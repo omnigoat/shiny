@@ -7,7 +7,10 @@ namespace plumbing {
 	
 	struct vertex_buffer_t
 	{
-		vertex_buffer_t() {}
+		vertex_buffer_t(void* data, unsigned int data_size, bool shadow)
+			: hardware_buffer_t(data, data_size, shadow)
+		{
+		}
 	
 	private:
 		

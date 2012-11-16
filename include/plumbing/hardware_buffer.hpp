@@ -1,0 +1,36 @@
+#ifndef SHINY_PLUMBING_HARDWARE_BUFFER_HPP
+#define SHINY_PLUMBING_HARDWARE_BUFFER_HPP
+//======================================================================
+namespace shiny {
+namespace plumbing {
+//======================================================================
+	
+	struct hardware_buffer_t
+	{
+		void reset_from_shadow_buffer() {
+			this->reset_from_shadow_buffer_impl();
+		}
+
+	protected:
+		hardware_buffer_t(void * data, unsigned int data_size, bool shadow)
+			: data_(data), data_size_(data_size), shadowing_(shadow)
+		{
+		}
+
+		virtual ~hardware_buffer_t() = default;
+		
+
+		virtual void reset_from_shadow_buffer() = 0;
+
+	protected:
+		void* data_;
+		unsigned int data_size_;
+		bool shadowing_;
+	};
+
+//======================================================================
+} // namespace plumbing
+} // namespace shiny
+//======================================================================
+#endif
+//======================================================================
