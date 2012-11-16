@@ -12,17 +12,18 @@ namespace plumbing {
 		}
 
 	protected:
-		hardware_buffer_t(void * data, unsigned int data_size, bool shadow)
-			: data_(data), data_size_(data_size), shadowing_(shadow)
+		hardware_buffer_t(buffer_type type, void * data, unsigned int data_size, bool shadow)
+			: type_(type), data_(data), data_size_(data_size), shadowing_(shadow)
 		{
 		}
 
-		virtual ~hardware_buffer_t() = default;
+		virtual ~hardware_buffer_t() {}
 		
 
 		virtual void reset_from_shadow_buffer() = 0;
 
 	protected:
+		buffer_type type_;
 		void* data_;
 		unsigned int data_size_;
 		bool shadowing_;
