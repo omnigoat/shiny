@@ -20,12 +20,21 @@
     <ClCompile Include="..\source\plumbing\vertex_buffer.cpp">
       <Filter>source\plumbing</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\main.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\plumbing\device.cpp">
+      <Filter>source\plumbing</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\shiny\plumbing\hardware_buffer.hpp">
       <Filter>include\plumbing</Filter>
     </ClInclude>
     <ClInclude Include="..\include\shiny\plumbing\vertex_buffer.hpp">
+      <Filter>include\plumbing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\shiny\plumbing\device.hpp">
       <Filter>include\plumbing</Filter>
     </ClInclude>
   </ItemGroup>

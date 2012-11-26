@@ -25,7 +25,7 @@ namespace plumbing {
 		usage use_;
 		void* data_;
 		unsigned int data_size_;
-		bool shadow_;
+		bool shadowing_;
 
 		ID3D11Buffer* d3d_buffer_;
 	};
@@ -34,17 +34,21 @@ namespace plumbing {
 	{
 		friend struct vertex_buffer_t;
 
-		// noncopyable, but movable
-		lock_t(const lock_t&) = delete;
+		// lock_t is movable
 		lock_t(lock_t&&);
 
+		bool valid() const;
 
 	private:
+		// constructable by friends
 		lock_t(vertex_buffer_t* owner, void* data, unsigned int data_size);
+		// noncopyable
+		lock_t(const lock_t&);
 
 		vertex_buffer_t* owner_;
 		void* data_;
 		unsigned int data_size_;
+		D3D11_MAPPED_SUBRESOURCE d3d_resource_;
 	};
 
 //======================================================================
