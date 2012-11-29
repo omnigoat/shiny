@@ -1,8 +1,8 @@
 #include <shiny/plumbing/vertex_buffer.hpp>
 
 
-shiny::plumbing::vertex_buffer_t::vertex_buffer_t( usage use, void* data, unsigned int data_size, bool shadow )
- : use_(use), data_(data), data_size_(data_size), shadowing_(shadow)
+shiny::plumbing::vertex_buffer_t::vertex_buffer_t( ID3D11Device* device, usage use, unsigned int data_size, bool shadow )
+ : use_(use), data_(data), data_size_(data_size), shadowing_(shadow), locked_(), d3d_device_(device), d3d_buffer_()
 {
 	D3D11_BUFFER_DESC buffer_desc;
 
@@ -22,25 +22,3 @@ shiny::plumbing::vertex_buffer_t::vertex_buffer_t( usage use, void* data, unsign
 
 
 
-shiny::plumbing::vertex_buffer_t::lock_t::lock_t(lock_t&& rhs)
- : owner_(rhs.owner_), data_(rhs.data_), data_size_(rhs.data_size_)
-{
-	rhs.owner_ = nullptr;
-	rhs.data_ = nullptr;
-	rhs.data_size_ = 0;
-}
-
-shiny::plumbing::vertex_buffer_t::lock_t::lock_t( vertex_buffer_t* owner, void* data, unsigned int data_size )
- : owner_(owner), data_(data), data_size_(data_size)
-{
-/*
-	if (device->Map(d3d_buffer_, 0, D3D11_MAP_WRITE, 0, &d3d_resource_) != S_OK) {
-		data_ = nullptr;
-	}
-*/
-}
-
-bool shiny::plumbing::vertex_buffer_t::lock_t::valid() const
-{
-	return data_ != nullptr;
-}

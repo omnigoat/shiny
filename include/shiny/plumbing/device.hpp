@@ -7,6 +7,8 @@ namespace shiny {
 namespace plumbing {
 //======================================================================
 	
+	struct vertex_buffer_t;
+
 	struct context_t
 	{
 		friend struct device_t;
@@ -29,11 +31,11 @@ namespace plumbing {
 		device_t& operator = (const device_t&&);
 		~device_t();
 
-	private:
+		vertex_buffer_t create_vertex_buffer(unsigned int size);
 		
 	private:
-		static ID3D11Device* device_;
-		static ID3D11DeviceContext* immediate_context_;
+		static ID3D11Device* d3d_device_;
+		static ID3D11DeviceContext* d3d_immediate_context_;
 	};
 
 //======================================================================
