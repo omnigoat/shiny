@@ -13,13 +13,21 @@ shiny::plumbing::context_t::context_t()
 {
 	mutex_.lock();
 
-	ATMA_ASSERT(detail::d3d_device_ != nullptr);
-	ATMA_ASSERT(detail::d3d_immediate_context_ != nullptr);
+	//ATMA_ASSERT(detail::d3d_device_ == nullptr);
+	//ATMA_ASSERT(detail::d3d_immediate_context_ == nullptr);
 	ATMA_ASSERT(context_t::bound_contexts_.find(std::this_thread::get_id()) == context_t::bound_contexts_.end());
 	
 	// if the thread we've been created in is the same thread that the device was
 	// created in, then we're an immediate context.
-	if (std::this_thread::get_id() == detail::device_creation_thread_id_) {
+	if (detail::d3d_device_ == nullptr) {
+		HRESULT hr = D3D11CreateDevice(
+			NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, 0, NULL, 0, D3D11_SDK_VERSION,
+			&detail::d3d_device_,
+			NULL,
+			&detail::d3d_immediate_context_
+		);
+
+		ATMA_ASSERT(hr == S_OK);
 		d3d_context_ = detail::d3d_immediate_context_;
 	}
 	else {
@@ -39,13 +47,14 @@ shiny::plumbing::context_t::~context_t()
 
 	// if we're the immediate context and we're being destructed, then we destroy the
 	// device, but only if there are no other contexts around.
-	if (std::this_thread::get_id() == detail::device_creation_thread_id_) {
+	if (d3d_context_ == detail::d3d_immediate_context_) {
 		ATMA_ASSERT(bound_contexts_.size() == 1);
 		detail::d3d_immediate_context_->Release();
 		detail::d3d_device_->Release();
 	}
 
 	bound_contexts_.erase(std::this_thread::get_id());
+	ATMA_ASSERT(bound_contexts_.empty());
 
 	mutex_.unlock();
 }
