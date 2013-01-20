@@ -1,15 +1,19 @@
 #include <shiny/plumbing/device.hpp>
 #include <shiny/plumbing/vertex_buffer.hpp>
-
-
+//======================================================================
+using shiny::plumbing::context_t;
+//======================================================================
 ID3D11Device* shiny::plumbing::detail::d3d_device_ = nullptr;
 ID3D11DeviceContext* shiny::plumbing::detail::d3d_immediate_context_ = nullptr;
 std::thread::id shiny::plumbing::detail::device_creation_thread_id_;
+std::mutex shiny::plubming::detail::immediate_context_mutex_;
 
-std::map<std::thread::id, shiny::plumbing::context_t*> shiny::plumbing::context_t::bound_contexts_;
-std::mutex shiny::plumbing::context_t::mutex_;
+std::map<std::thread::id, context_t*> context_t::bound_contexts_;
+std::mutex context_t::mutex_;
 
-shiny::plumbing::context_t::context_t()
+
+
+context_t::context_t()
 {
 	mutex_.lock();
 
@@ -39,7 +43,7 @@ shiny::plumbing::context_t::context_t()
 	mutex_.unlock();
 }
 
-shiny::plumbing::context_t::~context_t()
+context_t::~context_t()
 {
 	mutex_.lock();
 
@@ -59,6 +63,31 @@ shiny::plumbing::context_t::~context_t()
 	mutex_.unlock();
 }
 
+using shiny::plumbing::vertex_buffer_t;
+using shiny::plumbing::lock_type_t;
+
+auto context_t::map(vertex_buffer_t& vb, vertex_buffer_t::lock_t& lock) -> void
+{
+	D3D11_MAP map;
+	switch (lock.lock_type()) {
+		case lock_type_t::read: map = D3D11_MAP_READ; break;
+		case lock_type_t::write = D3D11_MAP_WRITE; break;
+		case lock_type_t::read_write = D3D11_MAP_READ_WRITE; break;
+		case lock_type_t::write_discard = D3D11_MAP_WRITE_DISCARD; break;
+	}
+
+	// single-threaded
+	{
+		std::lock_guard<std::mutex> SL(detail::immediate_context_mutex_);
+		detail::d3d_immediate_context_->Map(vb.d3d_buffer_, 0, map, 0, lock.d3d_resource_);
+	}
+}
+
+auto context_t::unmap(shiny::plumbing::vertex_buffer_t& vb) -> void
+{
+	
+}
+
 auto shiny::plumbing::this_context() -> context_t&
 {
 	context_t::mutex_.lock();
@@ -74,3 +103,6 @@ auto shiny::plumbing::device() -> ID3D11Device* {
 	ATMA_ASSERT(detail::d3d_device_ != nullptr);
 	return detail::d3d_device_;
 }
+
+
+

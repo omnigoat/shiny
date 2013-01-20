@@ -8,29 +8,27 @@
 #include <atma/assert.hpp>
 //======================================================================
 #include <shiny/plumbing/device.hpp>
+#include <shiny/plumbing/lock.hpp>
 //======================================================================
 namespace shiny {
 namespace plumbing {
 //======================================================================
+	
 
 	//======================================================================
 	// vertex_buffer_t
 	//======================================================================
 	struct vertex_buffer_t
 	{
-		// lock_t, for accessing the data.
-		template <typename T> struct lock_t;
-
 		enum class usage {
 			general,
 			updated_often,
 			immutable,
 			staging
 		};
-
 		
-		template <typename T> auto lock() -> lock_t<T>;
-		template <typename T> auto lock() const -> lock_t<T const>;
+		template <typename T> auto lock(lock_type_t) -> lock_t<vertex_buffer_t, T>;
+		template <typename T> auto lock(lock_type_t) const -> lock_t<vertex_buffer_t, T const>;
 
 		auto reload_from_shadow_buffer() -> void;
 		auto release_shadow_buffer() -> void;
@@ -55,10 +53,10 @@ namespace plumbing {
 
 
 	//======================================================================
-	// vertex_buffer_t::lock_t
+	// specialisation of lock_t for vertex buffers
 	//======================================================================
 	template <typename T>
-	struct vertex_buffer_t::lock_t
+	struct lock_t<vertex_buffer_t, T>
 	{
 		// lock_t is movable
 		lock_t(lock_t&&);
@@ -70,14 +68,13 @@ namespace plumbing {
 
 	private:
 		// constructable by friends
-		lock_t(context_t&, vertex_buffer_t* owner, unsigned int data_size);
+		lock_t(context_t&, vertex_buffer_t* owner, lock_type_t lock_type);
 		// noncopyable
 		lock_t(const lock_t&);
 
 		context_t& context_;
 		vertex_buffer_t* owner_;
-		unsigned int data_size_;
-		//ID3D11Device* d3d_device_;
+		lock_type_t lock_type_;
 		D3D11_MAPPED_SUBRESOURCE d3d_resource_;
 
 		friend struct vertex_buffer_t;
@@ -93,9 +90,8 @@ namespace plumbing {
 	// implementation - vertex_buffer_t
 	//======================================================================
 	template <typename T>
-	auto vertex_buffer_t::lock() -> vertex_buffer_t::lock_t<T>
-	{
-		return lock_t<T>(context_, this, data_size_);
+	auto vertex_buffer_t::lock(lock_type_t lock_type) -> vertex_buffer_t::lock_t<vertex_buffer_t, T> {
+		return lock_t<vertex_buffer_t, T>(context_, this, lock_type);
 	}
 
 
@@ -107,11 +103,12 @@ namespace plumbing {
 	// implementation - vertex_buffer_t::lock_t
 	//======================================================================
 	template <typename T>
-	vertex_buffer_t::lock_t<T>::lock_t(context_t& context, vertex_buffer_t* owner, unsigned int data_size )
-	: context_(context), owner_(owner), data_size_(data_size)
+	vertex_buffer_t::lock_t<T>::lock_t(context_t& context, vertex_buffer_t* owner, lock_type_t lock_type )
+	: context_(context), owner_(owner), lock_type_(lock_type)
 	{
 		if (!owner_->shadowing_) {
 			HRESULT hr = context_.get()->Map(owner_->d3d_buffer_, 0, D3D11_MAP_WRITE, 0, &d3d_resource_);
+			context_.map(*this->owner_, lock_type_);
 			ATMA_ASSERT(hr == S_OK);
 		}
 		
@@ -132,11 +129,12 @@ namespace plumbing {
 		if (owner_->shadowing_) {
 			HRESULT hr = context_.get()->Map(owner_->d3d_buffer_, 0, D3D11_MAP_WRITE, 0, &d3d_resource_);
 			ATMA_ASSERT(hr == S_OK);
-			memcpy(d3d_resource_.pData, &owner_->data_.front(), data_size_);
+			memcpy(d3d_resource_.pData, &owner_->data_.front(), owner_->data_size_);
 		}
 		
-		context_.get()->Unmap(owner_->d3d_buffer_, 0);
-		
+		//context_.get()->Unmap(owner_->d3d_buffer_, 0);
+		context_.unmap(*this->owner_);
+
 		owner_->locked_ = false;
 	}
 

@@ -25,7 +25,7 @@ auto shiny::plumbing::vertex_buffer_t::reload_from_shadow_buffer() -> void
 {
 	ATMA_ASSERT(shadowing_);
 
-	auto L = lock<char>();
+	auto L = lock<char>(lock_type_t::write_discard);
 	memcpy(L.begin(), &data_.front(), data_size_);
 }
 
