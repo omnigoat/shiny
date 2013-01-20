@@ -87,6 +87,7 @@
   <ItemGroup>
     <ClInclude Include="..\include\shiny\plumbing\device.hpp" />
     <ClInclude Include="..\include\shiny\plumbing\hardware_buffer.hpp" />
+    <ClInclude Include="..\include\shiny\plumbing\lock.hpp" />
     <ClInclude Include="..\include\shiny\plumbing\vertex_buffer.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
