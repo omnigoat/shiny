@@ -32,7 +32,7 @@ namespace plumbing {
 
 		auto reload_from_shadow_buffer() -> void;
 		auto release_shadow_buffer() -> void;
-		auto aquire_shadow_buffer() -> void;
+		auto aquire_shadow_buffer(bool pull_from_hardware = true) -> void;
 
 	private:
 		vertex_buffer_t(usage use, unsigned int data_size, bool shadow);
@@ -137,7 +137,7 @@ namespace plumbing {
 		// buffer. we will now update the d3d buffer from our shadow buffer.
 		if (owner_->shadowing_) {
 			detail::map_resource(owner_->d3d_buffer_, 0, D3D11_MAP_WRITE, 0, &d3d_resource_);
-			memcpy(d3d_resource_.pData, &owner_->data_.front(), owner_->data_size_);
+			std::copy_n(&owner_->data_.front(), owner_->data_size_, reinterpret_cast<char*>(d3d_resource_.pData));
 		}
 		
 		detail::unmap_resource(owner_->d3d_buffer_, 0);

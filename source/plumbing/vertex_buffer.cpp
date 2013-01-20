@@ -26,7 +26,7 @@ auto shiny::plumbing::vertex_buffer_t::reload_from_shadow_buffer() -> void
 	ATMA_ASSERT(shadowing_);
 
 	auto L = lock<char>(lock_type_t::write_discard);
-	memcpy(L.begin(), &data_.front(), data_size_);
+	std::copy_n(&data_.front(), data_size_, L.begin());
 }
 
 auto shiny::plumbing::vertex_buffer_t::release_shadow_buffer() -> void
@@ -38,10 +38,15 @@ auto shiny::plumbing::vertex_buffer_t::release_shadow_buffer() -> void
 	shadowing_ = false;
 }
 
-auto shiny::plumbing::vertex_buffer_t::aquire_shadow_buffer() -> void
+auto shiny::plumbing::vertex_buffer_t::aquire_shadow_buffer(bool pull_from_hardware) -> void
 {
 	ATMA_ASSERT(!shadowing_);
-
+	
 	data_.resize(data_size_);
+
+	if (pull_from_hardware) {
+		ATMA_ASSERT(use_ == usage::general || use_ == usage::updated_often);
+	}
+
 	shadowing_ = true;
 }
