@@ -21,6 +21,17 @@ shiny::plumbing::vertex_buffer_t::vertex_buffer_t( usage use, unsigned int data_
 	}
 }
 
+shiny::plumbing::vertex_buffer_t::~vertex_buffer_t()
+{
+	// busy-wait because we might still be uploading in the prime thread
+	while (locked_.exchange(true))
+		;
+
+	if (d3d_buffer_) {
+		d3d_buffer_->Release();
+	}
+}
+
 auto shiny::plumbing::vertex_buffer_t::reload_from_shadow_buffer() -> void
 {
 	ATMA_ASSERT(shadowing_);

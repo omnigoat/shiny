@@ -1,6 +1,6 @@
 #include <shiny/plumbing/prime_thread.hpp>
 #include <shiny/plumbing/device.hpp>
-	
+#include <iostream>
 auto shiny::plumbing::prime_thread::spawn() -> void
 {
 	using namespace shiny::plumbing::detail;
@@ -9,10 +9,14 @@ auto shiny::plumbing::prime_thread::spawn() -> void
 	prime_thread_running_ = true;
 
 	prime_thread_ = std::thread([]{
-		command_t* x = nullptr;
-		while (prime_thread_running_.load() && command_queue_.pop(x)) {
-			(*x)();
-			delete x;
+		std::cout << "weee" << std::endl;
+
+		while (prime_thread_running_.load()) {
+			command_t* x = nullptr;
+			while (command_queue_.pop(x)) {
+				(*x)();
+				delete x;
+			}
 		}
 	});
 }

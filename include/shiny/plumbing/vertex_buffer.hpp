@@ -16,6 +16,17 @@ namespace shiny {
 namespace plumbing {
 //======================================================================
 	
+	inline auto block_until_commands_execute() -> void
+	{
+		std::mutex m;
+		std::condition_variable c;
+		bool good = false;
+		prime_thread::submit_command(new wakeup_command_t(good, c));
+		std::unique_lock<std::mutex> UL(m);
+		while (!good)
+			c.wait(UL);
+		UL.unlock();
+	}
 
 	//======================================================================
 	// vertex_buffer_t
@@ -29,15 +40,15 @@ namespace plumbing {
 			staging
 		};
 		
+		vertex_buffer_t(usage use, unsigned int data_size, bool shadow);
+		~vertex_buffer_t();
+
 		template <typename T> auto lock(lock_type_t) -> lock_t<vertex_buffer_t, T>;
 		template <typename T> auto lock(lock_type_t) const -> lock_t<vertex_buffer_t, T const>;
 
 		auto reload_from_shadow_buffer() -> void;
 		auto release_shadow_buffer() -> void;
 		auto aquire_shadow_buffer(bool pull_from_hardware = true) -> void;
-
-	private:
-		vertex_buffer_t(usage use, unsigned int data_size, bool shadow);
 
 	private:
 		ID3D11Buffer* d3d_buffer_;
@@ -122,6 +133,7 @@ namespace plumbing {
 
 			//detail::map_resource(owner_->d3d_buffer_, 0, map_type, 0, &d3d_resource_);
 			prime_thread::submit_command(new map_resource_command_t(owner_->d3d_buffer_, 0, map_type, 0, &d3d_resource_));
+			block_until_commands_execute();
 		}
 	}
 
@@ -137,8 +149,8 @@ namespace plumbing {
 			CQ.push(new copy_data_command_t(&owner_->data_.front(), owner_->data_size_, reinterpret_cast<char*>(d3d_resource_.pData)));
 		}
 		
-		//CQ.push(new unmap_resource_command_t(owner_->d3d_buffer_, 0));
-		//CQ.push(new callback_command_t([&owner_]{ owner_->locked_.store(false); }));
+		CQ.push(new unmap_resource_command_t(owner_->d3d_buffer_, 0));
+		CQ.push(new callback_command_t([&]{ owner_->locked_.store(false); }));
 
 		prime_thread::submit_command_queue(CQ);
 	}

@@ -1,6 +1,8 @@
 #ifndef SHINY_PLUMBING_COMMAND_HPP
 #define SHINY_PLUMBING_COMMAND_HPP
 //======================================================================
+#include <condition_variable>
+//======================================================================
 #include <shiny/plumbing/device.hpp>
 //======================================================================
 namespace shiny {
@@ -13,6 +15,22 @@ namespace plumbing {
 		virtual ~command_t() {}
 		
 		virtual void operator ()() = 0;
+	};
+
+	struct wakeup_command_t : command_t
+	{
+		wakeup_command_t(bool& woken, std::condition_variable& cv)
+		: woken(woken), cv(cv)
+		{
+		}
+
+		void operator ()() {
+			woken = true;
+			cv.notify_all();
+		}
+
+		bool& woken;
+		std::condition_variable& cv;
 	};
 
 	struct map_resource_command_t : command_t
@@ -34,6 +52,21 @@ namespace plumbing {
 		D3D11_MAPPED_SUBRESOURCE* mapped_resource;
 	};
 
+	struct unmap_resource_command_t : command_t
+	{
+		unmap_resource_command_t(ID3D11Resource* resource, unsigned int subresource)
+		: resource(resource), subresource(subresource)
+		{
+		}
+
+		void operator ()() {
+			detail::d3d_immediate_context_->Unmap(resource, subresource);
+		}
+
+		ID3D11Resource* resource;
+		unsigned int subresource;
+	};
+
 	struct copy_data_command_t : command_t
 	{
 		copy_data_command_t(char* in, unsigned int size, char* out)
@@ -48,6 +81,17 @@ namespace plumbing {
 		char* in;
 		unsigned int size;
 		char* out;
+	};
+
+	struct callback_command_t : command_t
+	{
+		callback_command_t(std::function<void()> const& fn) : fn(fn) {}
+
+		void operator ()() {
+			fn();
+		}
+
+		std::function<void()> fn;
 	};
 
 //======================================================================
