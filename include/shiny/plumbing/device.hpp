@@ -25,6 +25,7 @@ namespace plumbing {
 		// the prime thread is the thread upon which all commands are consumed.
 		// this thread is also where @d3d_immediate_context_ resides.
 		extern std::thread prime_thread_;
+		extern std::atomic_bool prime_thread_running_;
 
 		// this is the command-queue which through all commands reach the prime thread.
 		typedef atma::lockfree::queue_t<command_t*> command_queue_t;

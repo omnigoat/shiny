@@ -29,6 +29,9 @@
     <ClCompile Include="..\source\scoped_runtime.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\plumbing\prime_thread.cpp">
+      <Filter>source\plumbing</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\shiny\plumbing\hardware_buffer.hpp">

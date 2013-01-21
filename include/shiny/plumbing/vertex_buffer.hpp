@@ -38,16 +38,14 @@ namespace plumbing {
 		vertex_buffer_t(usage use, unsigned int data_size, bool shadow);
 
 	private:
-		context_t& context_;
-		
+		ID3D11Buffer* d3d_buffer_;
 		usage use_;
 		std::vector<char> data_;
 		unsigned int data_size_;
 		bool shadowing_;
-		bool locked_;
+		std::atomic_bool locked_;
 		
-		ID3D11Buffer* d3d_buffer_;
-
+		
 		friend struct context_t;
 		friend struct lock_t<vertex_buffer_t, char>;
 	};
@@ -107,6 +105,8 @@ namespace plumbing {
 	lock_t<vertex_buffer_t, T>::lock_t(context_t& context, vertex_buffer_t* owner, lock_type_t lock_type )
 	: context_(context), owner_(owner), lock_type_(lock_type)
 	{
+		owner_->locked_ = true;
+
 		if (!owner_->shadowing_) {
 			D3D11_MAP map_type;
 			switch (lock_type_) {
@@ -116,10 +116,9 @@ namespace plumbing {
 				case lock_type_t::write_discard: map_type = D3D11_MAP_WRITE_DISCARD; break;
 			}
 
-			detail::map_resource(owner_->d3d_buffer_, 0, map_type, 0, &d3d_resource_);
+			//detail::map_resource(owner_->d3d_buffer_, 0, map_type, 0, &d3d_resource_);
+			submit_command(new map_resource_command_t(owner_->d3d_buffer_, 0, map_type, 0, &d3d_resource_));
 		}
-		
-		owner_->locked_ = true;
 	}
 	
 	template <typename T>
@@ -131,17 +130,19 @@ namespace plumbing {
 	template <typename T>
 	lock_t<vertex_buffer_t, T>::~lock_t()
 	{
-		detail::immediate_context_guard_t guard(detail::immediate_context_mutex_);
+		command_queue_t CQ;
 
 		// if we are shadowing, that means all data written was written into our shadow
 		// buffer. we will now update the d3d buffer from our shadow buffer.
 		if (owner_->shadowing_) {
-			detail::map_resource(owner_->d3d_buffer_, 0, D3D11_MAP_WRITE, 0, &d3d_resource_);
-			std::copy_n(&owner_->data_.front(), owner_->data_size_, reinterpret_cast<char*>(d3d_resource_.pData));
+			CQ.push(new map_resource_command_t(owner_->d3d_buffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &d3d_resource_));
+			CQ.push(new copy_data_command_t(&owner_->data_.front(), owner_->data_size_, reinterpret_cast<char*>(d3d_resource_.pData)));
 		}
 		
-		detail::unmap_resource(owner_->d3d_buffer_, 0);
-		owner_->locked_ = false;
+		CQ.push(new unmap_resource_command_t(owner_->d3d_buffer_, 0));
+		CQ.push(new callback_command_t([&owner_]{ owner_->locked_ = false; }));
+
+		submit_command_queue(CQ);
 	}
 
 	template <typename T>

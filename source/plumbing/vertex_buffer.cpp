@@ -2,7 +2,7 @@
 #include <atma/assert.hpp>
 
 shiny::plumbing::vertex_buffer_t::vertex_buffer_t( usage use, unsigned int data_size, bool shadow )
-: context_(this_context()), use_(use), data_size_(data_size), shadowing_(shadow), locked_(), d3d_buffer_()
+: use_(use), data_size_(data_size), shadowing_(shadow), locked_(), d3d_buffer_()
 {
 	D3D11_USAGE buffer_usage;
 	switch (use_) {
@@ -14,7 +14,7 @@ shiny::plumbing::vertex_buffer_t::vertex_buffer_t( usage use, unsigned int data_
 
 	D3D11_BUFFER_DESC buffer_desc { data_size_, buffer_usage, D3D11_BIND_VERTEX_BUFFER, 0, 0, 0 };
 
-	device()->CreateBuffer(&buffer_desc, NULL, &d3d_buffer_);
+	detail::d3d_device_->CreateBuffer(&buffer_desc, NULL, &d3d_buffer_);
 	
 	if (shadowing_) {
 		data_.resize(data_size_);
@@ -44,9 +44,9 @@ auto shiny::plumbing::vertex_buffer_t::aquire_shadow_buffer(bool pull_from_hardw
 	
 	data_.resize(data_size_);
 
-	if (pull_from_hardware) {
+	/*if (pull_from_hardware) {
 		ATMA_ASSERT(use_ == usage::general || use_ == usage::updated_often);
-	}
+	}*/
 
 	shadowing_ = true;
 }

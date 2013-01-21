@@ -82,6 +82,7 @@
   <ItemGroup>
     <ClCompile Include="..\source\main.cpp" />
     <ClCompile Include="..\source\plumbing\device.cpp" />
+    <ClCompile Include="..\source\plumbing\prime_thread.cpp" />
     <ClCompile Include="..\source\plumbing\vertex_buffer.cpp" />
     <ClCompile Include="..\source\scoped_runtime.cpp" />
   </ItemGroup>

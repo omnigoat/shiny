@@ -4,11 +4,13 @@
 //======================================================================
 // externs
 //======================================================================
-ID3D11Device* shiny::plumbing::detail::d3d_device_ = nullptr;
-ID3D11DeviceContext* shiny::plumbing::detail::d3d_immediate_context_ = nullptr;
+std::thread shiny::plumbing::detail::prime_thread_;
+std::atomic_bool shiny::plumbing::detail::prime_thread_running_;
 
 shiny::plumbing::detail::command_queue_t shiny::plumbing::detail::command_queue_;
-std::thread shiny::plumbing::detail::prime_thread_;
+
+ID3D11Device* shiny::plumbing::detail::d3d_device_ = nullptr;
+ID3D11DeviceContext* shiny::plumbing::detail::d3d_immediate_context_ = nullptr;
 
 
 //======================================================================
