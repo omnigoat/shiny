@@ -8,7 +8,9 @@
 #include <atma/assert.hpp>
 //======================================================================
 #include <shiny/plumbing/device.hpp>
+#include <shiny/plumbing/command.hpp>
 #include <shiny/plumbing/lock.hpp>
+#include <shiny/plumbing/prime_thread.hpp>
 //======================================================================
 namespace shiny {
 namespace plumbing {
@@ -67,11 +69,10 @@ namespace plumbing {
 
 	private:
 		// constructable by friends
-		lock_t(context_t&, vertex_buffer_t* owner, lock_type_t lock_type);
+		lock_t(vertex_buffer_t* owner, lock_type_t lock_type);
 		// noncopyable
 		lock_t(const lock_t&);
 
-		context_t& context_;
 		vertex_buffer_t* owner_;
 		lock_type_t lock_type_;
 		D3D11_MAPPED_SUBRESOURCE d3d_resource_;
@@ -89,8 +90,9 @@ namespace plumbing {
 	// implementation - vertex_buffer_t
 	//======================================================================
 	template <typename T>
-	auto vertex_buffer_t::lock(lock_type_t lock_type) -> lock_t<vertex_buffer_t, T> {
-		return lock_t<vertex_buffer_t, T>(context_, this, lock_type);
+	auto vertex_buffer_t::lock(lock_type_t lock_type) -> lock_t<vertex_buffer_t, T>
+	{
+		return lock_t<vertex_buffer_t, T>(this, lock_type);
 	}
 
 
@@ -102,10 +104,12 @@ namespace plumbing {
 	// implementation - vertex_buffer_t::lock_t
 	//======================================================================
 	template <typename T>
-	lock_t<vertex_buffer_t, T>::lock_t(context_t& context, vertex_buffer_t* owner, lock_type_t lock_type )
-	: context_(context), owner_(owner), lock_type_(lock_type)
+	lock_t<vertex_buffer_t, T>::lock_t(vertex_buffer_t* owner, lock_type_t lock_type )
+	: owner_(owner), lock_type_(lock_type)
 	{
-		owner_->locked_ = true;
+		// busy wait loop because we might still be uploading to the immediate context
+		while (owner_->locked_.exchange(true))
+			;
 
 		if (!owner_->shadowing_) {
 			D3D11_MAP map_type;
@@ -117,14 +121,8 @@ namespace plumbing {
 			}
 
 			//detail::map_resource(owner_->d3d_buffer_, 0, map_type, 0, &d3d_resource_);
-			submit_command(new map_resource_command_t(owner_->d3d_buffer_, 0, map_type, 0, &d3d_resource_));
+			//submit_command(new map_resource_command_t(owner_->d3d_buffer_, 0, map_type, 0, &d3d_resource_));
 		}
-	}
-	
-	template <typename T>
-	lock_t<vertex_buffer_t, T>::lock_t(lock_t&& rhs)
-	: owner_(rhs.owner_), data_size_(rhs.data_size_), d3d_resource_(std::move(rhs.d3d_resource_))
-	{
 	}
 
 	template <typename T>
@@ -139,10 +137,10 @@ namespace plumbing {
 			CQ.push(new copy_data_command_t(&owner_->data_.front(), owner_->data_size_, reinterpret_cast<char*>(d3d_resource_.pData)));
 		}
 		
-		CQ.push(new unmap_resource_command_t(owner_->d3d_buffer_, 0));
-		CQ.push(new callback_command_t([&owner_]{ owner_->locked_ = false; }));
+		//CQ.push(new unmap_resource_command_t(owner_->d3d_buffer_, 0));
+		//CQ.push(new callback_command_t([&owner_]{ owner_->locked_.store(false); }));
 
-		submit_command_queue(CQ);
+		prime_thread::submit_command_queue(CQ);
 	}
 
 	template <typename T>
