@@ -83,12 +83,16 @@
     <ClCompile Include="..\source\main.cpp" />
     <ClCompile Include="..\source\plumbing\device.cpp" />
     <ClCompile Include="..\source\plumbing\vertex_buffer.cpp" />
+    <ClCompile Include="..\source\scoped_runtime.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\include\shiny\plumbing\command.hpp" />
     <ClInclude Include="..\include\shiny\plumbing\device.hpp" />
     <ClInclude Include="..\include\shiny\plumbing\hardware_buffer.hpp" />
     <ClInclude Include="..\include\shiny\plumbing\lock.hpp" />
+    <ClInclude Include="..\include\shiny\plumbing\prime_thread.hpp" />
     <ClInclude Include="..\include\shiny\plumbing\vertex_buffer.hpp" />
+    <ClInclude Include="..\include\shiny\scoped_runtime.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

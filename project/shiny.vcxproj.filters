@@ -26,6 +26,9 @@
     <ClCompile Include="..\source\main.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\scoped_runtime.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\shiny\plumbing\hardware_buffer.hpp">
@@ -38,6 +41,15 @@
       <Filter>include\plumbing</Filter>
     </ClInclude>
     <ClInclude Include="..\include\shiny\plumbing\lock.hpp">
+      <Filter>include\plumbing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\shiny\scoped_runtime.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\shiny\plumbing\command.hpp">
+      <Filter>include\plumbing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\shiny\plumbing\prime_thread.hpp">
       <Filter>include\plumbing</Filter>
     </ClInclude>
   </ItemGroup>
