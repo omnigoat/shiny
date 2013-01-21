@@ -8,11 +8,11 @@ namespace shiny {
 
 scoped_runtime_t::scoped_runtime_t() {
 	plumbing::detail::setup_d3d_device();
-	plumbing::detail::spawn_prime_thread();
+	plumbing::prime_thread::spawn();
 }
 
 scoped_runtime_t::~scoped_runtime_t() {
-	plumbing::detail::join_prime_thread();
+	plumbing::prime_thread::join();
 	plumbing::detail::teardown_d3d_device();
 }
 

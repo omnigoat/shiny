@@ -107,7 +107,7 @@ namespace plumbing {
 	lock_t<vertex_buffer_t, T>::lock_t(vertex_buffer_t* owner, lock_type_t lock_type )
 	: owner_(owner), lock_type_(lock_type)
 	{
-		// busy wait loop because we might still be uploading to the immediate context
+		// busy-wait because we might still be uploading in the prime thread
 		while (owner_->locked_.exchange(true))
 			;
 
@@ -121,7 +121,7 @@ namespace plumbing {
 			}
 
 			//detail::map_resource(owner_->d3d_buffer_, 0, map_type, 0, &d3d_resource_);
-			//submit_command(new map_resource_command_t(owner_->d3d_buffer_, 0, map_type, 0, &d3d_resource_));
+			prime_thread::submit_command(new map_resource_command_t(owner_->d3d_buffer_, 0, map_type, 0, &d3d_resource_));
 		}
 	}
 
