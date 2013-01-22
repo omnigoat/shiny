@@ -16,8 +16,7 @@ namespace plumbing {
 //template <typename resource_tm, typename element_tm> struct lock_t;
 //struct vertex_buffer_t;
 //======================================================================
-	struct command_t;
-	typedef atma::lockfree::queue_t<command_t*> command_queue_t;
+	
 
 	//======================================================================
 	// the devil lies here.
@@ -28,8 +27,7 @@ namespace plumbing {
 		extern std::thread prime_thread_;
 		extern std::atomic_bool prime_thread_running_;
 
-		// this is the command-queue which through all commands reach the prime thread.
-		extern command_queue_t command_queue_;
+		
 		
 		// there is one global d3d device, and one immeidate context
 		extern ID3D11Device* d3d_device_;

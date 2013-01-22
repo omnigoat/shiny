@@ -9,13 +9,11 @@ auto shiny::plumbing::prime_thread::spawn() -> void
 	prime_thread_running_ = true;
 
 	prime_thread_ = std::thread([]{
-		std::cout << "weee" << std::endl;
-
 		while (prime_thread_running_.load()) {
 			command_t* x = nullptr;
 			while (command_queue_.pop(x)) {
 				(*x)();
-				delete x;
+				x->processed.store(true);
 			}
 		}
 	});
@@ -28,7 +26,7 @@ auto shiny::plumbing::prime_thread::join() -> void
 	detail::prime_thread_.join();
 }
 
-auto shiny::plumbing::prime_thread::submit_command(shiny::plumbing::command_t* c) -> void
+auto shiny::plumbing::prime_thread::submit_command(shiny::plumbing::command_ptr const& c) -> void
 {
 	detail::command_queue_.push(c);
 }

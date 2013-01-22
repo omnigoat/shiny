@@ -7,10 +7,9 @@
 //======================================================================
 #include <atma/assert.hpp>
 //======================================================================
-#include <shiny/plumbing/device.hpp>
-#include <shiny/plumbing/command.hpp>
 #include <shiny/plumbing/lock.hpp>
 #include <shiny/plumbing/prime_thread.hpp>
+#include <shiny/plumbing/commands/map_unmap_copy.hpp>
 //======================================================================
 namespace shiny {
 namespace plumbing {
@@ -21,7 +20,8 @@ namespace plumbing {
 		std::mutex m;
 		std::condition_variable c;
 		bool good = false;
-		prime_thread::submit_command(new wakeup_command_t(good, c));
+		command_ptr cc = make_command<wakeup_command_t>(good, c);
+		prime_thread::submit_command(cc);
 		std::unique_lock<std::mutex> UL(m);
 		while (!good)
 			c.wait(UL);
@@ -132,7 +132,7 @@ namespace plumbing {
 			}
 
 			//detail::map_resource(owner_->d3d_buffer_, 0, map_type, 0, &d3d_resource_);
-			prime_thread::submit_command(new map_resource_command_t(owner_->d3d_buffer_, 0, map_type, 0, &d3d_resource_));
+			prime_thread::submit_command(make_command<commands::map>(owner_->d3d_buffer_, 0, map_type, 0, &d3d_resource_));
 			block_until_commands_execute();
 		}
 	}
@@ -145,12 +145,12 @@ namespace plumbing {
 		// if we are shadowing, that means all data written was written into our shadow
 		// buffer. we will now update the d3d buffer from our shadow buffer.
 		if (owner_->shadowing_) {
-			CQ.push(new map_resource_command_t(owner_->d3d_buffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &d3d_resource_));
-			CQ.push(new copy_data_command_t(&owner_->data_.front(), owner_->data_size_, reinterpret_cast<char*>(d3d_resource_.pData)));
+			CQ.push(make_command<commands::map>(owner_->d3d_buffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &d3d_resource_));
+			CQ.push(make_command<commands::copy>(&owner_->data_.front(), owner_->data_size_, reinterpret_cast<char*>(d3d_resource_.pData)));
 		}
 		
-		CQ.push(new unmap_resource_command_t(owner_->d3d_buffer_, 0));
-		CQ.push(new callback_command_t([&]{ owner_->locked_.store(false); }));
+		CQ.push(make_command<commands::unmap>(owner_->d3d_buffer_, 0));
+		//CQ.push(make_command<commands::unlock>(owner_)) //new callback_command_t([&]{ owner_->locked_.store(false); }));
 
 		prime_thread::submit_command_queue(CQ);
 	}
