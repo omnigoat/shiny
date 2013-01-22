@@ -1,6 +1,14 @@
 #include <shiny/plumbing/prime_thread.hpp>
 #include <shiny/plumbing/device.hpp>
-#include <iostream>
+#include <shiny/plumbing/command.hpp>
+
+//======================================================================
+// externs
+//======================================================================
+shiny::plumbing::command_queue_t shiny::plumbing::detail::command_queue_;
+
+
+
 auto shiny::plumbing::prime_thread::spawn() -> void
 {
 	using namespace shiny::plumbing::detail;
@@ -10,9 +18,9 @@ auto shiny::plumbing::prime_thread::spawn() -> void
 
 	prime_thread_ = std::thread([]{
 		while (prime_thread_running_.load()) {
-			command_t* x = nullptr;
+			command_ptr x(nullptr);
 			while (command_queue_.pop(x)) {
-				(*x)();
+				(**x)();
 				x->processed.store(true);
 			}
 		}
@@ -33,7 +41,7 @@ auto shiny::plumbing::prime_thread::submit_command(shiny::plumbing::command_ptr 
 
 auto shiny::plumbing::prime_thread::submit_command_queue(shiny::plumbing::command_queue_t& q) -> void
 {
-	command_t* x = nullptr;
+	command_ptr x(nullptr);
 	while (q.pop(x))
 		detail::command_queue_.push(x);
 }
