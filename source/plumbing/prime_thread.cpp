@@ -43,5 +43,5 @@ auto shiny::plumbing::prime_thread::submit_command_queue(shiny::plumbing::comman
 {
 	command_ptr x(nullptr);
 	while (q.pop(x))
-		detail::command_queue_.push(x);
+		submit_command(x);
 }
