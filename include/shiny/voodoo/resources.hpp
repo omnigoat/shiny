@@ -1,31 +1,34 @@
-#ifndef SHINY_PLUMBING_LOCK_HPP
-#define SHINY_PLUMBING_LOCK_HPP
+#ifndef SHINY_VOODOO_RESOURCES_HPP
+#define SHINY_VOODOO_RESOURCES_HPP
+//======================================================================
+#include <thread>
+#include <atomic>
 //======================================================================
 #include <d3d11.h>
 //======================================================================
-#include <vector>
-//======================================================================
-#include <atma/assert.hpp>
-//======================================================================
-#include <shiny/voodoo/device.hpp>
-//======================================================================
 namespace shiny {
-namespace plumbing {
+namespace voodoo {
 //======================================================================
-	
-	enum class lock_type_t
+
+	enum class gpu_access_t
 	{
 		read,
 		write,
-		read_write,
-		write_discard
+		read_write
 	};
 
-	template <typename resource_tm, typename element_tm>
-	struct lock_t;
+	enum class cpu_access_t
+	{
+		none,
+		read,
+		write,
+		read_write,
+	};
 
+	auto create_buffer(ID3D11Buffer**, gpu_access_t, cpu_access_t, unsigned long data_size, void* data = nullptr) -> void;
+	
 //======================================================================
-} // namespace plumbing
+} // namespace voodoo
 } // namespace shiny
 //======================================================================
 #endif

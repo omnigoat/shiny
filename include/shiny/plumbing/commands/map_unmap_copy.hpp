@@ -1,14 +1,14 @@
 #ifndef SHINY_PLUMBING_COMMANDS_MAP_UNMAP_COPY_HPP
 #define SHINY_PLUMBING_COMMANDS_MAP_UNMAP_COPY_HPP
 //======================================================================
-#include <shiny/plumbing/command.hpp>
+#include <shiny/voodoo/command.hpp>
 //======================================================================
 namespace shiny {
 namespace plumbing {
 namespace commands {
 //======================================================================
 	
-	struct map : command_t
+	struct map : voodoo::command_t
 	{
 		map(ID3D11Resource* resource, unsigned int subresource, D3D11_MAP map_type, unsigned int map_flags,
 		  D3D11_MAPPED_SUBRESOURCE* mapped_resource)
@@ -17,7 +17,7 @@ namespace commands {
 		}
 
 		void operator ()() {
-			detail::d3d_immediate_context_->Map(resource, subresource, map_type, map_flags, mapped_resource);
+			//detail::d3d_immediate_context_->Map(resource, subresource, map_type, map_flags, mapped_resource);
 		}
 
 		ID3D11Resource* resource;
@@ -27,7 +27,7 @@ namespace commands {
 		D3D11_MAPPED_SUBRESOURCE* mapped_resource;
 	};
 
-	struct unmap : command_t
+	struct unmap : voodoo::command_t
 	{
 		unmap(ID3D11Resource* resource, unsigned int subresource)
 		: resource(resource), subresource(subresource)
@@ -35,14 +35,14 @@ namespace commands {
 		}
 
 		void operator ()() {
-			detail::d3d_immediate_context_->Unmap(resource, subresource);
+			//detail::d3d_immediate_context_->Unmap(resource, subresource);
 		}
 
 		ID3D11Resource* resource;
 		unsigned int subresource;
 	};
 
-	struct copy : command_t
+	struct copy : voodoo::command_t
 	{
 		copy(char* in, unsigned int size, char* out)
 		 : in(in), size(size), out(out)

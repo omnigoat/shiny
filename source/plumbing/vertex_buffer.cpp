@@ -1,56 +1,60 @@
 #include <shiny/plumbing/vertex_buffer.hpp>
 #include <atma/assert.hpp>
 
-shiny::plumbing::vertex_buffer_t::vertex_buffer_t( usage use, unsigned int data_size, bool shadow )
-: use_(use), data_size_(data_size), shadowing_(shadow), locked_(), d3d_buffer_()
+using shiny::plumbing::vertex_buffer_t;
+using shiny::plumbing::gpu_access_t;
+using shiny::plumbing::cpu_access_t;
+
+vertex_buffer_t::vertex_buffer_t(gpu_access_t gpua, cpu_access_t cpua, bool shadow, unsigned int data_size)
+: vertex_buffer_t(gpua, cpua, shadow, data_size, nullptr)
 {
-	D3D11_USAGE buffer_usage;
-	switch (use_) {
-		case usage::general: buffer_usage = D3D11_USAGE_DEFAULT; break;
-		case usage::immutable: buffer_usage = D3D11_USAGE_IMMUTABLE; break;
-		case usage::updated_often: buffer_usage = D3D11_USAGE_DYNAMIC; break;
-		case usage::staging: buffer_usage = D3D11_USAGE_STAGING; break;
-	}
+}
 
-	D3D11_BUFFER_DESC buffer_desc { data_size_, buffer_usage, D3D11_BIND_VERTEX_BUFFER, 0, 0, 0 };
-
-	detail::d3d_device_->CreateBuffer(&buffer_desc, NULL, &d3d_buffer_);
+vertex_buffer_t::vertex_buffer_t(gpu_access_t gpua, cpu_access_t cpua, bool shadow, unsigned int data_size, void* data)
+: d3d_buffer_(), gpu_access_(gpua), cpu_access_(cpua), data_size_(data_size), shadowing_(shadow), locked_()
+{
+	voodoo::create_buffer(&d3d_buffer_, gpu_access_, cpu_access_, data_size, data);
 	
 	if (shadowing_) {
-		data_.resize(data_size_);
+		ATMA_ASSERT(data);
+		data_.assign(reinterpret_cast<char*>(data), reinterpret_cast<char*>(data) + data_size_);
 	}
 }
 
-shiny::plumbing::vertex_buffer_t::~vertex_buffer_t()
+vertex_buffer_t::~vertex_buffer_t()
 {
-	// busy-wait because we might still be uploading in the prime thread
-	while (locked_.exchange(true))
-		;
-
 	if (d3d_buffer_) {
 		d3d_buffer_->Release();
 	}
 }
 
-auto shiny::plumbing::vertex_buffer_t::reload_from_shadow_buffer() -> void
+auto vertex_buffer_t::is_shadowing() const -> bool
 {
-	ATMA_ASSERT(shadowing_);
+	return shadowing_;
+}
 
+auto vertex_buffer_t::reload_from_shadow_buffer() -> void
+{
+	ATMA_ASSERT(!locked_.load());
+	ATMA_ASSERT(shadowing_);
+	
 	auto L = lock<char>(lock_type_t::write_discard);
 	std::copy_n(&data_.front(), data_size_, L.begin());
 }
 
-auto shiny::plumbing::vertex_buffer_t::release_shadow_buffer() -> void
+auto vertex_buffer_t::release_shadow_buffer() -> void
 {
+	ATMA_ASSERT(!locked_.load());
 	ATMA_ASSERT(shadowing_);
-
+	
 	data_.clear();
 	data_.shrink_to_fit();
 	shadowing_ = false;
 }
 
-auto shiny::plumbing::vertex_buffer_t::aquire_shadow_buffer(bool pull_from_hardware) -> void
+auto vertex_buffer_t::aquire_shadow_buffer(bool pull_from_hardware) -> void
 {
+	ATMA_ASSERT(!locked_.load());
 	ATMA_ASSERT(!shadowing_);
 	
 	data_.resize(data_size_);
@@ -61,3 +65,23 @@ auto shiny::plumbing::vertex_buffer_t::aquire_shadow_buffer(bool pull_from_hardw
 
 	shadowing_ = true;
 }
+
+auto vertex_buffer_t::rebase_from_buffer(vertex_buffer_t::data_t&& buffer) -> void
+{
+	ATMA_ASSERT(!locked_.load());
+	ATMA_ASSERT(data_size_ == buffer.size());
+
+	data_.swap(buffer);
+	reload_from_shadow_buffer();
+}
+
+auto vertex_buffer_t::rebase_from_buffer(vertex_buffer_t::data_t const& buffer) -> void
+{
+	ATMA_ASSERT(!locked_.load());
+	ATMA_ASSERT(data_size_ == buffer.size());
+
+	data_.assign(buffer.begin(), buffer.end());
+	reload_from_shadow_buffer();
+}
+
+

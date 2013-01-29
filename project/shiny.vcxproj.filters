@@ -18,12 +18,15 @@
     <Filter Include="include\plumbing\commands">
       <UniqueIdentifier>{1f963c8b-7f03-478c-8f1f-2f6231f62a7f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\voodoo">
+      <UniqueIdentifier>{dafada6f-7bd4-4d86-b003-4aa311689b36}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\voodoo">
+      <UniqueIdentifier>{51726eb3-2f88-4c7a-81e4-f960ee2f8985}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\plumbing\vertex_buffer.cpp">
-      <Filter>source\plumbing</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\plumbing\device.cpp">
       <Filter>source\plumbing</Filter>
     </ClCompile>
     <ClCompile Include="..\source\main.cpp">
@@ -35,6 +38,12 @@
     <ClCompile Include="..\source\plumbing\prime_thread.cpp">
       <Filter>source\plumbing</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\voodoo\device.cpp">
+      <Filter>source\voodoo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\voodoo\resources.cpp">
+      <Filter>source\voodoo</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\shiny\plumbing\hardware_buffer.hpp">
@@ -43,23 +52,29 @@
     <ClInclude Include="..\include\shiny\plumbing\vertex_buffer.hpp">
       <Filter>include\plumbing</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\shiny\plumbing\device.hpp">
-      <Filter>include\plumbing</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\shiny\plumbing\lock.hpp">
       <Filter>include\plumbing</Filter>
     </ClInclude>
     <ClInclude Include="..\include\shiny\scoped_runtime.hpp">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\shiny\plumbing\command.hpp">
-      <Filter>include\plumbing</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\shiny\plumbing\prime_thread.hpp">
       <Filter>include\plumbing</Filter>
     </ClInclude>
     <ClInclude Include="..\include\shiny\plumbing\commands\map_unmap_copy.hpp">
       <Filter>include\plumbing\commands</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\shiny\voodoo\scoped_command_batch.hpp">
+      <Filter>include\voodoo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\shiny\voodoo\command.hpp">
+      <Filter>include\voodoo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\shiny\voodoo\device.hpp">
+      <Filter>include\voodoo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\shiny\voodoo\resources.hpp">
+      <Filter>include\voodoo</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

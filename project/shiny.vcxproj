@@ -81,20 +81,23 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\source\main.cpp" />
-    <ClCompile Include="..\source\plumbing\device.cpp" />
     <ClCompile Include="..\source\plumbing\prime_thread.cpp" />
     <ClCompile Include="..\source\plumbing\vertex_buffer.cpp" />
     <ClCompile Include="..\source\scoped_runtime.cpp" />
+    <ClCompile Include="..\source\voodoo\device.cpp" />
+    <ClCompile Include="..\source\voodoo\resources.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\include\shiny\plumbing\command.hpp" />
     <ClInclude Include="..\include\shiny\plumbing\commands\map_unmap_copy.hpp" />
-    <ClInclude Include="..\include\shiny\plumbing\device.hpp" />
     <ClInclude Include="..\include\shiny\plumbing\hardware_buffer.hpp" />
     <ClInclude Include="..\include\shiny\plumbing\lock.hpp" />
     <ClInclude Include="..\include\shiny\plumbing\prime_thread.hpp" />
     <ClInclude Include="..\include\shiny\plumbing\vertex_buffer.hpp" />
     <ClInclude Include="..\include\shiny\scoped_runtime.hpp" />
+    <ClInclude Include="..\include\shiny\voodoo\command.hpp" />
+    <ClInclude Include="..\include\shiny\voodoo\device.hpp" />
+    <ClInclude Include="..\include\shiny\voodoo\resources.hpp" />
+    <ClInclude Include="..\include\shiny\voodoo\scoped_command_batch.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

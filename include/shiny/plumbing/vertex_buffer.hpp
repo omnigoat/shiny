@@ -7,6 +7,8 @@
 //======================================================================
 #include <atma/assert.hpp>
 //======================================================================
+#include <shiny/voodoo/resources.hpp>
+//======================================================================
 #include <shiny/plumbing/lock.hpp>
 #include <shiny/plumbing/prime_thread.hpp>
 #include <shiny/plumbing/commands/map_unmap_copy.hpp>
@@ -15,51 +17,42 @@ namespace shiny {
 namespace plumbing {
 //======================================================================
 	
-	inline auto block_until_commands_execute() -> void
-	{
-		std::mutex m;
-		std::condition_variable c;
-		bool good = false;
-		command_ptr cc = make_command<wakeup_command_t>(good, c);
-		prime_thread::submit_command(cc);
-		std::unique_lock<std::mutex> UL(m);
-		while (!good)
-			c.wait(UL);
-		UL.unlock();
-	}
+	using voodoo::gpu_access_t;
+	using voodoo::cpu_access_t;
 
 	//======================================================================
 	// vertex_buffer_t
 	//======================================================================
 	struct vertex_buffer_t
 	{
-		enum class usage {
-			general,
-			updated_often,
-			immutable,
-			staging
-		};
-		
-		vertex_buffer_t(usage use, unsigned int data_size, bool shadow);
+		typedef std::vector<char> data_t;
+
+		vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, unsigned int data_size);
+		vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, unsigned int data_size, void* data);
+		vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, data_t const& data);
+		vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, data_t&& data);
 		~vertex_buffer_t();
 
 		template <typename T> auto lock(lock_type_t) -> lock_t<vertex_buffer_t, T>;
 		template <typename T> auto lock(lock_type_t) const -> lock_t<vertex_buffer_t, T const>;
 
+		auto is_shadowing() const -> bool;
 		auto reload_from_shadow_buffer() -> void;
 		auto release_shadow_buffer() -> void;
 		auto aquire_shadow_buffer(bool pull_from_hardware = true) -> void;
+		auto rebase_from_buffer(data_t&&) -> void;
+		auto rebase_from_buffer(data_t const&) -> void;
 
 	private:
 		ID3D11Buffer* d3d_buffer_;
-		usage use_;
-		std::vector<char> data_;
+		gpu_access_t gpu_access_;
+		cpu_access_t cpu_access_;
 		unsigned int data_size_;
+		std::vector<char> data_;
 		bool shadowing_;
 		std::atomic_bool locked_;
 		
 		
-		friend struct context_t;
 		friend struct lock_t<vertex_buffer_t, char>;
 	};
 
@@ -103,6 +96,7 @@ namespace plumbing {
 	template <typename T>
 	auto vertex_buffer_t::lock(lock_type_t lock_type) -> lock_t<vertex_buffer_t, T>
 	{
+		ATMA_ASSERT(!locked_.load());
 		return lock_t<vertex_buffer_t, T>(this, lock_type);
 	}
 
@@ -118,9 +112,7 @@ namespace plumbing {
 	lock_t<vertex_buffer_t, T>::lock_t(vertex_buffer_t* owner, lock_type_t lock_type )
 	: owner_(owner), lock_type_(lock_type)
 	{
-		// busy-wait because we might still be uploading in the prime thread
-		while (owner_->locked_.exchange(true))
-			;
+		owner_->locked_.store(true);
 
 		if (!owner_->shadowing_) {
 			D3D11_MAP map_type;
@@ -131,28 +123,27 @@ namespace plumbing {
 				case lock_type_t::write_discard: map_type = D3D11_MAP_WRITE_DISCARD; break;
 			}
 
-			//detail::map_resource(owner_->d3d_buffer_, 0, map_type, 0, &d3d_resource_);
-			prime_thread::submit_command(make_command<commands::map>(owner_->d3d_buffer_, 0, map_type, 0, &d3d_resource_));
-			block_until_commands_execute();
+			voodoo::commands::map_resource(this, owner_->d3d_buffer_, 0, map_type, 0, &d3d_resource_);
 		}
 	}
 
 	template <typename T>
 	lock_t<vertex_buffer_t, T>::~lock_t()
 	{
-		command_queue_t CQ;
+		voodoo::scoped_blocking_queue_t Q;
 
 		// if we are shadowing, that means all data written was written into our shadow
 		// buffer. we will now update the d3d buffer from our shadow buffer.
 		if (owner_->shadowing_) {
-			CQ.push(make_command<commands::map>(owner_->d3d_buffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &d3d_resource_));
-			CQ.push(make_command<commands::copy>(&owner_->data_.front(), owner_->data_size_, reinterpret_cast<char*>(d3d_resource_.pData)));
+			voodoo::scoped_buffered_input_t sbi;
+
+			voodoo::map(owner_->d3d_buffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &d3d_resource_);
+			voodoo::execute([&owner_, &d3d_resource_] {
+				std::copy(&owner_->data_.front(), owner_->data_size_, reinterpret_cast<char*>(d3d_resource_.pData));
+			});
 		}
 		
-		CQ.push(make_command<commands::unmap>(owner_->d3d_buffer_, 0));
-		//CQ.push(make_command<commands::unlock>(owner_)) //new callback_command_t([&]{ owner_->locked_.store(false); }));
-
-		prime_thread::submit_command_queue(CQ);
+		voodoo::unmap(owner_->d3d_buffer_);
 	}
 
 	template <typename T>

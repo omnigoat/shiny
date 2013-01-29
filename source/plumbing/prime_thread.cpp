@@ -1,6 +1,5 @@
 #include <shiny/plumbing/prime_thread.hpp>
-#include <shiny/plumbing/device.hpp>
-#include <shiny/plumbing/command.hpp>
+#include <shiny/voodoo/command.hpp>
 
 //======================================================================
 // externs
