@@ -48,3 +48,17 @@ auto shiny::voodoo::create_buffer(ID3D11Buffer** buffer, gpu_access_t gpu_access
 }
 
 
+auto shiny::voodoo::map(ID3D11Resource* d3d_resource, D3D11_MAPPED_SUBRESOURCE* d3d_mapped_resource, D3D11_MAP map_type, unsigned int subresource, bool block) -> void
+{
+	if (map_type == D3D11_MAP_WRITE_DISCARD) {
+		detail::local_context()->Map(d3d_resource, subresource, map_type, 0, d3d_mapped_resource);
+	}
+	else {
+		detail::d3d_immediate_context_->Map(d3d_resource, subresource, map_type, D3D11_MAP_FLAG_DO_NOT_WAIT, d3d_mapped_resource);
+	}
+}
+
+
+
+
+
