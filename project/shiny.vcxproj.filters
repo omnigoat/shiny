@@ -76,5 +76,8 @@
     <ClInclude Include="..\include\shiny\voodoo\resources.hpp">
       <Filter>include\voodoo</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\shiny\voodoo\thread.hpp">
+      <Filter>include\voodoo</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

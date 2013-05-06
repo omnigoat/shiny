@@ -1,12 +1,15 @@
-#include <shiny/scoped_runtime.hpp>
-#include <shiny/plumbing/vertex_buffer.hpp>
-
+//#include <shiny/scoped_runtime.hpp>
+//#include <shiny/plumbing/vertex_buffer.hpp>
+#include <iostream>
+#include <shiny/voodoo/thread.hpp>
 int main()
 {
-	shiny::scoped_runtime_t SR;
+//	shiny::scoped_runtime_t SR;
 	
-	shiny::plumbing::vertex_buffer_t vb(shiny::plumbing::vertex_buffer_t::usage::general, 48, false);
+	//shiny::plumbing::vertex_buffer_t vb(shiny::plumbing::vertex_buffer_t::usage::general, 48, false);
 
-	auto k = vb.lock<char>(shiny::plumbing::lock_type_t::write);
-
+	//auto k = vb.lock<char>(shiny::plumbing::lock_type_t::write);
+	shiny::voodoo::spawn_thread([] {
+		std::cout << "bam!" << std::endl;
+	});
 }

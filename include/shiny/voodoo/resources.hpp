@@ -26,8 +26,8 @@ namespace voodoo {
 	};
 
 	auto create_buffer(ID3D11Buffer**, gpu_access_t, cpu_access_t, unsigned long data_size, void* data = nullptr) -> void;
-	auto map(ID3D11Buffer*, D3D11_MAPPED_SUBRESOURCE*, D3D11_MAP, unsigned int subresource, bool block) -> void;
-	//auto unmap(
+	auto map(ID3D11Resource*, D3D11_MAPPED_SUBRESOURCE*, D3D11_MAP, unsigned int subresource) -> void;
+	auto unmap(ID3D11Resource*, uint32_t subresource) -> void;
 
 //======================================================================
 } // namespace voodoo

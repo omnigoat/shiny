@@ -98,6 +98,7 @@
     <ClInclude Include="..\include\shiny\voodoo\device.hpp" />
     <ClInclude Include="..\include\shiny\voodoo\resources.hpp" />
     <ClInclude Include="..\include\shiny\voodoo\scoped_command_batch.hpp" />
+    <ClInclude Include="..\include\shiny\voodoo\thread.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

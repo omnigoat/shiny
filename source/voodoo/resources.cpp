@@ -5,6 +5,11 @@
 using shiny::voodoo::gpu_access_t;
 using shiny::voodoo::cpu_access_t;
 
+namespace {
+	uint32_t const ptr_size = sizeof(ID3D11Buffer*);
+	GUID const mapped_context_guid = { 0x01, 0x02, 0x03, "ctx_map" };
+}
+
 auto shiny::voodoo::create_buffer(ID3D11Buffer** buffer, gpu_access_t gpu_access, cpu_access_t cpu_access, unsigned long data_size, void* data) -> void
 {
 	// calcualte the buffer usage based off our gpu-access/cpu-access flags
@@ -48,13 +53,41 @@ auto shiny::voodoo::create_buffer(ID3D11Buffer** buffer, gpu_access_t gpu_access
 }
 
 
-auto shiny::voodoo::map(ID3D11Resource* d3d_resource, D3D11_MAPPED_SUBRESOURCE* d3d_mapped_resource, D3D11_MAP map_type, unsigned int subresource, bool block) -> void
+auto shiny::voodoo::map(ID3D11Resource* d3d_resource, D3D11_MAPPED_SUBRESOURCE* d3d_mapped_resource, D3D11_MAP map_type, unsigned int subresource) -> void
 {
-	if (map_type == D3D11_MAP_WRITE_DISCARD) {
-		detail::local_context()->Map(d3d_resource, subresource, map_type, 0, d3d_mapped_resource);
+	ID3D11DeviceContext* mapping_context = nullptr;
+
+
+	// write-discard can be dealt with on deferred contexts
+	if (map_type == D3D11_MAP_WRITE_DISCARD)
+	{
+		detail::d3d_local_context_->Map(d3d_resource, subresource, map_type, 0, d3d_mapped_resource);
+		mapping_context = detail::d3d_local_context_;
+	}
+	// otherwise, do it async on the immediate context
+	else
+	{
+		detail::scoped_IC_lock SL;
+		detail::d3d_immediate_context_->Map(d3d_resource, subresource, map_type, 0, d3d_mapped_resource);
+		mapping_context = detail::d3d_immediate_context_;
+	}
+
+	// store which context 
+	d3d_resource->SetPrivateData(mapped_context_guid, ptr_size, &detail::d3d_local_context_); 
+}
+
+auto shiny::voodoo::unmap(ID3D11Resource* d3d_resource, uint32_t subresource) -> void
+{
+	// use the device stored in private data to unmap the resource
+	auto size = ptr_size;
+	ID3D11DeviceContext* d3d_context = nullptr;
+	ATMA_ENSURE( d3d_resource->GetPrivateData(mapped_context_guid, &size, &d3d_context) == S_OK );
+	if (d3d_context == detail::d3d_immediate_context_) {
+		detail::scoped_IC_lock SL;
+		d3d_context->Unmap(d3d_resource, subresource);
 	}
 	else {
-		detail::d3d_immediate_context_->Map(d3d_resource, subresource, map_type, D3D11_MAP_FLAG_DO_NOT_WAIT, d3d_mapped_resource);
+		d3d_context->Unmap(d3d_resource, subresource);
 	}
 }
 
