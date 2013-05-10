@@ -130,18 +130,14 @@ namespace plumbing {
 	template <typename T>
 	lock_t<vertex_buffer_t, T>::~lock_t()
 	{
-		//voodoo::scoped_blocking_queue_t Q;
-
 		// if we are shadowing, that means all data written was written into our shadow
 		// buffer. we will now update the d3d buffer from our shadow buffer.
 		if (owner_->shadowing_) {
 			voodoo::map(owner_->d3d_buffer_, &d3d_resource_, D3D11_MAP_WRITE_DISCARD, 0);
-			voodoo::execute([&owner_, &d3d_resource_] {
-				std::copy(&owner_->data_.front(), owner_->data_size_, reinterpret_cast<char*>(d3d_resource_.pData));
-			});
+			memcpy(&owner_->data_.front(), d3d_resource_.pData, owner_->data_size_);
 		}
 		
-		voodoo::unmap(owner_->d3d_buffer_);
+		voodoo::unmap(owner_->d3d_buffer_, 0);
 	}
 
 	template <typename T>

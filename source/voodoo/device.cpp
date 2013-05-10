@@ -18,15 +18,19 @@ __declspec(thread) ID3D11DeviceContext* shiny::voodoo::detail::d3d_local_context
 //======================================================================
 // scoped_IC_lock
 //======================================================================
-using shiny::voodoo::detail::scoped_IC_lock;
-scoped_IC_lock::scoped_IC_lock()
+using shiny::voodoo::detail::scoped_async_immediate_context;
+scoped_async_immediate_context::scoped_async_immediate_context()
 {
 	immediate_context_mutex_.lock();
 }
 
-scoped_IC_lock::~scoped_IC_lock()
+scoped_async_immediate_context::~scoped_async_immediate_context()
 {
 	immediate_context_mutex_.unlock();
+}
+
+auto scoped_async_immediate_context::operator -> () const -> ID3D11DeviceContext* {
+	return d3d_immediate_context_;
 }
 
 //======================================================================

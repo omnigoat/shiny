@@ -20,9 +20,21 @@ namespace voodoo {
 		std::atomic_bool processed;
 	};
 
+	template <typename FN, typename... Args>
+	struct typed_command_t : command_t
+	{
+		auto operator ()(Args... args) -> void
+		{
+			fn_(args...);
+		}
+
+		FN fn_;
+	};
+
+
 	typedef atma::intrusive_ptr<command_t> command_ptr;
 
-	template <typename T, typename... Args>
+	template <typename FN, typename... Args>
 	command_ptr make_command(Args&&... args) {
 		return command_ptr(new T(std::forward<Args>(args)...));
 	}

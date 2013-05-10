@@ -27,11 +27,14 @@ namespace voodoo {
 		// this is the device context for this thread
 		extern __declspec(thread) ID3D11DeviceContext* d3d_local_context_;
 
+		inline auto is_prime_thread() -> bool { return d3d_local_context_ == d3d_immediate_context_; }
 
-		struct scoped_IC_lock
+		struct scoped_async_immediate_context
 		{
-			scoped_IC_lock();
-			~scoped_IC_lock();
+			scoped_async_immediate_context();
+			~scoped_async_immediate_context();
+
+			auto operator -> () const -> ID3D11DeviceContext*;
 		};
 	}
 
