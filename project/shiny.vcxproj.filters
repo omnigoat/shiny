@@ -44,6 +44,9 @@
     <ClCompile Include="..\source\voodoo\resources.cpp">
       <Filter>source\voodoo</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\voodoo\thread.cpp">
+      <Filter>source\voodoo</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\shiny\plumbing\hardware_buffer.hpp">

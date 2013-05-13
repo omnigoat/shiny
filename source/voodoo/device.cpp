@@ -4,10 +4,6 @@
 //======================================================================
 // externs
 //======================================================================
-std::thread shiny::voodoo::detail::prime_thread_;
-std::atomic_bool shiny::voodoo::detail::prime_thread_running_;
-
-
 ID3D11Device* shiny::voodoo::detail::d3d_device_ = nullptr;
 ID3D11DeviceContext* shiny::voodoo::detail::d3d_immediate_context_ = nullptr;
 std::mutex shiny::voodoo::detail::immediate_context_mutex_;
@@ -32,6 +28,7 @@ scoped_async_immediate_context::~scoped_async_immediate_context()
 auto scoped_async_immediate_context::operator -> () const -> ID3D11DeviceContext* {
 	return d3d_immediate_context_;
 }
+
 
 //======================================================================
 // device management
