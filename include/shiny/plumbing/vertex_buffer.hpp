@@ -40,8 +40,8 @@ namespace plumbing {
 		auto reload_from_shadow_buffer() -> void;
 		auto release_shadow_buffer() -> void;
 		auto aquire_shadow_buffer(bool pull_from_hardware = true) -> void;
-		auto rebase_from_buffer(data_t&&) -> void;
-		auto rebase_from_buffer(data_t const&) -> void;
+		auto rebase_from_buffer(data_t&&, bool upload_to_hardware) -> void;
+		auto rebase_from_buffer(data_t const&, bool upload_to_hardware) -> void;
 
 	private:
 		ID3D11Buffer* d3d_buffer_;
@@ -51,8 +51,7 @@ namespace plumbing {
 		std::vector<char> data_;
 		bool shadowing_;
 		std::atomic_bool locked_;
-		
-		
+
 		friend struct lock_t<vertex_buffer_t, char>;
 	};
 
@@ -96,7 +95,6 @@ namespace plumbing {
 	template <typename T>
 	auto vertex_buffer_t::lock(lock_type_t lock_type) -> lock_t<vertex_buffer_t, T>
 	{
-		ATMA_ASSERT(!locked_.load());
 		return lock_t<vertex_buffer_t, T>(this, lock_type);
 	}
 
@@ -112,9 +110,11 @@ namespace plumbing {
 	lock_t<vertex_buffer_t, T>::lock_t(vertex_buffer_t* owner, lock_type_t lock_type )
 	: owner_(owner), lock_type_(lock_type)
 	{
-		owner_->locked_.store(true);
+		ATMA_ASSERT(!owner_->locked_);
+		owner_->locked_ = true;
 
-		if (!owner_->shadowing_) {
+		if (!owner_->shadowing_)
+		{
 			D3D11_MAP map_type;
 			switch (lock_type_) {
 				case lock_type_t::read: map_type = D3D11_MAP_READ; break;
@@ -138,6 +138,8 @@ namespace plumbing {
 		}
 		
 		voodoo::unmap(owner_->d3d_buffer_, 0);
+
+		owner_->locked_ = false;
 	}
 
 	template <typename T>

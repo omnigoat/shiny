@@ -35,7 +35,7 @@ auto vertex_buffer_t::is_shadowing() const -> bool
 
 auto vertex_buffer_t::reload_from_shadow_buffer() -> void
 {
-	ATMA_ASSERT(!locked_.load());
+	ATMA_ASSERT(!locked_);
 	ATMA_ASSERT(shadowing_);
 	
 	auto L = lock<char>(lock_type_t::write_discard);
@@ -44,7 +44,7 @@ auto vertex_buffer_t::reload_from_shadow_buffer() -> void
 
 auto vertex_buffer_t::release_shadow_buffer() -> void
 {
-	ATMA_ASSERT(!locked_.load());
+	ATMA_ASSERT(!locked_);
 	ATMA_ASSERT(shadowing_);
 	
 	data_.clear();
@@ -54,7 +54,7 @@ auto vertex_buffer_t::release_shadow_buffer() -> void
 
 auto vertex_buffer_t::aquire_shadow_buffer(bool pull_from_hardware) -> void
 {
-	ATMA_ASSERT(!locked_.load());
+	ATMA_ASSERT(!locked_);
 	ATMA_ASSERT(!shadowing_);
 	
 	data_.resize(data_size_);
@@ -66,22 +66,30 @@ auto vertex_buffer_t::aquire_shadow_buffer(bool pull_from_hardware) -> void
 	shadowing_ = true;
 }
 
-auto vertex_buffer_t::rebase_from_buffer(vertex_buffer_t::data_t&& buffer) -> void
+auto vertex_buffer_t::rebase_from_buffer(vertex_buffer_t::data_t&& buffer, bool upload_to_hardware) -> void
 {
-	ATMA_ASSERT(!locked_.load());
+	ATMA_ASSERT(!locked_);
 	ATMA_ASSERT(data_size_ == buffer.size());
 
 	data_.swap(buffer);
-	reload_from_shadow_buffer();
+	if (upload_to_hardware)
+		reload_from_shadow_buffer();
 }
 
-auto vertex_buffer_t::rebase_from_buffer(vertex_buffer_t::data_t const& buffer) -> void
+auto vertex_buffer_t::rebase_from_buffer(vertex_buffer_t::data_t const& buffer, bool upload_to_hardware) -> void
 {
-	ATMA_ASSERT(!locked_.load());
+	ATMA_ASSERT(!locked_);
 	ATMA_ASSERT(data_size_ == buffer.size());
 
-	data_.assign(buffer.begin(), buffer.end());
-	reload_from_shadow_buffer();
+	if (data_.size() != buffer.size()) {
+		data_.resize(buffer.size());
+		data_.shrink_to_fit();
+	}
+
+	std::copy(buffer.begin(), buffer.end(), data_.begin());
+
+	if (upload_to_hardware)
+		reload_from_shadow_buffer();
 }
 
 
