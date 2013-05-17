@@ -37,14 +37,12 @@ auto shiny::voodoo::setup_d3d_device() -> void
 {
 	ATMA_ASSERT(detail::d3d_device_ == nullptr);
 
-	HRESULT hr = D3D11CreateDevice(
+	ATMA_ENSURE_IS(S_OK, D3D11CreateDevice(
 		NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, 0, NULL, 0, D3D11_SDK_VERSION,
 		&detail::d3d_device_,
 		NULL,
 		&detail::d3d_immediate_context_
-	);
-
-	ATMA_ASSERT(hr == S_OK);
+	));
 
 	detail::d3d_local_context_ = detail::d3d_immediate_context_;
 }
