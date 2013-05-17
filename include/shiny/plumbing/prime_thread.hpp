@@ -31,11 +31,8 @@ namespace plumbing {
 namespace prime_thread {
 //======================================================================
 	
-	auto spawn() -> void;
-	auto join() -> void;
-
-	auto submit_command(command_ptr const&) -> void;
-	auto submit_command_queue(command_queue_t&) -> void;
+	//auto submit_command(command_ptr const&) -> void;
+	//auto submit_command_queue(command_queue_t&) -> void;
 	
 //======================================================================
 } // namespace prime_thread

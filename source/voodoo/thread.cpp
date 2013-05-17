@@ -1,5 +1,6 @@
 #include <shiny/voodoo/thread.hpp>
 #include <shiny/voodoo/device.hpp>
+#include <shiny/voodoo/command.hpp>
 
 //======================================================================
 // externs
@@ -20,17 +21,17 @@ auto shiny::voodoo::prime_thread::spawn() -> void
 	ATMA_ASSERT(prime_thread_.get_id() == std::thread::id());
 	prime_thread_running_ = true;
 
-	#if 0
 	prime_thread_ = std::thread([]{
 		while (prime_thread_running_.load()) {
-			command_ptr x(nullptr);
+		#if 0
+			command_ptr x;
 			while (command_queue_.pop(x)) {
 				(**x)();
 				x->processed.store(true);
 			}
+		#endif
 		}
 	});
-	#endif
 }
 
 auto shiny::voodoo::prime_thread::join() -> void

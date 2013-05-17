@@ -1,5 +1,5 @@
-#ifndef SHINY_VOODOO_THREADS_HPP
-#define SHINY_VOODOO_THREADS_HPP
+#ifndef SHINY_VOODOO_THREAD_HPP
+#define SHINY_VOODOO_THREAD_HPP
 //======================================================================
 #include <thread>
 #include <atomic>

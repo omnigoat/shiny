@@ -14,29 +14,52 @@ namespace voodoo {
 	{
 		command_t() {}
 		virtual ~command_t() {}
-		
 		virtual auto operator ()() -> void = 0;
-
-		std::atomic_bool processed;
 	};
-
-	template <typename FN, typename... Args>
-	struct typed_command_t : command_t
-	{
-		auto operator ()(Args... args) -> void
-		{
-			fn_(args...);
-		}
-
-		FN fn_;
-	};
-
 
 	typedef atma::intrusive_ptr<command_t> command_ptr;
 
-	template <typename FN, typename... Args>
-	command_ptr make_command(Args&&... args) {
-		return command_ptr(new T(std::forward<Args>(args)...));
+
+
+	template <typename R, typename... Args>
+	struct fnptr_command_t : command_t
+	{
+		fnptr_command_t(R(*fn)(Args...))
+		 : fn_(fn)
+		  {}
+
+		auto operator ()() -> void {
+			(*fn_)();
+		}
+
+		R (*fn_)(Args...);
+	};
+
+	template <typename R, typename C, typename... Args>
+	struct memfnptr_command_t : command_t
+	{
+		memfnptr_command_t(R(C::*fn)(Args...), C& c)
+		 : fn_(fn), c_(c)
+		  {}
+
+		auto operator ()() -> void {
+			(c_.*fn_)();
+		}
+
+		R (C::*fn_)(Args...);
+		C& c_;
+	};
+
+	
+
+	template <typename R, typename... Args>
+	command_ptr make_command(R (*fn)(Args...)) {
+		return command_ptr(new fnptr_command_t<R, Args...>(fn));
+	}
+
+	template <typename R, typename C, typename... Args>
+	command_ptr make_command(R (C::*fn)(Args...), C& c) {
+		return command_ptr(new memfnptr_command_t<R, C, Args...>(fn, c));
 	}
 
 //======================================================================

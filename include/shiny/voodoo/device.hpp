@@ -14,7 +14,8 @@ namespace voodoo {
 	//======================================================================
 	// the devil lies here.
 	//======================================================================
-	namespace detail {
+	namespace detail
+	{
 		// there is one global d3d device, and one immeidate context
 		extern ID3D11Device* d3d_device_;
 		extern ID3D11DeviceContext* d3d_immediate_context_;
