@@ -26,10 +26,10 @@ namespace voodoo {
 
 		inline auto is_prime_thread() -> bool { return d3d_local_context_ == d3d_immediate_context_; }
 
-		struct scoped_async_immediate_context
+		struct scoped_async_immediate_context_t
 		{
-			scoped_async_immediate_context();
-			~scoped_async_immediate_context();
+			scoped_async_immediate_context_t();
+			~scoped_async_immediate_context_t();
 
 			auto operator -> () const -> ID3D11DeviceContext*;
 		};

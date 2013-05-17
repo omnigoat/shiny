@@ -27,10 +27,5 @@ int main()
 	shiny::voodoo::command_ptr C2 = shiny::voodoo::make_command(&zomg::operator(), zomg());
 	C2->operator ()();
 	#endif
-	//shiny::plumbing::vertex_buffer_t vb(shiny::plumbing::vertex_buffer_t::usage::general, 48, false);
-
-	//auto k = vb.lock<char>(shiny::plumbing::lock_type_t::write);
-	/*shiny::voodoo::spawn_thread([] {
-		std::cout << "bam!" << std::endl;
-	});*/
+	
 }
