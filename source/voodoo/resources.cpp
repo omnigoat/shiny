@@ -79,7 +79,8 @@ auto shiny::voodoo::unmap(ID3D11Resource* d3d_resource, uint32_t subresource) ->
 	// use the device stored in private data to unmap the resource
 	auto size = ptr_size;
 	ID3D11DeviceContext* d3d_context = nullptr;
-	ATMA_ENSURE( d3d_resource->GetPrivateData(mapped_context_guid, &size, &d3d_context) == S_OK );
+	ATMA_ENSURE_IS(S_OK, d3d_resource->GetPrivateData(mapped_context_guid, &size, &d3d_context));
+
 	if (d3d_context == detail::d3d_immediate_context_) {
 		detail::scoped_async_immediate_context_t IC;
 		IC->Unmap(d3d_resource, subresource);
