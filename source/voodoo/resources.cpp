@@ -80,6 +80,7 @@ auto shiny::voodoo::unmap(ID3D11Resource* d3d_resource, uint32_t subresource) ->
 	auto size = ptr_size;
 	ID3D11DeviceContext* d3d_context = nullptr;
 	ATMA_ENSURE_IS(S_OK, d3d_resource->GetPrivateData(mapped_context_guid, &size, &d3d_context));
+	ATMA_ASSERT(size == ptr_size);
 
 	if (d3d_context == detail::d3d_immediate_context_) {
 		detail::scoped_async_immediate_context_t IC;
