@@ -40,8 +40,8 @@ namespace plumbing {
 		auto reload_from_shadow_buffer() -> void;
 		auto release_shadow_buffer() -> void;
 		auto aquire_shadow_buffer(bool pull_from_hardware = true) -> void;
-		auto rebase_from_buffer(data_t&&, bool upload_to_hardware) -> void;
-		auto rebase_from_buffer(data_t const&, bool upload_to_hardware) -> void;
+		auto rebase_from_buffer(data_t&&, bool upload_to_hardware = true) -> void;
+		auto rebase_from_buffer(data_t const&, bool upload_to_hardware = true) -> void;
 
 	private:
 		ID3D11Buffer* d3d_buffer_;
@@ -111,15 +111,21 @@ namespace plumbing {
 	: owner_(owner), lock_type_(lock_type)
 	{
 		ATMA_ASSERT(!owner_->locked_);
-		owner_->locked_ = true;
+		ATMA_ASSERT_SWITCH(lock_type_,
+			(lock_type_t::read,          ATMA_ASSERT_ONE_OF(owner_->gpu_access_, gpu_access_t::read, gpu_access_t::read_write))
+			(lock_type_t::write,
+			 lock_type_t::write_discard, ATMA_ASSERT_ONE_OF(owner_->gpu_access_, gpu_access_t::write, gpu_access_t::read_write))
+			(lock_type_t::read_write,    ATMA_ASSERT(owner_->gpu_access_ == gpu_access_t::read_write))
+		);
 
+		owner_->locked_ = true;
 		if (!owner_->shadowing_)
 		{
 			D3D11_MAP map_type;
 			switch (lock_type_) {
 				case lock_type_t::read: map_type = D3D11_MAP_READ; break;
-				case lock_type_t::write: map_type = D3D11_MAP_WRITE; break;
 				case lock_type_t::read_write: map_type = D3D11_MAP_READ_WRITE; break;
+				case lock_type_t::write: map_type = D3D11_MAP_WRITE; break;
 				case lock_type_t::write_discard: map_type = D3D11_MAP_WRITE_DISCARD; break;
 			}
 
@@ -158,8 +164,8 @@ namespace plumbing {
 	template <typename T>
 	auto lock_t<vertex_buffer_t, T>::end() -> T* {
 		return owner_->shadowing_
-		  ? &owner_->data_.front() + data_size_
-		  : reinterpret_cast<T*>(d3d_resource_.pData) + data_size_
+		  ? &owner_->data_.front() + owner_->data_size_
+		  : reinterpret_cast<T*>(d3d_resource_.pData) + owner_->data_size_
 		  ;
 	}
 

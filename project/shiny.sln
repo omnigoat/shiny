@@ -2,6 +2,9 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "shiny", "shiny.vcxproj", "{8E03B685-D9CE-45BF-8597-E7EF57E62B8D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{3301E1FA-9F23-43C6-A5E1-183204867D44} = {3301E1FA-9F23-43C6-A5E1-183204867D44}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "atma", "..\..\atma\project\atma.vcxproj", "{3301E1FA-9F23-43C6-A5E1-183204867D44}"
 EndProject

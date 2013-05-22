@@ -59,9 +59,10 @@ auto vertex_buffer_t::aquire_shadow_buffer(bool pull_from_hardware) -> void
 	
 	data_.resize(data_size_);
 
-	/*if (pull_from_hardware) {
-		ATMA_ASSERT(use_ == usage::general || use_ == usage::updated_often);
-	}*/
+	if (pull_from_hardware) {
+		auto L = lock<char>(lock_type_t::read);
+		std::copy(L.begin(), L.end(), data_.begin());
+	}
 
 	shadowing_ = true;
 }
@@ -80,11 +81,6 @@ auto vertex_buffer_t::rebase_from_buffer(vertex_buffer_t::data_t const& buffer, 
 {
 	ATMA_ASSERT(!locked_);
 	ATMA_ASSERT(data_size_ == buffer.size());
-
-	if (data_.size() != buffer.size()) {
-		data_.resize(buffer.size());
-		data_.shrink_to_fit();
-	}
 
 	std::copy(buffer.begin(), buffer.end(), data_.begin());
 
