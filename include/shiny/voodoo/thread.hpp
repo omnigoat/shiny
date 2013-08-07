@@ -9,6 +9,7 @@
 #include <atma/assert.hpp>
 #include <atma/lockfree/queue.hpp>
 #include <shiny/voodoo/device.hpp>
+#include <shiny/voodoo/command.hpp>
 //======================================================================
 namespace shiny {
 namespace voodoo {
@@ -90,8 +91,42 @@ namespace voodoo {
 namespace prime_thread {
 //======================================================================
 	
+	namespace detail
+	{
+		typedef atma::lockfree::queue_t<shiny::voodoo::command_ptr> command_queue_t;
+		extern command_queue_t command_queue;
+
+		inline auto enqueue_blocking_impl(command_queue_t::batch_t& block, command_ptr const& command) -> void
+		{
+			block.push(command);
+		}
+
+		template <typename... Commands>
+		auto enqueue_blocking_impl(command_queue_t::batch_t& block, command_ptr const& command, Commands... commands) -> void
+		{
+			block.push(command);
+			enqueue_blocking_impl(block, commands...);
+		}
+	}
+
 	auto spawn() -> void;
 	auto join() -> void;
+
+
+	// enqueues a list of commands, and then blocks until their completion
+	template <typename... Commands>
+	inline auto enqueue_blocking(Commands... commands) -> void
+	{
+		detail::command_queue_t::batch_t block;
+		detail::enqueue_blocking_impl(block, commands...);
+		std::atomic_bool blocked{true};
+		block.push(make_command([&blocked] {blocked = false;}));
+
+		detail::command_queue.push(block);
+
+		while (blocked)
+			;
+	}
 
 //======================================================================
 } // namespace prime_thread

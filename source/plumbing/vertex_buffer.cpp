@@ -1,17 +1,23 @@
 #include <shiny/plumbing/vertex_buffer.hpp>
+#include <shiny/voodoo/thread.hpp>
 #include <atma/assert.hpp>
 
 using shiny::plumbing::vertex_buffer_t;
+using shiny::plumbing::locked_vertex_buffer_t;
+using shiny::plumbing::lock_type_t;
 using shiny::plumbing::gpu_access_t;
 using shiny::plumbing::cpu_access_t;
 
+//======================================================================
+// vertex_buffer_t
+//======================================================================
 vertex_buffer_t::vertex_buffer_t(gpu_access_t gpua, cpu_access_t cpua, bool shadow, unsigned int data_size)
 : vertex_buffer_t(gpua, cpua, shadow, data_size, nullptr)
 {
 }
 
 vertex_buffer_t::vertex_buffer_t(gpu_access_t gpua, cpu_access_t cpua, bool shadow, unsigned int data_size, void* data)
-: d3d_buffer_(), gpu_access_(gpua), cpu_access_(cpua), data_size_(data_size), shadowing_(shadow), locked_()
+: d3d_buffer_(), gpu_access_(gpua), cpu_access_(cpua), data_size_(data_size), shadowing_(shadow)
 {
 	voodoo::create_buffer(&d3d_buffer_, gpu_access_, cpu_access_, data_size, data);
 	
@@ -35,16 +41,14 @@ auto vertex_buffer_t::is_shadowing() const -> bool
 
 auto vertex_buffer_t::reload_from_shadow_buffer() -> void
 {
-	ATMA_ASSERT(!locked_);
 	ATMA_ASSERT(shadowing_);
 	
-	auto L = lock<char>(lock_type_t::write_discard);
-	std::copy_n(&data_.front(), data_size_, L.begin());
+	locked_vertex_buffer_t L(*this, lock_type_t::write_discard);
+	std::copy_n(&data_.front(), data_size_, L.begin<char>());
 }
 
 auto vertex_buffer_t::release_shadow_buffer() -> void
 {
-	ATMA_ASSERT(!locked_);
 	ATMA_ASSERT(shadowing_);
 	
 	data_.clear();
@@ -54,22 +58,13 @@ auto vertex_buffer_t::release_shadow_buffer() -> void
 
 auto vertex_buffer_t::aquire_shadow_buffer(bool pull_from_hardware) -> void
 {
-	ATMA_ASSERT(!locked_);
 	ATMA_ASSERT(!shadowing_);
-	
-	data_.resize(data_size_);
-
-	if (pull_from_hardware) {
-		auto L = lock<char>(lock_type_t::read);
-		std::copy(L.begin(), L.end(), data_.begin());
-	}
-
+	ATMA_ASSERT(false);
 	shadowing_ = true;
 }
 
 auto vertex_buffer_t::rebase_from_buffer(vertex_buffer_t::data_t&& buffer, bool upload_to_hardware) -> void
 {
-	ATMA_ASSERT(!locked_);
 	ATMA_ASSERT(data_size_ == buffer.size());
 
 	data_.swap(buffer);
@@ -79,7 +74,6 @@ auto vertex_buffer_t::rebase_from_buffer(vertex_buffer_t::data_t&& buffer, bool 
 
 auto vertex_buffer_t::rebase_from_buffer(vertex_buffer_t::data_t const& buffer, bool upload_to_hardware) -> void
 {
-	ATMA_ASSERT(!locked_);
 	ATMA_ASSERT(data_size_ == buffer.size());
 
 	std::copy(buffer.begin(), buffer.end(), data_.begin());
@@ -88,4 +82,53 @@ auto vertex_buffer_t::rebase_from_buffer(vertex_buffer_t::data_t const& buffer, 
 		reload_from_shadow_buffer();
 }
 
+
+
+
+//======================================================================
+// locked_vertex_buffer_t
+//======================================================================
+locked_vertex_buffer_t::locked_vertex_buffer_t(vertex_buffer_t& vertex_buffer, lock_type_t lock_type)
+	: owner_(&vertex_buffer), lock_type_(lock_type), guard_(owner_->mutex_)
+{
+	ATMA_ASSERT_SWITCH(lock_type_,
+		(lock_type_t::read,          ATMA_ASSERT_ONE_OF(owner_->cpu_access_, cpu_access_t::read, cpu_access_t::read_write))
+		(lock_type_t::write,
+		 lock_type_t::write_discard, ATMA_ASSERT_ONE_OF(owner_->cpu_access_, cpu_access_t::write, cpu_access_t::read_write))
+		(lock_type_t::read_write,    ATMA_ASSERT(owner_->cpu_access_ == cpu_access_t::read_write))
+	);
+
+	
+	// if we're not shadowing, we ask the prime thread to map our buffer, and
+	// then we block until it's done so.
+	if (!owner_->shadowing_)
+	{
+		switch (lock_type_)
+		{
+			// write-discard can be performed on this thread
+			case lock_type_t::write_discard: //map_type = D3D11_MAP_WRITE_DISCARD; break;
+				voodoo::map(owner_->d3d_buffer_, &d3d_resource_, D3D11_MAP_WRITE_DISCARD, 0);
+				break;
+
+			// other types must be performed on the prime-thread
+			default:
+			{
+				D3D11_MAP map_type
+					= (lock_type_ == lock_type_t::read) ? D3D11_MAP_READ
+					: (lock_type_ == lock_type_t::read_write) ? D3D11_MAP_READ_WRITE
+					: D3D11_MAP_WRITE
+					;
+
+				voodoo::prime_thread::enqueue_blocking(
+					voodoo::make_command(&voodoo::map, (ID3D11Resource*)owner_->d3d_buffer_, &d3d_resource_, map_type, 0U)
+				);
+			}
+		}
+	}
+}
+
+locked_vertex_buffer_t::~locked_vertex_buffer_t()
+{
+	
+}
 

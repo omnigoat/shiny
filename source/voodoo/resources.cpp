@@ -10,7 +10,7 @@ namespace {
 	GUID const mapped_context_guid = { 0x01, 0x02, 0x03, "ctx_map" };
 }
 
-auto shiny::voodoo::create_buffer(ID3D11Buffer** buffer, gpu_access_t gpu_access, cpu_access_t cpu_access, unsigned long data_size, void* data) -> void
+auto shiny::voodoo::create_buffer(ID3D11Buffer** buffer, gpu_access_t gpu_access, cpu_access_t cpu_access, uint32_t data_size, void* data) -> void
 {
 	// calcualte the buffer usage based off our gpu-access/cpu-access flags
 	D3D11_USAGE buffer_usage = D3D11_USAGE_DEFAULT;
@@ -55,9 +55,13 @@ auto shiny::voodoo::create_buffer(ID3D11Buffer** buffer, gpu_access_t gpu_access
 
 auto shiny::voodoo::map(ID3D11Resource* d3d_resource, D3D11_MAPPED_SUBRESOURCE* d3d_mapped_resource, D3D11_MAP map_type, uint32_t subresource) -> void
 {
-	ID3D11DeviceContext* mapping_context = nullptr;
+	detail::d3d_local_context_->Map(d3d_resource, subresource, map_type, 0, d3d_mapped_resource);
+	ID3D11DeviceContext* mapping_context = detail::d3d_local_context_;
 
+	// store which context mapped the resource
+	d3d_resource->SetPrivateData(mapped_context_guid, ptr_size, &detail::d3d_local_context_); 
 
+	#if 0
 	// write-discard can be dealt with on deferred contexts
 	if (map_type == D3D11_MAP_WRITE_DISCARD && !detail::is_prime_thread()) {
 		detail::d3d_local_context_->Map(d3d_resource, subresource, map_type, 0, d3d_mapped_resource);
@@ -69,26 +73,21 @@ auto shiny::voodoo::map(ID3D11Resource* d3d_resource, D3D11_MAPPED_SUBRESOURCE* 
 		IC->Map(d3d_resource, subresource, map_type, 0, d3d_mapped_resource);
 		mapping_context = detail::d3d_immediate_context_;
 	}
+	#endif
 
-	// store which context 
-	d3d_resource->SetPrivateData(mapped_context_guid, ptr_size, &detail::d3d_local_context_); 
+	
 }
 
 auto shiny::voodoo::unmap(ID3D11Resource* d3d_resource, uint32_t subresource) -> void
 {
-	// use the device stored in private data to unmap the resource
+	// use the device stored in private data to assert it's the same thread
 	auto size = ptr_size;
 	ID3D11DeviceContext* d3d_context = nullptr;
 	ATMA_ENSURE_IS(S_OK, d3d_resource->GetPrivateData(mapped_context_guid, &size, &d3d_context));
 	ATMA_ASSERT(size == ptr_size);
+	ATMA_ASSERT(detail::d3d_local_context_ == d3d_context);
 
-	if (d3d_context == detail::d3d_immediate_context_) {
-		detail::scoped_async_immediate_context_t IC;
-		IC->Unmap(d3d_resource, subresource);
-	}
-	else {
-		d3d_context->Unmap(d3d_resource, subresource);
-	}
+	detail::d3d_local_context_->Unmap(d3d_resource, subresource);
 }
 
 

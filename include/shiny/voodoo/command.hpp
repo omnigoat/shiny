@@ -35,6 +35,27 @@ namespace voodoo {
 		R (*fn_)(Args...);
 	};
 
+	template <typename R, typename... Args>
+	struct bound_fnptr_command_t : command_t
+	{
+		bound_fnptr_command_t(R(*fn)(Args...), Args const&... args)
+		 : fn_(std::bind(fn, args...))
+		{
+		}
+
+		bound_fnptr_command_t(std::function<R()> const& fn)
+			: fn_(fn)
+		{
+		}
+
+		auto operator ()() -> void
+		{
+			fn_();
+		}
+
+		std::function< R() > fn_;
+	};
+
 	template <typename R, typename C, typename... Args>
 	struct memfnptr_command_t : command_t
 	{
@@ -53,15 +74,29 @@ namespace voodoo {
 	
 
 	template <typename R, typename... Args>
-	command_ptr make_command(R (*fn)(Args...)) {
+	inline command_ptr make_command(R(*fn)(Args...))
+	{
 		return command_ptr(new fnptr_command_t<R, Args...>(fn));
 	}
 
-	template <typename R, typename C, typename... Args>
-	command_ptr make_command(R (C::*fn)(Args...), C& c) {
-		return command_ptr(new memfnptr_command_t<R, C, Args...>(fn, c));
+	template <typename R, typename... Args>
+	inline command_ptr make_command(R(*fn)(Args...), Args const&... args)
+	{
+		return command_ptr(new bound_fnptr_command_t<R, Args...>(fn, args...));
 	}
 
+	inline command_ptr make_command(std::function<void()> fn)
+	{
+		return command_ptr(new bound_fnptr_command_t<void>(fn));
+	}
+
+	
+	template <typename R, typename C, typename... Args>
+	inline command_ptr make_command(R(C::*fn)(Args...), C& c)
+	{
+		return command_ptr(new memfnptr_command_t<R, C, Args...>(fn, c));
+	}
+	
 //======================================================================
 } // namespace voodoo
 } // namespace shiny

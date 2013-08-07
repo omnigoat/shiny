@@ -2,12 +2,14 @@
 #include <shiny/voodoo/device.hpp>
 #include <shiny/voodoo/command.hpp>
 
+#include <atma/lockfree/queue.hpp>
+
 //======================================================================
 // externs
 //======================================================================
 std::thread shiny::voodoo::detail::prime_thread_;
 std::atomic_bool shiny::voodoo::detail::prime_thread_running_;
-
+shiny::voodoo::prime_thread::detail::command_queue_t shiny::voodoo::prime_thread::detail::command_queue;
 
 
 //======================================================================
@@ -15,31 +17,29 @@ std::atomic_bool shiny::voodoo::detail::prime_thread_running_;
 //======================================================================
 auto shiny::voodoo::prime_thread::spawn() -> void
 {
-	using detail::prime_thread_;
-	using detail::prime_thread_running_;
+	using voodoo::detail::prime_thread_;
+	using voodoo::detail::prime_thread_running_;
 
 	ATMA_ASSERT(prime_thread_.get_id() == std::thread::id());
 	prime_thread_running_ = true;
 
 	prime_thread_ = std::thread([]{
-		while (prime_thread_running_.load()) {
-		#if 0
+		while (prime_thread_running_) {
 			command_ptr x;
-			while (command_queue_.pop(x)) {
+			while (detail::command_queue.pop(x)) {
 				(**x)();
-				x->processed.store(true);
 			}
-		#endif
 		}
 	});
 }
 
 auto shiny::voodoo::prime_thread::join() -> void
 {
-	using detail::prime_thread_;
-	using detail::prime_thread_running_;
+	using voodoo::detail::prime_thread_;
+	using voodoo::detail::prime_thread_running_;
 
 	ATMA_ASSERT(prime_thread_.get_id() != std::thread::id());
 	prime_thread_running_.store(false);
 	prime_thread_.join();
 }
+
