@@ -29,8 +29,8 @@ int main()
 	shiny::plumbing::locked_vertex_buffer_t lvb(vb, shiny::plumbing::lock_type_t::write_discard);
 
 
-	auto k = []{std::cout << "hello" << std::endl;};
-	shiny::voodoo::command_ptr C = shiny::voodoo::make_command(&hello);
+	//auto k = []{std::cout << "hello" << std::endl;};
+	//shiny::voodoo::command_ptr C = shiny::voodoo::make_command(&hello);
 
 	#if 0
 

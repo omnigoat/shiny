@@ -27,7 +27,7 @@ auto shiny::voodoo::prime_thread::spawn() -> void
 		while (prime_thread_running_) {
 			command_ptr x;
 			while (detail::command_queue.pop(x)) {
-				(**x)();
+				(*x)();
 			}
 		}
 	});

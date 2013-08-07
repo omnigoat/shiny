@@ -59,23 +59,12 @@ auto shiny::voodoo::map(ID3D11Resource* d3d_resource, D3D11_MAPPED_SUBRESOURCE* 
 	ID3D11DeviceContext* mapping_context = detail::d3d_local_context_;
 
 	// store which context mapped the resource
-	d3d_resource->SetPrivateData(mapped_context_guid, ptr_size, &detail::d3d_local_context_); 
+	d3d_resource->SetPrivateData(mapped_context_guid, ptr_size, &detail::d3d_local_context_);
+}
 
-	#if 0
-	// write-discard can be dealt with on deferred contexts
-	if (map_type == D3D11_MAP_WRITE_DISCARD && !detail::is_prime_thread()) {
-		detail::d3d_local_context_->Map(d3d_resource, subresource, map_type, 0, d3d_mapped_resource);
-		mapping_context = detail::d3d_local_context_;
-	}
-	// otherwise, do it async on the immediate context
-	else {
-		detail::scoped_async_immediate_context_t IC;
-		IC->Map(d3d_resource, subresource, map_type, 0, d3d_mapped_resource);
-		mapping_context = detail::d3d_immediate_context_;
-	}
-	#endif
-
-	
+auto shiny::voodoo::map_vb(ID3D11Buffer* d3d_resource, D3D11_MAPPED_SUBRESOURCE* d3d_mapped_resource, D3D11_MAP map_type, uint32_t subresource) -> void
+{
+	map((ID3D11Resource*)d3d_resource, d3d_mapped_resource, map_type, subresource);
 }
 
 auto shiny::voodoo::unmap(ID3D11Resource* d3d_resource, uint32_t subresource) -> void

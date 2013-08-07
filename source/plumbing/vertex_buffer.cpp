@@ -1,5 +1,6 @@
 #include <shiny/plumbing/vertex_buffer.hpp>
 #include <shiny/voodoo/thread.hpp>
+#include <shiny/voodoo/command.hpp>
 #include <atma/assert.hpp>
 
 using shiny::plumbing::vertex_buffer_t;
@@ -83,8 +84,6 @@ auto vertex_buffer_t::rebase_from_buffer(vertex_buffer_t::data_t const& buffer, 
 }
 
 
-
-
 //======================================================================
 // locked_vertex_buffer_t
 //======================================================================
@@ -120,7 +119,7 @@ locked_vertex_buffer_t::locked_vertex_buffer_t(vertex_buffer_t& vertex_buffer, l
 					;
 
 				voodoo::prime_thread::enqueue_blocking(
-					voodoo::make_command(&voodoo::map, (ID3D11Resource*)owner_->d3d_buffer_, &d3d_resource_, map_type, 0U)
+					voodoo::make_command(&voodoo::map_vb, owner_->d3d_buffer_, &d3d_resource_, map_type, 0U)
 				);
 			}
 		}
@@ -129,6 +128,32 @@ locked_vertex_buffer_t::locked_vertex_buffer_t(vertex_buffer_t& vertex_buffer, l
 
 locked_vertex_buffer_t::~locked_vertex_buffer_t()
 {
-	
+	#if 0
+	voodoo::bound_fnptr_command_t
+		<void, ID3D11Buffer*, D3D11_MAPPED_SUBRESOURCE*, D3D11_MAP, uint32_t>
+		gkh(&voodoo::map_vb, owner_->d3d_buffer_, &d3d_resource_, D3D11_MAP_WRITE_DISCARD, 0U);
+
+	voodoo::bound_fnptr_command_t
+		<void*, void*, void const*, size_t>
+		gkh2(std::memcpy, (void*)&owner_->data_.front(), d3d_resource_.pData, owner_->data_size_);
+	#endif
+
+	voodoo::scoped_command_batch_t Q;
+
+	// if we are shadowing, that means all data written was written into our shadow
+	// buffer. we will now update the d3d buffer from our shadow buffer.
+	if (owner_->shadowing_) {
+		Q.push(&voodoo::map_vb, owner_->d3d_buffer_, &d3d_resource_, D3D11_MAP_WRITE_DISCARD, 0U)
+		 .push(std::memcpy, &owner_->data_.front(), d3d_resource_.pData, owner_->data_size_)
+		 ;
+
+		//voodoo::map(owner_->d3d_buffer_, &d3d_resource_, D3D11_MAP_WRITE_DISCARD, 0);
+		//memcpy(&owner_->data_.front(), d3d_resource_.pData, owner_->data_size_);
+	}
+
+
+	Q.push(voodoo::unmap, owner_->d3d_buffer_, 0)
+	 .block()
+	 ;
 }
 

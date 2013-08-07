@@ -128,8 +128,41 @@ namespace prime_thread {
 			;
 	}
 
+	
+
 //======================================================================
 } // namespace prime_thread
+//======================================================================
+
+	struct scoped_command_batch_t
+	{
+		template <typename R, typename... Params, typename... Args>
+		auto push(R(*fn)(Params...), Args&&... args) -> scoped_command_batch_t&
+		{
+			batch_.push(make_command(fn, std::forward<Args>(args)...));
+			return *this;
+		}
+
+		auto block() -> scoped_command_batch_t&
+		{
+			batch_.push(make_command([&] {blocked_ = false;}));
+			return *this;
+		}
+
+		~scoped_command_batch_t()
+		{
+			prime_thread::detail::command_queue.push(batch_);
+
+			while (blocked_)
+				;
+		}
+
+	private:
+		std::atomic_bool blocked_;
+		prime_thread::detail::command_queue_t::batch_t batch_;
+	};
+
+//======================================================================
 } // namespace voodoo
 } // namespace shiny
 //======================================================================

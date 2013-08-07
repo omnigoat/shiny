@@ -64,7 +64,8 @@ namespace plumbing {
 	struct locked_vertex_buffer_t
 	{
 		locked_vertex_buffer_t(vertex_buffer_t&, lock_type_t);
-		
+		~locked_vertex_buffer_t();
+
 		template <typename T>
 		auto begin() -> T* {
 			return owner_->shadowing_
