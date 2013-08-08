@@ -143,6 +143,13 @@ namespace prime_thread {
 			return *this;
 		}
 
+		template <typename FN>
+		auto push(FN && fn) -> scoped_command_batch_t&
+		{
+			batch_.push(make_command(fn));
+			return *this;
+		}
+
 		auto block() -> scoped_command_batch_t&
 		{
 			batch_.push(make_command([&] {blocked_ = false;}));

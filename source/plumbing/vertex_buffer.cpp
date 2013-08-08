@@ -143,12 +143,11 @@ locked_vertex_buffer_t::~locked_vertex_buffer_t()
 	// if we are shadowing, that means all data written was written into our shadow
 	// buffer. we will now update the d3d buffer from our shadow buffer.
 	if (owner_->shadowing_) {
-		Q.push(&voodoo::map_vb, owner_->d3d_buffer_, &d3d_resource_, D3D11_MAP_WRITE_DISCARD, 0U)
-		 .push(std::memcpy, &owner_->data_.front(), d3d_resource_.pData, owner_->data_size_)
+		Q.push(voodoo::map_vb, owner_->d3d_buffer_, &d3d_resource_, D3D11_MAP_WRITE_DISCARD, 0U)
+		 .push([&] {
+			std::memcpy(d3d_resource_.pData, &owner_->data_.front(), owner_->data_size_);
+		 })
 		 ;
-
-		//voodoo::map(owner_->d3d_buffer_, &d3d_resource_, D3D11_MAP_WRITE_DISCARD, 0);
-		//memcpy(&owner_->data_.front(), d3d_resource_.pData, owner_->data_size_);
 	}
 
 

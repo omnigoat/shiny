@@ -82,7 +82,7 @@ namespace voodoo {
 	}
 
 
-	struct command_t : atma::ref_counted
+	struct command_t // : atma::ref_counted
 	{
 		command_t() {}
 		virtual ~command_t() {}
@@ -148,6 +148,21 @@ namespace voodoo {
 		std::tuple<Params...> args_;
 	};
 
+	template <typename R>
+	struct function_command_t : command_t
+	{
+		function_command_t( std::function<R()> fn )
+		 : fn_(fn)
+		{
+		}
+
+		auto operator ()() -> void {
+			fn_();
+		}
+
+		std::function<R()> fn_;
+	};
+
 	
 	#if 0
 	template <typename R, typename... Args>
@@ -165,8 +180,7 @@ namespace voodoo {
 
 	inline command_ptr make_command(std::function<void()> fn)
 	{
-		//return command_ptr(new bound_fnptr_command_t<void>(fn));
-		return command_ptr();
+		return command_ptr(new function_command_t<void>(fn));
 	}
 
 	

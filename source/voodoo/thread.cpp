@@ -23,7 +23,12 @@ auto shiny::voodoo::prime_thread::spawn() -> void
 	ATMA_ASSERT(prime_thread_.get_id() == std::thread::id());
 	prime_thread_running_ = true;
 
-	prime_thread_ = std::thread([]{
+	setup_d3d_device();
+
+	prime_thread_ = std::thread([] {
+		// this thread is main thread
+		voodoo::detail::d3d_local_context_ = voodoo::detail::d3d_immediate_context_;
+
 		while (prime_thread_running_) {
 			command_ptr x;
 			while (detail::command_queue.pop(x)) {
@@ -41,5 +46,7 @@ auto shiny::voodoo::prime_thread::join() -> void
 	ATMA_ASSERT(prime_thread_.get_id() != std::thread::id());
 	prime_thread_running_.store(false);
 	prime_thread_.join();
+
+	teardown_d3d_device();
 }
 
