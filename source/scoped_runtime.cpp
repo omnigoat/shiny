@@ -3,21 +3,27 @@
 #include <shiny/voodoo/device.hpp>
 #include <shiny/voodoo/thread.hpp>
 //======================================================================
-namespace shiny {
-//======================================================================
+#include <algorithm>
+
+using shiny::scoped_runtime_t;
 
 scoped_runtime_t::scoped_runtime_t() {
-	//voodoo::setup_d3d_device();
 	voodoo::prime_thread::spawn();
-	//voodoo::detail::d3d_device_->CreateDeferredContext(0, &voodoo::detail::d3d_local_context_)
 }
 
 scoped_runtime_t::~scoped_runtime_t() {
+
+	std::for_each(threads_.begin(), threads_.end(), std::mem_fn(&std::thread::join));
+	
 	voodoo::prime_thread::join();
-	//voodoo::teardown_d3d_device();
 }
 
-//======================================================================
-} // namespace shiny
-//======================================================================
+auto scoped_runtime_t::add_thread(std::function<void()> fn) -> void
+{
+	threads_.push_back(std::thread(fn));
+}
 
+auto scoped_runtime_t::add_context_thread(std::function<void()> fn) -> void
+{
+	threads_.push_back(voodoo::spawn_context_thread(fn));
+}

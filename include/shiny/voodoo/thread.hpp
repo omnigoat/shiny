@@ -82,7 +82,7 @@ namespace voodoo {
 	#endif
 	
 	template <typename FN, typename... Args>
-	inline auto spawn_thread(FN fn, Args... args) -> std::thread
+	inline auto spawn_context_thread(FN fn, Args... args) -> std::thread
 	{
 		return std::thread(detail::thread_fn<FN, Args...>(fn), args...);
 	}
