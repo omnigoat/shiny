@@ -13,7 +13,11 @@ namespace voodoo {
 //======================================================================
 	
 
-
+	//======================================================================
+	// command_t
+	// -----------
+	//   something sent to the prime_thread
+	//======================================================================
 	struct command_t : atma::ref_counted
 	{
 		command_t() {}
@@ -22,105 +26,103 @@ namespace voodoo {
 	};
 
 	typedef atma::intrusive_ptr<command_t> command_ptr;
-	//typedef std::shared_ptr<command_t> command_ptr;
+	
 
-
-
-	template <typename R, typename... Args>
-	struct fnptr_command_t : command_t
+	//======================================================================
+	// ...
+	//======================================================================
+	namespace detail
 	{
-		fnptr_command_t(R(*fn)(Args...))
-		 : fn_(fn)
-		  {}
-
-		auto operator ()() -> void {
-			(*fn_)();
-		}
-
-		R (*fn_)(Args...);
-	};
-
-
-	template <typename R, typename C, typename... Args>
-	struct memfnptr_command_t : command_t
-	{
-		memfnptr_command_t(R(C::*fn)(Args...), C& c)
-		 : fn_(fn), c_(c)
+		template <typename R, typename... Params>
+		struct bound_fnptr_command_t : command_t
 		{
-		}
+			template <typename... Args>
+			bound_fnptr_command_t(R(*fn)(Params...), Args&&... args)
+			 : fn_(fn), args_(std::make_tuple(args...))
+			{
+			}
 
-		auto operator ()() -> void
+			auto operator ()() -> void
+			{
+				atma::xtm::apply_tuple(fn_, std::forward<std::tuple<Params...>>(args_));
+			}
+
+			R(*fn_)(Params...);
+			std::tuple<Params...> args_;
+		};
+
+		template <typename R, typename C, typename... Params>
+		struct bound_memfnptr_command_t : command_t
 		{
-			(c_.*fn_)();
-		}
+			template <typename... Args>
+			bound_memfnptr_command_t(R(C::*fn)(Params...), C* c, Args&&... args)
+			 : fn_(fn), args_(std::make_tuple(c, args...))
+			{
+			}
 
-		R(C::*fn_)(Args...);
-		C& c_;
-	};
+			auto operator ()() -> void
+			{
+				atma::xtm::apply_tuple(fn_, std::forward<std::tuple<C*, Params...>>(args_));
+			}
+
+			R(C::*fn_)(Params...);
+			std::tuple<C*, Params...> args_;
+		};
+
+		template <typename F>
+		struct bound_callable_command_t : command_t
+		{
+			bound_callable_command_t(F&& fn)
+			 : fn_(fn)
+			{
+			}
+
+			auto operator ()() -> void
+			{
+				fn_();
+			}
+
+			F fn_;
+		};
+	}
 
 
 
 
-
+	//======================================================================
+	// make_command
+	//======================================================================
+	// function-pointer
+	template <typename R, typename... Params, typename... Args>
+	inline auto make_command(R(*fn)(Params...), Args&&... args) -> command_ptr {
+		return command_ptr(new detail::bound_fnptr_command_t<R, Params...>(fn, (std::forward<Args>(args))...));
+	}
 
 	template <typename R, typename... Params>
-	struct bound_fnptr_command_t : command_t
-	{
-		template <typename... Args>
-		bound_fnptr_command_t(R (*fn)(Params...), Args&&... args)
-		 : fn_(fn), args_(std::make_tuple(args...))
-		{
-		}
-
-		auto operator ()() -> void {
-			atma::xtm::apply_tuple(fn_, std::forward<std::tuple<Params...>>(args_));
-		}
-
-		R (*fn_)(Params...);
-		std::tuple<Params...> args_;
-	};
-
-	template <typename R>
-	struct function_command_t : command_t
-	{
-		function_command_t( std::function<R()> fn )
-		 : fn_(fn)
-		{
-		}
-
-		auto operator ()() -> void {
-			fn_();
-		}
-
-		std::function<R()> fn_;
-	};
-
-	
-	#if 0
-	template <typename R, typename... Args>
-	inline command_ptr make_command(R(*fn)(Args...))
-	{
-		return command_ptr(new fnptr_command_t<R, Args...>(fn));
-	}
-	#endif
-
-	template <typename R, typename... Params, typename... Args>
-	inline command_ptr make_command(R(*fn)(Params...), Args&&... args)
-	{
-		return command_ptr(new bound_fnptr_command_t<R, Params...>(fn, (std::forward<Args>(args))...));
+	inline auto make_command(R(*fn)(Params...)) -> command_ptr {
+		return command_ptr(new detail::bound_fnptr_command_t<R, Params...>(fn));
 	}
 
-	inline command_ptr make_command(std::function<void()> fn)
-	{
-		return command_ptr(new function_command_t<void>(fn));
+	// member-function-pointer
+	template <typename R, typename C, typename... Params, typename... Args>
+	inline auto make_command(R(C::*fn)(Params...), C* c, Args&&... args) -> command_ptr {
+		return command_ptr(new detail::bound_memfnptr_command_t<R, C, Params...>
+			(fn, c, (std::forward<Args>(args))...));
+	}
+
+	template <typename R, typename C, typename... Params>
+	inline auto make_command(R(C::*fn)(Params...), C* c) -> command_ptr {
+		return command_ptr(new detail::bound_memfnptr_command_t<R, C, Params...>(fn, c));
+	}
+
+	// whatevs.
+	template <typename F>
+	inline auto make_command(F&& fn) -> command_ptr {
+		return command_ptr(new detail::bound_callable_command_t<F>(std::forward<F>(fn)));
 	}
 
 	
-	template <typename R, typename C, typename... Args>
-	inline command_ptr make_command(R(C::*fn)(Args...), C& c)
-	{
-		return command_ptr(new memfnptr_command_t<R, C, Args...>(fn, c));
-	}
+	
 	
 //======================================================================
 } // namespace voodoo

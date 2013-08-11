@@ -73,5 +73,8 @@
     <ClInclude Include="..\include\shiny\voodoo\thread.hpp">
       <Filter>include\voodoo</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\shiny\plumbing\index_buffer.hpp">
+      <Filter>include\plumbing</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -64,22 +64,7 @@ namespace voodoo {
 			FN fn_;
 		};
 	}
-	#if 0
-	struct scoped_blocking_queue_t
-	{
-		scoped_blocking_queue_t();
-		~scoped_blocking_queue_t();
-
-		template <typename... Args>
-		auto add(void (*fn)(Args...), Args... args) -> void
-		{
-			queue_.push(make_command(fn, args...));
-		}
-
-	private:
-		atma::lockfree::queue_t<command_ptr> queue_;
-	};
-	#endif
+	
 	
 	template <typename FN, typename... Args>
 	inline auto spawn_context_thread(FN fn, Args... args) -> std::thread
@@ -128,6 +113,21 @@ namespace prime_thread {
 			;
 	}
 
+	inline auto enqueue_batch(detail::command_queue_t::batch_t& batch) -> void
+	{
+		if (std::this_thread::get_id() == voodoo::detail::prime_thread_.get_id()) {
+			auto n = batch.begin();
+			while (n) {
+				command_ptr const& x = *n->value_ptr();
+				x->operator()();
+				n = n->next;
+			}
+		}
+		else {
+			detail::command_queue.push(batch);
+		}
+	}
+
 	
 
 //======================================================================
@@ -136,10 +136,22 @@ namespace prime_thread {
 
 	struct scoped_command_batch_t
 	{
+		scoped_command_batch_t()
+		{
+			blocked_ = false;
+		}
+
 		template <typename R, typename... Params, typename... Args>
 		auto push(R(*fn)(Params...), Args&&... args) -> scoped_command_batch_t&
 		{
 			batch_.push(make_command(fn, std::forward<Args>(args)...));
+			return *this;
+		}
+
+		template <typename R, typename C, typename... Params, typename... Args>
+		auto push(R(C::*fn)(Params...), C* c, Args&&... args) -> scoped_command_batch_t&
+		{
+			batch_.push(make_command(fn, c, std::forward<Args>(args)...));
 			return *this;
 		}
 
@@ -152,13 +164,16 @@ namespace prime_thread {
 
 		auto block() -> scoped_command_batch_t&
 		{
-			batch_.push(make_command([&] {blocked_ = false;}));
+			blocked_ = true;
+			batch_.push(make_command([&] {
+				blocked_ = false;
+			}));
 			return *this;
 		}
 
 		~scoped_command_batch_t()
 		{
-			prime_thread::detail::command_queue.push(batch_);
+			prime_thread::enqueue_batch(batch_);
 
 			while (blocked_)
 				;

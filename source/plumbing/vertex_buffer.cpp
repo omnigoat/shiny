@@ -20,12 +20,20 @@ vertex_buffer_t::vertex_buffer_t(gpu_access_t gpua, cpu_access_t cpua, bool shad
 vertex_buffer_t::vertex_buffer_t(gpu_access_t gpua, cpu_access_t cpua, bool shadow, uint32_t data_size, void* data)
 : d3d_buffer_(), gpu_access_(gpua), cpu_access_(cpua), data_size_(data_size), shadowing_(shadow)
 {
-	voodoo::create_buffer(&d3d_buffer_, gpu_access_, cpu_access_, data_size, data);
+	voodoo::scoped_command_batch_t Q;
+	Q.push(&voodoo::create_buffer, &d3d_buffer_, gpu_access_, cpu_access_, data_size, data);
 	
 	if (shadowing_) {
 		ATMA_ASSERT(data);
 		data_.assign(reinterpret_cast<char*>(data), reinterpret_cast<char*>(data) + data_size_);
 	}
+
+	if (data) {
+		Q.push(&vertex_buffer_t::reload_from_shadow_buffer, this)
+		 ;
+	}
+
+	Q.block();
 }
 
 vertex_buffer_t::~vertex_buffer_t()
