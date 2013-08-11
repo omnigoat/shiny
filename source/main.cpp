@@ -7,16 +7,6 @@
 #include <shiny/voodoo/command.hpp>
 #include <shiny/plumbing/vertex_buffer.hpp>
 
-void hello()
-{
-	std::cout << "hello" << std::endl;
-}
-
-struct zomg {
-	void operator ()() {
-		std::cout << "zomg" << std::endl;
-	}
-};
 
 int main()
 {

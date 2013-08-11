@@ -12,12 +12,12 @@ using shiny::plumbing::cpu_access_t;
 //======================================================================
 // vertex_buffer_t
 //======================================================================
-vertex_buffer_t::vertex_buffer_t(gpu_access_t gpua, cpu_access_t cpua, bool shadow, unsigned int data_size)
+vertex_buffer_t::vertex_buffer_t(gpu_access_t gpua, cpu_access_t cpua, bool shadow, uint32_t data_size)
 : vertex_buffer_t(gpua, cpua, shadow, data_size, nullptr)
 {
 }
 
-vertex_buffer_t::vertex_buffer_t(gpu_access_t gpua, cpu_access_t cpua, bool shadow, unsigned int data_size, void* data)
+vertex_buffer_t::vertex_buffer_t(gpu_access_t gpua, cpu_access_t cpua, bool shadow, uint32_t data_size, void* data)
 : d3d_buffer_(), gpu_access_(gpua), cpu_access_(cpua), data_size_(data_size), shadowing_(shadow)
 {
 	voodoo::create_buffer(&d3d_buffer_, gpu_access_, cpu_access_, data_size, data);
@@ -128,16 +128,6 @@ locked_vertex_buffer_t::locked_vertex_buffer_t(vertex_buffer_t& vertex_buffer, l
 
 locked_vertex_buffer_t::~locked_vertex_buffer_t()
 {
-	#if 0
-	voodoo::bound_fnptr_command_t
-		<void, ID3D11Buffer*, D3D11_MAPPED_SUBRESOURCE*, D3D11_MAP, uint32_t>
-		gkh(&voodoo::map_vb, owner_->d3d_buffer_, &d3d_resource_, D3D11_MAP_WRITE_DISCARD, 0U);
-
-	voodoo::bound_fnptr_command_t
-		<void*, void*, void const*, size_t>
-		gkh2(std::memcpy, (void*)&owner_->data_.front(), d3d_resource_.pData, owner_->data_size_);
-	#endif
-
 	voodoo::scoped_command_batch_t Q;
 
 	// if we are shadowing, that means all data written was written into our shadow

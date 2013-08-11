@@ -89,8 +89,6 @@
     <ClCompile Include="..\source\voodoo\thread.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\include\shiny\plumbing\commands\map_unmap_copy.hpp" />
-    <ClInclude Include="..\include\shiny\plumbing\hardware_buffer.hpp" />
     <ClInclude Include="..\include\shiny\plumbing\lock.hpp" />
     <ClInclude Include="..\include\shiny\plumbing\prime_thread.hpp" />
     <ClInclude Include="..\include\shiny\plumbing\vertex_buffer.hpp" />

@@ -15,9 +15,6 @@
     <Filter Include="source\plumbing">
       <UniqueIdentifier>{1257461d-a961-47af-b332-316f5e7abb71}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\plumbing\commands">
-      <UniqueIdentifier>{1f963c8b-7f03-478c-8f1f-2f6231f62a7f}</UniqueIdentifier>
-    </Filter>
     <Filter Include="include\voodoo">
       <UniqueIdentifier>{dafada6f-7bd4-4d86-b003-4aa311689b36}</UniqueIdentifier>
     </Filter>
@@ -49,9 +46,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\include\shiny\plumbing\hardware_buffer.hpp">
-      <Filter>include\plumbing</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\shiny\plumbing\vertex_buffer.hpp">
       <Filter>include\plumbing</Filter>
     </ClInclude>
@@ -63,9 +57,6 @@
     </ClInclude>
     <ClInclude Include="..\include\shiny\plumbing\prime_thread.hpp">
       <Filter>include\plumbing</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\shiny\plumbing\commands\map_unmap_copy.hpp">
-      <Filter>include\plumbing\commands</Filter>
     </ClInclude>
     <ClInclude Include="..\include\shiny\voodoo\scoped_command_batch.hpp">
       <Filter>include\voodoo</Filter>

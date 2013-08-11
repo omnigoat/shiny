@@ -4,6 +4,7 @@
 #include <condition_variable>
 #include <memory>
 #include <atma/intrusive_ptr.hpp>
+#include <atma/xtm/tuple.hpp>
 //======================================================================
 #include <shiny/voodoo/device.hpp>
 //======================================================================
@@ -11,86 +12,17 @@ namespace shiny {
 namespace voodoo {
 //======================================================================
 	
-	namespace other {
-
-	template<size_t N>
-	struct Apply
-	{
-		template<typename F, typename T, typename... A>
-		static inline auto apply(F && f, T && t, A &&... a)
-			-> decltype(Apply<N-1>::apply(
-			::std::forward<F>(f), ::std::forward<T>(t),
-			::std::get<N-1>(::std::forward<T>(t)), ::std::forward<A>(a)...))
-		{
-			return Apply<N-1>::apply(::std::forward<F>(f), ::std::forward<T>(t),
-				::std::get<N-1>(::std::forward<T>(t)), ::std::forward<A>(a)...
-				);
-		}
-	};
-
-	template<>
-	struct Apply<0>
-	{
-		template<typename F, typename T, typename... A>
-		static inline auto apply(F && f, T &&, A &&... a)
-			-> decltype(::std::forward<F>(f)(::std::forward<A>(a)...))
-		{
-			return ::std::forward<F>(f)(::std::forward<A>(a)...);
-		}
-	};
-
-	template <typename F, typename T>
-	inline auto apply(F && f, T && t)
-		 -> decltype(Apply< ::std::tuple_size<
-		 typename ::std::decay<T>::type
-		 >::value>::apply(::std::forward<F>(f), ::std::forward<T>(t)))
-	{
-		return Apply< ::std::tuple_size<
-			typename ::std::decay<T>::type
-		>::value>::apply(::std::forward<F>(f), ::std::forward<T>(t));
-	}
-
-	}
 
 
-	template<size_t N>
-	struct Apply
-	{
-		template <typename R, typename... Params, typename T, typename... A>
-		static inline auto apply(R (*f)(Params...), T && t, A &&... a) -> R
-		{
-			return Apply<N-1>::apply(f, ::std::forward<T>(t),
-				::std::get<N-1>(::std::forward<T>(t)), ::std::forward<A>(a)...);
-		}
-	};
-
-	template<>
-	struct Apply<0>
-	{
-		template <typename R, typename... Params, typename T, typename... A>
-		static inline auto apply(R (f)(Params...), T &&, A &&... a) -> R
-		{
-			return (*f)(::std::forward<A>(a)...);
-		}
-	};
-
-	template <typename R, typename... Params>
-	inline auto apply(R (*f)(Params...), std::tuple<Params...>&& t) -> R
-	{
-		return Apply< ::std::tuple_size<typename ::std::decay<decltype(t)>::type>::value>
-		  ::apply(f, ::std::forward<decltype(t)>(t));
-	}
-
-
-	struct command_t // : atma::ref_counted
+	struct command_t : atma::ref_counted
 	{
 		command_t() {}
 		virtual ~command_t() {}
 		virtual auto operator ()() -> void = 0;
 	};
 
-	//typedef atma::intrusive_ptr<command_t> command_ptr;
-	typedef std::shared_ptr<command_t> command_ptr;
+	typedef atma::intrusive_ptr<command_t> command_ptr;
+	//typedef std::shared_ptr<command_t> command_ptr;
 
 
 
@@ -141,7 +73,7 @@ namespace voodoo {
 		}
 
 		auto operator ()() -> void {
-			apply(fn_, std::forward<std::tuple<Params...>>(args_));
+			atma::xtm::apply_tuple(fn_, std::forward<std::tuple<Params...>>(args_));
 		}
 
 		R (*fn_)(Params...);
