@@ -44,6 +44,9 @@
     <ClCompile Include="..\source\voodoo\thread.cpp">
       <Filter>source\voodoo</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\plumbing\index_buffer.cpp">
+      <Filter>source\plumbing</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\shiny\plumbing\vertex_buffer.hpp">

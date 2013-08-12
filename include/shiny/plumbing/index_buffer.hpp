@@ -22,20 +22,20 @@ namespace plumbing {
 	using voodoo::cpu_access_t;
 
 	//======================================================================
-	// vertex_buffer_t
+	// index_buffer_t
 	//======================================================================
 	struct index_buffer_t
 	{
 		typedef std::vector<char> data_t;
 
-		vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, uint32_t data_size);
-		vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, uint32_t data_size, void* data);
-		vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, data_t const& data);
-		vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, data_t&& data);
-		~vertex_buffer_t();
+		index_buffer_t(gpu_access_t, cpu_access_t, bool shadow, uint32_t data_size);
+		index_buffer_t(gpu_access_t, cpu_access_t, bool shadow, uint32_t data_size, void* data);
+		index_buffer_t(gpu_access_t, cpu_access_t, bool shadow, data_t const& data);
+		index_buffer_t(gpu_access_t, cpu_access_t, bool shadow, data_t&& data);
+		~index_buffer_t();
 
-		template <typename T> auto lock(lock_type_t) -> lock_t<vertex_buffer_t, T>;
-		template <typename T> auto lock(lock_type_t) const -> lock_t<vertex_buffer_t, T const>;
+		template <typename T> auto lock(lock_type_t) -> lock_t<index_buffer_t, T>;
+		template <typename T> auto lock(lock_type_t) const -> lock_t<index_buffer_t, T const>;
 
 		auto is_shadowing() const -> bool;
 		auto reload_from_shadow_buffer() -> void;
@@ -53,18 +53,18 @@ namespace plumbing {
 		bool shadowing_;
 		std::mutex mutex_;
 
-		friend struct locked_vertex_buffer_t;
+		friend struct locked_index_buffer_t;
 	};
 
 
 
 	//======================================================================
-	// locked_vertex_buffer_t
+	// locked_index_buffer_t
 	//======================================================================
-	struct locked_vertex_buffer_t
+	struct locked_index_buffer_t
 	{
-		locked_vertex_buffer_t(vertex_buffer_t&, lock_type_t);
-		~locked_vertex_buffer_t();
+		locked_index_buffer_t(index_buffer_t&, lock_type_t);
+		~locked_index_buffer_t();
 
 		template <typename T>
 		auto begin() -> T* {
@@ -83,9 +83,9 @@ namespace plumbing {
 		}
 
 	private:
-		locked_vertex_buffer_t(locked_vertex_buffer_t const&);
+		locked_index_buffer_t(locked_index_buffer_t const&);
 
-		vertex_buffer_t* owner_;
+		index_buffer_t* owner_;
 		lock_type_t lock_type_;
 		std::lock_guard<std::mutex> guard_;
 		D3D11_MAPPED_SUBRESOURCE d3d_resource_;
