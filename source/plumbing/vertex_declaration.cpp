@@ -3,7 +3,9 @@
 using shiny::plumbing::vertex_stream_t;
 using shiny::plumbing::vertex_declaration_t;
 
-
+//======================================================================
+// vertex_stream_t
+//======================================================================
 vertex_stream_t::vertex_stream_t(usage_t usage, uint32_t index, element_type_t element_type, uint32_t element_count)
 	: usage_(usage), index_(index), element_type_(element_type), element_count_(element_count)
 {
@@ -30,7 +32,7 @@ auto vertex_stream_t::size() const -> uint32_t
 	uint32_t element_size = 0;
 	switch (element_type_)
 	{
-		case element_type_t::real32:
+		case element_type_t::float32:
 		case element_type_t::int32:
 		case element_type_t::uint32:
 			element_size = 4;
@@ -54,6 +56,10 @@ auto vertex_stream_t::size() const -> uint32_t
 
 
 
+
+//======================================================================
+// vertex_declaration_t
+//======================================================================
 vertex_declaration_t::vertex_declaration_t( std::initializer_list<vertex_stream_t> streams )
 	: streams_(streams.begin(), streams.end()), stride_(), d3d_layout_()
 {
@@ -72,3 +78,7 @@ auto vertex_declaration_t::stride() const -> uint32_t
 	return stride_;
 }
 
+auto vertex_declaration_t::build() -> void
+{
+	// ??
+}

@@ -33,7 +33,7 @@ namespace plumbing {
 
 		enum class element_type_t
 		{
-			real32,
+			float32,
 			uint8,
 			uint16,
 			uint32,
