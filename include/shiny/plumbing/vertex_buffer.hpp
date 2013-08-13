@@ -34,9 +34,6 @@ namespace plumbing {
 		vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, data_t&& data);
 		~vertex_buffer_t();
 
-		template <typename T> auto lock(lock_type_t) -> lock_t<vertex_buffer_t, T>;
-		template <typename T> auto lock(lock_type_t) const -> lock_t<vertex_buffer_t, T const>;
-
 		auto is_shadowing() const -> bool;
 		auto reload_from_shadow_buffer() -> void;
 		auto release_shadow_buffer() -> void;

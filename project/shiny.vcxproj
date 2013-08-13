@@ -84,6 +84,7 @@
     <ClCompile Include="..\source\plumbing\index_buffer.cpp" />
     <ClCompile Include="..\source\plumbing\prime_thread.cpp" />
     <ClCompile Include="..\source\plumbing\vertex_buffer.cpp" />
+    <ClCompile Include="..\source\plumbing\vertex_declaration.cpp" />
     <ClCompile Include="..\source\scoped_runtime.cpp" />
     <ClCompile Include="..\source\voodoo\device.cpp" />
     <ClCompile Include="..\source\voodoo\resources.cpp" />
@@ -94,6 +95,7 @@
     <ClInclude Include="..\include\shiny\plumbing\lock.hpp" />
     <ClInclude Include="..\include\shiny\plumbing\prime_thread.hpp" />
     <ClInclude Include="..\include\shiny\plumbing\vertex_buffer.hpp" />
+    <ClInclude Include="..\include\shiny\plumbing\vertex_declaration.hpp" />
     <ClInclude Include="..\include\shiny\scoped_runtime.hpp" />
     <ClInclude Include="..\include\shiny\voodoo\command.hpp" />
     <ClInclude Include="..\include\shiny\voodoo\device.hpp" />
