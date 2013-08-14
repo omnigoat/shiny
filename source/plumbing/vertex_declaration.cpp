@@ -80,5 +80,6 @@ auto vertex_declaration_t::stride() const -> uint32_t
 
 auto vertex_declaration_t::build() -> void
 {
-	// ??
+	// require a shader to bind to
+	//voodoo::create_input_layout(
 }
