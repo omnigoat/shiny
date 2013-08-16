@@ -41,7 +41,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(ProjectDir)..\..\atma\vendor;$(ProjectDir)..\include;$(ProjectDir)..\..\atma\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)..\include;$(ProjectDir)..\..\atma\vendor;$(ProjectDir)..\..\atma\include;$(ProjectDir)..\..\fooey\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -102,6 +102,12 @@
     <ClInclude Include="..\include\shiny\voodoo\resources.hpp" />
     <ClInclude Include="..\include\shiny\voodoo\scoped_command_batch.hpp" />
     <ClInclude Include="..\include\shiny\voodoo\thread.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="..\shaders\vs_basic.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
+    </FxCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -21,6 +21,9 @@
     <Filter Include="source\voodoo">
       <UniqueIdentifier>{51726eb3-2f88-4c7a-81e4-f960ee2f8985}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shaders">
+      <UniqueIdentifier>{69726e24-bf27-40cc-88f6-f6f41ad69449}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\plumbing\vertex_buffer.cpp">
@@ -85,5 +88,10 @@
     <ClInclude Include="..\include\shiny\plumbing\vertex_declaration.hpp">
       <Filter>include\plumbing</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="..\shaders\vs_basic.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>
