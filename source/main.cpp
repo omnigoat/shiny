@@ -8,6 +8,7 @@
 #include <shiny/plumbing/vertex_buffer.hpp>
 
 #include <fooey/widgets/window.hpp>
+#include <fooey/fooey.hpp>
 #include <atma/evented/event.hpp>
 
 void blah() {
@@ -27,7 +28,12 @@ int main()
 
 	// setup up gui
 	fooey::window_ptr wnd = fooey::window("blam");
-	//fooey::map_basic_window_events(wnd);
+	
+	fooey::renderer_ptr R = fooey::system_renderer();
+	R->register_window(wnd);
+
+	//fooey::input::register_ui(wnd);
+
 	wnd->on_minimise += blah;
 	wnd->on_minimise.fire();
 	#if 0
