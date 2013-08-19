@@ -55,4 +55,6 @@ int main()
 		}}
 	});
 	#endif
+	for (;;)
+		;
 }
