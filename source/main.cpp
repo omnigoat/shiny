@@ -17,7 +17,7 @@ void blah() {
 
 int main()
 {
-	shiny::scoped_runtime_t SR;
+	auto SR = shiny::scoped_runtime_t{};
 	
 	
 	SR.add_context_thread([] {
@@ -27,15 +27,21 @@ int main()
 
 
 	// setup up gui
-	fooey::window_ptr wnd = fooey::window("blam");
-	
-	fooey::renderer_ptr R = fooey::system_renderer();
+	auto wnd = fooey::window("blam");
+	auto R = fooey::system_renderer();
 	R->register_window(wnd);
 
-	//fooey::input::register_ui(wnd);
+	
+	// game loop
+#if 0
+	while (;;)
+		fooey::process_events(wnd);
+#endif
+	
 
-	wnd->on_minimise += blah;
-	wnd->on_minimise.fire();
+
+
+
 	#if 0
 	
 	
