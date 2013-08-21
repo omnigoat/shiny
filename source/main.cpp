@@ -39,65 +39,6 @@ static atma::xtm::detail::xtm_ph<2> _3;
 
 int main()
 {
-	// function pointer
-	auto b = atma::xtm::bind(&print_4, 1, 2, _2, _1);
-	b(4, 3);
-	
-	// member function pointer
-	printer_t printer(5);
-	auto b2 = atma::xtm::bind(&printer_t::print_4_x, _3, 1, _2, 3, _1);
-	b2(4, 2, &printer);
-
-	// lambda
-	auto L = [](int a, int b) -> int {return a + b; };
-	auto b3 = atma::xtm::bind(L, 7, _1);
-	std::cout << b3(3) << std::endl;
-	
-	// reference
-	auto b4 = atma::xtm::bind([](int& x) {x += 4;}, _1);
-	int i = 3;
-	b4(i);
-	std::cout << i << std::endl;
-
-	// moveable
-	auto t1 = std::thread{};
-	auto t2 = std::thread{};
-	auto b5 = atma::xtm::bind([](std::thread&& a, std::thread&& b) {}, _1, std::move(t1));
-	b5(std::move(t2));
-
-	uint64_t x = 0;
-
-	// timing
-	{
-		auto c = std::chrono::high_resolution_clock{};
-
-		auto t = c.now();
-		for (long i = 0; i != 1000000; ++i)
-		{
-			auto k = std::bind(&add, 1, std::placeholders::_1);
-			x += k(2);
-		}
-		auto t2 = c.now();
-		std::cout << "time: " << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t).count() << "ms" << std::endl;
-	}
-
-
-	// timing
-	{
-		auto c = std::chrono::high_resolution_clock{};
-
-		auto t = c.now();
-		for (long i = 0; i != 1000000; ++i)
-		{
-			auto k = atma::xtm::bind(&add, 1, _1);
-			x -= k(2);
-		}
-		auto t2 = c.now();
-		std::cout << "time: " << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t).count() << "ms" << std::endl;
-	}
-
-	return (int)x;
-
 	auto SR = shiny::scoped_runtime_t{};
 	
 	
