@@ -51,17 +51,18 @@ int main()
 	// setup up gui
 	auto renderer = fooey::system_renderer();
 	
-	auto wnd = fooey::window("blam");
+	auto wnd = fooey::window("Excitement.");
 	renderer->add_window(wnd);
 	
+	bool running = true;
 
 	wnd->on_minimise += [] {
 		std::cout << "bam, minimised" << std::endl;
 	};
 
-	wnd->on_minimise += [] {
+	/*wnd->on_minimise += [] {
 		std::cout << "you jelly, Qt?" << std::endl;
-	};
+	};*/
 
 	wnd->on_maximise += [] {
 		std::cout << "wow, maximised" << std::endl;
@@ -71,13 +72,12 @@ int main()
 		std::cout << "ooh, restored" << std::endl;
 	};
 
-	wnd->on_close += [] {
+	wnd->on_close += [&running] {
 		std::cout << "lol, bai" << std::endl;
+		running = false;
 	};
 
 	// game loop
-	for (;;)
+	while (running)
 		fooey::process_events(wnd);
-	
-
 }
