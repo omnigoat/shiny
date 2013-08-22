@@ -15,8 +15,8 @@ void print_4(int a, int b, int c, int d) {
 	//std::cout << "blah: " << a << ", " << b << ", " << c << ", " << d << std::endl;
 }
 
-auto add(int a, int b) -> int {
-	return a + b;
+auto add(std::shared_ptr<int> const& a, int b) -> int {
+	return *a + b;
 }
 
 struct printer_t
@@ -49,40 +49,35 @@ int main()
 
 
 	// setup up gui
+	auto renderer = fooey::system_renderer();
+	
 	auto wnd = fooey::window("blam");
-	auto R = fooey::system_renderer();
-	R->register_window(wnd);
-
-	
-	// game loop
-#if 0
-	while (;;)
-		fooey::process_events(wnd);
-#endif
+	renderer->add_window(wnd);
 	
 
-
-
-
-	#if 0
-	
-	
-	//fooey::map_close_to_shutdown(wnd);
-
-	wnd->window_events.on_minimise += [](fooey::window_ptr const& x, et const&) {
-		x->set_window_state(fooey::)
+	wnd->on_minimise += [] {
+		std::cout << "bam, minimised" << std::endl;
 	};
-	
-	fooey::map_window_events(wnd,
-	{
-		{fooey::window_event_t::minimise, [](wp const& x, et const&) {
-			fooey::set_window_state(x, fooey::window_t::minimised);
-		}},
-		{fooey::window_event_t::maximise, [](wp const& x, et const&) {
-			fooey::set_window_state(x, fooey::window_t::maximised);
-		}}
-	});
-	#endif
+
+	wnd->on_minimise += [] {
+		std::cout << "you jelly, Qt?" << std::endl;
+	};
+
+	wnd->on_maximise += [] {
+		std::cout << "wow, maximised" << std::endl;
+	};
+
+	wnd->on_restore += [] {
+		std::cout << "ooh, restored" << std::endl;
+	};
+
+	wnd->on_close += [] {
+		std::cout << "lol, bai" << std::endl;
+	};
+
+	// game loop
 	for (;;)
-		;
+		fooey::process_events(wnd);
+	
+
 }
