@@ -1,17 +1,16 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Express 2013 for Windows Desktop
-VisualStudioVersion = 12.0.20617.1 PREVIEW
+# Visual Studio 2013
+VisualStudioVersion = 12.0.20623.1 VSUPREVIEW
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "shiny", "shiny.vcxproj", "{8E03B685-D9CE-45BF-8597-E7EF57E62B8D}"
 	ProjectSection(ProjectDependencies) = postProject
 		{82B83F8F-A8CF-4720-9ABD-F08682C1C325} = {82B83F8F-A8CF-4720-9ABD-F08682C1C325}
-		{3301E1FA-9F23-43C6-A5E1-183204867D44} = {3301E1FA-9F23-43C6-A5E1-183204867D44}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "atma", "..\..\atma\project\atma.vcxproj", "{3301E1FA-9F23-43C6-A5E1-183204867D44}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fooey", "..\..\fooey\project\fooey.vcxproj", "{82B83F8F-A8CF-4720-9ABD-F08682C1C325}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "atma", "..\..\atma\project\atma.vcxproj", "{0581B1D8-88BC-4835-A665-EDCB87AAFC7C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -31,14 +30,6 @@ Global
 		{8E03B685-D9CE-45BF-8597-E7EF57E62B8D}.Release|Win32.ActiveCfg = Release|Win32
 		{8E03B685-D9CE-45BF-8597-E7EF57E62B8D}.Release|Win32.Build.0 = Release|Win32
 		{8E03B685-D9CE-45BF-8597-E7EF57E62B8D}.Release|x64.ActiveCfg = Release|Win32
-		{3301E1FA-9F23-43C6-A5E1-183204867D44}.Debug|ARM.ActiveCfg = Debug|Win32
-		{3301E1FA-9F23-43C6-A5E1-183204867D44}.Debug|Win32.ActiveCfg = Debug|Win32
-		{3301E1FA-9F23-43C6-A5E1-183204867D44}.Debug|Win32.Build.0 = Debug|Win32
-		{3301E1FA-9F23-43C6-A5E1-183204867D44}.Debug|x64.ActiveCfg = Debug|Win32
-		{3301E1FA-9F23-43C6-A5E1-183204867D44}.Release|ARM.ActiveCfg = Release|Win32
-		{3301E1FA-9F23-43C6-A5E1-183204867D44}.Release|Win32.ActiveCfg = Release|Win32
-		{3301E1FA-9F23-43C6-A5E1-183204867D44}.Release|Win32.Build.0 = Release|Win32
-		{3301E1FA-9F23-43C6-A5E1-183204867D44}.Release|x64.ActiveCfg = Release|Win32
 		{82B83F8F-A8CF-4720-9ABD-F08682C1C325}.Debug|ARM.ActiveCfg = Debug|Win32
 		{82B83F8F-A8CF-4720-9ABD-F08682C1C325}.Debug|Win32.ActiveCfg = Debug|Win32
 		{82B83F8F-A8CF-4720-9ABD-F08682C1C325}.Debug|Win32.Build.0 = Debug|Win32
@@ -47,6 +38,14 @@ Global
 		{82B83F8F-A8CF-4720-9ABD-F08682C1C325}.Release|Win32.ActiveCfg = Release|Win32
 		{82B83F8F-A8CF-4720-9ABD-F08682C1C325}.Release|Win32.Build.0 = Release|Win32
 		{82B83F8F-A8CF-4720-9ABD-F08682C1C325}.Release|x64.ActiveCfg = Release|Win32
+		{0581B1D8-88BC-4835-A665-EDCB87AAFC7C}.Debug|ARM.ActiveCfg = Debug|Win32
+		{0581B1D8-88BC-4835-A665-EDCB87AAFC7C}.Debug|Win32.ActiveCfg = Debug|Win32
+		{0581B1D8-88BC-4835-A665-EDCB87AAFC7C}.Debug|Win32.Build.0 = Debug|Win32
+		{0581B1D8-88BC-4835-A665-EDCB87AAFC7C}.Debug|x64.ActiveCfg = Debug|Win32
+		{0581B1D8-88BC-4835-A665-EDCB87AAFC7C}.Release|ARM.ActiveCfg = Release|Win32
+		{0581B1D8-88BC-4835-A665-EDCB87AAFC7C}.Release|Win32.ActiveCfg = Release|Win32
+		{0581B1D8-88BC-4835-A665-EDCB87AAFC7C}.Release|Win32.Build.0 = Release|Win32
+		{0581B1D8-88BC-4835-A665-EDCB87AAFC7C}.Release|x64.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -11,34 +11,23 @@
 #include <fooey/fooey.hpp>
 #include <atma/evented/event.hpp>
 
-void print_4(int a, int b, int c, int d) {
-	//std::cout << "blah: " << a << ", " << b << ", " << c << ", " << d << std::endl;
-}
-
-auto add(std::shared_ptr<int> const& a, int b) -> int {
-	return *a + b;
-}
-
-struct printer_t
-{
-	printer_t() : x(-1) {}
-	printer_t(int x) : x(x) {}
-
-	void print_4_x(int a, int b, int c, int d)
-	{
-		std::cout << "blah: " << a << ", " << b << ", " << c << ", " << d << ", " << x << std::endl;
-	}
-
-	int x;
-};
-
-static atma::xtm::detail::xtm_ph<0> _1;
-static atma::xtm::detail::xtm_ph<1> _2;
-static atma::xtm::detail::xtm_ph<2> _3;
-
+#include <atma/math/vector4f.hpp>
 
 int main()
 {
+
+	atma::math::vector4f v{1, 2, 3, 4};
+	auto addition = v + v;
+	//atma::math::vector4f r = addition;
+	auto multiplication = addition * 3.f;
+	atma::math::vector4f r2 = multiplication;
+
+	
+	
+	auto k = atma::math::dot_product(v, v);
+
+	return (int)v[2];
+#if 0
 	auto SR = shiny::scoped_runtime_t{};
 	
 	
@@ -80,4 +69,5 @@ int main()
 	// game loop
 	while (running)
 		fooey::process_events(wnd);
+#endif
 }
