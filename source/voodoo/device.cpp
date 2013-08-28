@@ -44,7 +44,7 @@ auto shiny::voodoo::setup_d3d_device() -> void
 		&detail::d3d_immediate_context_
 	));
 
-	//detail::d3d_local_context_ = detail::d3d_immediate_context_;
+	detail::d3d_local_context_ = detail::d3d_immediate_context_;
 }
 
 auto shiny::voodoo::teardown_d3d_device() -> void

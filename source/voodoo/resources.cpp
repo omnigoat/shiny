@@ -45,7 +45,7 @@ auto shiny::voodoo::create_buffer(ID3D11Buffer** buffer, gpu_access_t gpu_access
 		// for vertex buffers, the pitch and slice-pitch mean nothing, so we'll just
 		// pass along stats to help with debugging (1xdata_size buffer created)
 		D3D11_SUBRESOURCE_DATA d3d_data { data, 1, data_size };
-		detail::d3d_device_->CreateBuffer(&buffer_desc, &d3d_data, buffer);
+		ATMA_ENSURE_IS(S_OK, detail::d3d_device_->CreateBuffer(&buffer_desc, &d3d_data, buffer));
 	}
 	else {
 		detail::d3d_device_->CreateBuffer(&buffer_desc, NULL, buffer);

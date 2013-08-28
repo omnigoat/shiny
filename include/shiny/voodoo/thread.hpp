@@ -67,7 +67,7 @@ namespace voodoo {
 	
 	
 	template <typename FN, typename... Args>
-	inline auto spawn_context_thread(FN fn, Args... args) -> std::thread
+	inline auto spawn_thread(FN fn, Args... args) -> std::thread
 	{
 		return std::thread(detail::thread_fn<FN, Args...>(fn), args...);
 	}
@@ -78,9 +78,10 @@ namespace prime_thread {
 	
 	namespace detail
 	{
-		typedef atma::lockfree::queue_t<shiny::voodoo::command_ptr> command_queue_t;
+		typedef atma::lockfree::queue_t<std::function<void()>> command_queue_t;
 		extern command_queue_t command_queue;
-
+		extern command_queue_t shutdown_queue;
+#if 0
 		inline auto enqueue_blocking_impl(command_queue_t::batch_t& block, command_ptr const& command) -> void
 		{
 			block.push(command);
@@ -92,27 +93,51 @@ namespace prime_thread {
 			block.push(command);
 			enqueue_blocking_impl(block, commands...);
 		}
+#endif
+
+		auto reenter(std::atomic_bool const&) -> void;
 	}
 
 	auto spawn() -> void;
 	auto join() -> void;
 
-
-	// enqueues a list of commands, and then blocks until their completion
-	template <typename... Commands>
-	inline auto enqueue_blocking(Commands... commands) -> void
+	inline auto enqueue_block() -> void
 	{
-		detail::command_queue_t::batch_t block;
-		detail::enqueue_blocking_impl(block, commands...);
-		std::atomic_bool blocked{true};
-		block.push(make_command([&blocked] {blocked = false;}));
+		if (!voodoo::detail::prime_thread_running_)
+			return;
 
-		detail::command_queue.push(block);
+		// push blocking fn!
+		std::atomic_bool blocked{ true };
+		detail::command_queue.push([&blocked]{ blocked = false; });
 
-		while (blocked)
-			;
+		// don't block if we're the prime thread blocking ourselves.
+		if (std::this_thread::get_id() == voodoo::detail::prime_thread_.get_id())
+		{
+			voodoo::prime_thread::detail::reenter(blocked);
+			return;
+		}
+		else
+		{
+			while (blocked)
+				;
+		}
 	}
 
+	inline auto enqueue(std::function<void()> const& fn) -> void
+	{
+		if (!voodoo::detail::prime_thread_running_)
+			return;
+
+		// perform straight away if we're the prime thread enqueuing ourselves
+		//if (std::this_thread::get_id() == voodoo::detail::prime_thread_.get_id())
+			//fn();
+
+		detail::command_queue.push(fn);
+	}
+
+	
+
+#if 0
 	inline auto enqueue_batch(detail::command_queue_t::batch_t& batch) -> void
 	{
 		if (std::this_thread::get_id() == voodoo::detail::prime_thread_.get_id()) {
@@ -127,13 +152,14 @@ namespace prime_thread {
 			detail::command_queue.push(batch);
 		}
 	}
+#endif
 
 	
 
 //======================================================================
 } // namespace prime_thread
 //======================================================================
-
+#if 0
 	struct scoped_command_batch_t
 	{
 		scoped_command_batch_t()
@@ -183,6 +209,7 @@ namespace prime_thread {
 		std::atomic_bool blocked_;
 		prime_thread::detail::command_queue_t::batch_t batch_;
 	};
+#endif
 
 //======================================================================
 } // namespace voodoo

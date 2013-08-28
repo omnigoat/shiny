@@ -25,5 +25,5 @@ auto scoped_runtime_t::add_thread(std::function<void()> fn) -> void
 
 auto scoped_runtime_t::add_context_thread(std::function<void()> fn) -> void
 {
-	threads_.push_back(voodoo::spawn_context_thread(fn));
+	threads_.push_back(voodoo::spawn_thread(fn));
 }

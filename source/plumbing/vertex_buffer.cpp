@@ -3,6 +3,8 @@
 #include <shiny/voodoo/command.hpp>
 #include <atma/assert.hpp>
 
+namespace prime_thread = shiny::voodoo::prime_thread;
+
 using shiny::plumbing::vertex_buffer_t;
 using shiny::plumbing::locked_vertex_buffer_t;
 using shiny::plumbing::lock_type_t;
@@ -20,8 +22,7 @@ vertex_buffer_t::vertex_buffer_t(gpu_access_t gpua, cpu_access_t cpua, bool shad
 vertex_buffer_t::vertex_buffer_t(gpu_access_t gpua, cpu_access_t cpua, bool shadow, uint32_t data_size, void* data)
 : d3d_buffer_(), gpu_access_(gpua), cpu_access_(cpua), data_size_(data_size), shadowing_(shadow)
 {
-	voodoo::scoped_command_batch_t Q;
-	Q.push(&voodoo::create_buffer, &d3d_buffer_, gpu_access_, cpu_access_, data_size, data);
+	prime_thread::enqueue(std::bind(&voodoo::create_buffer, &d3d_buffer_, gpu_access_, cpu_access_, data_size, data));
 	
 	if (shadowing_) {
 		ATMA_ASSERT(data);
@@ -29,18 +30,21 @@ vertex_buffer_t::vertex_buffer_t(gpu_access_t gpua, cpu_access_t cpua, bool shad
 	}
 
 	if (data) {
-		Q.push(&vertex_buffer_t::reload_from_shadow_buffer, this)
-		 ;
-	}
+		prime_thread::enqueue(std::bind(&vertex_buffer_t::reload_from_shadow_buffer, this));
 
-	Q.block();
+		prime_thread::enqueue_block();
+	}
 }
 
 vertex_buffer_t::~vertex_buffer_t()
 {
+	mutex_.lock();
+
 	if (d3d_buffer_) {
 		d3d_buffer_->Release();
 	}
+
+	mutex_.unlock();
 }
 
 auto vertex_buffer_t::is_shadowing() const -> bool
@@ -126,9 +130,8 @@ locked_vertex_buffer_t::locked_vertex_buffer_t(vertex_buffer_t& vertex_buffer, l
 					: D3D11_MAP_WRITE
 					;
 
-				voodoo::prime_thread::enqueue_blocking(
-					voodoo::make_command(&voodoo::map_vb, owner_->d3d_buffer_, &d3d_resource_, map_type, 0U)
-				);
+				prime_thread::enqueue(std::bind(&voodoo::map_vb, owner_->d3d_buffer_, &d3d_resource_, map_type, 0U));
+				prime_thread::enqueue_block();
 			}
 		}
 	}
@@ -136,21 +139,14 @@ locked_vertex_buffer_t::locked_vertex_buffer_t(vertex_buffer_t& vertex_buffer, l
 
 locked_vertex_buffer_t::~locked_vertex_buffer_t()
 {
-	voodoo::scoped_command_batch_t Q;
-
 	// if we are shadowing, that means all data written was written into our shadow
 	// buffer. we will now update the d3d buffer from our shadow buffer.
 	if (owner_->shadowing_) {
-		Q.push(voodoo::map_vb, owner_->d3d_buffer_, &d3d_resource_, D3D11_MAP_WRITE_DISCARD, 0U)
-		 .push([&] {
-			std::memcpy(d3d_resource_.pData, &owner_->data_.front(), owner_->data_size_);
-		 })
-		 ;
+		voodoo::prime_thread::enqueue([&]{ voodoo::map_vb(owner_->d3d_buffer_, &d3d_resource_, D3D11_MAP_WRITE_DISCARD, 0U); });
+		voodoo::prime_thread::enqueue([&]{ std::memcpy(d3d_resource_.pData, &owner_->data_.front(), owner_->data_size_); });
 	}
 
-
-	Q.push(voodoo::unmap, owner_->d3d_buffer_, 0)
-	 .block()
-	 ;
+	prime_thread::enqueue([&]{ voodoo::unmap(owner_->d3d_buffer_, 0); });
+	prime_thread::enqueue_block();
 }
 

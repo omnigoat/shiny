@@ -12,23 +12,44 @@
 #include <atma/evented/event.hpp>
 
 #include <atma/math/vector4f.hpp>
+#include <atma/math/matrix4f.hpp>
 
 int main()
 {
-
+#if 0
 	atma::math::vector4f v{1, 2, 3, 4};
 	auto addition = v + v;
 	//atma::math::vector4f r = addition;
 	auto multiplication = addition * 3.f;
 	atma::math::vector4f r2 = multiplication;
 
+	atma::math::matrix4f m = atma::math::matrix4f::identity();
+	atma::math::matrix4f m2 = atma::math::matrix4f::identity();
+
+	m.set(0, 0, 4.f);
+	m.set(1, 1, 2.f);
+	m.set(2, 2, 4.f / 3.f);
+
+	auto rv = m * v;
+
+	m2.set(1, 1, 3.f);
+
 	
-	
+
+	auto mr = m * m2;
 	auto k = atma::math::dot_product(v, v);
 
 	return (int)v[2];
-#if 0
-	auto SR = shiny::scoped_runtime_t{};
+#else
+	// setup up gui
+	auto renderer = fooey::system_renderer();
+	auto wnd = fooey::window("Excitement.");
+	renderer->add_window(wnd);
+
+	// runtime!
+	auto SR = shiny::scoped_runtime_t();
+	// context per window!
+	//auto context = shiny::rendering_context_t(wnd);
 	
 	
 	SR.add_context_thread([] {
@@ -37,11 +58,7 @@ int main()
 	});
 
 
-	// setup up gui
-	auto renderer = fooey::system_renderer();
 	
-	auto wnd = fooey::window("Excitement.");
-	renderer->add_window(wnd);
 	
 	bool running = true;
 
@@ -57,12 +74,18 @@ int main()
 		std::cout << "wow, maximised" << std::endl;
 	};
 
+#if 0
+	wnd->on_resize += [](uint32_t width, uint32_t height) {
+		shiny::signal_resize(width, height);
+	};
+#endif
+
 	wnd->on_restore += [] {
 		std::cout << "ooh, restored" << std::endl;
 	};
 
 	wnd->on_close += [&running] {
-		std::cout << "lol, bai" << std::endl;
+		std::cout << "lol, bye" << std::endl;
 		running = false;
 	};
 
