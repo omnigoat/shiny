@@ -38,9 +38,13 @@ index_buffer_t::index_buffer_t(gpu_access_t gpua, cpu_access_t cpua, bool shadow
 
 index_buffer_t::~index_buffer_t()
 {
+	mutex_.lock();
+
 	if (d3d_buffer_) {
 		d3d_buffer_->Release();
 	}
+
+	mutex_.unlock();
 }
 
 auto index_buffer_t::is_shadowing() const -> bool
