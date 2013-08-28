@@ -158,60 +158,6 @@ namespace prime_thread {
 
 //======================================================================
 } // namespace prime_thread
-//======================================================================
-#if 0
-	struct scoped_command_batch_t
-	{
-		scoped_command_batch_t()
-		{
-			blocked_ = false;
-		}
-
-		template <typename R, typename... Params, typename... Args>
-		auto push(R(*fn)(Params...), Args&&... args) -> scoped_command_batch_t&
-		{
-			batch_.push(make_command(fn, std::forward<Args>(args)...));
-			return *this;
-		}
-
-		template <typename R, typename C, typename... Params, typename... Args>
-		auto push(R(C::*fn)(Params...), C* c, Args&&... args) -> scoped_command_batch_t&
-		{
-			batch_.push(make_command(fn, c, std::forward<Args>(args)...));
-			return *this;
-		}
-
-		template <typename FN>
-		auto push(FN && fn) -> scoped_command_batch_t&
-		{
-			batch_.push(make_command(fn));
-			return *this;
-		}
-
-		auto block() -> scoped_command_batch_t&
-		{
-			blocked_ = true;
-			batch_.push(make_command([&] {
-				blocked_ = false;
-			}));
-			return *this;
-		}
-
-		~scoped_command_batch_t()
-		{
-			prime_thread::enqueue_batch(batch_);
-
-			while (blocked_)
-				;
-		}
-
-	private:
-		std::atomic_bool blocked_;
-		prime_thread::detail::command_queue_t::batch_t batch_;
-	};
-#endif
-
-//======================================================================
 } // namespace voodoo
 } // namespace shiny
 //======================================================================
