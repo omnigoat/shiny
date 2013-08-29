@@ -53,4 +53,36 @@ auto shiny::voodoo::teardown_d3d_device() -> void
 	detail::d3d_device_->Release();
 }
 
+//======================================================================
+// context creation
+//======================================================================
+auto shiny::voodoo::create_context(fooey::window_ptr const& window, uint32_t width, uint32_t height) -> void
+{
+	IDXGIDevice1* dxgi_device = nullptr;
+	HRESULT hr = detail::d3d_device_->QueryInterface(__uuidof(IDXGIDevice1), (void**)&dxgi_device);
+	ATMA_ENSURE_IS(S_OK, hr);
 
+	IDXGIAdapter1* dxgi_adapter = nullptr;
+	hr = dxgi_device->GetParent(__uuidof(IDXGIAdapter1), (void**)&dxgi_adapter);
+	ATMA_ENSURE_IS(S_OK, hr);
+
+	IDXGIFactory1* dxgi_factory = nullptr;
+	hr = dxgi_adapter->GetParent(__uuidof(IDXGIFactory1), (void**)&dxgi_factory);
+	ATMA_ENSURE_IS(S_OK, hr);
+
+	auto desc = DXGI_SWAP_CHAIN_DESC{
+		// DXGI_MODE_DESC
+		{0, 0, { 0, 0 }, DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, DXGI_MODE_SCANLINE_ORDER_PROGRESSIVE, DXGI_MODE_SCALING_UNSPECIFIED},
+		// DXGI_SAMPLE_DESC
+		{1, 0},
+		DXGI_USAGE_BACK_BUFFER,
+		3,
+		window->hwnd,
+		TRUE,
+		DXGI_SWAP_EFFECT_DISCARD,
+		0
+	};
+
+	IDXGISwapChain* dxgi_swap_chain = nullptr;
+	ATMA_ENSURE_IS(S_OK, dxgi_factory->CreateSwapChain(detail::d3d_device_, &desc, &dxgi_swap_chain));
+}

@@ -9,7 +9,6 @@
 
 #include <fooey/widgets/window.hpp>
 #include <fooey/fooey.hpp>
-#include <atma/evented/event.hpp>
 
 #include <atma/math/vector4f.hpp>
 #include <atma/math/matrix4f.hpp>
@@ -62,21 +61,21 @@ int main()
 	
 	bool running = true;
 
-	wnd->on_minimise += [](atma::evented::flowcontrol_t& fc) {
+	wnd->on_minimise += [](atma::event_flow_t& fc) {
 		std::cout << "bam, minimised" << std::endl;
 		fc.stop_execution();
 		fc.prevent_default_behaviour();
 	};
 	
-	wnd->on_minimise += [](atma::evented::flowcontrol_t&) {
+	wnd->on_minimise += [](atma::event_flow_t&) {
 		std::cout << "you jelly, Qt?" << std::endl;
 	};
 
-	wnd->on_maximise += [](atma::evented::flowcontrol_t&) {
+	wnd->on_maximise += [](atma::event_flow_t&) {
 		std::cout << "wow, maximised" << std::endl;
 	};
 
-	wnd->on_resize += [](atma::evented::flowcontrol_t&) {
+	wnd->on_resize += [](atma::event_flow_t&) {
 		std::cout << "WM_SIZE" << std::endl;
 	};
 
@@ -86,17 +85,21 @@ int main()
 	};
 #endif
 
-	wnd->on_restore += [](atma::evented::flowcontrol_t&) {
+	wnd->on_restore += [](atma::event_flow_t&) {
 		std::cout << "ooh, restored" << std::endl;
 	};
 
-	wnd->on_close += [&running](atma::evented::flowcontrol_t&) {
+	wnd->on_close += [&running](atma::event_flow_t&) {
 		std::cout << "lol, bye" << std::endl;
 		running = false;
 	};
 
+
+	shiny::voodoo::create_context(wnd, 0, 0);
+
 	// game loop
 	while (running)
-		fooey::process_events(wnd);
+		//fooey::process_events(wnd)
+		;
 #endif
 }
