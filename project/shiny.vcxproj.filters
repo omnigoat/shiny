@@ -35,9 +35,6 @@
     <ClCompile Include="..\source\scoped_runtime.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\plumbing\prime_thread.cpp">
-      <Filter>source\plumbing</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\voodoo\device.cpp">
       <Filter>source\voodoo</Filter>
     </ClCompile>
@@ -53,6 +50,9 @@
     <ClCompile Include="..\source\plumbing\vertex_declaration.cpp">
       <Filter>source\plumbing</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\voodoo\prime_thread.cpp">
+      <Filter>source\voodoo</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\shiny\plumbing\vertex_buffer.hpp">
@@ -63,9 +63,6 @@
     </ClInclude>
     <ClInclude Include="..\include\shiny\scoped_runtime.hpp">
       <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\shiny\plumbing\prime_thread.hpp">
-      <Filter>include\plumbing</Filter>
     </ClInclude>
     <ClInclude Include="..\include\shiny\voodoo\scoped_command_batch.hpp">
       <Filter>include\voodoo</Filter>
@@ -87,6 +84,9 @@
     </ClInclude>
     <ClInclude Include="..\include\shiny\plumbing\vertex_declaration.hpp">
       <Filter>include\plumbing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\shiny\voodoo\prime_thread.hpp">
+      <Filter>include\voodoo</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

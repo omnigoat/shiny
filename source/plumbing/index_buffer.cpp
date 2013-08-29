@@ -1,6 +1,7 @@
 #include <shiny/plumbing/index_buffer.hpp>
 #include <shiny/voodoo/thread.hpp>
 #include <shiny/voodoo/command.hpp>
+#include <shiny/voodoo/prime_thread.hpp>
 #include <atma/assert.hpp>
 
 namespace prime_thread = shiny::voodoo::prime_thread;

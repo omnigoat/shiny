@@ -1,6 +1,8 @@
 #ifndef SHINY_VOODOO_DEVICE_HPP
 #define SHINY_VOODOO_DEVICE_HPP
 //======================================================================
+#include <fooey/widgets/window.hpp>
+//======================================================================
 #include <thread>
 #include <atomic>
 #include <mutex>
@@ -37,6 +39,8 @@ namespace voodoo {
 
 	auto setup_d3d_device() -> void;
 	auto teardown_d3d_device() -> void;
+	
+	//auto create_context(fooey::window_ptr const&, uint32_t width, uint32_t height, ) -> void;
 
 //======================================================================
 } // namespace voodoo

@@ -1,5 +1,6 @@
 #include <shiny/plumbing/vertex_buffer.hpp>
 #include <shiny/voodoo/thread.hpp>
+#include <shiny/voodoo/prime_thread.hpp>
 #include <shiny/voodoo/command.hpp>
 #include <atma/assert.hpp>
 

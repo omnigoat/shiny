@@ -1,5 +1,5 @@
-#ifndef SHINY_VOODOO_THREAD_HPP
-#define SHINY_VOODOO_THREAD_HPP
+#ifndef SHINY_VOODOO_PRIME_THREAD_HPP
+#define SHINY_VOODOO_PRIME_THREAD_HPP
 //======================================================================
 #include <thread>
 #include <atomic>
@@ -13,53 +13,32 @@
 //======================================================================
 namespace shiny {
 namespace voodoo {
+namespace prime_thread {
 //======================================================================
 	
 	//======================================================================
-	// thread_fn
-	// -----------
-	//   the function passed to std::thread that maintains thread-local
-	//   validity of d3d_local_context_
+	// here be dragons.
 	//======================================================================
 	namespace detail
 	{
-		template <typename FN, typename... Args>
-		struct thread_fn
-		{
-			thread_fn(FN fn)
-				: fn_(fn)
-			{
-			}
+		extern std::thread handle_;
+		extern std::atomic_bool is_running_;
+	
+		typedef atma::lockfree::queue_t<std::function<void()>> command_queue_t;
+		extern command_queue_t command_queue_;
+		extern command_queue_t shutdown_queue_;
 
-			void operator ()(Args&&... args) const
-			{
-				ATMA_ASSERT(detail::d3d_device_);
-				ATMA_ASSERT(detail::d3d_local_context_ == nullptr);
-				detail::d3d_device_->CreateDeferredContext(0, &detail::d3d_local_context_);
-				ATMA_ASSERT(detail::d3d_local_context_);
-
-				fn_(args...);
-
-				ATMA_ASSERT(detail::d3d_local_context_);
-				detail::d3d_local_context_->Release();
-				detail::d3d_local_context_ = nullptr;
-			}
-
-		private:
-			FN fn_;
-		};
+		auto reenter(std::atomic_bool const&) -> void;
 	}
-	
-	
-	template <typename FN, typename... Args>
-	inline auto spawn_thread(FN fn, Args... args) -> std::thread
-	{
-		return std::thread(detail::thread_fn<FN, Args...>(fn), args...);
-	}
-	
-	
+
+	auto spawn() -> void;
+	auto join() -> void;
+
+	auto enqueue_block() -> void;
+	auto enqueue(std::function<void()> const& fn) -> void;
 
 //======================================================================
+} // namespace prime_thread
 } // namespace voodoo
 } // namespace shiny
 //======================================================================

@@ -2,6 +2,7 @@
 //======================================================================
 #include <shiny/voodoo/device.hpp>
 #include <shiny/voodoo/thread.hpp>
+#include <shiny/voodoo/prime_thread.hpp>
 //======================================================================
 #include <algorithm>
 

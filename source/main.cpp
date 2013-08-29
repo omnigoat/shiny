@@ -62,16 +62,22 @@ int main()
 	
 	bool running = true;
 
-	wnd->on_minimise += [] {
+	wnd->on_minimise += [](atma::evented::flowcontrol_t& fc) {
 		std::cout << "bam, minimised" << std::endl;
+		fc.stop_execution();
+		fc.prevent_default_behaviour();
+	};
+	
+	wnd->on_minimise += [](atma::evented::flowcontrol_t&) {
+		std::cout << "you jelly, Qt?" << std::endl;
 	};
 
-	/*wnd->on_minimise += [] {
-		std::cout << "you jelly, Qt?" << std::endl;
-	};*/
-
-	wnd->on_maximise += [] {
+	wnd->on_maximise += [](atma::evented::flowcontrol_t&) {
 		std::cout << "wow, maximised" << std::endl;
+	};
+
+	wnd->on_resize += [](atma::evented::flowcontrol_t&) {
+		std::cout << "WM_SIZE" << std::endl;
 	};
 
 #if 0
@@ -80,11 +86,11 @@ int main()
 	};
 #endif
 
-	wnd->on_restore += [] {
+	wnd->on_restore += [](atma::evented::flowcontrol_t&) {
 		std::cout << "ooh, restored" << std::endl;
 	};
 
-	wnd->on_close += [&running] {
+	wnd->on_close += [&running](atma::evented::flowcontrol_t&) {
 		std::cout << "lol, bye" << std::endl;
 		running = false;
 	};
