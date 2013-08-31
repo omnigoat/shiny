@@ -142,12 +142,21 @@ locked_vertex_buffer_t::~locked_vertex_buffer_t()
 {
 	// if we are shadowing, that means all data written was written into our shadow
 	// buffer. we will now update the d3d buffer from our shadow buffer.
+	auto owner = owner_;
+	auto d3d_resource = new D3D11_MAPPED_SUBRESOURCE;
+	
 	if (owner_->shadowing_) {
-		voodoo::prime_thread::enqueue([&]{ voodoo::map_vb(owner_->d3d_buffer_, &d3d_resource_, D3D11_MAP_WRITE_DISCARD, 0U); });
-		voodoo::prime_thread::enqueue([&]{ std::memcpy(d3d_resource_.pData, &owner_->data_.front(), owner_->data_size_); });
+		voodoo::prime_thread::enqueue([owner, d3d_resource]{ 
+			voodoo::map_vb(owner->d3d_buffer_, d3d_resource, D3D11_MAP_WRITE_DISCARD, 0U);
+			std::memcpy(d3d_resource->pData, &owner->data_.front(), owner->data_size_);
+		});
 	}
 
-	prime_thread::enqueue([&]{ voodoo::unmap(owner_->d3d_buffer_, 0); });
-	prime_thread::enqueue_block();
+	prime_thread::enqueue([=]{ 
+		voodoo::unmap(owner_->d3d_buffer_, 0);
+		delete d3d_resource;
+	});
+
+	//prime_thread::enqueue_block();
 }
 

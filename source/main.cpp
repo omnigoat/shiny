@@ -51,12 +51,6 @@ int main()
 	//auto context = shiny::rendering_context_t(wnd);
 	
 	
-	SR.add_context_thread([] {
-		float f[] = { 1, 2, 3, 4 };
-		shiny::plumbing::vertex_buffer_t vb(shiny::voodoo::gpu_access_t::read, shiny::voodoo::cpu_access_t::write, true, 16, f);
-	});
-
-
 	
 	
 	bool running = true;
@@ -75,8 +69,8 @@ int main()
 		std::cout << "wow, maximised" << std::endl;
 	};
 
-	wnd->on_resize += [](atma::event_flow_t&) {
-		std::cout << "WM_SIZE" << std::endl;
+	wnd->on_resize += [](atma::event_flow_t&, uint32_t width, uint32_t height) {
+		std::cout << "WM_SIZE: " << width << ", " << height << std::endl;
 	};
 
 #if 0
@@ -95,11 +89,10 @@ int main()
 	};
 
 
-	shiny::voodoo::create_context(wnd, 0, 0);
+	auto context = shiny::voodoo::create_context(wnd, 0, 0);
 
 	// game loop
 	while (running)
-		//fooey::process_events(wnd)
 		;
 #endif
 }

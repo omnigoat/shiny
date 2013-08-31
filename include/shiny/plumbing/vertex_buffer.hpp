@@ -49,6 +49,7 @@ namespace plumbing {
 		std::vector<char> data_;
 		bool shadowing_;
 		std::mutex mutex_;
+		std::mutex inflight_mutex_;
 
 		friend struct locked_vertex_buffer_t;
 	};

@@ -3,6 +3,8 @@
 //======================================================================
 #include <fooey/widgets/window.hpp>
 //======================================================================
+#include <atma/intrusive_ptr.hpp>
+//======================================================================
 #include <thread>
 #include <atomic>
 #include <mutex>
@@ -40,10 +42,26 @@ namespace voodoo {
 	auto setup_d3d_device() -> void;
 	auto teardown_d3d_device() -> void;
 	
-	auto create_context(fooey::window_ptr const&, uint32_t width, uint32_t height) -> void;
+	struct context_t : atma::ref_counted
+	{
+		context_t(fooey::window_ptr const&);
+		~context_t();
+
+	private:
+		fooey::window_ptr window_;
+		uint32_t on_resize_handle_;
+		IDXGISwapChain* dxgi_swap_chain_;
+	};
+	typedef atma::intrusive_ptr<context_t> context_ptr;
+
+
+	auto create_context(fooey::window_ptr const&, uint32_t width, uint32_t height) -> context_ptr;
 
 //======================================================================
 } // namespace voodoo
+
+	using voodoo::create_context;
+
 } // namespace shiny
 //======================================================================
 #endif

@@ -56,26 +56,30 @@ auto shiny::voodoo::teardown_d3d_device() -> void
 //======================================================================
 // context creation
 //======================================================================
-auto shiny::voodoo::create_context(fooey::window_ptr const& window, uint32_t width, uint32_t height) -> void
+auto shiny::voodoo::create_context(fooey::window_ptr const& window, uint32_t width, uint32_t height) -> shiny::voodoo::context_ptr
+{
+	return context_ptr(new context_t(window));
+}
+
+using shiny::voodoo::context_t;
+context_t::context_t(fooey::window_ptr const& window)
+	: window_(window)
 {
 	IDXGIDevice1* dxgi_device = nullptr;
-	HRESULT hr = detail::d3d_device_->QueryInterface(__uuidof(IDXGIDevice1), (void**)&dxgi_device);
-	ATMA_ENSURE_IS(S_OK, hr);
+	ATMA_ENSURE_IS(S_OK, detail::d3d_device_->QueryInterface(__uuidof(IDXGIDevice1), (void**)&dxgi_device));
 
 	IDXGIAdapter1* dxgi_adapter = nullptr;
-	hr = dxgi_device->GetParent(__uuidof(IDXGIAdapter1), (void**)&dxgi_adapter);
-	ATMA_ENSURE_IS(S_OK, hr);
+	ATMA_ENSURE_IS(S_OK, dxgi_device->GetParent(__uuidof(IDXGIAdapter1), (void**)&dxgi_adapter));
 
 	IDXGIFactory1* dxgi_factory = nullptr;
-	hr = dxgi_adapter->GetParent(__uuidof(IDXGIFactory1), (void**)&dxgi_factory);
-	ATMA_ENSURE_IS(S_OK, hr);
+	ATMA_ENSURE_IS(S_OK, dxgi_adapter->GetParent(__uuidof(IDXGIFactory1), (void**)&dxgi_factory));
 
 	auto desc = DXGI_SWAP_CHAIN_DESC{
 		// DXGI_MODE_DESC
 		{0, 0, { 0, 0 }, DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, DXGI_MODE_SCANLINE_ORDER_PROGRESSIVE, DXGI_MODE_SCALING_UNSPECIFIED},
 		// DXGI_SAMPLE_DESC
-		{1, 0},
-		DXGI_USAGE_BACK_BUFFER,
+		{ 1, 0 },
+		0,
 		3,
 		window->hwnd,
 		TRUE,
@@ -85,4 +89,14 @@ auto shiny::voodoo::create_context(fooey::window_ptr const& window, uint32_t wid
 
 	IDXGISwapChain* dxgi_swap_chain = nullptr;
 	ATMA_ENSURE_IS(S_OK, dxgi_factory->CreateSwapChain(detail::d3d_device_, &desc, &dxgi_swap_chain));
+
+
+	on_resize_handle_ = window_->on_resize.connect([dxgi_swap_chain](atma::event_flow_t&, uint32_t width, uint32_t height) {
+		ATMA_ENSURE_IS(S_OK, dxgi_swap_chain->ResizeBuffers(3, width, height, DXGI_FORMAT_UNKNOWN, 0));
+	});
+}
+
+context_t::~context_t()
+{
+	window_->on_resize.disconnect(on_resize_handle_);
 }
