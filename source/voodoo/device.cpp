@@ -58,13 +58,18 @@ auto shiny::voodoo::teardown_d3d_device() -> void
 //======================================================================
 auto shiny::voodoo::create_context(fooey::window_ptr const& window, uint32_t width, uint32_t height) -> shiny::voodoo::context_ptr
 {
-	return context_ptr(new context_t(window));
+	return context_ptr(new context_t(window, width, height));
 }
 
 using shiny::voodoo::context_t;
-context_t::context_t(fooey::window_ptr const& window)
-	: window_(window)
+context_t::context_t(fooey::window_ptr const& window, uint32_t width, uint32_t height)
+	: window_(window), width_(width), height_(height), fullscreen_()
 {
+	if (width_ == 0)
+		width_ = window_->width_in_pixels();
+	if (height_ == 0)
+		height_ = window_->height_in_pixels();
+
 	IDXGIDevice1* dxgi_device = nullptr;
 	ATMA_ENSURE_IS(S_OK, detail::d3d_device_->QueryInterface(__uuidof(IDXGIDevice1), (void**)&dxgi_device));
 
@@ -76,7 +81,7 @@ context_t::context_t(fooey::window_ptr const& window)
 
 	auto desc = DXGI_SWAP_CHAIN_DESC{
 		// DXGI_MODE_DESC
-		{0, 0, { 0, 0 }, DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, DXGI_MODE_SCANLINE_ORDER_PROGRESSIVE, DXGI_MODE_SCALING_UNSPECIFIED},
+		{width_, height_, { 0, 0 }, DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, DXGI_MODE_SCANLINE_ORDER_PROGRESSIVE, DXGI_MODE_SCALING_UNSPECIFIED},
 		// DXGI_SAMPLE_DESC
 		{ 1, 0 },
 		0,
@@ -92,11 +97,17 @@ context_t::context_t(fooey::window_ptr const& window)
 
 
 	on_resize_handle_ = window_->on_resize.connect([dxgi_swap_chain](atma::event_flow_t&, uint32_t width, uint32_t height) {
-		ATMA_ENSURE_IS(S_OK, dxgi_swap_chain->ResizeBuffers(3, width, height, DXGI_FORMAT_UNKNOWN, 0));
+		ATMA_ENSURE_IS(S_OK, dxgi_swap_chain->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0));
 	});
 }
 
 context_t::~context_t()
 {
 	window_->on_resize.disconnect(on_resize_handle_);
+}
+
+auto context_t::toggle_fullscreen() -> void
+{
+	//dxgi_swap_chain_->SetFullscreenState(TRUE, wat);
+	//dxgi_swap_chain_->ResizeTarget()
 }

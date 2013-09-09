@@ -42,7 +42,7 @@ int main()
 #else
 	// setup up gui
 	auto renderer = fooey::system_renderer();
-	auto wnd = fooey::window("Excitement.");
+	auto wnd = fooey::window("Excitement.", 480, 360);
 	renderer->add_window(wnd);
 
 	// runtime!
@@ -88,8 +88,29 @@ int main()
 		running = false;
 	};
 
+	//{fooey::keys::Alt + fooey::key_t::Enter}
+	//{fooey::keys::Ctrl + fooey::keys::K, fooey::keys::Ctrl + fooey::Keys::C};
+
+
 
 	auto context = shiny::voodoo::create_context(wnd, 0, 0);
+
+	wnd->key_state.on_key(fooey::key_t::Ctrl + fooey::key_t::F, [&context]{
+		//context->toggle_fullscreen();
+		std::cout << "blam" << std::endl;
+	});
+/*
+	auto keymappings =
+		shiny::map_keys_for(wnd)
+			.add_key(fooey::keys::A, )
+			;
+	//shiny::unmap_keys(wnd, keymappings);
+
+	shiny::on_key_chord({shiny::keys::Ctrl + shiny::keys::Backtick}, []{
+
+	});
+
+*/
 
 	// game loop
 	while (running)
