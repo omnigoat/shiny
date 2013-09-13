@@ -42,7 +42,7 @@ int main()
 #else
 	// setup up gui
 	auto renderer = fooey::system_renderer();
-	auto wnd = fooey::window("Excitement.");
+	auto wnd = fooey::window("Excitement.", 480, 260);
 	renderer->add_window(wnd);
 
 	// runtime!
@@ -75,8 +75,8 @@ int main()
 		std::cout << "wow, maximised" << std::endl;
 	};
 
-	wnd->on_resize += [](atma::event_flow_t&) {
-		std::cout << "WM_SIZE" << std::endl;
+	wnd->on_resize += [](atma::event_flow_t&, uint32_t width, uint32_t height) {
+		std::cout << "WM_SIZE: " << width << "x" << height << std::endl;
 	};
 
 #if 0
