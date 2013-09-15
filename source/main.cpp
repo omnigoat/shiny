@@ -2,10 +2,12 @@
 //#include <shiny/plumbing/vertex_buffer.hpp>
 #include <iostream>
 
+
 #include <atma/intrusive_ptr.hpp>
 #include <shiny/voodoo/thread.hpp>
 #include <shiny/voodoo/command.hpp>
 #include <shiny/plumbing/vertex_buffer.hpp>
+#include <shiny/voodoo/context.hpp>
 
 #include <fooey/widgets/window.hpp>
 #include <fooey/fooey.hpp>
@@ -48,13 +50,14 @@ int main()
 	// runtime!
 	auto SR = shiny::scoped_runtime_t();
 	// context per window!
-	//auto context = shiny::rendering_context_t(wnd);
+	auto context = shiny::create_context(wnd, 0, 0);
 	
 	
 	
 	
 	bool running = true;
 
+#if 0
 	wnd->on_minimise += [](atma::event_flow_t& fc) {
 		std::cout << "bam, minimised" << std::endl;
 		fc.stop_execution();
@@ -69,18 +72,20 @@ int main()
 		std::cout << "wow, maximised" << std::endl;
 	};
 
-	wnd->on_resize += [](atma::event_flow_t&, uint32_t width, uint32_t height) {
-		std::cout << "WM_SIZE: " << width << ", " << height << std::endl;
-	};
+	
 
-#if 0
 	wnd->on_resize += [](uint32_t width, uint32_t height) {
 		shiny::signal_resize(width, height);
 	};
-#endif
+
 
 	wnd->on_restore += [](atma::event_flow_t&) {
 		std::cout << "ooh, restored" << std::endl;
+	};
+
+#endif
+	wnd->on_resize += [](atma::event_flow_t&, uint32_t width, uint32_t height) {
+		std::cout << "WM_SIZE: " << width << ", " << height << std::endl;
 	};
 
 	wnd->on_close += [&running](atma::event_flow_t&) {
@@ -88,29 +93,10 @@ int main()
 		running = false;
 	};
 
-	//{fooey::keys::Alt + fooey::key_t::Enter}
-	//{fooey::keys::Ctrl + fooey::keys::K, fooey::keys::Ctrl + fooey::Keys::C};
-
-
-
-	auto context = shiny::voodoo::create_context(wnd, 0, 0);
-
 	wnd->key_state.on_key(fooey::key_t::Ctrl + fooey::key_t::F, [&context]{
-		//context->toggle_fullscreen();
-		std::cout << "blam" << std::endl;
-	});
-/*
-	auto keymappings =
-		shiny::map_keys_for(wnd)
-			.add_key(fooey::keys::A, )
-			;
-	//shiny::unmap_keys(wnd, keymappings);
-
-	shiny::on_key_chord({shiny::keys::Ctrl + shiny::keys::Backtick}, []{
-
+		shiny::signal_fullscreen_toggle(context);
 	});
 
-*/
 
 	// game loop
 	while (running)

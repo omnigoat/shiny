@@ -18,7 +18,7 @@ namespace voodoo {
 	// -----------
 	//   something sent to the prime_thread
 	//======================================================================
-	struct command_t : atma::ref_counted
+	struct command_t : atma::ref_counted<command_t>
 	{
 		command_t() {}
 		virtual ~command_t() {}
