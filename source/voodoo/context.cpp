@@ -96,18 +96,19 @@ auto context_t::toggle_fullscreen() -> void
 		auto mode = closest_fullscreen_backbuffer_mode(width_, height_);
 		auto dxgi_mode = DXGI_MODE_DESC{mode.width, mode.height, {mode.refreshrate_frames, mode.refreshrate_period}, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_MODE_SCANLINE_ORDER_PROGRESSIVE, DXGI_MODE_SCALING_UNSPECIFIED};
 		
-		std::cout << "going fullscreen to " << mode.width << "x" << mode.height << std::endl;
+		std::cout << "SHINY: going fullscreen to " << mode.width << "x" << mode.height << std::endl;
 		dxgi_swap_chain_->ResizeTarget(&dxgi_mode);
 		dxgi_swap_chain_->SetFullscreenState(TRUE, nullptr);
 	}
 	else
 	{
-		std::cout << "going windowed to " << width_ << "x" << height_ << std::endl;
+		std::cout << "SHINY: going windowed to " << width_ << "x" << height_ << std::endl;
 		auto dxgi_mode = DXGI_MODE_DESC{width_, height_, {0, 1}, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_MODE_SCANLINE_ORDER_PROGRESSIVE, DXGI_MODE_SCALING_UNSPECIFIED};
 		dxgi_swap_chain_->ResizeTarget(&dxgi_mode);
 		dxgi_swap_chain_->SetFullscreenState(FALSE, nullptr);
-		//window_->on_resize.fire(width_, height_);
-		//SendMessage(window_->hwnd, WM_SIZE, 0, ((uint16_t)height_ << 16) | (uint16_t)width_);
+
+		//fooey::signal_window_resize(window_, width_, height_);
+		
 		RECT rect;
 		GetWindowRect(window_->hwnd, &rect);
 		SetWindowPos(window_->hwnd, HWND_TOPMOST, rect.left, rect.top, window_->width_in_pixels(), window_->height_in_pixels(), 0);
