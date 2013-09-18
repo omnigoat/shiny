@@ -17,31 +17,6 @@
 
 int main()
 {
-#if 0
-	atma::math::vector4f v{1, 2, 3, 4};
-	auto addition = v + v;
-	//atma::math::vector4f r = addition;
-	auto multiplication = addition * 3.f;
-	atma::math::vector4f r2 = multiplication;
-
-	atma::math::matrix4f m = atma::math::matrix4f::identity();
-	atma::math::matrix4f m2 = atma::math::matrix4f::identity();
-
-	m.set(0, 0, 4.f);
-	m.set(1, 1, 2.f);
-	m.set(2, 2, 4.f / 3.f);
-
-	auto rv = m * v;
-
-	m2.set(1, 1, 3.f);
-
-	
-
-	auto mr = m * m2;
-	auto k = atma::math::dot_product(v, v);
-
-	return (int)v[2];
-#else
 	// setup up gui
 	auto renderer = fooey::system_renderer();
 	auto wnd = fooey::window("Excitement.", 480, 360);
@@ -50,7 +25,8 @@ int main()
 	// runtime!
 	auto SR = shiny::scoped_runtime_t();
 	// context per window!
-	auto context = shiny::create_context(wnd, 0, 0);
+	auto context = shiny::create_context(shiny::defer_construction);
+	context->bind_to(wnd);
 	
 	
 	
@@ -93,13 +69,14 @@ int main()
 		running = false;
 	};
 
+	#if 0
 	wnd->key_state.on_key(fooey::key_t::Ctrl + fooey::key_t::F, [&context]{
 		shiny::signal_fullscreen_toggle(context);
 	});
+	#endif
 
 
 	// game loop
 	while (running)
 		;
-#endif
 }

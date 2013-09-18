@@ -31,11 +31,16 @@ namespace shiny {
 		display_format_t format;
 	};
 
-	struct context_t : atma::ref_counted<context_t>
+	struct defer_construction_t {};
+	static defer_construction_t const defer_construction;
+
+	struct context_t : std::enable_shared_from_this<context_t>
 	{
-		context_t(fooey::window_ptr const&, uint32_t width, uint32_t height);
+		//context_t(bool fullscreen, uint32_t width, uint32_t height);
+		context_t(defer_construction_t);
 		~context_t();
 
+		auto bind_to(fooey::window_ptr const&) -> void;
 		auto toggle_fullscreen() -> void;
 
 	private:
@@ -52,7 +57,7 @@ namespace shiny {
 
 		// fooey
 		fooey::window_ptr window_;
-		uint32_t on_resize_handle_;
+		atma::event_t<uint32_t, uint32_t>::delegate_handle_t on_resize_handle_;
 
 		// implementation
 		typedef std::vector<display_mode_t> display_modes_t;
@@ -60,10 +65,11 @@ namespace shiny {
 		uint32_t width_, height_;
 		bool fullscreen_;
 	};
-	typedef atma::intrusive_ptr<context_t> context_ptr;
+	//typedef atma::intrusive_ptr<context_t> context_ptr;
+	typedef std::shared_ptr<context_t> context_ptr;
 
 	
-	auto create_context(fooey::window_ptr const&, uint32_t width, uint32_t height) -> context_ptr;
+	auto create_context(defer_construction_t) -> context_ptr;
 
 	auto signal_fullscreen_toggle(context_ptr const& context) -> void;
 

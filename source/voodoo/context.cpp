@@ -4,38 +4,48 @@
 //======================================================================
 // context creation
 //======================================================================
-auto shiny::create_context(fooey::window_ptr const& window, uint32_t width, uint32_t height) -> shiny::context_ptr
+auto shiny::create_context(shiny::defer_construction_t) -> shiny::context_ptr
 {
-	return context_ptr(new context_t(window, width, height));
+	return context_ptr(new context_t(shiny::defer_construction));
 }
 
 using shiny::context_t;
-context_t::context_t(fooey::window_ptr const& window, uint32_t width, uint32_t height)
-	: window_(window), width_(width), height_(height), fullscreen_()
+context_t::context_t(shiny::defer_construction_t)
+	: width_(), height_(), fullscreen_()
 {
-	if (width_ == 0)
-		width_ = window_->width_in_pixels();
-	if (height_ == 0)
-		height_ = window_->height_in_pixels();
-
 	ATMA_ENSURE_IS(S_OK, voodoo::detail::d3d_device_->QueryInterface(__uuidof(IDXGIDevice1), (void**)&dxgi_device_));
 	ATMA_ENSURE_IS(S_OK, dxgi_device_->GetParent(__uuidof(IDXGIAdapter1), (void**)&dxgi_adapter_));
 	ATMA_ENSURE_IS(S_OK, dxgi_adapter_->GetParent(__uuidof(IDXGIFactory1), (void**)&dxgi_factory_));
 
 	enumerate_backbuffers();
+}
+
+auto context_t::bind_to(fooey::window_ptr const& window) -> void
+{
+	window_ = window;
+	width_ = window_->width_in_pixels();
+	height_ = window_->height_in_pixels();
+
 	create_swapchain();
 
-	auto cptr = shared_from_this();
-	on_resize_handle_ = window_->on_resize.connect([cptr](atma::event_flow_t& fc, uint32_t width, uint32_t height)
+	auto ptr = std::weak_ptr<context_t>(shared_from_this());
+	
+	on_resize_handle_ = window_->on_resize.connect([ptr](atma::event_flow_t& fc, uint32_t width, uint32_t height)
 	{
-		voodoo::prime_thread::enqueue([&cptr, &fc, width, height]
+		if (ptr.expired())
+			return;
+
+		voodoo::prime_thread::enqueue([ptr, &fc, width, height]
 		{
-			if (!cptr->fullscreen_)
+			auto pp = ptr.lock();
+			if (!pp) return;
+
+			if (!pp->fullscreen_)
 			{
-				cptr->width_ = width;
-				cptr->height_ = height;
-				std::cout << "resizing to " << cptr->width_ << "x" << cptr->height_ << std::endl;
-				ATMA_ENSURE_IS(S_OK, cptr->dxgi_swap_chain_->ResizeBuffers(3, cptr->width_, cptr->height_, DXGI_FORMAT_UNKNOWN, 0));
+				pp->width_ = width;
+				pp->height_ = height;
+				std::cout << "resizing to " << pp->width_ << "x" << pp->height_ << std::endl;
+				ATMA_ENSURE_IS(S_OK, pp->dxgi_swap_chain_->ResizeBuffers(3, pp->width_, pp->height_, DXGI_FORMAT_UNKNOWN, 0));
 			}
 		});
 	});
