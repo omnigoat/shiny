@@ -30,12 +30,12 @@ auto context_t::bind_to(fooey::window_ptr const& window) -> void
 
 	auto ptr = std::weak_ptr<context_t>(shared_from_this());
 	
-	on_resize_handle_ = window_->on_resize.connect([ptr](atma::event_flow_t& fc, uint32_t width, uint32_t height)
+	window_->on_resize.add("shiny/context", [ptr](fooey::widget_event_t const& e, uint32_t width, uint32_t height)
 	{
 		if (ptr.expired())
 			return;
 
-		voodoo::prime_thread::enqueue([ptr, &fc, width, height]
+		voodoo::prime_thread::enqueue([ptr, width, height]
 		{
 			auto pp = ptr.lock();
 			if (!pp) return;
@@ -53,7 +53,7 @@ auto context_t::bind_to(fooey::window_ptr const& window) -> void
 
 context_t::~context_t()
 {
-	window_->on_resize.disconnect(on_resize_handle_);
+	//window_->on_resize.disconnect(on_resize_handle_);
 }
 
 auto context_t::enumerate_backbuffers() -> void

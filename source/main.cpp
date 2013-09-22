@@ -26,10 +26,7 @@ int main()
 	auto SR = shiny::scoped_runtime_t();
 	// context per window!
 	auto context = shiny::create_context(shiny::defer_construction);
-	context->bind_to(wnd);
-	
-	
-	
+	//context->bind_to(wnd);
 	
 	bool running = true;
 
@@ -60,14 +57,14 @@ int main()
 	};
 
 #endif
-	wnd->on_resize += [](atma::event_flow_t&, uint32_t width, uint32_t height) {
+	wnd->on_resize.add("shiny", [](fooey::widget_event_t const&, uint32_t width, uint32_t height) {
 		std::cout << "WM_SIZE: " << width << ", " << height << std::endl;
-	};
+	});
 
-	wnd->on_close += [&running](atma::event_flow_t&) {
+	wnd->on_close.add("shiny", [&running](fooey::widget_event_t const&) {
 		std::cout << "lol, bye" << std::endl;
 		running = false;
-	};
+	});
 
 	#if 0
 	wnd->key_state.on_key(fooey::key_t::Ctrl + fooey::key_t::F, [&context]{
