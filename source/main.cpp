@@ -15,6 +15,10 @@
 #include <atma/math/vector4f.hpp>
 #include <atma/math/matrix4f.hpp>
 
+struct dragon_event_t : fooey::event_t
+{
+};
+
 int main()
 {
 	// setup up gui
@@ -29,6 +33,16 @@ int main()
 	//context->bind_to(wnd);
 	
 	bool running = true;
+
+	wnd->on("close.dragons", [](dragon_event_t& e){
+		std::cout << "close.dragon" << std::endl;
+	});
+
+	wnd->on("close.dragons.things", [](dragon_event_t& e){
+		std::cout << "close.dragon.things" << std::endl;
+	});
+
+	wnd->fire("close.things", dragon_event_t());
 
 #if 0
 	wnd->on_minimise += [](atma::event_flow_t& fc) {
