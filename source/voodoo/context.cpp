@@ -28,32 +28,32 @@ auto context_t::bind_to(fooey::window_ptr const& window) -> void
 
 	create_swapchain();
 
-	auto ptr = std::weak_ptr<context_t>(shared_from_this());
+	auto weak_context = context_wptr(shared_from_this());
 	
-	window_->on_resize.add("shiny/context", [ptr](fooey::widget_event_t const& e, uint32_t width, uint32_t height)
-	{
-		if (ptr.expired())
-			return;
-
-		voodoo::prime_thread::enqueue([ptr, width, height]
+	//scoped_resize_handle_ =
+		window_->on("resize.shiny.context", [weak_context](fooey::resize_event_t& e)
 		{
-			auto pp = ptr.lock();
-			if (!pp) return;
+			if (weak_context.expired())
+				return;
 
-			if (!pp->fullscreen_)
+			voodoo::prime_thread::enqueue([weak_context, e]
 			{
-				pp->width_ = width;
-				pp->height_ = height;
-				std::cout << "resizing to " << pp->width_ << "x" << pp->height_ << std::endl;
-				ATMA_ENSURE_IS(S_OK, pp->dxgi_swap_chain_->ResizeBuffers(3, pp->width_, pp->height_, DXGI_FORMAT_UNKNOWN, 0));
-			}
+				auto pp = weak_context.lock();
+				if (!pp) return;
+
+				if (!pp->fullscreen_)
+				{
+					pp->width_ = e.width(); //width;
+					pp->height_ = e.height();
+					std::cout << "resizing to " << pp->width_ << "x" << pp->height_ << std::endl;
+					ATMA_ENSURE_IS(S_OK, pp->dxgi_swap_chain_->ResizeBuffers(3, pp->width_, pp->height_, DXGI_FORMAT_UNKNOWN, 0));
+				}
+			});
 		});
-	});
 }
 
 context_t::~context_t()
 {
-	//window_->on_resize.disconnect(on_resize_handle_);
 }
 
 auto context_t::enumerate_backbuffers() -> void
@@ -89,7 +89,7 @@ auto context_t::create_swapchain() -> void
 		{format.width, format.height, {format.refreshrate_frames, format.refreshrate_period}, DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, DXGI_MODE_SCANLINE_ORDER_PROGRESSIVE, DXGI_MODE_SCALING_UNSPECIFIED},
 		// DXGI_SAMPLE_DESC
 		{1, 0},
-		0, 3, window_->hwnd, TRUE, DXGI_SWAP_EFFECT_DISCARD, 0
+		0, 3, window_->hwnd(), TRUE, DXGI_SWAP_EFFECT_DISCARD, 0
 	};
 
 	ATMA_ENSURE_IS(S_OK, dxgi_factory_->CreateSwapChain(voodoo::detail::d3d_device_, &desc, &dxgi_swap_chain_));
@@ -120,8 +120,8 @@ auto context_t::toggle_fullscreen() -> void
 		//fooey::signal_window_resize(window_, width_, height_);
 		
 		RECT rect;
-		GetWindowRect(window_->hwnd, &rect);
-		SetWindowPos(window_->hwnd, HWND_TOPMOST, rect.left, rect.top, window_->width_in_pixels(), window_->height_in_pixels(), 0);
+		GetWindowRect(window_->hwnd(), &rect);
+		SetWindowPos(window_->hwnd(), HWND_TOPMOST, rect.left, rect.top, window_->width_in_pixels(), window_->height_in_pixels(), 0);
 	}
 }
 

@@ -67,7 +67,7 @@ namespace shiny {
 	};
 	//typedef atma::intrusive_ptr<context_t> context_ptr;
 	typedef std::shared_ptr<context_t> context_ptr;
-
+	typedef std::weak_ptr<context_t> context_wptr;
 	
 	auto create_context(defer_construction_t) -> context_ptr;
 

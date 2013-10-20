@@ -15,15 +15,15 @@
 #include <atma/math/vector4f.hpp>
 #include <atma/math/matrix4f.hpp>
 
-struct dragon_event_t : fooey::event_t
-{
-};
-
 int main()
 {
 	// setup up gui
 	auto renderer = fooey::system_renderer();
-	auto wnd = fooey::window("Excitement.", 480, 360);
+	fooey::window_ptr wnd = fooey::window("Excitement.", 480, 360);
+
+
+	auto window = (fooey::widget_ptr)fooey::window("Excitement.", 480, 360);
+
 	renderer->add_window(wnd);
 
 	// runtime!
@@ -34,58 +34,15 @@ int main()
 	
 	bool running = true;
 
-	wnd->on("close.dragons", [](dragon_event_t& e){
-		std::cout << "close.dragon" << std::endl;
-	});
-
-	wnd->on("close.dragons.things", [](dragon_event_t& e){
-		std::cout << "close.dragon.things" << std::endl;
-	});
-
-	wnd->fire("close.things", dragon_event_t());
-
-#if 0
-	wnd->on_minimise += [](atma::event_flow_t& fc) {
-		std::cout << "bam, minimised" << std::endl;
-		fc.stop_execution();
-		fc.prevent_default_behaviour();
-	};
-	
-	wnd->on_minimise += [](atma::event_flow_t&) {
-		std::cout << "you jelly, Qt?" << std::endl;
-	};
-
-	wnd->on_maximise += [](atma::event_flow_t&) {
-		std::cout << "wow, maximised" << std::endl;
-	};
-
-	
-
-	wnd->on_resize += [](uint32_t width, uint32_t height) {
-		shiny::signal_resize(width, height);
-	};
-
-
-	wnd->on_restore += [](atma::event_flow_t&) {
-		std::cout << "ooh, restored" << std::endl;
-	};
-
-#endif
-	wnd->on_resize.add("shiny", [](fooey::widget_event_t const&, uint32_t width, uint32_t height) {
-		std::cout << "WM_SIZE: " << width << ", " << height << std::endl;
-	});
-
-	wnd->on_close.add("shiny", [&running](fooey::widget_event_t const&) {
-		std::cout << "lol, bye" << std::endl;
+	wnd->on("close", [&running](fooey::event_t&){
 		running = false;
 	});
 
-	#if 0
-	wnd->key_state.on_key(fooey::key_t::Ctrl + fooey::key_t::F, [&context]{
-		shiny::signal_fullscreen_toggle(context);
+	wnd->on("resize", [](fooey::resize_event_t& e) {
+		std::cout << "WM_SIZE: " << e.width() << ", " << e.height() << std::endl;
 	});
-	#endif
 
+	
 
 	// game loop
 	while (running)
