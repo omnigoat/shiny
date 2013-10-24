@@ -1,5 +1,6 @@
 #include <shiny/voodoo/context.hpp>
 #include <shiny/voodoo/prime_thread.hpp>
+#include <fooey/events/resize.hpp>
 
 //======================================================================
 // context creation
@@ -31,7 +32,7 @@ auto context_t::bind_to(fooey::window_ptr const& window) -> void
 	auto weak_context = context_wptr(shared_from_this());
 	
 	//scoped_resize_handle_ =
-		window_->on("resize.shiny.context", [weak_context](fooey::resize_event_t& e)
+		window_->on("resize.shiny.context", [weak_context](fooey::events::resize_t& e)
 		{
 			if (weak_context.expired())
 				return;

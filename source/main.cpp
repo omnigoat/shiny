@@ -11,6 +11,7 @@
 
 #include <fooey/widgets/window.hpp>
 #include <fooey/fooey.hpp>
+#include <fooey/events/resize.hpp>
 
 #include <atma/math/vector4f.hpp>
 #include <atma/math/matrix4f.hpp>
@@ -38,7 +39,7 @@ int main()
 		running = false;
 	});
 
-	wnd->on("resize", [](fooey::resize_event_t& e) {
+	wnd->on("resize", [](fooey::events::resize_t& e) {
 		std::cout << "WM_SIZE: " << e.width() << ", " << e.height() << std::endl;
 	});
 
