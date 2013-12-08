@@ -57,15 +57,14 @@ namespace shiny {
 
 		// fooey
 		fooey::window_ptr window_;
-		//atma::event_t<uint32_t, uint32_t>::delegate_handle_t on_resize_handle_;
-
+		
 		// implementation
 		typedef std::vector<display_mode_t> display_modes_t;
 		display_modes_t backbuffer_display_modes_;
 		uint32_t width_, height_;
 		bool fullscreen_;
 	};
-	//typedef atma::intrusive_ptr<context_t> context_ptr;
+
 	typedef std::shared_ptr<context_t> context_ptr;
 	typedef std::weak_ptr<context_t> context_wptr;
 	

@@ -1,6 +1,7 @@
 #include <shiny/voodoo/context.hpp>
 #include <shiny/voodoo/prime_thread.hpp>
 #include <fooey/events/resize.hpp>
+#include <fooey/keys.hpp>
 
 //======================================================================
 // context creation
@@ -28,29 +29,28 @@ auto context_t::bind_to(fooey::window_ptr const& window) -> void
 	height_ = window_->height_in_pixels();
 
 	create_swapchain();
-
-	auto weak_context = context_wptr(shared_from_this());
 	
-	//scoped_resize_handle_ =
-		window_->on("resize.shiny.context", [weak_context](fooey::events::resize_t& e)
+	auto ctx = shared_from_this();
+
+	window_->on("resize.shiny.context", [ctx](fooey::events::resize_t& e)
+	{
+		voodoo::prime_thread::enqueue([ctx, e]
 		{
-			if (weak_context.expired())
+			if (e.origin().expired())
 				return;
 
-			voodoo::prime_thread::enqueue([weak_context, e]
+			auto wnd = std::dynamic_pointer_cast<fooey::window_t>(e.origin().lock());
+			ATMA_ASSERT(wnd);
+			
+			if (!ctx->fullscreen_)
 			{
-				auto pp = weak_context.lock();
-				if (!pp) return;
-
-				if (!pp->fullscreen_)
-				{
-					pp->width_ = e.width(); //width;
-					pp->height_ = e.height();
-					std::cout << "resizing to " << pp->width_ << "x" << pp->height_ << std::endl;
-					ATMA_ENSURE_IS(S_OK, pp->dxgi_swap_chain_->ResizeBuffers(3, pp->width_, pp->height_, DXGI_FORMAT_UNKNOWN, 0));
-				}
-			});
+				ctx->width_ = e.width();
+				ctx->height_ = e.height();
+				std::cout << "resizing to " << ctx->width_ << "x" << ctx->height_ << std::endl;
+				ATMA_ENSURE_IS(S_OK, ctx->dxgi_swap_chain_->ResizeBuffers(3, ctx->width_, ctx->height_, DXGI_FORMAT_UNKNOWN, 0));
+			}
 		});
+	});
 }
 
 context_t::~context_t()

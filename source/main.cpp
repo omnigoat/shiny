@@ -31,7 +31,7 @@ int main()
 	auto SR = shiny::scoped_runtime_t();
 	// context per window!
 	auto context = shiny::create_context(shiny::defer_construction);
-	//context->bind_to(wnd);
+	context->bind_to(wnd);
 	
 	bool running = true;
 
@@ -43,6 +43,7 @@ int main()
 		std::cout << "WM_SIZE: " << e.width() << ", " << e.height() << std::endl;
 	});
 
+	//fooey::event_t on_resize;
 	
 
 	// game loop
