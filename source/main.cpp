@@ -35,6 +35,10 @@ int main()
 	
 	bool running = true;
 
+	wnd->key_state.on_key(fooey::key_t::Ctrl + fooey::key_t::F, [&context]{
+		context->toggle_fullscreen();
+	});
+
 	wnd->on("close", [&running](fooey::event_t&){
 		running = false;
 	});
