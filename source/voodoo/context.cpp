@@ -118,11 +118,15 @@ auto context_t::toggle_fullscreen() -> void
 		dxgi_swap_chain_->ResizeTarget(&dxgi_mode);
 		dxgi_swap_chain_->SetFullscreenState(FALSE, nullptr);
 
+		//window_->
 		//fooey::signal_window_resize(window_, width_, height_);
 		
-		RECT rect;
-		GetWindowRect(window_->hwnd(), &rect);
-		SetWindowPos(window_->hwnd(), HWND_TOPMOST, rect.left, rect.top, window_->width_in_pixels(), window_->height_in_pixels(), 0);
+		//RECT rect;
+		//GetWindowRect(window_->hwnd(), &rect);
+		SetWindowPos(
+			window_->hwnd(), HWND_TOPMOST,
+			window_->left(), window_->top(), window_->width_in_pixels(), window_->height_in_pixels(),
+			0);
 	}
 }
 

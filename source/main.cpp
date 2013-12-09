@@ -35,7 +35,7 @@ int main()
 	
 	bool running = true;
 
-	wnd->key_state.on_key(fooey::key_t::Ctrl + fooey::key_t::F, [&context]{
+	wnd->key_state.on_key(fooey::key_t::Alt + fooey::key_t::Enter, [&context]{
 		context->toggle_fullscreen();
 	});
 
