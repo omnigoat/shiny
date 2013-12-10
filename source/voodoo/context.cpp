@@ -32,7 +32,7 @@ auto context_t::bind_to(fooey::window_ptr const& window) -> void
 	
 	auto ctx = shared_from_this();
 
-	window_->on("resize.shiny.context", [ctx](fooey::events::resize_t& e)
+	window_->on("resize-dc.shiny.context", [ctx](fooey::events::resize_t& e)
 	{
 		voodoo::prime_thread::enqueue([ctx, e]
 		{
@@ -42,11 +42,18 @@ auto context_t::bind_to(fooey::window_ptr const& window) -> void
 			auto wnd = std::dynamic_pointer_cast<fooey::window_t>(e.origin().lock());
 			ATMA_ASSERT(wnd);
 			
-			if (!ctx->fullscreen_)
+			std::cout << "resizing to " << e.width() << "x" << e.height() << std::endl;
+			
+			if (ctx->fullscreen_)
+			{
+				ctx->fullscreen_width_ = e.width();
+				ctx->fullscreen_height_ = e.height();
+				ATMA_ENSURE_IS(S_OK, ctx->dxgi_swap_chain_->ResizeBuffers(3, ctx->fullscreen_width_, ctx->fullscreen_height_, DXGI_FORMAT_UNKNOWN, 0));
+			}
+			else
 			{
 				ctx->width_ = e.width();
 				ctx->height_ = e.height();
-				std::cout << "resizing to " << ctx->width_ << "x" << ctx->height_ << std::endl;
 				ATMA_ENSURE_IS(S_OK, ctx->dxgi_swap_chain_->ResizeBuffers(3, ctx->width_, ctx->height_, DXGI_FORMAT_UNKNOWN, 0));
 			}
 		});
@@ -94,6 +101,7 @@ auto context_t::create_swapchain() -> void
 	};
 
 	ATMA_ENSURE_IS(S_OK, dxgi_factory_->CreateSwapChain(voodoo::detail::d3d_device_, &desc, &dxgi_swap_chain_));
+	ATMA_ENSURE_IS(S_OK, dxgi_factory_->MakeWindowAssociation(window_->hwnd(), DXGI_MWA_NO_WINDOW_CHANGES));
 }
 
 
@@ -104,12 +112,19 @@ auto context_t::toggle_fullscreen() -> void
 
 	if (fullscreen_)
 	{
-		auto mode = closest_fullscreen_backbuffer_mode(width_, height_);
-		auto dxgi_mode = DXGI_MODE_DESC{mode.width, mode.height, {mode.refreshrate_frames, mode.refreshrate_period}, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_MODE_SCANLINE_ORDER_PROGRESSIVE, DXGI_MODE_SCALING_UNSPECIFIED};
-		
+		auto mode = closest_fullscreen_backbuffer_mode(1680, 1050);
 		std::cout << "SHINY: going fullscreen to " << mode.width << "x" << mode.height << std::endl;
+
+		// resize-target
+		auto dxgi_mode = DXGI_MODE_DESC{mode.width, mode.height, {mode.refreshrate_frames, mode.refreshrate_period}, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_MODE_SCANLINE_ORDER_PROGRESSIVE, DXGI_MODE_SCALING_UNSPECIFIED};
 		dxgi_swap_chain_->ResizeTarget(&dxgi_mode);
+		
+		// go to fullscreen
 		dxgi_swap_chain_->SetFullscreenState(TRUE, nullptr);
+
+		// second resize-target with zeroed refresh-rate because MS says so
+		dxgi_mode.RefreshRate = {0, 0};
+		dxgi_swap_chain_->ResizeTarget(&dxgi_mode);
 	}
 	else
 	{
@@ -117,12 +132,7 @@ auto context_t::toggle_fullscreen() -> void
 		auto dxgi_mode = DXGI_MODE_DESC{width_, height_, {0, 1}, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_MODE_SCANLINE_ORDER_PROGRESSIVE, DXGI_MODE_SCALING_UNSPECIFIED};
 		dxgi_swap_chain_->ResizeTarget(&dxgi_mode);
 		dxgi_swap_chain_->SetFullscreenState(FALSE, nullptr);
-
-		//window_->
-		//fooey::signal_window_resize(window_, width_, height_);
 		
-		//RECT rect;
-		//GetWindowRect(window_->hwnd(), &rect);
 		SetWindowPos(
 			window_->hwnd(), HWND_TOPMOST,
 			window_->left(), window_->top(), window_->width_in_pixels(), window_->height_in_pixels(),

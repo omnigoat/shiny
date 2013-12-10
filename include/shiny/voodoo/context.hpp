@@ -61,6 +61,7 @@ namespace shiny {
 		// implementation
 		typedef std::vector<display_mode_t> display_modes_t;
 		display_modes_t backbuffer_display_modes_;
+		uint32_t fullscreen_width_, fullscreen_height_;
 		uint32_t width_, height_;
 		bool fullscreen_;
 	};

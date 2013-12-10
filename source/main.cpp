@@ -43,7 +43,7 @@ int main()
 		running = false;
 	});
 
-	wnd->on("resize", [](fooey::events::resize_t& e) {
+	wnd->on("resize-dc", [](fooey::events::resize_t& e) {
 		std::cout << "WM_SIZE: " << e.width() << ", " << e.height() << std::endl;
 	});
 
