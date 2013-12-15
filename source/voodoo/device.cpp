@@ -13,19 +13,18 @@ std::mutex shiny::voodoo::detail::immediate_context_mutex_;
 __declspec(thread) ID3D11DeviceContext* shiny::voodoo::detail::d3d_local_context_ = nullptr;
 
 // dxgi factory
-com_ptr<IDXGIFactory1> shiny::voodoo::detail::dxgi_factory_;
+atma::com_ptr<IDXGIFactory1> shiny::voodoo::detail::dxgi_factory_;
 
 // dxgi device for the d3d-device
-com_ptr<IDXGIDevice1> shiny::voodoo::detail::dxgi_device_;
+atma::com_ptr<IDXGIDevice1> shiny::voodoo::detail::dxgi_device_;
 
 // dxgi adapters
-std::vector<com_ptr<IDXGIAdapter1>> shiny::voodoo::detail::dxgi_adapters_;
-com_ptr<IDXGIAdapter1> shiny::voodoo::detail::dxgi_primary_adapter_;
+std::vector<atma::com_ptr<IDXGIAdapter1>> shiny::voodoo::detail::dxgi_adapters_;
+atma::com_ptr<IDXGIAdapter1> shiny::voodoo::detail::dxgi_primary_adapter_;
 
 // outputs/surface for primary adapter
-std::vector<com_ptr<IDXGIOutput>> shiny::voodoo::detail::dxgi_primary_adaptor_outputs_;
-com_ptr<IDXGIOutput> shiny::voodoo::detail::dxgi_primary_output_;
-com_ptr<IDXGISurface> shiny::voodoo::detail::dxgi_primary_surface_;
+std::vector<atma::com_ptr<IDXGIOutput>> shiny::voodoo::detail::dxgi_primary_adaptor_outputs_;
+atma::com_ptr<IDXGIOutput> shiny::voodoo::detail::dxgi_primary_output_;
 
 
 
@@ -73,7 +72,6 @@ auto shiny::voodoo::setup_d3d_device() -> void
 
 		// store primary output and surface
 		detail::dxgi_primary_output_ = detail::dxgi_primary_adaptor_outputs_[0];
-		//detail::dxgi_primary_output_->GetDisplaySurfaceData(&detail::dxgi_primary_surface_);
 	}
 
 
