@@ -16,6 +16,68 @@
 namespace shiny {
 namespace voodoo {
 //======================================================================
+	
+	template <typename T>
+	class com_ptr
+	{
+	public:
+		com_ptr()
+			: x_(nullptr)
+		{}
+
+		// raw constructor takes ownership
+		com_ptr(T* x)
+			: x_(x)
+		{}
+
+		com_ptr(com_ptr&& rhs)
+			: x_(rhs.x_)
+		{
+			rhs.x_ = nullptr;
+		}
+
+		com_ptr(com_ptr const& rhs)
+		{
+			if (x_) x_->Release();
+			x_ = rhs.x_;
+			if (x_) x_->AddRef();
+		}
+
+		~com_ptr()
+		{
+			if (x_) x_->Release();
+		}
+
+		auto operator -> () -> T* {
+			return x_;
+		}
+
+		auto operator = (com_ptr const& rhs) -> com_ptr&
+		{
+			if (x_) x_->Release();
+			x_ = rhs.x_;
+			if (x_) x_->AddRef();
+			return *this;
+		}
+
+		auto operator & () -> T** {
+			return &x_;
+		}
+
+		operator bool () {
+			return x_ != nullptr;
+		}
+
+		auto get() const -> T* { return x_; }
+	private:
+		T* x_;
+	};
+
+	template <typename T>
+	auto make_com_ptr(T* t) -> com_ptr<T>
+	{
+		return com_ptr<T>(t);
+	}
 
 	//======================================================================
 	// the devil lies here.
@@ -29,6 +91,25 @@ namespace voodoo {
 
 		// this is the device context for this thread
 		extern __declspec(thread) ID3D11DeviceContext* d3d_local_context_;
+
+
+		// dxgi factory
+		extern com_ptr<IDXGIFactory1> dxgi_factory_;
+
+		// dxgi device for the d3d-device
+		extern com_ptr<IDXGIDevice1> dxgi_device_;
+
+		// dxgi adapters
+		extern std::vector<com_ptr<IDXGIAdapter1>> dxgi_adapters_;
+		extern com_ptr<IDXGIAdapter1> dxgi_primary_adapter_;
+
+		// outputs/surface for primary adapter
+		extern std::vector<com_ptr<IDXGIOutput>> dxgi_primary_adaptor_outputs_;
+		extern com_ptr<IDXGIOutput> dxgi_primary_output_;
+		extern com_ptr<IDXGISurface> dxgi_primary_surface_;
+
+
+
 
 		inline auto is_prime_thread() -> bool { return d3d_local_context_ == d3d_immediate_context_; }
 

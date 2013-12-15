@@ -50,9 +50,7 @@ namespace shiny {
 		auto closest_fullscreen_backbuffer_mode(uint32_t width, uint32_t height)->display_mode_t;
 		
 		// dxgi
-		IDXGIDevice1* dxgi_device_;
 		IDXGIAdapter1* dxgi_adapter_;
-		IDXGIFactory1* dxgi_factory_;
 		IDXGISwapChain* dxgi_swap_chain_;
 
 		// fooey
