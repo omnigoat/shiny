@@ -129,29 +129,17 @@ auto context_t::toggle_fullscreen() -> void
 	{
 		auto monitor_info = primary_monitor_resolution();
 
-		// get surface properties of primary output
-		//DXGI_SURFACE_DESC surface_desc;
-		//detail::dxgi_primary_surface_->GetDesc(&surface_desc);
+		// find best-fitting fullscreen resolution
 		DXGI_OUTPUT_DESC output_desc;
 		detail::dxgi_primary_output_->GetDesc(&output_desc);
-
-		// find best-fitting fullscreen resolution
+		
 		DXGI_MODE_DESC candidate{output_desc.DesktopCoordinates.right, output_desc.DesktopCoordinates.bottom, {0, 0}, DXGI_FORMAT_UNKNOWN, DXGI_MODE_SCANLINE_ORDER_PROGRESSIVE, DXGI_MODE_SCALING_UNSPECIFIED};
 		DXGI_MODE_DESC mode_desc;
 		detail::dxgi_primary_output_->FindClosestMatchingMode(&candidate, &mode_desc, detail::dxgi_device_.get());
 
-
-		//auto mode = closest_fullscreen_backbuffer_mode(monitor_info.width, monitor_info.height);
-		//std::cout << "SHINY: going fullscreen to " << mode.width << "x" << mode.height << std::endl;
-		//auto k = shiny::voodoo::detail::dxgi_primary_surface_
-
 		// resize-target to natural width/height
-		//auto dxgi_mode = DXGI_MODE_DESC{mode.width, mode.height, {mode.refreshrate_frames, mode.refreshrate_period}, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_MODE_SCANLINE_ORDER_PROGRESSIVE, DXGI_MODE_SCALING_UNSPECIFIED};
 		dxgi_swap_chain_->ResizeTarget(&mode_desc);
 
-		DXGI_SWAP_CHAIN_DESC dxgi_swap_chain_desc;
-		dxgi_swap_chain_->GetDesc(&dxgi_swap_chain_desc);
-		
 		// go to fullscreen
 		dxgi_swap_chain_->SetFullscreenState(TRUE, nullptr);
 
@@ -161,16 +149,7 @@ auto context_t::toggle_fullscreen() -> void
 	}
 	else
 	{
-		std::cout << "SHINY: going windowed to " << width_ << "x" << height_ << std::endl;
-		auto dxgi_mode = DXGI_MODE_DESC{width_, height_, {0, 1}, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_MODE_SCANLINE_ORDER_PROGRESSIVE, DXGI_MODE_SCALING_UNSPECIFIED};
-		dxgi_swap_chain_->ResizeTarget(&dxgi_mode);
 		dxgi_swap_chain_->SetFullscreenState(FALSE, nullptr);
-		
-		std::cout << "SHINY: SetWindowPos - " << window_->left() << ":" << window_->top() << " " << window_->width_in_pixels() << "x" << window_->height_in_pixels() << std::endl;
-		SetWindowPos(
-			window_->hwnd(), HWND_TOPMOST,
-			window_->left(), window_->top(), window_->width_in_pixels(), window_->height_in_pixels(),
-			0);
 	}
 }
 

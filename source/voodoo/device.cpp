@@ -1,8 +1,6 @@
 #include <shiny/voodoo/device.hpp>
 #include <atma/assert.hpp>
 
-using shiny::voodoo::com_ptr;
-
 //======================================================================
 // externs
 //======================================================================
@@ -60,7 +58,7 @@ auto shiny::voodoo::setup_d3d_device() -> void
 		IDXGIAdapter1* adapter;
 		uint32_t i = 0;
 		while (detail::dxgi_factory_->EnumAdapters1(i++, &adapter) != DXGI_ERROR_NOT_FOUND)
-			detail::dxgi_adapters_.push_back(make_com_ptr(adapter));
+			detail::dxgi_adapters_.push_back(atma::make_com_ptr(adapter));
 	}
 
 	// get all outputs for the primary adapter
@@ -68,7 +66,7 @@ auto shiny::voodoo::setup_d3d_device() -> void
 		IDXGIOutput* output;
 		uint32_t i = 0;
 		while (detail::dxgi_adapters_[0]->EnumOutputs(i++, &output) != DXGI_ERROR_NOT_FOUND)
-			detail::dxgi_primary_adaptor_outputs_.push_back(make_com_ptr(output));
+			detail::dxgi_primary_adaptor_outputs_.push_back(atma::make_com_ptr(output));
 
 		// store primary output and surface
 		detail::dxgi_primary_output_ = detail::dxgi_primary_adaptor_outputs_[0];
