@@ -51,7 +51,8 @@ auto shiny::voodoo::prime_thread::spawn() -> void
 	// tell the prime-thread to shut down the d3d-device on close
 	detail::shutdown_queue_.push(&teardown_d3d_device);
 
-	// setup the d3d-device and then block until that's done
+	// setup the dxgi & d3d and then block until that's done
+	prime_thread::enqueue(&setup_dxgi);
 	prime_thread::enqueue(&setup_d3d_device);
 	prime_thread::enqueue_block();
 }

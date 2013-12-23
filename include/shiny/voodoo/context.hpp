@@ -36,14 +36,15 @@ namespace shiny {
 
 	struct context_t : std::enable_shared_from_this<context_t>
 	{
-		//context_t(bool fullscreen, uint32_t width, uint32_t height);
+		context_t(fooey::window_ptr const&);
 		context_t(defer_construction_t);
 		~context_t();
 
-		auto bind_to(fooey::window_ptr const&) -> void;
 		auto toggle_fullscreen() -> void;
 
 	private:
+		auto bind_to(fooey::window_ptr const&) -> void;
+		auto bind_events(fooey::window_ptr const&) -> void;
 		auto enumerate_backbuffers() -> void;
 		auto create_swapchain() -> void; 
 		
@@ -55,7 +56,8 @@ namespace shiny {
 
 		// fooey
 		fooey::window_ptr window_;
-		
+		fooey::event_handler_t::delegate_set_t bound_events_;
+
 		// implementation
 		typedef std::vector<display_mode_t> display_modes_t;
 		display_modes_t backbuffer_display_modes_;
@@ -67,8 +69,9 @@ namespace shiny {
 	typedef std::shared_ptr<context_t> context_ptr;
 	typedef std::weak_ptr<context_t> context_wptr;
 	
+	auto create_context(fooey::window_ptr const&) -> context_ptr;
 	auto create_context(defer_construction_t) -> context_ptr;
-
+	
 	auto signal_fullscreen_toggle(context_ptr const& context) -> void;
 
 //======================================================================

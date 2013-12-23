@@ -20,35 +20,32 @@ int main()
 {
 	// setup up gui
 	auto renderer = fooey::system_renderer();
-	fooey::window_ptr wnd = fooey::window("Excitement.", 480, 360);
+	fooey::window_ptr window = fooey::window("Excitement.", 480, 360);
 
 
-	auto window = (fooey::widget_ptr)fooey::window("Excitement.", 480, 360);
-
-	renderer->add_window(wnd);
+	renderer->add_window(window);
 
 	// runtime!
 	auto SR = shiny::scoped_runtime_t();
 	// context per window!
-	auto context = shiny::create_context(shiny::defer_construction);
-	context->bind_to(wnd);
+	//auto context = shiny::create_context(window);
 	
 	bool running = true;
 
-	wnd->key_state.on_key(fooey::key_t::Alt + fooey::key_t::Enter, [&context]{
-		context->toggle_fullscreen();
+	//window->key_state.on_key(fooey::key_t::Alt + fooey::key_t::Enter, [&context]{
+	//	context->toggle_fullscreen();
+	//});
+
+	window->on({
+		{"close", [&running](fooey::event_t&){
+			running = false;
+		}},
+
+		{"resize-dc", [](fooey::events::resize_t& e) {
+			std::cout << "WM_SIZE: " << e.width() << ", " << e.height() << std::endl;
+		}}
 	});
 
-	wnd->on("close", [&running](fooey::event_t&){
-		running = false;
-	});
-
-	wnd->on("resize-dc", [](fooey::events::resize_t& e) {
-		std::cout << "WM_SIZE: " << e.width() << ", " << e.height() << std::endl;
-	});
-
-	//fooey::event_t on_resize;
-	
 
 	// game loop
 	while (running)
