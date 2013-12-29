@@ -20,26 +20,28 @@ namespace shiny {
 namespace voodoo {
 //======================================================================
 	
+	// dxgi
 	typedef atma::com_ptr<IDXGIAdapter1> dxgi_adapter_ptr;
 	typedef atma::com_ptr<IDXGIOutput> dxgi_output_ptr;
-
+	typedef atma::com_ptr<IDXGISwapChain> dxgi_swap_chain_ptr;
+	
+	// d3d
+	typedef atma::com_ptr<ID3D11Device> d3d_device_ptr;
+	typedef atma::com_ptr<ID3D11DeviceContext> d3d_context_ptr;
+	
 	//======================================================================
 	// the devil lies here.
 	//======================================================================
 	namespace detail
 	{
-		// there is one global d3d device, and one immeidate context
-		extern atma::com_ptr<ID3D11Device> d3d_device_;
-		extern atma::com_ptr<ID3D11DeviceContext> d3d_immediate_context_;
-		extern std::mutex immediate_context_mutex_;
-
+		
 		// this is the device context for this thread
-		extern __declspec(thread) ID3D11DeviceContext* d3d_local_context_;
+		//extern __declspec(thread) ID3D11DeviceContext* d3d_local_context_;
 
 
 		auto output_for_window(fooey::window_ptr const&) -> atma::com_ptr<IDXGIOutput>;
 
-		inline auto is_prime_thread() -> bool { return d3d_local_context_ == d3d_immediate_context_.get(); }
+		//inline auto is_prime_thread() -> bool { return d3d_local_context_ == d3d_immediate_context_.get(); }
 
 		struct scoped_async_immediate_context_t
 		{
@@ -52,7 +54,8 @@ namespace voodoo {
 
 	auto adapter_and_output(uint32_t adapter, uint32_t output) -> std::tuple<dxgi_adapter_ptr, dxgi_output_ptr>;
 	//auto create_swap_chain(fooey::window_ptr const&, )
-	//auto d3d_device(dxgi_adapter_ptr const&) -> 
+	
+	auto dxgi_and_d3d_at(uint32_t adapter_index) -> std::tuple<dxgi_adapter_ptr, d3d_device_ptr, d3d_context_ptr>;
 
 	auto setup_dxgi() -> void;
 	auto teardown_dxgi() -> void;

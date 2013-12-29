@@ -7,7 +7,7 @@
 #include <shiny/voodoo/thread.hpp>
 #include <shiny/voodoo/command.hpp>
 #include <shiny/plumbing/vertex_buffer.hpp>
-#include <shiny/voodoo/context.hpp>
+#include <shiny/context.hpp>
 
 #include <fooey/widgets/window.hpp>
 #include <fooey/fooey.hpp>

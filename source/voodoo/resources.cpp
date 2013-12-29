@@ -41,6 +41,7 @@ auto shiny::voodoo::create_buffer(ID3D11Buffer** buffer, gpu_access_t gpu_access
 	
 	D3D11_BUFFER_DESC buffer_desc { data_size, buffer_usage, D3D11_BIND_VERTEX_BUFFER, cpua, 0, 0 };
 
+#if 0
 	if (data) {
 		// for vertex buffers, the pitch and slice-pitch mean nothing, so we'll just
 		// pass along stats to help with debugging (1xdata_size buffer created)
@@ -50,6 +51,7 @@ auto shiny::voodoo::create_buffer(ID3D11Buffer** buffer, gpu_access_t gpu_access
 	else {
 		detail::d3d_device_->CreateBuffer(&buffer_desc, NULL, buffer);
 	}
+#endif
 }
 
 
@@ -85,6 +87,7 @@ auto shiny::voodoo::create_index_buffer(ID3D11Buffer** buffer, gpu_access_t gpu_
 
 	D3D11_BUFFER_DESC buffer_desc { data_size, buffer_usage, D3D11_BIND_INDEX_BUFFER, cpua, 0, 0 };
 
+#if 0
 	if (data) {
 		// for vertex buffers, the pitch and slice-pitch mean nothing, so we'll just
 		// pass along stats to help with debugging (1xdata_size buffer created)
@@ -94,15 +97,18 @@ auto shiny::voodoo::create_index_buffer(ID3D11Buffer** buffer, gpu_access_t gpu_
 	else {
 		detail::d3d_device_->CreateBuffer(&buffer_desc, NULL, buffer);
 	}
+#endif
 }
 
 auto shiny::voodoo::map(ID3D11Resource* d3d_resource, D3D11_MAPPED_SUBRESOURCE* d3d_mapped_resource, D3D11_MAP map_type, uint32_t subresource) -> void
 {
+#if 0
 	detail::d3d_local_context_->Map(d3d_resource, subresource, map_type, 0, d3d_mapped_resource);
 	ID3D11DeviceContext* mapping_context = detail::d3d_local_context_;
 
 	// store which context mapped the resource
 	d3d_resource->SetPrivateData(mapped_context_guid, ptr_size, &detail::d3d_local_context_);
+#endif
 }
 
 auto shiny::voodoo::map_vb(ID3D11Buffer* d3d_resource, D3D11_MAPPED_SUBRESOURCE* d3d_mapped_resource, D3D11_MAP map_type, uint32_t subresource) -> void
@@ -112,6 +118,7 @@ auto shiny::voodoo::map_vb(ID3D11Buffer* d3d_resource, D3D11_MAPPED_SUBRESOURCE*
 
 auto shiny::voodoo::unmap(ID3D11Resource* d3d_resource, uint32_t subresource) -> void
 {
+#if 0
 	// use the device stored in private data to assert it's the same thread
 	auto size = ptr_size;
 	ID3D11DeviceContext* d3d_context = nullptr;
@@ -120,6 +127,7 @@ auto shiny::voodoo::unmap(ID3D11Resource* d3d_resource, uint32_t subresource) ->
 	ATMA_ASSERT(detail::d3d_local_context_ == d3d_context);
 
 	detail::d3d_local_context_->Unmap(d3d_resource, subresource);
+#endif
 }
 
 

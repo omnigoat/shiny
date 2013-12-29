@@ -59,8 +59,8 @@
     <ClCompile Include="..\source\voodoo\prime_thread.cpp">
       <Filter>source\voodoo</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\voodoo\context.cpp">
-      <Filter>source\voodoo</Filter>
+    <ClCompile Include="..\source\context.cpp">
+      <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -97,10 +97,13 @@
     <ClInclude Include="..\include\shiny\voodoo\prime_thread.hpp">
       <Filter>include\voodoo</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\shiny\voodoo\context.hpp">
-      <Filter>include\voodoo</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\shiny\format.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\shiny\thread\this_thread.hpp">
+      <Filter>include\thread</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\shiny\context.hpp">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>

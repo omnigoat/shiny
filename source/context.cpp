@@ -1,4 +1,5 @@
-#include <shiny/voodoo/context.hpp>
+#include <shiny/context.hpp>
+
 #include <shiny/voodoo/prime_thread.hpp>
 #include <shiny/voodoo/device.hpp>
 #include <fooey/events/resize.hpp>
@@ -6,7 +7,8 @@
 
 #include <vector>
 
-using namespace shiny::voodoo;
+using namespace shiny;
+using shiny::context_t;
 
 namespace
 {
@@ -32,12 +34,10 @@ auto shiny::create_context(fooey::window_ptr const& window, uint32_t adapter) ->
 //======================================================================
 // context_t
 //======================================================================
-using shiny::context_t;
-
 context_t::context_t(fooey::window_ptr const& window, uint32_t adapter)
-: width_(), height_(), fullscreen_()
+: fullscreen_()
 {
-	enumerate_backbuffers();
+	setup_dxgi_and_d3d(adapter);
 	bind_to(window);
 	bind_events(window);
 }
@@ -48,70 +48,71 @@ context_t::~context_t()
 		window_->unbind(bound_events_);
 }
 
+auto context_t::setup_dxgi_and_d3d(uint32_t adapter) -> void
+{
+	std::tie(dxgi_adapter_, d3d_device_, d3d_immediate_context_)
+		= voodoo::dxgi_and_d3d_at(adapter);
+}
+
 
 auto context_t::bind_to(fooey::window_ptr const& window) -> void
 {
 	window_ = window;
-	width_ = window_->width_in_pixels();
-	height_ = window_->height_in_pixels();
+	//width_ = window_->width_in_pixels();
+	//height_ = window_->height_in_pixels();
 
 	create_swapchain();
 }
 
 auto context_t::bind_events(fooey::window_ptr const& window) -> void
 {
-	auto ctx = this;
-
 	bound_events_ = window->on({
-		{"resize-dc.shiny.context", [ctx](fooey::events::resize_t& e) {
-			voodoo::prime_thread::enqueue([ctx, e]
-			{
-				if (e.origin().expired())
-					return;
-
-				auto wnd = std::dynamic_pointer_cast<fooey::window_t>(e.origin().lock());
-				ATMA_ASSERT(wnd);
-
-				//std::cout << "resize-dc.shiny.context: resizing to " << e.width() << "x" << e.height() << std::endl;
-
-				if (ctx->fullscreen_)
-				{
-					ctx->fullscreen_width_ = e.width();
-					ctx->fullscreen_height_ = e.height();
-
-					ATMA_ENSURE_IS(S_OK, ctx->dxgi_swap_chain_->ResizeBuffers(3, ctx->fullscreen_width_, ctx->fullscreen_height_, DXGI_FORMAT_UNKNOWN, 0));
-				}
-				else
-				{
-					ctx->width_ = e.width();
-					ctx->height_ = e.height();
-					ATMA_ENSURE_IS(S_OK, ctx->dxgi_swap_chain_->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0));
-				}
-			});
-		}}
+		{"resize-dc.shiny.context", [this](fooey::events::resize_t& e) { on_resize(e); }}
 	});
 }
 
-auto context_t::enumerate_backbuffers() -> void
+auto context_t::on_resize(fooey::events::resize_t& e) -> void
 {
+	voodoo::prime_thread::enqueue([this, e]
+	{
+		if (e.origin().expired())
+			return;
 
+		auto wnd = std::dynamic_pointer_cast<fooey::window_t>(e.origin().lock());
+		ATMA_ASSERT(wnd);
+
+		if (fullscreen_)
+		{
+			//fullscreen_width_ = e.width();
+			//fullscreen_height_ = e.height();
+
+			ATMA_ENSURE_IS(S_OK, dxgi_swap_chain_->ResizeBuffers(3, e.width(), e.height(), DXGI_FORMAT_UNKNOWN, 0));
+		}
+		else
+		{
+			//width_ = e.width();
+			//height_ = e.height();
+			ATMA_ENSURE_IS(S_OK, dxgi_swap_chain_->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0));
+		}
+	});
 }
 
 auto context_t::create_swapchain() -> void
 {
-	auto format = closest_fullscreen_backbuffer_mode(width_, height_);
-	
+	display_format_.width = window_->width();
+	display_format_.height = window_->height();
+
 	auto desc = DXGI_SWAP_CHAIN_DESC{
 		// DXGI_MODE_DESC
-		{format.width, format.height, {format.refreshrate_frames, format.refreshrate_period}, DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, DXGI_MODE_SCANLINE_ORDER_PROGRESSIVE, DXGI_MODE_SCALING_UNSPECIFIED},
+		{0, 0, {0, 0}, DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, DXGI_MODE_SCANLINE_ORDER_PROGRESSIVE, DXGI_MODE_SCALING_UNSPECIFIED},
 		// DXGI_SAMPLE_DESC
 		{1, 0},
 		0, 3, window_->hwnd(), TRUE, DXGI_SWAP_EFFECT_DISCARD, 0
 	};
 
-#if 0
-	ATMA_ENSURE_IS(S_OK, detail::dxgi_factory_->CreateSwapChain(voodoo::detail::d3d_device_.get(), &desc, &dxgi_swap_chain_));
-	ATMA_ENSURE_IS(S_OK, detail::dxgi_factory_->MakeWindowAssociation(window_->hwnd(), DXGI_MWA_NO_WINDOW_CHANGES));
+#if 1
+	//ATMA_ENSURE_IS(S_OK, detail::dxgi_factory_->CreateSwapChain(&d3d_device_.assign(), &desc, &dxgi_swap_chain_));
+	//ATMA_ENSURE_IS(S_OK, detail::dxgi_factory_->MakeWindowAssociation(window_->hwnd(), DXGI_MWA_NO_WINDOW_CHANGES));
 #endif
 }
 
@@ -162,6 +163,7 @@ auto context_t::toggle_fullscreen() -> void
 #endif
 }
 
+#if 0
 auto context_t::closest_fullscreen_backbuffer_mode(uint32_t width, uint32_t height) -> shiny::display_mode_t
 {
 	for (auto const& x : backbuffer_display_modes_)
@@ -172,6 +174,7 @@ auto context_t::closest_fullscreen_backbuffer_mode(uint32_t width, uint32_t heig
 
 	return backbuffer_display_modes_.back();
 }
+#endif
 
 auto shiny::signal_fullscreen_toggle(context_ptr const& context) -> void
 {

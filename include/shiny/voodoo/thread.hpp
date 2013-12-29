@@ -33,6 +33,7 @@ namespace voodoo {
 
 			void operator ()(Args&&... args) const
 			{
+				#if 0
 				ATMA_ASSERT(detail::d3d_device_);
 				ATMA_ASSERT(detail::d3d_local_context_ == nullptr);
 				detail::d3d_device_->CreateDeferredContext(0, &detail::d3d_local_context_);
@@ -43,6 +44,7 @@ namespace voodoo {
 				ATMA_ASSERT(detail::d3d_local_context_);
 				detail::d3d_local_context_->Release();
 				detail::d3d_local_context_ = nullptr;
+				#endif
 			}
 
 		private:

@@ -10,9 +10,10 @@
 #endif
 
 #include <map>
+#include <tuple>
 
 //======================================================================
-// internal data
+// DXGI
 //======================================================================
 namespace
 {
@@ -23,7 +24,7 @@ namespace
 	atma::com_ptr<IDXGIDebug> dxgi_debug_;
 
 	// dxgi adapters
-	std::vector<atma::com_ptr<IDXGIAdapter1>> dxgi_adapters_;
+	std::vector<voodoo::dxgi_adapter_ptr> dxgi_adapters_;
 	
 	// outputs for adapters
 	typedef std::vector<atma::com_ptr<IDXGIOutput>> dxgi_outputs_t;
@@ -60,6 +61,18 @@ namespace
 }
 
 
+
+
+//======================================================================
+// D3D
+//======================================================================
+namespace
+{
+	using namespace shiny::voodoo;
+
+	std::map<dxgi_adapter_ptr, d3d_device_ptr> d3d_devices_;
+}
+
 //======================================================================
 // lol data
 //======================================================================
@@ -90,6 +103,7 @@ atma::com_ptr<IDXGIOutput> shiny::voodoo::detail::dxgi_primary_output_;
 //======================================================================
 // scoped_IC_lock
 //======================================================================
+#if 0
 using shiny::voodoo::detail::scoped_async_immediate_context_t;
 scoped_async_immediate_context_t::scoped_async_immediate_context_t()
 {
@@ -104,7 +118,7 @@ scoped_async_immediate_context_t::~scoped_async_immediate_context_t()
 auto scoped_async_immediate_context_t::operator -> () const -> atma::com_ptr<ID3D11DeviceContext> const& {
 	return d3d_immediate_context_;
 }
-
+#endif
 
 //======================================================================
 // device management
@@ -128,8 +142,10 @@ auto shiny::voodoo::setup_dxgi() -> void
 		{
 			atma::com_ptr<IDXGIOutput> output;
 			uint32_t i = 0;
-			while (x->EnumOutputs(i++, output.assign()) != DXGI_ERROR_NOT_FOUND)
+			while (x->EnumOutputs(i++, output.assign()) != DXGI_ERROR_NOT_FOUND) {
 				dxgi_outputs_mapping_[x].push_back(output);
+				enumerate_backbuffers(dxgi_backbuffer_formats_[output], output);
+			}
 		}
 	}
 
@@ -154,14 +170,7 @@ auto shiny::voodoo::setup_d3d_device() -> void
 #if 0
 	ATMA_ASSERT(detail::d3d_device_ == nullptr);
 
-	// we can't specify the primary adapter ourselves, because for some reason
-	// the transition to fullscreen sends another WM_SIZE message
-	ATMA_ENSURE_IS(S_OK, D3D11CreateDevice(
-		detail::dxgi_primary_adapter_.get(), D3D_DRIVER_TYPE_UNKNOWN, NULL, 0, NULL, 0, D3D11_SDK_VERSION,
-		detail::d3d_device_.assign(),
-		NULL,
-		detail::d3d_immediate_context_.assign()
-	));
+	
 
 
 	// the local-context for the prime-thread doesn't get an AddRef, because it's special
@@ -196,4 +205,33 @@ auto shiny::voodoo::teardown_d3d_device() -> void
 	OutputDebugString(L"END DXGI Live Objects\n");
 	dxgi_debug_.reset();
 #endif
+}
+
+
+
+auto shiny::voodoo::dxgi_and_d3d_at(uint32_t adapter_index) -> std::tuple<dxgi_adapter_ptr, d3d_device_ptr, d3d_context_ptr>
+{
+	dxgi_adapter_ptr adapter = dxgi_adapters_[adapter_index];
+	d3d_device_ptr device;
+	d3d_context_ptr context;
+
+	auto i = d3d_devices_.find(adapter);
+	if (i != d3d_devices_.end()) {
+		device = i->second;
+		device->GetImmediateContext(context.assign());
+	}
+	else {
+		// we can't specify the primary adapter ourselves, because for some reason
+		// the transition to fullscreen sends another WM_SIZE message
+		ATMA_ENSURE_IS(S_OK, D3D11CreateDevice(
+			nullptr, D3D_DRIVER_TYPE_HARDWARE, NULL, 0, NULL, 0, D3D11_SDK_VERSION,
+			device.assign(),
+			NULL,
+			context.assign()
+		));
+
+		d3d_devices_[adapter] = device;
+	}
+
+	return std::make_tuple(dxgi_adapters_[adapter_index], device, context);
 }
