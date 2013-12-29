@@ -1,4 +1,7 @@
 #include <shiny/voodoo/device.hpp>
+
+#include <shiny/format.hpp>
+
 #include <atma/assert.hpp>
 
 #ifdef _DEBUG
@@ -6,12 +9,64 @@
 #include <dxgidebug.h>
 #endif
 
+#include <map>
+
 //======================================================================
-// externs
+// internal data
 //======================================================================
-atma::com_ptr<ID3D11Device> shiny::voodoo::detail::d3d_device_ = nullptr;
-atma::com_ptr<ID3D11DeviceContext> shiny::voodoo::detail::d3d_immediate_context_ = nullptr;
-std::mutex shiny::voodoo::detail::immediate_context_mutex_;
+namespace
+{
+	using namespace shiny;
+
+	// dxgi factory
+	atma::com_ptr<IDXGIFactory1> dxgi_factory_;
+	atma::com_ptr<IDXGIDebug> dxgi_debug_;
+
+	// dxgi adapters
+	std::vector<atma::com_ptr<IDXGIAdapter1>> dxgi_adapters_;
+	
+	// outputs for adapters
+	typedef std::vector<atma::com_ptr<IDXGIOutput>> dxgi_outputs_t;
+	typedef std::map<atma::com_ptr<IDXGIAdapter1>, dxgi_outputs_t> dxgi_outputs_mapping_t;
+	dxgi_outputs_mapping_t dxgi_outputs_mapping_;
+
+	// valid backbuffer formats for outputs
+	typedef std::vector<display_mode_t> display_modes_t;
+	typedef std::map<voodoo::dxgi_output_ptr, display_modes_t> dxgi_backbuffer_formats_t;
+	dxgi_backbuffer_formats_t dxgi_backbuffer_formats_;
+	
+
+
+	auto enumerate_backbuffers(display_modes_t& dest, voodoo::dxgi_output_ptr const& dxgi_output) -> void
+	{
+		auto format = DXGI_FORMAT_R8G8B8A8_UNORM;
+
+		uint32_t mode_count = 0;
+		ATMA_ENSURE_IS(S_OK, dxgi_output->GetDisplayModeList(format, 0, &mode_count, nullptr));
+
+		auto modes = std::unique_ptr<DXGI_MODE_DESC[]>(new DXGI_MODE_DESC[mode_count]);
+		ATMA_ENSURE_IS(S_OK, dxgi_output->GetDisplayModeList(format, 0, &mode_count, modes.get()));
+
+		// convert dxgi format to shiny's format
+		for (auto i = modes.get(); i != modes.get() + mode_count; ++i)
+		{
+			dest.push_back({
+				i->Width, i->Height,
+				i->RefreshRate.Numerator, i->RefreshRate.Denominator,
+				display_format_t::r8g8b8a8_unorm
+			});
+		}
+	}
+}
+
+
+//======================================================================
+// lol data
+//======================================================================
+#if 0
+atma::com_ptr<ID3D11Device> d3d_device_ = nullptr;
+atma::com_ptr<ID3D11DeviceContext> d3d_immediate_context_ = nullptr;
+std::mutex immediate_context_mutex_;
 
 __declspec(thread) ID3D11DeviceContext* shiny::voodoo::detail::d3d_local_context_ = nullptr;
 
@@ -28,8 +83,8 @@ atma::com_ptr<IDXGIAdapter1> shiny::voodoo::detail::dxgi_primary_adapter_;
 // outputs/surface for primary adapter
 std::vector<atma::com_ptr<IDXGIOutput>> shiny::voodoo::detail::dxgi_primary_adaptor_outputs_;
 atma::com_ptr<IDXGIOutput> shiny::voodoo::detail::dxgi_primary_output_;
+#endif
 
-atma::com_ptr<IDXGIDebug> dxgi_debug_;
 
 
 //======================================================================
@@ -57,31 +112,29 @@ auto scoped_async_immediate_context_t::operator -> () const -> atma::com_ptr<ID3
 auto shiny::voodoo::setup_dxgi() -> void
 {
 	// create dxgi factory
-	ATMA_ENSURE_IS(S_OK, CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)&detail::dxgi_factory_));
+	ATMA_ENSURE_IS(S_OK, CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)&dxgi_factory_));
 
 	// get all the adapters
 	{
 		atma::com_ptr<IDXGIAdapter1> adapter;
 		uint32_t i = 0;
-		while (detail::dxgi_factory_->EnumAdapters1(i++, adapter.assign()) != DXGI_ERROR_NOT_FOUND)
-			detail::dxgi_adapters_.push_back(adapter);
-		
-		detail::dxgi_primary_adapter_ = detail::dxgi_adapters_[0];
+		while (dxgi_factory_->EnumAdapters1(i++, adapter.assign()) != DXGI_ERROR_NOT_FOUND)
+			dxgi_adapters_.push_back(adapter);
 	}
 
-	// get all outputs for the primary adapter
+	// get all outputs for the adapters
 	{
-		atma::com_ptr<IDXGIOutput> output;
-		uint32_t i = 0;
-		while (detail::dxgi_primary_adapter_->EnumOutputs(i++, output.assign()) != DXGI_ERROR_NOT_FOUND)
-			detail::dxgi_primary_adaptor_outputs_.push_back(output);
-
-		// store primary output
-		detail::dxgi_primary_output_ = detail::dxgi_primary_adaptor_outputs_[0];
+		for (auto& x : dxgi_adapters_)
+		{
+			atma::com_ptr<IDXGIOutput> output;
+			uint32_t i = 0;
+			while (x->EnumOutputs(i++, output.assign()) != DXGI_ERROR_NOT_FOUND)
+				dxgi_outputs_mapping_[x].push_back(output);
+		}
 	}
 
 
-	ATMA_ASSERT(detail::dxgi_factory_);
+	ATMA_ASSERT(dxgi_factory_);
 
 	// get debug thing
 #ifdef _DEBUG
@@ -98,8 +151,11 @@ auto shiny::voodoo::setup_dxgi() -> void
 
 auto shiny::voodoo::setup_d3d_device() -> void
 {
+#if 0
 	ATMA_ASSERT(detail::d3d_device_ == nullptr);
 
+	// we can't specify the primary adapter ourselves, because for some reason
+	// the transition to fullscreen sends another WM_SIZE message
 	ATMA_ENSURE_IS(S_OK, D3D11CreateDevice(
 		detail::dxgi_primary_adapter_.get(), D3D_DRIVER_TYPE_UNKNOWN, NULL, 0, NULL, 0, D3D11_SDK_VERSION,
 		detail::d3d_device_.assign(),
@@ -113,22 +169,23 @@ auto shiny::voodoo::setup_d3d_device() -> void
 	
 	// store dxgi-device of this
 	detail::d3d_device_->QueryInterface(__uuidof(IDXGIDevice1), (void**)detail::dxgi_device_.assign());
+#endif
 }
 
 auto shiny::voodoo::teardown_d3d_device() -> void
 {
-#if 1
+#if 0
 	detail::d3d_immediate_context_.reset();
 	detail::d3d_device_.reset();
 #endif
 
+#if 0
 	detail::dxgi_primary_output_.reset();
 	detail::dxgi_primary_adaptor_outputs_.clear();
 
 	detail::dxgi_primary_adapter_.reset();
 	detail::dxgi_adapters_.clear();
 
-	detail::dxgi_device_.reset();
 	detail::dxgi_factory_.reset();
 	
 
@@ -138,5 +195,5 @@ auto shiny::voodoo::teardown_d3d_device() -> void
 	dxgi_debug_->ReportLiveObjects(DXGI_DEBUG_DXGI, DXGI_DEBUG_RLO_ALL);
 	OutputDebugString(L"END DXGI Live Objects\n");
 	dxgi_debug_.reset();
-
+#endif
 }

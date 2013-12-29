@@ -14,9 +14,15 @@
 #include <d3d11.h>
 //======================================================================
 namespace shiny {
+	
+	uint32_t const primary_adapter = 0;
+
 namespace voodoo {
 //======================================================================
 	
+	typedef atma::com_ptr<IDXGIAdapter1> dxgi_adapter_ptr;
+	typedef atma::com_ptr<IDXGIOutput> dxgi_output_ptr;
+
 	//======================================================================
 	// the devil lies here.
 	//======================================================================
@@ -31,23 +37,7 @@ namespace voodoo {
 		extern __declspec(thread) ID3D11DeviceContext* d3d_local_context_;
 
 
-		// dxgi factory
-		extern atma::com_ptr<IDXGIFactory1> dxgi_factory_;
-
-		// dxgi device for the d3d-device
-		extern atma::com_ptr<IDXGIDevice1> dxgi_device_;
-
-		// dxgi adapters
-		extern std::vector<atma::com_ptr<IDXGIAdapter1>> dxgi_adapters_;
-		extern atma::com_ptr<IDXGIAdapter1> dxgi_primary_adapter_;
-
-		// outputs/surface for primary adapter
-		extern std::vector<atma::com_ptr<IDXGIOutput>> dxgi_primary_adaptor_outputs_;
-		extern atma::com_ptr<IDXGIOutput> dxgi_primary_output_;
-
-
-
-
+		auto output_for_window(fooey::window_ptr const&) -> atma::com_ptr<IDXGIOutput>;
 
 		inline auto is_prime_thread() -> bool { return d3d_local_context_ == d3d_immediate_context_.get(); }
 
@@ -59,6 +49,10 @@ namespace voodoo {
 			auto operator -> () const -> atma::com_ptr<ID3D11DeviceContext> const&;
 		};
 	}
+
+	auto adapter_and_output(uint32_t adapter, uint32_t output) -> std::tuple<dxgi_adapter_ptr, dxgi_output_ptr>;
+	//auto create_swap_chain(fooey::window_ptr const&, )
+	//auto d3d_device(dxgi_adapter_ptr const&) -> 
 
 	auto setup_dxgi() -> void;
 	auto teardown_dxgi() -> void;

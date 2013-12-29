@@ -4,6 +4,7 @@
 #include <fooey/events/resize.hpp>
 #include <fooey/keys.hpp>
 
+#include <vector>
 
 using namespace shiny::voodoo;
 
@@ -23,35 +24,23 @@ namespace
 //======================================================================
 // context creation
 //======================================================================
-auto shiny::create_context(fooey::window_ptr const& window) -> shiny::context_ptr
+auto shiny::create_context(fooey::window_ptr const& window, uint32_t adapter) -> shiny::context_ptr
 {
-	return context_ptr(new context_t(window));
+	return context_ptr(new context_t(window, adapter));
 }
-
-auto shiny::create_context(shiny::defer_construction_t) -> shiny::context_ptr
-{
-	return context_ptr(new context_t(shiny::defer_construction));
-}
-
 
 //======================================================================
 // context_t
 //======================================================================
 using shiny::context_t;
 
-context_t::context_t(fooey::window_ptr const& window)
-	: context_t(shiny::defer_construction_t())
+context_t::context_t(fooey::window_ptr const& window, uint32_t adapter)
+: width_(), height_(), fullscreen_()
 {
+	enumerate_backbuffers();
 	bind_to(window);
 	bind_events(window);
 }
-
-context_t::context_t(shiny::defer_construction_t)
-	: width_(), height_(), fullscreen_()
-{
-	enumerate_backbuffers();
-}
-
 
 context_t::~context_t()
 {
@@ -67,10 +56,6 @@ auto context_t::bind_to(fooey::window_ptr const& window) -> void
 	height_ = window_->height_in_pixels();
 
 	create_swapchain();
-	
-	auto ctx = this;
-
-	
 }
 
 auto context_t::bind_events(fooey::window_ptr const& window) -> void
@@ -87,7 +72,7 @@ auto context_t::bind_events(fooey::window_ptr const& window) -> void
 				auto wnd = std::dynamic_pointer_cast<fooey::window_t>(e.origin().lock());
 				ATMA_ASSERT(wnd);
 
-				std::cout << "resize-dc.shiny.context: resizing to " << e.width() << "x" << e.height() << std::endl;
+				//std::cout << "resize-dc.shiny.context: resizing to " << e.width() << "x" << e.height() << std::endl;
 
 				if (ctx->fullscreen_)
 				{
@@ -100,7 +85,7 @@ auto context_t::bind_events(fooey::window_ptr const& window) -> void
 				{
 					ctx->width_ = e.width();
 					ctx->height_ = e.height();
-					ATMA_ENSURE_IS(S_OK, ctx->dxgi_swap_chain_->ResizeBuffers(3, ctx->width_, ctx->height_, DXGI_FORMAT_UNKNOWN, 0));
+					ATMA_ENSURE_IS(S_OK, ctx->dxgi_swap_chain_->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0));
 				}
 			});
 		}}
@@ -109,23 +94,7 @@ auto context_t::bind_events(fooey::window_ptr const& window) -> void
 
 auto context_t::enumerate_backbuffers() -> void
 {
-	auto format = DXGI_FORMAT_R8G8B8A8_UNORM;
 
-	uint32_t mode_count = 0;
-	ATMA_ENSURE_IS(S_OK, detail::dxgi_primary_output_->GetDisplayModeList(format, 0, &mode_count, nullptr));
-	
-	auto modes = std::unique_ptr<DXGI_MODE_DESC[]>(new DXGI_MODE_DESC[mode_count]);
-	ATMA_ENSURE_IS(S_OK, detail::dxgi_primary_output_->GetDisplayModeList(format, 0, &mode_count, modes.get()));
-	
-	// convert dxgi format to shiny's format
-	for (auto i = modes.get(); i != modes.get() + mode_count; ++i)
-	{
-		backbuffer_display_modes_.push_back({
-			i->Width, i->Height,
-			i->RefreshRate.Numerator, i->RefreshRate.Denominator,
-			display_format_t::r8g8b8a8_unorm
-		});
-	}
 }
 
 auto context_t::create_swapchain() -> void
@@ -140,15 +109,19 @@ auto context_t::create_swapchain() -> void
 		0, 3, window_->hwnd(), TRUE, DXGI_SWAP_EFFECT_DISCARD, 0
 	};
 
+#if 0
 	ATMA_ENSURE_IS(S_OK, detail::dxgi_factory_->CreateSwapChain(voodoo::detail::d3d_device_.get(), &desc, &dxgi_swap_chain_));
 	ATMA_ENSURE_IS(S_OK, detail::dxgi_factory_->MakeWindowAssociation(window_->hwnd(), DXGI_MWA_NO_WINDOW_CHANGES));
+#endif
 }
 
 
 
 auto context_t::toggle_fullscreen() -> void
 {
+#if 0
 	fullscreen_ = !fullscreen_;
+	window_->fullscreen_ = fullscreen_;
 
 	if (fullscreen_)
 	{
@@ -158,24 +131,35 @@ auto context_t::toggle_fullscreen() -> void
 		DXGI_OUTPUT_DESC output_desc;
 		detail::dxgi_primary_output_->GetDesc(&output_desc);
 		
-		DXGI_MODE_DESC candidate{output_desc.DesktopCoordinates.right, output_desc.DesktopCoordinates.bottom, {0, 0}, DXGI_FORMAT_UNKNOWN, DXGI_MODE_SCANLINE_ORDER_PROGRESSIVE, DXGI_MODE_SCALING_UNSPECIFIED};
-		DXGI_MODE_DESC mode_desc;
-		detail::dxgi_primary_output_->FindClosestMatchingMode(&candidate, &mode_desc, detail::dxgi_device_.get());
+		auto candidate = DXGI_MODE_DESC{800, 640, {0, 0}, DXGI_FORMAT_UNKNOWN, DXGI_MODE_SCANLINE_ORDER_PROGRESSIVE, DXGI_MODE_SCALING_UNSPECIFIED};
+		auto mode_desc = DXGI_MODE_DESC{};
+		detail::dxgi_primary_output_->FindClosestMatchingMode(&candidate, &mode_desc, detail::d3d_device_.get()/*detail::dxgi_device_.get()*/);
+
 
 		// resize-target to natural width/height
 		dxgi_swap_chain_->ResizeTarget(&mode_desc);
 
+
 		// go to fullscreen
-		dxgi_swap_chain_->SetFullscreenState(TRUE, nullptr);
+		dxgi_swap_chain_->SetFullscreenState(true, detail::dxgi_primary_output_.get());
+
+
+
 
 		// second resize-target with zeroed refresh-rate because MS says so
-		mode_desc.RefreshRate ={0, 0};
+		mode_desc.RefreshRate = {0, 0};
 		dxgi_swap_chain_->ResizeTarget(&mode_desc);
 	}
 	else
 	{
 		dxgi_swap_chain_->SetFullscreenState(FALSE, nullptr);
+
+		//SetWindowPos(window_->hwnd, NULL, win)
+		//window_->resize()
+		//fooey::signal_window_resize(window_, )
+		//fooey::signal_window_resize(window_);
 	}
+#endif
 }
 
 auto context_t::closest_fullscreen_backbuffer_mode(uint32_t width, uint32_t height) -> shiny::display_mode_t

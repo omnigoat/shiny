@@ -16,25 +16,24 @@
 #include <atma/math/vector4f.hpp>
 #include <atma/math/matrix4f.hpp>
 
+//shiny::gfx_context_t::create(window)
+
 int main()
 {
 	// setup up gui
 	auto renderer = fooey::system_renderer();
-	fooey::window_ptr window = fooey::window("Excitement.", 480, 360);
-
-
+	auto window = fooey::window("Excitement.", 480, 360);
 	renderer->add_window(window);
 
-	// runtime!
+	// initialise shiny
 	auto SR = shiny::scoped_runtime_t();
-	// context per window!
-	//auto context = shiny::create_context(window);
-	
+	auto context = shiny::create_context(window, shiny::primary_adapter);
+
 	bool running = true;
 
-	//window->key_state.on_key(fooey::key_t::Alt + fooey::key_t::Enter, [&context]{
-	//	context->toggle_fullscreen();
-	//});
+	window->key_state.on_key(fooey::key_t::Alt + fooey::key_t::Enter, [&context]{
+		shiny::signal_fullscreen_toggle(context /*, shiny::primary_monitor */);
+	});
 
 	window->on({
 		{"close", [&running](fooey::event_t&){
@@ -42,12 +41,18 @@ int main()
 		}},
 
 		{"resize-dc", [](fooey::events::resize_t& e) {
-			std::cout << "WM_SIZE: " << e.width() << ", " << e.height() << std::endl;
+			//std::cout << "WM_SIZE: " << e.width() << ", " << e.height() << std::endl;
 		}}
 	});
 
+	
+	
+	//shiny::spawn_gfx_thread(context, [] {});
 
 	// game loop
-	while (running)
-		;
+	while (running) {
+		//shiny::signal_present(context);
+		//auto vb = shiny::create_vertex_buffer(context, )
+		//auto vb = shiny::vertex_buffer_t::create(context, )
+	}
 }

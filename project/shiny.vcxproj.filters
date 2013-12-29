@@ -24,6 +24,12 @@
     <Filter Include="shaders">
       <UniqueIdentifier>{69726e24-bf27-40cc-88f6-f6f41ad69449}</UniqueIdentifier>
     </Filter>
+    <Filter Include="source\thread">
+      <UniqueIdentifier>{4991b7c1-9e32-4484-8d3c-b5cb4d23fc5e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\thread">
+      <UniqueIdentifier>{189e963b-dc17-4d80-bfa2-fa65b394effd}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\plumbing\vertex_buffer.cpp">
@@ -93,6 +99,9 @@
     </ClInclude>
     <ClInclude Include="..\include\shiny\voodoo\context.hpp">
       <Filter>include\voodoo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\shiny\format.hpp">
+      <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
