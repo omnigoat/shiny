@@ -110,17 +110,15 @@ auto context_t::create_swapchain() -> void
 		0, 3, window_->hwnd(), TRUE, DXGI_SWAP_EFFECT_DISCARD, 0
 	};
 
-#if 1
-	//ATMA_ENSURE_IS(S_OK, detail::dxgi_factory_->CreateSwapChain(&d3d_device_.assign(), &desc, &dxgi_swap_chain_));
-	//ATMA_ENSURE_IS(S_OK, detail::dxgi_factory_->MakeWindowAssociation(window_->hwnd(), DXGI_MWA_NO_WINDOW_CHANGES));
-#endif
+	ATMA_ENSURE_IS(S_OK, voodoo::dxgi_factory()->CreateSwapChain(d3d_device_.get(), &desc, dxgi_swap_chain_.assign()));
+	ATMA_ENSURE_IS(S_OK, voodoo::dxgi_factory()->MakeWindowAssociation(window_->hwnd(), DXGI_MWA_NO_WINDOW_CHANGES));
 }
 
 
-
+#if 0
 auto context_t::toggle_fullscreen() -> void
 {
-#if 0
+
 	fullscreen_ = !fullscreen_;
 	window_->fullscreen_ = fullscreen_;
 
@@ -160,8 +158,8 @@ auto context_t::toggle_fullscreen() -> void
 		//fooey::signal_window_resize(window_, )
 		//fooey::signal_window_resize(window_);
 	}
-#endif
 }
+#endif
 
 #if 0
 auto context_t::closest_fullscreen_backbuffer_mode(uint32_t width, uint32_t height) -> shiny::display_mode_t
@@ -176,7 +174,13 @@ auto context_t::closest_fullscreen_backbuffer_mode(uint32_t width, uint32_t heig
 }
 #endif
 
-auto shiny::signal_fullscreen_toggle(context_ptr const& context) -> void
+auto shiny::signal_fullscreen_toggle(context_ptr const& context, uint32_t output_index) -> void
 {
-	voodoo::prime_thread::enqueue(std::bind(&context_t::toggle_fullscreen, context));
+	voodoo::prime_thread::enqueue(std::bind(&detail::context_fns::toggle_fullscreen, context, output_index));
+}
+
+auto shiny::detail::context_fns::toggle_fullscreen(context_ptr const& context, uint32_t output_index) -> void
+{
+	// do things
+	ATMA_ASSERT(context->dxgi_adapter_);
 }

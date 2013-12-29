@@ -207,6 +207,10 @@ auto shiny::voodoo::teardown_d3d_device() -> void
 #endif
 }
 
+auto shiny::voodoo::dxgi_factory() -> dxgi_factory_ptr
+{
+	return dxgi_factory_;
+}
 
 
 auto shiny::voodoo::dxgi_and_d3d_at(uint32_t adapter_index) -> std::tuple<dxgi_adapter_ptr, d3d_device_ptr, d3d_context_ptr>
@@ -224,7 +228,7 @@ auto shiny::voodoo::dxgi_and_d3d_at(uint32_t adapter_index) -> std::tuple<dxgi_a
 		// we can't specify the primary adapter ourselves, because for some reason
 		// the transition to fullscreen sends another WM_SIZE message
 		ATMA_ENSURE_IS(S_OK, D3D11CreateDevice(
-			nullptr, D3D_DRIVER_TYPE_HARDWARE, NULL, 0, NULL, 0, D3D11_SDK_VERSION,
+			adapter.get(), D3D_DRIVER_TYPE_UNKNOWN, NULL, 0, NULL, 0, D3D11_SDK_VERSION,
 			device.assign(),
 			NULL,
 			context.assign()

@@ -32,7 +32,7 @@ int main()
 	bool running = true;
 
 	window->key_state.on_key(fooey::key_t::Alt + fooey::key_t::Enter, [&context]{
-		shiny::signal_fullscreen_toggle(context /*, shiny::primary_monitor */);
+		shiny::signal_fullscreen_toggle(context);
 	});
 
 	window->on({

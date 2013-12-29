@@ -10,26 +10,19 @@
 #include <atma/intrusive_ptr.hpp>
 //======================================================================
 #include <thread>
-#include <atomic>
 #include <mutex>
-//======================================================================
-#include <d3d11.h>
 //======================================================================
 namespace shiny {
 //======================================================================
 	
 	namespace detail {
-		struct context_t {
-			//static 
-		};
+		struct context_fns;
 	}
 
-	struct context_t : std::enable_shared_from_this<context_t>
+	struct context_t : atma::ref_counted<context_t>
 	{
 		context_t(fooey::window_ptr const&, uint32_t adapter);
 		~context_t();
-
-		auto toggle_fullscreen() -> void;
 
 	private:
 		auto setup_dxgi_and_d3d(uint32_t adapter) -> void;
@@ -56,15 +49,22 @@ namespace shiny {
 
 		// windowed
 		display_mode_t display_format_;
+
+		friend struct detail::context_fns;
 	};
 
-	typedef std::shared_ptr<context_t> context_ptr;
-	typedef std::weak_ptr<context_t> context_wptr;
+	typedef atma::intrusive_ptr<context_t> context_ptr;
 	
 	auto create_context(fooey::window_ptr const&, uint32_t adapter = primary_adapter) -> context_ptr;
+	auto output_for_window(fooey::window_ptr const&) -> uint32_t;
 	
-	
-	auto signal_fullscreen_toggle(context_ptr const& context) -> void;
+	auto signal_fullscreen_toggle(context_ptr const&, uint32_t output_index = primary_output) -> void;
+
+	namespace detail {
+		struct context_fns {
+			static auto toggle_fullscreen(context_ptr const&, uint32_t output_index) -> void;
+		};
+	}
 
 //======================================================================
 } // namespace shiny
