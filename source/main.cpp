@@ -16,7 +16,7 @@
 #include <atma/math/vector4f.hpp>
 #include <atma/math/matrix4f.hpp>
 
-//shiny::gfx_context_t::create(window)
+//shiny::gfx_gfx_t::create(window)
 
 int main()
 {
@@ -26,15 +26,18 @@ int main()
 	renderer->add_window(window);
 
 	// initialise shiny
-	auto SR = shiny::scoped_runtime_t();
-	auto context = shiny::create_context(window, shiny::primary_adapter);
+	auto shiny_runtime = shiny::scoped_runtime_t();
+	auto gfx = shiny::create_context(window, shiny::primary_adapter);
 
-	bool running = true;
 
-	window->key_state.on_key(fooey::key_t::Alt + fooey::key_t::Enter, [&context]{
-		shiny::signal_fullscreen_toggle(context);
+	
+	window->key_state.on_key(fooey::key_t::Alt + fooey::key_t::Enter, [&gfx]{
+		gfx->signal_fullscreen_toggle();
 	});
 
+
+
+	bool running = true;
 	window->on({
 		{"close", [&running](fooey::event_t&){
 			running = false;
@@ -47,12 +50,12 @@ int main()
 
 	
 	
-	//shiny::spawn_gfx_thread(context, [] {});
+	//shiny::spawn_gfx_thread(gfx, [] {});
 
 	// game loop
 	while (running) {
-		//shiny::signal_present(context);
-		//auto vb = shiny::create_vertex_buffer(context, )
-		//auto vb = shiny::vertex_buffer_t::create(context, )
+		//shiny::signal_present(gfx);
+		//auto vb = shiny::create_vertex_buffer(gfx, )
+		//auto vb = shiny::vertex_buffer_t::create(gfx, )
 	}
 }

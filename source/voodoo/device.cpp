@@ -212,6 +212,10 @@ auto shiny::voodoo::dxgi_factory() -> dxgi_factory_ptr
 	return dxgi_factory_;
 }
 
+auto shiny::voodoo::output_at(dxgi_adapter_ptr const& adapter, uint32_t index) -> dxgi_output_ptr
+{
+	return dxgi_outputs_mapping_[adapter][index];
+}
 
 auto shiny::voodoo::dxgi_and_d3d_at(uint32_t adapter_index) -> std::tuple<dxgi_adapter_ptr, d3d_device_ptr, d3d_context_ptr>
 {

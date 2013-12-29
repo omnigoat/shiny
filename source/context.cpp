@@ -37,21 +37,25 @@ auto shiny::create_context(fooey::window_ptr const& window, uint32_t adapter) ->
 context_t::context_t(fooey::window_ptr const& window, uint32_t adapter)
 : fullscreen_()
 {
-	setup_dxgi_and_d3d(adapter);
-	bind_to(window);
-	bind_events(window);
+	signal_hq_.signal([=]{
+		std::tie(dxgi_adapter_, d3d_device_, d3d_immediate_context_) = voodoo::dxgi_and_d3d_at(adapter);
+		window_ = window;
+		create_swapchain();
+		bind_events(window);
+	});
 }
 
 context_t::~context_t()
 {
-	if (window_)
-		window_->unbind(bound_events_);
+	signal_hq_.signal([=]{
+		if (window_)
+			window_->unbind(bound_events_);
+	});
 }
 
 auto context_t::setup_dxgi_and_d3d(uint32_t adapter) -> void
 {
-	std::tie(dxgi_adapter_, d3d_device_, d3d_immediate_context_)
-		= voodoo::dxgi_and_d3d_at(adapter);
+	
 }
 
 
@@ -174,13 +178,52 @@ auto context_t::closest_fullscreen_backbuffer_mode(uint32_t width, uint32_t heig
 }
 #endif
 
-auto shiny::signal_fullscreen_toggle(context_ptr const& context, uint32_t output_index) -> void
+auto context_t::signal_fullscreen_toggle(uint32_t output_index) -> void
 {
-	voodoo::prime_thread::enqueue(std::bind(&detail::context_fns::toggle_fullscreen, context, output_index));
-}
+	signal_hq_.signal([&, output_index]
+	{
+		ATMA_ASSERT(dxgi_adapter_);
 
-auto shiny::detail::context_fns::toggle_fullscreen(context_ptr const& context, uint32_t output_index) -> void
-{
-	// do things
-	ATMA_ASSERT(context->dxgi_adapter_);
+		fullscreen_ = !fullscreen_;
+		window_->fullscreen_ = fullscreen_;
+
+		if (fullscreen_)
+		{
+			// get output of our adapter
+			dxgi_output_ = voodoo::output_at(dxgi_adapter_, output_index);
+			ATMA_ASSERT(dxgi_output_);
+
+			// find best-fitting fullscreen resolution
+			DXGI_OUTPUT_DESC output_desc;
+			dxgi_output_->GetDesc(&output_desc);
+
+			auto candidate = DXGI_MODE_DESC{800, 640, {0, 0}, DXGI_FORMAT_UNKNOWN, DXGI_MODE_SCANLINE_ORDER_PROGRESSIVE, DXGI_MODE_SCALING_UNSPECIFIED};
+			auto mode_desc = DXGI_MODE_DESC{};
+			dxgi_output_->FindClosestMatchingMode(&candidate, &mode_desc, d3d_device_.get());
+
+
+			// resize-target to natural width/height
+			dxgi_swap_chain_->ResizeTarget(&mode_desc);
+
+
+			// go to fullscreen
+			dxgi_swap_chain_->SetFullscreenState(true, dxgi_output_.get());
+
+
+
+
+			// second resize-target with zeroed refresh-rate because MS says so
+			mode_desc.RefreshRate ={0, 0};
+			dxgi_swap_chain_->ResizeTarget(&mode_desc);
+		}
+		else
+		{
+			dxgi_swap_chain_->SetFullscreenState(FALSE, nullptr);
+
+			//SetWindowPos(window_->hwnd, NULL, win)
+			//window_->resize()
+			//fooey::signal_window_resize(window_, )
+			//fooey::signal_window_resize(window_);
+		}
+	});
 }

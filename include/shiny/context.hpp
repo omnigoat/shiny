@@ -8,6 +8,7 @@
 #include <fooey/events/resize.hpp>
 //======================================================================
 #include <atma/intrusive_ptr.hpp>
+#include <atma/signal_hq.hpp>
 //======================================================================
 #include <thread>
 #include <mutex>
@@ -19,10 +20,20 @@ namespace shiny {
 		struct context_fns;
 	}
 
+	struct context_t;
+	typedef atma::intrusive_ptr<context_t> context_ptr;
+
+	//======================================================================
+	// context_t
+	// -----------
+	//   manages lifetime and threading
+	//======================================================================
 	struct context_t : atma::ref_counted<context_t>
 	{
 		context_t(fooey::window_ptr const&, uint32_t adapter);
 		~context_t();
+
+		auto signal_fullscreen_toggle(uint32_t output_index = primary_output) -> void;
 
 	private:
 		auto setup_dxgi_and_d3d(uint32_t adapter) -> void;
@@ -32,11 +43,19 @@ namespace shiny {
 		
 		auto on_resize(fooey::events::resize_t&) -> void;
 
+	private:
+		atma::signal_hq_t signal_hq_;
+
 		// dxgi
 		voodoo::dxgi_adapter_ptr dxgi_adapter_;
 		voodoo::dxgi_swap_chain_ptr dxgi_swap_chain_;
+		
+		// d3d
 		voodoo::d3d_device_ptr d3d_device_;
 		voodoo::d3d_context_ptr d3d_immediate_context_;
+		bool is_immediate_thread_;
+
+
 
 		// fooey
 		fooey::window_ptr window_;
@@ -45,26 +64,17 @@ namespace shiny {
 		// fullscreen
 		bool fullscreen_;
 		display_mode_t fullscreen_display_format_;
-		IDXGIOutput* dxgi_output_;
+		voodoo::dxgi_output_ptr dxgi_output_;
 
 		// windowed
 		display_mode_t display_format_;
-
-		friend struct detail::context_fns;
 	};
 
-	typedef atma::intrusive_ptr<context_t> context_ptr;
+	
 	
 	auto create_context(fooey::window_ptr const&, uint32_t adapter = primary_adapter) -> context_ptr;
 	auto output_for_window(fooey::window_ptr const&) -> uint32_t;
 	
-	auto signal_fullscreen_toggle(context_ptr const&, uint32_t output_index = primary_output) -> void;
-
-	namespace detail {
-		struct context_fns {
-			static auto toggle_fullscreen(context_ptr const&, uint32_t output_index) -> void;
-		};
-	}
 
 //======================================================================
 } // namespace shiny
