@@ -8,7 +8,7 @@
 #include <fooey/events/resize.hpp>
 //======================================================================
 #include <atma/intrusive_ptr.hpp>
-#include <atma/signal_hq.hpp>
+#include <atma/thread/engine.hpp>
 //======================================================================
 #include <thread>
 #include <mutex>
@@ -33,6 +33,7 @@ namespace shiny {
 		context_t(fooey::window_ptr const&, uint32_t adapter);
 		~context_t();
 
+		auto signal_block() -> void;
 		auto signal_fullscreen_toggle(uint32_t output_index = primary_output) -> void;
 
 	private:
@@ -44,7 +45,7 @@ namespace shiny {
 		auto on_resize(fooey::events::resize_t&) -> void;
 
 	private:
-		atma::signal_hq_t signal_hq_;
+		atma::thread::engine_t engine_;
 
 		// dxgi
 		voodoo::dxgi_adapter_ptr dxgi_adapter_;

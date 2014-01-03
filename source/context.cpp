@@ -37,7 +37,7 @@ auto shiny::create_context(fooey::window_ptr const& window, uint32_t adapter) ->
 context_t::context_t(fooey::window_ptr const& window, uint32_t adapter)
 : fullscreen_()
 {
-	signal_hq_.signal([=]{
+	engine_.signal([=]{
 		std::tie(dxgi_adapter_, d3d_device_, d3d_immediate_context_) = voodoo::dxgi_and_d3d_at(adapter);
 		window_ = window;
 		create_swapchain();
@@ -47,7 +47,7 @@ context_t::context_t(fooey::window_ptr const& window, uint32_t adapter)
 
 context_t::~context_t()
 {
-	signal_hq_.signal([=]{
+	engine_.signal([&]{
 		if (window_)
 			window_->unbind(bound_events_);
 	});
@@ -77,7 +77,7 @@ auto context_t::bind_events(fooey::window_ptr const& window) -> void
 
 auto context_t::on_resize(fooey::events::resize_t& e) -> void
 {
-	voodoo::prime_thread::enqueue([this, e]
+	engine_.signal([this, e]
 	{
 		if (e.origin().expired())
 			return;
@@ -178,9 +178,14 @@ auto context_t::closest_fullscreen_backbuffer_mode(uint32_t width, uint32_t heig
 }
 #endif
 
+auto context_t::signal_block() -> void
+{
+	engine_.signal_block();
+}
+
 auto context_t::signal_fullscreen_toggle(uint32_t output_index) -> void
 {
-	signal_hq_.signal([&, output_index]
+	engine_.signal([&, output_index]
 	{
 		ATMA_ASSERT(dxgi_adapter_);
 
@@ -203,7 +208,7 @@ auto context_t::signal_fullscreen_toggle(uint32_t output_index) -> void
 
 
 			// resize-target to natural width/height
-			dxgi_swap_chain_->ResizeTarget(&mode_desc);
+			//dxgi_swap_chain_->ResizeTarget(&mode_desc);
 
 
 			// go to fullscreen
@@ -219,11 +224,6 @@ auto context_t::signal_fullscreen_toggle(uint32_t output_index) -> void
 		else
 		{
 			dxgi_swap_chain_->SetFullscreenState(FALSE, nullptr);
-
-			//SetWindowPos(window_->hwnd, NULL, win)
-			//window_->resize()
-			//fooey::signal_window_resize(window_, )
-			//fooey::signal_window_resize(window_);
 		}
 	});
 }
