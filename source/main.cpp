@@ -30,10 +30,9 @@ int main()
 	auto gfx = shiny::create_context(window, shiny::primary_adapter);
 
 
-	
 	window->key_state.on_key(fooey::key_t::Alt + fooey::key_t::Enter, [&gfx]{
-		gfx->signal_fullscreen_toggle();
-		//gfx->signal_block();
+		std::cout << "fullscreen toggle" << std::endl;
+		gfx->signal_fullscreen_toggle(1);
 	});
 
 
@@ -55,6 +54,7 @@ int main()
 
 	// game loop
 	while (running) {
+		gfx->signal_present();
 		//shiny::signal_present(gfx);
 		//auto vb = shiny::create_vertex_buffer(gfx, )
 		//auto vb = shiny::vertex_buffer_t::create(gfx, )

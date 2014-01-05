@@ -26,7 +26,7 @@ namespace shiny {
 	//======================================================================
 	// context_t
 	// -----------
-	//   manages lifetime and threading
+	//   manages lifetime and threading of a swapchain
 	//======================================================================
 	struct context_t : atma::ref_counted<context_t>
 	{
@@ -35,13 +35,14 @@ namespace shiny {
 
 		auto signal_block() -> void;
 		auto signal_fullscreen_toggle(uint32_t output_index = primary_output) -> void;
+		auto signal_present() -> void;
 
 	private:
-		auto setup_dxgi_and_d3d(uint32_t adapter) -> void;
-		auto bind_to(fooey::window_ptr const&) -> void;
 		auto bind_events(fooey::window_ptr const&) -> void;
-		auto create_swapchain() -> void; 
-		
+		auto signal_create_swapchain() -> void; 
+		auto signal_setup_backbuffer() -> void;
+
+		// these functions are called on a fooey thread
 		auto on_resize(fooey::events::resize_t&) -> void;
 
 	private:
@@ -54,6 +55,7 @@ namespace shiny {
 		// d3d
 		voodoo::d3d_device_ptr d3d_device_;
 		voodoo::d3d_context_ptr d3d_immediate_context_;
+		atma::com_ptr<ID3D11RenderTargetView> d3d_render_target_;
 		bool is_immediate_thread_;
 
 

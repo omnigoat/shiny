@@ -1,6 +1,6 @@
 #include <shiny/voodoo/device.hpp>
 
-#include <shiny/format.hpp>
+
 
 #include <atma/assert.hpp>
 
@@ -229,17 +229,28 @@ auto shiny::voodoo::dxgi_and_d3d_at(uint32_t adapter_index) -> std::tuple<dxgi_a
 		device->GetImmediateContext(context.assign());
 	}
 	else {
-		// we can't specify the primary adapter ourselves, because for some reason
-		// the transition to fullscreen sends another WM_SIZE message
 		ATMA_ENSURE_IS(S_OK, D3D11CreateDevice(
-			adapter.get(), D3D_DRIVER_TYPE_UNKNOWN, NULL, 0, NULL, 0, D3D11_SDK_VERSION,
+			adapter.get(), D3D_DRIVER_TYPE_UNKNOWN,
+			NULL, 0, NULL, 0, D3D11_SDK_VERSION,
 			device.assign(),
 			NULL,
 			context.assign()
 		));
+		
 
 		d3d_devices_[adapter] = device;
 	}
 
 	return std::make_tuple(dxgi_adapters_[adapter_index], device, context);
+}
+
+auto shiny::voodoo::closest_matching_format(dxgi_output_ptr const& output, uint32_t width, uint32_t height) -> display_mode_t
+{
+	for (auto const& x : dxgi_backbuffer_formats_[output])
+	{
+		if (x.width >= width && x.height >= height)
+			return x;
+	}
+
+	return display_mode_t();
 }

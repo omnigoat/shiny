@@ -1,7 +1,7 @@
 #ifndef SHINY_VOODOO_DEVICE_HPP
 #define SHINY_VOODOO_DEVICE_HPP
 //======================================================================
-#include <shiny/voodoo/prime_thread.hpp>
+#include <shiny/format.hpp>
 //======================================================================
 #include <fooey/widgets/window.hpp>
 //======================================================================
@@ -57,6 +57,7 @@ namespace voodoo {
 	auto dxgi_and_d3d_at(uint32_t adapter_index) -> std::tuple<dxgi_adapter_ptr, d3d_device_ptr, d3d_context_ptr>;
 	auto adapter_and_output(uint32_t adapter, uint32_t output) -> std::tuple<dxgi_adapter_ptr, dxgi_output_ptr>;
 	auto output_at(dxgi_adapter_ptr const&, uint32_t output_index) -> dxgi_output_ptr;
+	auto closest_matching_format(dxgi_output_ptr const&, uint32_t width, uint32_t height) -> display_mode_t;
 
 	auto setup_dxgi() -> void;
 	auto teardown_dxgi() -> void;
