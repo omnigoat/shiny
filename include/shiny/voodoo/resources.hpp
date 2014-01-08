@@ -33,6 +33,11 @@ namespace voodoo {
 
 //======================================================================
 } // namespace voodoo
+//======================================================================
+
+	typedef voodoo::gpu_access_t gpu_access_t;
+	typedef voodoo::cpu_access_t cpu_access_t;
+
 } // namespace shiny
 //======================================================================
 #endif

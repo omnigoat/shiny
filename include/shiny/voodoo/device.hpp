@@ -30,7 +30,8 @@ namespace voodoo {
 	// d3d
 	typedef atma::com_ptr<ID3D11Device> d3d_device_ptr;
 	typedef atma::com_ptr<ID3D11DeviceContext> d3d_context_ptr;
-	
+	typedef atma::com_ptr<ID3D11Buffer> d3d_buffer_ptr;
+
 	//======================================================================
 	// the devil lies here.
 	//======================================================================

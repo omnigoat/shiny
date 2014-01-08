@@ -12,28 +12,37 @@ using shiny::plumbing::lock_type_t;
 using shiny::plumbing::gpu_access_t;
 using shiny::plumbing::cpu_access_t;
 
+using shiny::context_ptr;
+
 //======================================================================
 // vertex_buffer_t
 //======================================================================
-vertex_buffer_t::vertex_buffer_t(gpu_access_t gpua, cpu_access_t cpua, bool shadow, uint32_t data_size)
-: vertex_buffer_t(gpua, cpua, shadow, data_size, nullptr)
+vertex_buffer_t::vertex_buffer_t(context_ptr const& context, gpu_access_t gpua, cpu_access_t cpua, bool shadow, uint32_t data_size)
+: vertex_buffer_t(context, gpua, cpua, shadow, data_size, nullptr)
 {
 }
 
-vertex_buffer_t::vertex_buffer_t(gpu_access_t gpua, cpu_access_t cpua, bool shadow, uint32_t data_size, void* data)
-: d3d_buffer_(), gpu_access_(gpua), cpu_access_(cpua), data_size_(data_size), shadowing_(shadow)
+vertex_buffer_t::vertex_buffer_t(context_ptr const& context, gpu_access_t gpua, cpu_access_t cpua, bool shadow, uint32_t data_size, void* data)
+: context_(context), gpu_access_(gpua), cpu_access_(cpua), data_size_(data_size), shadowing_(shadow)
 {
-	prime_thread::enqueue(std::bind(&voodoo::create_buffer, &d3d_buffer_, gpu_access_, cpu_access_, data_size, data));
+	
+	context_->create_d3d_buffer(d3d_buffer_, gpu_access_, cpu_access_, data_size, data);
+	//prime_thread::enqueue(std::bind(&voodoo::create_buffer, &d3d_buffer_, gpu_access_, cpu_access_, data_size, data));
 	
 	if (shadowing_) {
 		ATMA_ASSERT(data);
 		data_.assign(reinterpret_cast<char*>(data), reinterpret_cast<char*>(data) + data_size_);
 	}
 
-	if (data) {
-		prime_thread::enqueue(std::bind(&vertex_buffer_t::reload_from_shadow_buffer, this));
+	context_->signal_block();
 
-		prime_thread::enqueue_block();
+	if (data) {
+		
+		//prime_thread::enqueue(std::bind(&vertex_buffer_t::reload_from_shadow_buffer, this));
+		//context_->signal_
+
+		//prime_thread::enqueue_block();
+		
 	}
 }
 
@@ -119,7 +128,7 @@ locked_vertex_buffer_t::locked_vertex_buffer_t(vertex_buffer_t& vertex_buffer, l
 		{
 			// write-discard can be performed on this thread
 			case lock_type_t::write_discard: //map_type = D3D11_MAP_WRITE_DISCARD; break;
-				voodoo::map(owner_->d3d_buffer_, &d3d_resource_, D3D11_MAP_WRITE_DISCARD, 0);
+				voodoo::map(owner_->d3d_buffer_.get(), &d3d_resource_, D3D11_MAP_WRITE_DISCARD, 0);
 				break;
 
 			// other types must be performed on the prime-thread
@@ -131,7 +140,7 @@ locked_vertex_buffer_t::locked_vertex_buffer_t(vertex_buffer_t& vertex_buffer, l
 					: D3D11_MAP_WRITE
 					;
 
-				prime_thread::enqueue(std::bind(&voodoo::map_vb, owner_->d3d_buffer_, &d3d_resource_, map_type, 0U));
+				prime_thread::enqueue(std::bind(&voodoo::map_vb, owner_->d3d_buffer_.get(), &d3d_resource_, map_type, 0U));
 				prime_thread::enqueue_block();
 			}
 		}
@@ -147,13 +156,13 @@ locked_vertex_buffer_t::~locked_vertex_buffer_t()
 	
 	if (owner_->shadowing_) {
 		voodoo::prime_thread::enqueue([owner, d3d_resource]{ 
-			voodoo::map_vb(owner->d3d_buffer_, d3d_resource, D3D11_MAP_WRITE_DISCARD, 0U);
+			voodoo::map_vb(owner->d3d_buffer_.get(), d3d_resource, D3D11_MAP_WRITE_DISCARD, 0U);
 			std::memcpy(d3d_resource->pData, &owner->data_.front(), owner->data_size_);
 		});
 	}
 
 	prime_thread::enqueue([=]{ 
-		voodoo::unmap(owner_->d3d_buffer_, 0);
+		voodoo::unmap(owner_->d3d_buffer_.get(), 0);
 		delete d3d_resource;
 	});
 

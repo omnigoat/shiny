@@ -37,6 +37,8 @@ auto shiny::create_context(fooey::window_ptr const& window, uint32_t adapter) ->
 context_t::context_t(fooey::window_ptr const& window, uint32_t adapter)
 : fullscreen_()
 {
+	allow_present_ = true;
+
 	engine_.signal([=]{
 		std::tie(dxgi_adapter_, d3d_device_, d3d_immediate_context_) = voodoo::dxgi_and_d3d_at(adapter);
 		window_ = window;
@@ -74,11 +76,16 @@ auto context_t::signal_block() -> void
 
 auto context_t::signal_present() -> void
 {
+#if 0
 	engine_.signal([&] {
+		if (!allow_present_)
+			return;
+		std::cout << "presenting" << std::endl;
 		float g[4] = {.5f, .5f, 1.f, 1.f};
 		d3d_immediate_context_->ClearRenderTargetView(d3d_render_target_.get(), g);
 		ATMA_ENSURE_IS(S_OK, dxgi_swap_chain_->Present(DXGI_SWAP_EFFECT_DISCARD, 0));
 	});
+#endif
 }
 
 auto context_t::signal_fullscreen_toggle(uint32_t output_index) -> void
@@ -90,6 +97,8 @@ auto context_t::signal_fullscreen_toggle(uint32_t output_index) -> void
 		fullscreen_ = !fullscreen_;
 		window_->fullscreen_ = fullscreen_;
 
+		allow_present_ = false;
+
 		if (fullscreen_)
 		{
 			// get output of our adapter
@@ -100,34 +109,43 @@ auto context_t::signal_fullscreen_toggle(uint32_t output_index) -> void
 			DXGI_OUTPUT_DESC output_desc;
 			dxgi_output_->GetDesc(&output_desc);
 
-			auto fmt = voodoo::closest_matching_format(dxgi_output_, 800, 600);
+			//auto fmt = voodoo::closest_matching_format(dxgi_output_, 800, 600);
 
-			auto candidate = DXGI_MODE_DESC{fmt.width, fmt.height, {fmt.refreshrate_frames, fmt.refreshrate_period}, DXGI_FORMAT_UNKNOWN, DXGI_MODE_SCANLINE_ORDER_PROGRESSIVE, DXGI_MODE_SCALING_UNSPECIFIED};
+			// fmt.width, fmt.height, {fmt.refreshrate_frames, fmt.refreshrate_period}
+			auto candidate = DXGI_MODE_DESC{800, 600, {0, 0}, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED, DXGI_MODE_SCALING_UNSPECIFIED};
 			auto mode_desc = DXGI_MODE_DESC{};
 			dxgi_output_->FindClosestMatchingMode(&candidate, &mode_desc, d3d_device_.get());
-
-
+			std::cout << "mode found: " << mode_desc.Width << "x" << mode_desc.Height << std::endl;
 
 			// when changing modes, ResizeTarget posts WM_SIZE to our window,
 			// so we need to wait until the window has processed that message
+			#if 1
 			dxgi_swap_chain_->ResizeTarget(&mode_desc);
-			window_->signal_block();
+			//window_->signal_block();
+			std::cout << "post ResizeTarget" << std::endl;
+			#endif
 
 			// go to fullscreen
+			#if 1
+			std::cout << "SetFullscreenState - begin" << std::endl;
 			dxgi_swap_chain_->SetFullscreenState(true, dxgi_output_.get());
+			std::cout << "SetFullscreenState - done" << std::endl;
+			#endif
 
-
-
+			
 
 
 			// second resize-target with zeroed refresh-rate because MS says so
-			mode_desc.RefreshRate = {0, 0};
-			dxgi_swap_chain_->ResizeTarget(&mode_desc);
+			//mode_desc.RefreshRate = {0, 0};
+			//dxgi_swap_chain_->ResizeTarget(&mode_desc);
 		}
 		else
 		{
 			dxgi_swap_chain_->SetFullscreenState(FALSE, nullptr);
+			window_->signal_block();
 		}
+
+		allow_present_ = true;
 	});
 }
 
@@ -138,11 +156,11 @@ auto context_t::signal_create_swapchain() -> void
 
 	auto desc = DXGI_SWAP_CHAIN_DESC{
 		// DXGI_MODE_DESC
-		{0, 0, {0, 0}, DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, DXGI_MODE_SCANLINE_ORDER_PROGRESSIVE, DXGI_MODE_SCALING_UNSPECIFIED},
+		{0, 0, {0, 0}, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED, DXGI_MODE_SCALING_UNSPECIFIED},
 		// DXGI_SAMPLE_DESC
 		{1, 0},
-		DXGI_USAGE_RENDER_TARGET_OUTPUT, 3, window_->hwnd(), TRUE,
-		DXGI_SWAP_EFFECT_DISCARD, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH
+		DXGI_USAGE_RENDER_TARGET_OUTPUT, 1, window_->hwnd(), TRUE,
+		DXGI_SWAP_EFFECT_DISCARD, 0 //DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH
 	};
 
 	ATMA_ENSURE_IS(S_OK, voodoo::dxgi_factory()->CreateSwapChain(d3d_device_.get(), &desc, dxgi_swap_chain_.assign()));
@@ -163,25 +181,72 @@ auto context_t::signal_setup_backbuffer() -> void
 
 auto context_t::on_resize(fooey::events::resize_t& e) -> void
 {
-	if (e.origin().expired())
-		return;
-
 	engine_.signal([&, e] {
+		if (e.origin().expired())
+			return;
+
 		auto wnd = std::dynamic_pointer_cast<fooey::window_t>(e.origin().lock());
 		ATMA_ASSERT(wnd);
+
+		std::cout << "on_resize " << e.width() << "x" << e.height() << std::endl;
 
 		// teardown backbuffer rendertarget
 		d3d_render_target_.reset();
 
-		if (fullscreen_) {
-			ATMA_ENSURE_IS(S_OK, dxgi_swap_chain_->ResizeBuffers(3, e.width(), e.height(), DXGI_FORMAT_UNKNOWN, 0));
-		}
-		else {
-			ATMA_ENSURE_IS(S_OK, dxgi_swap_chain_->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0));
-		}
-	});
+		ATMA_ENSURE_IS(S_OK, dxgi_swap_chain_->ResizeBuffers(1, e.width(), e.height(), DXGI_FORMAT_R8G8B8A8_UNORM, 0));
 
-	// rebind backbuffer again
-	signal_setup_backbuffer();
+		
+		// rebind backbuffer again
+		atma::com_ptr<ID3D11Texture2D> backbuffer;
+		ATMA_ENSURE_IS(S_OK, dxgi_swap_chain_->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)backbuffer.assign()));
+		ATMA_ENSURE_IS(S_OK, d3d_device_->CreateRenderTargetView(backbuffer.get(), nullptr, d3d_render_target_.assign()));
+		d3d_immediate_context_->OMSetRenderTargets(1, &d3d_render_target_.get_ref(), nullptr);
+
+		std::cout << "on_resize - done" << std::endl;
+	});
 }
+
+auto context_t::create_d3d_buffer(voodoo::d3d_buffer_ptr& buffer, gpu_access_t gpu_access, cpu_access_t cpu_access, uint32_t data_size, void* data) -> void
+{
+	// calcualte the buffer usage based off our gpu-access/cpu-access flags
+	D3D11_USAGE buffer_usage = D3D11_USAGE_DEFAULT;
+	if (cpu_access == cpu_access_t::write) {
+		if (gpu_access == gpu_access_t::read) {
+			buffer_usage = D3D11_USAGE_DYNAMIC;
+		}
+		else if (gpu_access == gpu_access_t::write || gpu_access == gpu_access_t::read_write) {
+			buffer_usage = D3D11_USAGE_STAGING;
+		}
+	}
+	else if (cpu_access == cpu_access_t::read || cpu_access == cpu_access_t::read_write) {
+		buffer_usage = D3D11_USAGE_STAGING;
+	}
+	else {
+		if (gpu_access == gpu_access_t::read) {
+			buffer_usage = D3D11_USAGE_IMMUTABLE;
+		}
+	}
+
+	// cpu-usage still needs to be calculated
+	D3D11_CPU_ACCESS_FLAG cpua = static_cast<D3D11_CPU_ACCESS_FLAG>(0L);
+	switch (cpu_access) {
+		case cpu_access_t::read: cpua = D3D11_CPU_ACCESS_READ; break;
+		case cpu_access_t::write: cpua = D3D11_CPU_ACCESS_WRITE; break;
+		case cpu_access_t::read_write: cpua = static_cast<D3D11_CPU_ACCESS_FLAG>(D3D11_CPU_ACCESS_READ | D3D11_CPU_ACCESS_WRITE); break;
+	}
+
+	D3D11_BUFFER_DESC buffer_desc{data_size, buffer_usage, D3D11_BIND_VERTEX_BUFFER, cpua, 0, 0};
+
+
+	if (data) {
+		// for vertex buffers, the pitch and slice-pitch mean nothing, so we'll just
+		// pass along stats to help with debugging (1xdata_size buffer created)
+		D3D11_SUBRESOURCE_DATA d3d_data{data, 1, data_size};
+		ATMA_ENSURE_IS(S_OK, d3d_device_->CreateBuffer(&buffer_desc, &d3d_data, buffer.assign()));
+	}
+	else {
+		d3d_device_->CreateBuffer(&buffer_desc, NULL, buffer.assign());
+	}
+}
+
 

@@ -6,6 +6,7 @@
 #include <shiny/plumbing/commands/map_unmap_copy.hpp>
 //======================================================================
 #include <shiny/voodoo/resources.hpp>
+#include <shiny/context.hpp>
 //======================================================================
 #include <atma/assert.hpp>
 //======================================================================
@@ -28,10 +29,10 @@ namespace plumbing {
 	{
 		typedef std::vector<char> data_t;
 
-		vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, uint32_t data_size);
-		vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, uint32_t data_size, void* data);
-		vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, data_t const& data);
-		vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, data_t&& data);
+		vertex_buffer_t(context_ptr const&, gpu_access_t, cpu_access_t, bool shadow, uint32_t data_size);
+		vertex_buffer_t(context_ptr const&, gpu_access_t, cpu_access_t, bool shadow, uint32_t data_size, void* data);
+		//vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, data_t const& data);
+		//vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, data_t&& data);
 		~vertex_buffer_t();
 
 		auto is_shadowing() const -> bool;
@@ -41,8 +42,11 @@ namespace plumbing {
 		auto rebase_from_buffer(data_t&&, bool upload_to_hardware = true) -> void;
 		auto rebase_from_buffer(data_t const&, bool upload_to_hardware = true) -> void;
 
+		auto bind_to(context_ptr const&) -> void;
+
 	private:
-		ID3D11Buffer* d3d_buffer_;
+		context_ptr context_;
+		voodoo::d3d_buffer_ptr d3d_buffer_;
 		gpu_access_t gpu_access_;
 		cpu_access_t cpu_access_;
 		uint32_t data_size_;
@@ -50,6 +54,8 @@ namespace plumbing {
 		bool shadowing_;
 		std::mutex mutex_;
 		std::mutex inflight_mutex_;
+
+		//std::map<context_ptr, d3d_buffer_ptr> d3d_buffers_;
 
 		friend struct locked_vertex_buffer_t;
 	};

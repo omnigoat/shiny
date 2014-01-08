@@ -18,6 +18,8 @@
 
 //shiny::gfx_gfx_t::create(window)
 
+
+
 int main()
 {
 	// setup up gui
@@ -30,11 +32,10 @@ int main()
 	auto gfx = shiny::create_context(window, shiny::primary_adapter);
 
 
-	window->key_state.on_key(fooey::key_t::Alt + fooey::key_t::Enter, [&gfx]{
+	window->key_state.on_key(fooey::key_t::Ctrl + fooey::key_t::F, [&gfx]{
 		std::cout << "fullscreen toggle" << std::endl;
 		gfx->signal_fullscreen_toggle(1);
 	});
-
 
 
 	bool running = true;
@@ -48,13 +49,14 @@ int main()
 		}}
 	});
 
-	
-	
-	//shiny::spawn_gfx_thread(gfx, [] {});
+
+	//auto vb = shiny::create_vertex_buffer({gfx}, shiny::voodoo::gpu_access_t::read,  )
+
 
 	// game loop
 	while (running) {
 		gfx->signal_present();
+		gfx->signal_block();
 		//shiny::signal_present(gfx);
 		//auto vb = shiny::create_vertex_buffer(gfx, )
 		//auto vb = shiny::vertex_buffer_t::create(gfx, )

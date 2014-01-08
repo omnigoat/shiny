@@ -2,6 +2,7 @@
 #define SHINY_CONTEXT_HPP
 //======================================================================
 #include <shiny/voodoo/device.hpp>
+#include <shiny/voodoo/resources.hpp>
 #include <shiny/format.hpp>
 //======================================================================
 #include <fooey/widgets/window.hpp>
@@ -37,6 +38,8 @@ namespace shiny {
 		auto signal_fullscreen_toggle(uint32_t output_index = primary_output) -> void;
 		auto signal_present() -> void;
 
+		auto create_d3d_buffer(voodoo::d3d_buffer_ptr&, gpu_access_t, cpu_access_t, uint32_t data_size, void* data) -> void;
+
 	private:
 		auto bind_events(fooey::window_ptr const&) -> void;
 		auto signal_create_swapchain() -> void; 
@@ -58,7 +61,7 @@ namespace shiny {
 		atma::com_ptr<ID3D11RenderTargetView> d3d_render_target_;
 		bool is_immediate_thread_;
 
-
+		std::atomic_bool allow_present_;
 
 		// fooey
 		fooey::window_ptr window_;
