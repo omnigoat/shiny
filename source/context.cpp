@@ -76,11 +76,10 @@ auto context_t::signal_block() -> void
 
 auto context_t::signal_present() -> void
 {
-#if 0
+#if 1
 	engine_.signal([&] {
 		if (!allow_present_)
 			return;
-		std::cout << "presenting" << std::endl;
 		float g[4] = {.5f, .5f, 1.f, 1.f};
 		d3d_immediate_context_->ClearRenderTargetView(d3d_render_target_.get(), g);
 		ATMA_ENSURE_IS(S_OK, dxgi_swap_chain_->Present(DXGI_SWAP_EFFECT_DISCARD, 0));
@@ -109,39 +108,43 @@ auto context_t::signal_fullscreen_toggle(uint32_t output_index) -> void
 			DXGI_OUTPUT_DESC output_desc;
 			dxgi_output_->GetDesc(&output_desc);
 
-			//auto fmt = voodoo::closest_matching_format(dxgi_output_, 800, 600);
-
-			// fmt.width, fmt.height, {fmt.refreshrate_frames, fmt.refreshrate_period}
 			auto candidate = DXGI_MODE_DESC{800, 600, {0, 0}, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED, DXGI_MODE_SCALING_UNSPECIFIED};
-			auto mode_desc = DXGI_MODE_DESC{};
-			dxgi_output_->FindClosestMatchingMode(&candidate, &mode_desc, d3d_device_.get());
-			std::cout << "mode found: " << mode_desc.Width << "x" << mode_desc.Height << std::endl;
+			auto mode = DXGI_MODE_DESC{};
+			dxgi_output_->FindClosestMatchingMode(&candidate, &mode, d3d_device_.get());
+			std::cout << "mode found: " << mode.Width << "x" << mode.Height << std::endl;
 
-			// when changing modes, ResizeTarget posts WM_SIZE to our window,
-			// so we need to wait until the window has processed that message
-			#if 1
-			dxgi_swap_chain_->ResizeTarget(&mode_desc);
-			//window_->signal_block();
-			std::cout << "post ResizeTarget" << std::endl;
-			#endif
+			window_->engine_.signal([&, mode] {
+				// set target mode. sends superfluous WM_SIZE?
+#if 1
+				dxgi_swap_chain_->ResizeTarget(&mode);
+				std::cout << "post ResizeTarget" << std::endl;
+#endif
 
-			// go to fullscreen
-			#if 1
-			std::cout << "SetFullscreenState - begin" << std::endl;
-			dxgi_swap_chain_->SetFullscreenState(true, dxgi_output_.get());
-			std::cout << "SetFullscreenState - done" << std::endl;
-			#endif
+				// go to fullscreen
+#if 1
+				std::cout << "SetFullscreenState - begin" << std::endl;
+				dxgi_swap_chain_->SetFullscreenState(true, dxgi_output_.get());
+				std::cout << "SetFullscreenState - done" << std::endl;
+#endif
+			});
+			
 
 			
 
 
 			// second resize-target with zeroed refresh-rate because MS says so
-			//mode_desc.RefreshRate = {0, 0};
-			//dxgi_swap_chain_->ResizeTarget(&mode_desc);
+			//mode.RefreshRate = {0, 0};
+			//dxgi_swap_chain_->ResizeTarget(&mode);
 		}
 		else
 		{
 			dxgi_swap_chain_->SetFullscreenState(FALSE, nullptr);
+
+			//auto mode = DXGI_MODE_DESC{display_format_.width, display_format_.height, {0, 0}, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED, DXGI_MODE_SCALING_UNSPECIFIED};
+			// when changing modes, ResizeTarget posts WM_SIZE to our window,
+			// so we need to wait until the window has processed that message
+			//dxgi_swap_chain_->ResizeTarget(&mode);
+
 			window_->signal_block();
 		}
 
@@ -160,7 +163,7 @@ auto context_t::signal_create_swapchain() -> void
 		// DXGI_SAMPLE_DESC
 		{1, 0},
 		DXGI_USAGE_RENDER_TARGET_OUTPUT, 1, window_->hwnd(), TRUE,
-		DXGI_SWAP_EFFECT_DISCARD, 0 //DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH
+		DXGI_SWAP_EFFECT_DISCARD, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH
 	};
 
 	ATMA_ENSURE_IS(S_OK, voodoo::dxgi_factory()->CreateSwapChain(d3d_device_.get(), &desc, dxgi_swap_chain_.assign()));
@@ -181,7 +184,12 @@ auto context_t::signal_setup_backbuffer() -> void
 
 auto context_t::on_resize(fooey::events::resize_t& e) -> void
 {
-	engine_.signal([&, e] {
+	if (!fullscreen_) {
+		display_format_.width = e.width();
+		display_format_.height = e.height();
+	}
+
+	//engine_.signal([&, e] {
 		if (e.origin().expired())
 			return;
 
@@ -203,7 +211,7 @@ auto context_t::on_resize(fooey::events::resize_t& e) -> void
 		d3d_immediate_context_->OMSetRenderTargets(1, &d3d_render_target_.get_ref(), nullptr);
 
 		std::cout << "on_resize - done" << std::endl;
-	});
+	//});
 }
 
 auto context_t::create_d3d_buffer(voodoo::d3d_buffer_ptr& buffer, gpu_access_t gpu_access, cpu_access_t cpu_access, uint32_t data_size, void* data) -> void
