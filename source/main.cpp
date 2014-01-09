@@ -246,10 +246,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				fullscreen = !fullscreen;
 
 				if (fullscreen) {
-					ShowWindow(hWnd, SW_HIDE);
-					auto mode = DXGI_MODE_DESC{800, 600, {60, 1}, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED, DXGI_MODE_SCALING_UNSPECIFIED};
-					g_pSwapChain->ResizeTarget(&mode);
+					IDXGIOutput* output;
+					g_pSwapChain->GetContainingOutput(&output);
+					
+					auto candidate = DXGI_MODE_DESC{1024, 720, {0, 1}, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED, DXGI_MODE_SCALING_UNSPECIFIED};
+					auto mode = DXGI_MODE_DESC{};
+					output->FindClosestMatchingMode(&candidate, &mode, g_pd3dDevice1);
+					auto hr = g_pSwapChain->ResizeTarget(&mode);
+					assert(hr == S_OK);
 					g_pSwapChain->SetFullscreenState(TRUE, NULL);
+
 				}
 				else {
 					g_pSwapChain->SetFullscreenState(FALSE, NULL);
@@ -259,28 +265,31 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 		case WM_SIZE:
 		{
+
 			std::cout << "WM_SIZE [" << wParam << "] " << LOWORD(lParam) << "x" << HIWORD(lParam) << std::endl;
 
 			if (!g_pSwapChain)
 				break;
-			g_pSwapChain->ResizeBuffers(1, LOWORD(lParam), HIWORD(lParam), DXGI_FORMAT_R8G8B8A8_UNORM, 0);
-
-			// Create a render target view
+			g_pImmediateContext1->OMSetRenderTargets(0, 0, 0);
+			
 			g_pRenderTargetView->Release();
+
+			g_pSwapChain->ResizeBuffers(1, 0, 0, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH);
+
 
 			ID3D11Texture2D* pBackBuffer = nullptr;
 			auto hr = g_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&pBackBuffer));
 			
-
+			
 			hr = g_pd3dDevice->CreateRenderTargetView(pBackBuffer, nullptr, &g_pRenderTargetView);
 			pBackBuffer->Release();
 			if (FAILED(hr))
 				return hr;
 
-			g_pImmediateContext->OMSetRenderTargets(1, &g_pRenderTargetView, nullptr);
-
+			g_pImmediateContext1->OMSetRenderTargets(1, &g_pRenderTargetView, nullptr);
 			break;
 		}
+
 		default:
 			return DefWindowProc(hWnd, message, wParam, lParam);
 	}
@@ -336,6 +345,7 @@ HRESULT InitDevice()
 	sd.SampleDesc.Count = 1;
 	sd.SampleDesc.Quality = 0;
 	sd.Windowed = TRUE;
+	sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
 	for (UINT driverTypeIndex = 0; driverTypeIndex < numDriverTypes; driverTypeIndex++)
 	{
