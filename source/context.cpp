@@ -82,7 +82,8 @@ auto context_t::signal_present() -> void
 			return;
 		float g[4] = {.5f, .5f, 1.f, 1.f};
 		d3d_immediate_context_->ClearRenderTargetView(d3d_render_target_.get(), g);
-		ATMA_ENSURE_IS(S_OK, dxgi_swap_chain_->Present(DXGI_SWAP_EFFECT_DISCARD, 0));
+		//ATMA_ENSURE_IS(S_OK, dxgi_swap_chain_->Present(DXGI_SWAP_EFFECT_DISCARD, 0));
+		dxgi_swap_chain_->Present(DXGI_SWAP_EFFECT_DISCARD, 0);
 	});
 #endif
 }
@@ -111,41 +112,19 @@ auto context_t::signal_fullscreen_toggle(uint32_t output_index) -> void
 			auto candidate = DXGI_MODE_DESC{800, 600, {0, 0}, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED, DXGI_MODE_SCALING_UNSPECIFIED};
 			auto mode = DXGI_MODE_DESC{};
 			dxgi_output_->FindClosestMatchingMode(&candidate, &mode, d3d_device_.get());
-			std::cout << "mode found: " << mode.Width << "x" << mode.Height << std::endl;
+			//std::cout << "mode found: " << mode.Width << "x" << mode.Height << std::endl;
 
-			window_->engine_.signal([&, mode] {
-				// set target mode. sends superfluous WM_SIZE?
-#if 1
-				dxgi_swap_chain_->ResizeTarget(&mode);
-				std::cout << "post ResizeTarget" << std::endl;
-#endif
+			dxgi_swap_chain_->ResizeTarget(&mode);
 
-				// go to fullscreen
-#if 1
-				std::cout << "SetFullscreenState - begin" << std::endl;
-				dxgi_swap_chain_->SetFullscreenState(true, dxgi_output_.get());
-				std::cout << "SetFullscreenState - done" << std::endl;
-#endif
-			});
-			
-
-			
-
-
-			// second resize-target with zeroed refresh-rate because MS says so
-			//mode.RefreshRate = {0, 0};
-			//dxgi_swap_chain_->ResizeTarget(&mode);
+			dxgi_swap_chain_->SetFullscreenState(true, dxgi_output_.get());
 		}
 		else
 		{
 			dxgi_swap_chain_->SetFullscreenState(FALSE, nullptr);
 
-			//auto mode = DXGI_MODE_DESC{display_format_.width, display_format_.height, {0, 0}, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED, DXGI_MODE_SCALING_UNSPECIFIED};
-			// when changing modes, ResizeTarget posts WM_SIZE to our window,
-			// so we need to wait until the window has processed that message
-			//dxgi_swap_chain_->ResizeTarget(&mode);
-
-			window_->signal_block();
+			// resize window back to what it was before fullscreening
+			auto mode = DXGI_MODE_DESC{display_format_.width, display_format_.height, {0, 0}, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED, DXGI_MODE_SCALING_UNSPECIFIED};
+			dxgi_swap_chain_->ResizeTarget(&mode);
 		}
 
 		allow_present_ = true;
@@ -201,7 +180,7 @@ auto context_t::on_resize(fooey::events::resize_t& e) -> void
 		// teardown backbuffer rendertarget
 		d3d_render_target_.reset();
 
-		ATMA_ENSURE_IS(S_OK, dxgi_swap_chain_->ResizeBuffers(1, e.width(), e.height(), DXGI_FORMAT_R8G8B8A8_UNORM, 0));
+		ATMA_ENSURE_IS(S_OK, dxgi_swap_chain_->ResizeBuffers(1, 0, 0, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH));
 
 		
 		// rebind backbuffer again

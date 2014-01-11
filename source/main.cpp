@@ -1,5 +1,5 @@
 
-#if 0
+#if 1
 #include <shiny/scoped_runtime.hpp>
 //#include <shiny/plumbing/vertex_buffer.hpp>
 #include <iostream>
@@ -34,8 +34,29 @@ int main()
 	auto gfx = shiny::create_context(window, shiny::primary_adapter);
 
 
-	window->key_state.on_key(fooey::key_t::Ctrl + fooey::key_t::F, [&gfx]{
+	window->key_state.on_key(fooey::key_t::Ctrl + fooey::key_t::F, [&gfx, window]{
 		std::cout << "fullscreen toggle" << std::endl;
+		auto hwnd_ = window->hwnd();
+		//ShowWindow(hwnd_, SW_HIDE);
+		//SetWindowLong(hwnd_, GWL_STYLE, 0);
+		#if 0
+		SetWindowLong(hwnd_, GWL_EXSTYLE,
+			0 & ~(WS_EX_DLGMODALFRAME |
+			WS_EX_WINDOWEDGE | WS_EX_CLIENTEDGE | WS_EX_STATICEDGE));
+
+		// On expand, if we're given a window_rect, grow to it, otherwise do
+		// not resize.
+			MONITORINFO monitor_info;
+			monitor_info.cbSize = sizeof(monitor_info);
+			GetMonitorInfo(MonitorFromWindow(hwnd_, MONITOR_DEFAULTTONEAREST),
+				&monitor_info);
+
+			SetWindowPos(hwnd_, NULL, monitor_info.rcMonitor.left, monitor_info.rcMonitor.top,
+				monitor_info.rcMonitor.right - monitor_info.rcMonitor.left, monitor_info.rcMonitor.bottom - monitor_info.rcMonitor.top,
+				SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
+		#endif
+		//window->signal_show(fooey::visibility::hidden);
+		//ShowWindow(window->hwnd(), SW_HIDE);
 		gfx->signal_fullscreen_toggle(1);
 	});
 
@@ -65,7 +86,7 @@ int main()
 	}
 }
 
-#endif
+#else
 
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
@@ -425,3 +446,5 @@ void CleanupDevice()
 	if (g_pd3dDevice1) g_pd3dDevice1->Release();
 	if (g_pd3dDevice) g_pd3dDevice->Release();
 }
+
+#endif
