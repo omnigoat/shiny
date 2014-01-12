@@ -22,18 +22,19 @@ namespace plumbing {
 	using voodoo::gpu_access_t;
 	using voodoo::cpu_access_t;
 
+
+	struct vertex_buffer_t;
+	typedef atma::intrusive_ptr<vertex_buffer_t> vertex_buffer_ptr;
+
 	//======================================================================
 	// vertex_buffer_t
 	//======================================================================
-	struct vertex_buffer_t
+	struct vertex_buffer_t : atma::ref_counted<vertex_buffer_t>
 	{
 		typedef std::vector<char> data_t;
 
-		vertex_buffer_t(context_ptr const&, gpu_access_t, cpu_access_t, bool shadow, uint32_t data_size);
-		vertex_buffer_t(context_ptr const&, gpu_access_t, cpu_access_t, bool shadow, uint32_t data_size, void* data);
-		//vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, data_t const& data);
-		//vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, data_t&& data);
-		~vertex_buffer_t();
+		static auto create(std::initializer_list<context_ptr>, gpu_access_t, cpu_access_t, bool shadow, uint32_t data_size) -> vertex_buffer_ptr;
+
 
 		auto is_shadowing() const -> bool;
 		auto reload_from_shadow_buffer() -> void;
@@ -42,20 +43,31 @@ namespace plumbing {
 		auto rebase_from_buffer(data_t&&, bool upload_to_hardware = true) -> void;
 		auto rebase_from_buffer(data_t const&, bool upload_to_hardware = true) -> void;
 
+		//
 		auto bind_to(context_ptr const&) -> void;
 
 	private:
-		context_ptr context_;
+		struct context_binding_t;
+
+		vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, uint32_t data_size);
+		vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, uint32_t data_size, void* data);
+		vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, data_t const& data);
+		vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, data_t&& data);
+		~vertex_buffer_t();
+
+	private:
 		voodoo::d3d_buffer_ptr d3d_buffer_;
 		gpu_access_t gpu_access_;
 		cpu_access_t cpu_access_;
 		uint32_t data_size_;
 		std::vector<char> data_;
 		bool shadowing_;
+		
 		std::mutex mutex_;
 		std::mutex inflight_mutex_;
 
-		//std::map<context_ptr, d3d_buffer_ptr> d3d_buffers_;
+
+		std::map<std::tuple<context_ptr, voodoo::dxgi_adapter_ptr>, voodoo::d3d_buffer_ptr> d3d_buffers_;
 
 		friend struct locked_vertex_buffer_t;
 	};

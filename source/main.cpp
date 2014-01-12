@@ -18,10 +18,6 @@
 #include <atma/math/vector4f.hpp>
 #include <atma/math/matrix4f.hpp>
 
-//shiny::gfx_gfx_t::create(window)
-
-
-
 int main()
 {
 	// setup up gui
@@ -35,30 +31,13 @@ int main()
 
 
 	window->key_state.on_key(fooey::key_t::Ctrl + fooey::key_t::F, [&gfx, window]{
-		std::cout << "fullscreen toggle" << std::endl;
-		auto hwnd_ = window->hwnd();
-		//ShowWindow(hwnd_, SW_HIDE);
-		//SetWindowLong(hwnd_, GWL_STYLE, 0);
-		#if 0
-		SetWindowLong(hwnd_, GWL_EXSTYLE,
-			0 & ~(WS_EX_DLGMODALFRAME |
-			WS_EX_WINDOWEDGE | WS_EX_CLIENTEDGE | WS_EX_STATICEDGE));
-
-		// On expand, if we're given a window_rect, grow to it, otherwise do
-		// not resize.
-			MONITORINFO monitor_info;
-			monitor_info.cbSize = sizeof(monitor_info);
-			GetMonitorInfo(MonitorFromWindow(hwnd_, MONITOR_DEFAULTTONEAREST),
-				&monitor_info);
-
-			SetWindowPos(hwnd_, NULL, monitor_info.rcMonitor.left, monitor_info.rcMonitor.top,
-				monitor_info.rcMonitor.right - monitor_info.rcMonitor.left, monitor_info.rcMonitor.bottom - monitor_info.rcMonitor.top,
-				SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
-		#endif
-		//window->signal_show(fooey::visibility::hidden);
-		//ShowWindow(window->hwnd(), SW_HIDE);
 		gfx->signal_fullscreen_toggle(1);
 	});
+
+
+
+	auto vb = shiny::vertex_buffer_t({gfx}, shiny::gpu_access_t::read, shiny::cpu_access_t::write, true, 3);
+
 
 
 	bool running = true;

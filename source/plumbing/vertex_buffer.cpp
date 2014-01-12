@@ -7,6 +7,7 @@
 namespace prime_thread = shiny::voodoo::prime_thread;
 
 using shiny::plumbing::vertex_buffer_t;
+using shiny::plumbing::vertex_buffer_ptr;
 using shiny::plumbing::locked_vertex_buffer_t;
 using shiny::plumbing::lock_type_t;
 using shiny::plumbing::gpu_access_t;
@@ -17,16 +18,28 @@ using shiny::context_ptr;
 //======================================================================
 // vertex_buffer_t
 //======================================================================
-vertex_buffer_t::vertex_buffer_t(context_ptr const& context, gpu_access_t gpua, cpu_access_t cpua, bool shadow, uint32_t data_size)
-: vertex_buffer_t(context, gpua, cpua, shadow, data_size, nullptr)
+auto vertex_buffer_t::create(std::initializer_list<context_ptr> contexts, gpu_access_t gpua, cpu_access_t cpua, bool shadow, uint32_t data_size) -> vertex_buffer_ptr
+{
+	auto vb = vertex_buffer_ptr(new vertex_buffer_t(gpua, cpua, shadow, data_size));
+
+	for (auto const& x : contexts) {
+		vb->bind_to(x);
+	}
+
+	return vb;
+}
+
+
+vertex_buffer_t::vertex_buffer_t(gpu_access_t gpua, cpu_access_t cpua, bool shadow, uint32_t data_size)
+: vertex_buffer_t(gpua, cpua, shadow, data_size, nullptr)
 {
 }
 
-vertex_buffer_t::vertex_buffer_t(context_ptr const& context, gpu_access_t gpua, cpu_access_t cpua, bool shadow, uint32_t data_size, void* data)
-: context_(context), gpu_access_(gpua), cpu_access_(cpua), data_size_(data_size), shadowing_(shadow)
+vertex_buffer_t::vertex_buffer_t(gpu_access_t gpua, cpu_access_t cpua, bool shadow, uint32_t data_size, void* data)
+: gpu_access_(gpua), cpu_access_(cpua), data_size_(data_size), shadowing_(shadow)
 {
 	
-	context_->create_d3d_buffer(d3d_buffer_, gpu_access_, cpu_access_, data_size, data);
+	//context_->create_d3d_buffer(d3d_buffer_, gpu_access_, cpu_access_, data_size, data);
 	//prime_thread::enqueue(std::bind(&voodoo::create_buffer, &d3d_buffer_, gpu_access_, cpu_access_, data_size, data));
 	
 	if (shadowing_) {
@@ -34,7 +47,7 @@ vertex_buffer_t::vertex_buffer_t(context_ptr const& context, gpu_access_t gpua, 
 		data_.assign(reinterpret_cast<char*>(data), reinterpret_cast<char*>(data) + data_size_);
 	}
 
-	context_->signal_block();
+	//context_->signal_block();
 
 	if (data) {
 		
@@ -66,6 +79,9 @@ auto vertex_buffer_t::reload_from_shadow_buffer() -> void
 {
 	ATMA_ASSERT(shadowing_);
 	
+	for (auto& x : d3d_buffers_) {
+		x.second
+	}
 	locked_vertex_buffer_t L(*this, lock_type_t::write_discard);
 	std::copy_n(&data_.front(), data_size_, L.begin<char>());
 }
