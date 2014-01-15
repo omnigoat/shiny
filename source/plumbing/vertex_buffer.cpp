@@ -18,17 +18,48 @@ using shiny::context_ptr;
 //======================================================================
 // vertex_buffer_t
 //======================================================================
+#if 0
 auto vertex_buffer_t::create(std::initializer_list<context_ptr> contexts, gpu_access_t gpua, cpu_access_t cpua, bool shadow, uint32_t data_size) -> vertex_buffer_ptr
 {
 	auto vb = vertex_buffer_ptr(new vertex_buffer_t(gpua, cpua, shadow, data_size));
 
 	for (auto const& x : contexts) {
-		vb->bind_to(x);
+		//vb->bind_to(x);
 	}
 
 	return vb;
 }
+#endif
 
+vertex_buffer_t::vertex_buffer_t(usage_t usage, bool shadow, uint32_t data_size, void* data)
+: gpu_access_(), cpu_access_(), usage_(usage), shadow_(shadow), data_size_(data_size)
+{
+	if (usage_ == usage_t::immutable)
+	{
+		ATMA_ASSERT_MSG(data, "immutable buffers require data upon initialisation");
+
+		gpu_access_ = gpu_access_t::read;
+		cpu_access_ = cpu_access_t::none;
+
+		context_->create_d3d_buffer(d3d_buffer_, gpu_access_t::read, cpu_access_t::none, data_size, data);
+		return;
+	}
+
+	// if we're shadowing, then stick the data in the shadow buffer, and then upload
+	// it, because the shadow-buffer is aligned correctly, and garuaneteed to be fastest.
+	if (shadowing_ && data_size > 0)
+	{
+		ATMA_ASSERT(data);
+		data_.assign(reinterpret_cast<char*>(data), reinterpret_cast<char*>(data) + data_size_);
+
+		reload_from_shadow_buffer();
+	}
+	else if (data_size > 0) {
+		context_->signal_buffer_upload(d3d_buffer_, data, data + data_size);
+	}
+
+	
+}
 
 vertex_buffer_t::vertex_buffer_t(gpu_access_t gpua, cpu_access_t cpua, bool shadow, uint32_t data_size)
 : vertex_buffer_t(gpua, cpua, shadow, data_size, nullptr)
@@ -79,9 +110,12 @@ auto vertex_buffer_t::reload_from_shadow_buffer() -> void
 {
 	ATMA_ASSERT(shadowing_);
 	
+	#if 0
 	for (auto& x : d3d_buffers_) {
 		x.second
 	}
+	#endif
+
 	locked_vertex_buffer_t L(*this, lock_type_t::write_discard);
 	std::copy_n(&data_.front(), data_size_, L.begin<char>());
 }

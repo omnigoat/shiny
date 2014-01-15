@@ -38,7 +38,7 @@ namespace shiny {
 		auto signal_fullscreen_toggle(uint32_t output_index = primary_output) -> void;
 		auto signal_present() -> void;
 
-		auto signal_upload_vertex_buffer_data(vertex_buffer_t const&, )
+		//auto signal_upload_vertex_buffer_data(vertex_buffer_t const&, )
 
 		auto create_d3d_buffer(voodoo::d3d_buffer_ptr&, gpu_access_t, cpu_access_t, uint32_t data_size, void* data) -> void;
 

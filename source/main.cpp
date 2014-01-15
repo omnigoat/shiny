@@ -36,7 +36,7 @@ int main()
 
 
 
-	auto vb = shiny::vertex_buffer_t({gfx}, shiny::gpu_access_t::read, shiny::cpu_access_t::write, true, 3);
+	//auto vb = shiny::vertex_buffer_t({gfx}, shiny::gpu_access_t::read, shiny::cpu_access_t::write, true, 3);
 
 
 

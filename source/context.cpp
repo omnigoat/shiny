@@ -232,7 +232,7 @@ auto context_t::create_d3d_buffer(voodoo::d3d_buffer_ptr& buffer, gpu_access_t g
 		ATMA_ENSURE_IS(S_OK, d3d_device_->CreateBuffer(&buffer_desc, &d3d_data, buffer.assign()));
 	}
 	else {
-		d3d_device_->CreateBuffer(&buffer_desc, NULL, buffer.assign());
+		ATMA_ENSURE_IS(S_OK, d3d_device_->CreateBuffer(&buffer_desc, NULL, buffer.assign()));
 	}
 }
 

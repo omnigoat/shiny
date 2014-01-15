@@ -26,17 +26,30 @@ namespace plumbing {
 	struct vertex_buffer_t;
 	typedef atma::intrusive_ptr<vertex_buffer_t> vertex_buffer_ptr;
 
+	
+
 	//======================================================================
 	// vertex_buffer_t
 	//======================================================================
 	struct vertex_buffer_t : atma::ref_counted<vertex_buffer_t>
 	{
+		enum class usage_t
+		{
+			immutable,
+			long_lived
+		};
+
 		typedef std::vector<char> data_t;
 
-		static auto create(std::initializer_list<context_ptr>, gpu_access_t, cpu_access_t, bool shadow, uint32_t data_size) -> vertex_buffer_ptr;
+		// variadic factory
+		template <typename... Args>
+		static auto create(Args const&... args) -> vertex_buffer_ptr {
+			return vertex_buffer_ptr(new vertex_buffer_t(args...));
+		}
 
-
+		auto usage() const -> usage_t { return usage_; }
 		auto is_shadowing() const -> bool;
+
 		auto reload_from_shadow_buffer() -> void;
 		auto release_shadow_buffer() -> void;
 		auto aquire_shadow_buffer(bool pull_from_hardware = true) -> void;
@@ -49,6 +62,7 @@ namespace plumbing {
 	private:
 		struct context_binding_t;
 
+		vertex_buffer_t(usage_t, bool shadow, uint32_t data_size, void* data);
 		vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, uint32_t data_size);
 		vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, uint32_t data_size, void* data);
 		vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, data_t const& data);
@@ -56,6 +70,7 @@ namespace plumbing {
 		~vertex_buffer_t();
 
 	private:
+		usage_t usage_;
 		voodoo::d3d_buffer_ptr d3d_buffer_;
 		gpu_access_t gpu_access_;
 		cpu_access_t cpu_access_;
@@ -66,8 +81,8 @@ namespace plumbing {
 		std::mutex mutex_;
 		std::mutex inflight_mutex_;
 
-
-		std::map<std::tuple<context_ptr, voodoo::dxgi_adapter_ptr>, voodoo::d3d_buffer_ptr> d3d_buffers_;
+		context_ptr context_;
+		//std::map<std::tuple<context_ptr, voodoo::dxgi_adapter_ptr>, voodoo::d3d_buffer_ptr> d3d_buffers_;
 
 		friend struct locked_vertex_buffer_t;
 	};
