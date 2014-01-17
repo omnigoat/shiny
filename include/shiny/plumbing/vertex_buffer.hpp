@@ -9,6 +9,7 @@
 #include <shiny/context.hpp>
 //======================================================================
 #include <atma/assert.hpp>
+#include <atma/aligned_allocator.hpp>
 //======================================================================
 #include <d3d11.h>
 //======================================================================
@@ -39,7 +40,7 @@ namespace plumbing {
 			long_lived
 		};
 
-		typedef std::vector<char> data_t;
+		typedef std::vector<char, atma::aligned_allocator_t<char, 4>> data_t;
 
 		// variadic factory
 		template <typename... Args>
@@ -75,7 +76,8 @@ namespace plumbing {
 		gpu_access_t gpu_access_;
 		cpu_access_t cpu_access_;
 		uint32_t data_size_;
-		std::vector<char> data_;
+
+		data_t data_;
 		bool shadowing_;
 		
 		std::mutex mutex_;

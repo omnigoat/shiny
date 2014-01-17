@@ -32,7 +32,7 @@ auto vertex_buffer_t::create(std::initializer_list<context_ptr> contexts, gpu_ac
 #endif
 
 vertex_buffer_t::vertex_buffer_t(usage_t usage, bool shadow, uint32_t data_size, void* data)
-: gpu_access_(), cpu_access_(), usage_(usage), shadow_(shadow), data_size_(data_size)
+: gpu_access_(), cpu_access_(), usage_(usage), shadowing_(shadow), data_size_(data_size)
 {
 	if (usage_ == usage_t::immutable)
 	{
@@ -55,7 +55,7 @@ vertex_buffer_t::vertex_buffer_t(usage_t usage, bool shadow, uint32_t data_size,
 		reload_from_shadow_buffer();
 	}
 	else if (data_size > 0) {
-		context_->signal_buffer_upload(d3d_buffer_, data, data + data_size);
+		//context_->signal_buffer_upload(d3d_buffer_, data, data + data_size);
 	}
 
 	
