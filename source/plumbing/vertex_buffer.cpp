@@ -31,9 +31,11 @@ auto vertex_buffer_t::create(std::initializer_list<context_ptr> contexts, gpu_ac
 }
 #endif
 
-vertex_buffer_t::vertex_buffer_t(usage_t usage, bool shadow, uint32_t data_size, void* data)
-: gpu_access_(), cpu_access_(), usage_(usage), shadowing_(shadow), data_size_(data_size)
+vertex_buffer_t::vertex_buffer_t(context_ptr const& context, usage_t usage, bool shadow, uint32_t data_size, void* data)
+: context_(context), gpu_access_(), cpu_access_(), usage_(usage), shadowing_(shadow), data_size_(data_size)
 {
+	ATMA_ASSERT(data_size > 0);
+
 	if (usage_ == usage_t::immutable)
 	{
 		ATMA_ASSERT_MSG(data, "immutable buffers require data upon initialisation");
@@ -44,23 +46,31 @@ vertex_buffer_t::vertex_buffer_t(usage_t usage, bool shadow, uint32_t data_size,
 		context_->create_d3d_buffer(d3d_buffer_, gpu_access_t::read, cpu_access_t::none, data_size, data);
 		return;
 	}
-
-	// if we're shadowing, then stick the data in the shadow buffer, and then upload
-	// it, because the shadow-buffer is aligned correctly, and garuaneteed to be fastest.
-	if (shadowing_ && data_size > 0)
+	else if (usage_ == usage_t::long_lived)
 	{
-		ATMA_ASSERT(data);
-		data_.assign(reinterpret_cast<char*>(data), reinterpret_cast<char*>(data) + data_size_);
+		gpu_access_ = gpu_access_t::read;
+		cpu_access_ = cpu_access_t::write;
 
-		reload_from_shadow_buffer();
-	}
-	else if (data_size > 0) {
-		//context_->signal_buffer_upload(d3d_buffer_, data, data + data_size);
-	}
+		context_->create_d3d_buffer(d3d_buffer_, gpu_access_, cpu_access_, data_size, data);
 
-	
+		// if we're shadowing, then stick the data in the shadow buffer, and then upload
+		// it, because the shadow-buffer is aligned correctly, and garuaneteed to be fastest.
+		if (shadowing_)
+		{
+			if (data) {
+				ATMA_ASSERT(data);
+				data_.assign(reinterpret_cast<char*>(data), reinterpret_cast<char*>(data)+ data_size_);
+
+				reload_from_shadow_buffer();
+			}
+			else {
+				data_.resize(data_size);
+			}
+		}
+	}
 }
 
+#if 0
 vertex_buffer_t::vertex_buffer_t(gpu_access_t gpua, cpu_access_t cpua, bool shadow, uint32_t data_size)
 : vertex_buffer_t(gpua, cpua, shadow, data_size, nullptr)
 {
@@ -89,16 +99,10 @@ vertex_buffer_t::vertex_buffer_t(gpu_access_t gpua, cpu_access_t cpua, bool shad
 		
 	}
 }
+#endif
 
 vertex_buffer_t::~vertex_buffer_t()
 {
-	mutex_.lock();
-
-	if (d3d_buffer_) {
-		d3d_buffer_->Release();
-	}
-
-	mutex_.unlock();
 }
 
 auto vertex_buffer_t::is_shadowing() const -> bool
@@ -115,6 +119,8 @@ auto vertex_buffer_t::reload_from_shadow_buffer() -> void
 		x.second
 	}
 	#endif
+
+	//context_->signal_buffer_upload(d3d_buffer_, &data_[0], data_size_);
 
 	locked_vertex_buffer_t L(*this, lock_type_t::write_discard);
 	std::copy_n(&data_.front(), data_size_, L.begin<char>());
@@ -177,8 +183,9 @@ locked_vertex_buffer_t::locked_vertex_buffer_t(vertex_buffer_t& vertex_buffer, l
 		switch (lock_type_)
 		{
 			// write-discard can be performed on this thread
-			case lock_type_t::write_discard: //map_type = D3D11_MAP_WRITE_DISCARD; break;
-				voodoo::map(owner_->d3d_buffer_.get(), &d3d_resource_, D3D11_MAP_WRITE_DISCARD, 0);
+			case lock_type_t::write_discard:
+				owner_->context_->signal_d3d_map(owner_->d3d_buffer_, &d3d_resource_, D3D11_MAP_WRITE_DISCARD, 0);
+				owner_->context_->signal_block();
 				break;
 
 			// other types must be performed on the prime-thread
@@ -190,8 +197,10 @@ locked_vertex_buffer_t::locked_vertex_buffer_t(vertex_buffer_t& vertex_buffer, l
 					: D3D11_MAP_WRITE
 					;
 
-				prime_thread::enqueue(std::bind(&voodoo::map_vb, owner_->d3d_buffer_.get(), &d3d_resource_, map_type, 0U));
-				prime_thread::enqueue_block();
+				owner_->context_->signal_d3d_map(owner_->d3d_buffer_, &d3d_resource_, map_type, 0);
+				owner_->context_->signal_block();
+				//owner_->context_->signal_d3d_map(owner_->d3d_buffer_, &d3d_resource_, map_type, 0);
+				//owner_->context_->signal_block();
 			}
 		}
 	}
@@ -205,17 +214,12 @@ locked_vertex_buffer_t::~locked_vertex_buffer_t()
 	auto d3d_resource = new D3D11_MAPPED_SUBRESOURCE;
 	
 	if (owner_->shadowing_) {
-		voodoo::prime_thread::enqueue([owner, d3d_resource]{ 
-			voodoo::map_vb(owner->d3d_buffer_.get(), d3d_resource, D3D11_MAP_WRITE_DISCARD, 0U);
+		owner_->context_->signal_d3d_map(owner_->d3d_buffer_, d3d_resource, D3D11_MAP_WRITE_DISCARD, 0, [&](D3D11_MAPPED_SUBRESOURCE* sr) {
 			std::memcpy(d3d_resource->pData, &owner->data_.front(), owner->data_size_);
 		});
 	}
 
-	prime_thread::enqueue([=]{ 
-		voodoo::unmap(owner_->d3d_buffer_.get(), 0);
-		delete d3d_resource;
-	});
-
-	//prime_thread::enqueue_block();
+	owner_->context_->signal_d3d_unmap(owner_->d3d_buffer_, 0);
+	owner_->context_->signal_block();
 }
 

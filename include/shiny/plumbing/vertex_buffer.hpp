@@ -63,11 +63,11 @@ namespace plumbing {
 	private:
 		struct context_binding_t;
 
-		vertex_buffer_t(usage_t, bool shadow, uint32_t data_size, void* data);
-		vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, uint32_t data_size);
-		vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, uint32_t data_size, void* data);
-		vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, data_t const& data);
-		vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, data_t&& data);
+		vertex_buffer_t(context_ptr const&, usage_t, bool shadow, uint32_t data_size, void* data);
+		//vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, uint32_t data_size);
+		//vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, uint32_t data_size, void* data);
+		//vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, data_t const& data);
+		//vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, data_t&& data);
 		~vertex_buffer_t();
 
 	private:

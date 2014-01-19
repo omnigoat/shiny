@@ -35,9 +35,9 @@ int main()
 	});
 
 
-
-	//auto vb = shiny::vertex_buffer_t({gfx}, shiny::gpu_access_t::read, shiny::cpu_access_t::write, true, 3);
-
+	auto vb = shiny::plumbing::vertex_buffer_t::create(gfx, shiny::plumbing::vertex_buffer_t::usage_t::long_lived, true, 3, nullptr);
+	shiny::plumbing::locked_vertex_buffer_t lvb(*vb, shiny::plumbing::lock_type_t::write);
+	
 
 
 	bool running = true;

@@ -37,8 +37,9 @@ namespace shiny {
 		auto signal_block() -> void;
 		auto signal_fullscreen_toggle(uint32_t output_index = primary_output) -> void;
 		auto signal_present() -> void;
-
-		//auto signal_upload_vertex_buffer_data(vertex_buffer_t const&, )
+		//auto signal_d3d_map(voodoo::d3d_buffer_ptr&, D3D11_MAPPED_SUBRESOURCE*, D3D11_MAP, uint32_t subresource) -> void;
+		auto signal_d3d_map(voodoo::d3d_buffer_ptr&, D3D11_MAPPED_SUBRESOURCE*, D3D11_MAP, uint32_t subresource, std::function<void(D3D11_MAPPED_SUBRESOURCE*)> const& = std::function<void(D3D11_MAPPED_SUBRESOURCE*)>()) -> void;
+		auto signal_d3d_unmap(voodoo::d3d_buffer_ptr&, uint32_t subresource) -> void;
 
 		auto create_d3d_buffer(voodoo::d3d_buffer_ptr&, gpu_access_t, cpu_access_t, uint32_t data_size, void* data) -> void;
 
@@ -60,6 +61,7 @@ namespace shiny {
 		// d3d
 		voodoo::d3d_device_ptr d3d_device_;
 		voodoo::d3d_context_ptr d3d_immediate_context_;
+		voodoo::d3d_context_ptr d3d_deferred_context_;
 		atma::com_ptr<ID3D11RenderTargetView> d3d_render_target_;
 		bool is_immediate_thread_;
 

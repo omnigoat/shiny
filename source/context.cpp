@@ -55,6 +55,8 @@ context_t::~context_t()
 		if (window_)
 			window_->unbind(bound_events_);
 	});
+
+	engine_.signal_block();
 }
 
 
@@ -234,6 +236,35 @@ auto context_t::create_d3d_buffer(voodoo::d3d_buffer_ptr& buffer, gpu_access_t g
 	else {
 		ATMA_ENSURE_IS(S_OK, d3d_device_->CreateBuffer(&buffer_desc, NULL, buffer.assign()));
 	}
+}
+
+
+//auto context_t::immediate_d3d_map(voodoo::d3d_buffer_ptr& buffer, D3D11_MAPPED_SUBRESOURCE* mapped_resource, D3D11_MAP map_type, uint32_t subresource) -> void
+//{
+//	d3d_deferred_context_->Map(buffer.get(), subresource, map_type, 0, mapped_resource);
+//}
+
+//auto context_t::signal_d3d_map(voodoo::d3d_buffer_ptr& buffer, D3D11_MAPPED_SUBRESOURCE* mapped_resource, D3D11_MAP map_type, uint32_t subresource) -> void
+//{
+//	engine_.signal([&, mapped_resource, map_type, subresource] {
+//		d3d_immediate_context_->Map(buffer.get(), subresource, map_type, 0, mapped_resource);
+//	});
+//}
+
+auto context_t::signal_d3d_map(voodoo::d3d_buffer_ptr& buffer, D3D11_MAPPED_SUBRESOURCE* mapped_resource, D3D11_MAP map_type, uint32_t subresource, std::function<void(D3D11_MAPPED_SUBRESOURCE*)> const& fn) -> void
+{
+	engine_.signal([&, mapped_resource, map_type, subresource] {
+		d3d_immediate_context_->Map(buffer.get(), subresource, map_type, 0, mapped_resource);
+		if (fn)
+			fn(mapped_resource);
+	});
+}
+
+auto context_t::signal_d3d_unmap(voodoo::d3d_buffer_ptr& buffer, uint32_t subresource) -> void
+{
+	engine_.signal([&, buffer, subresource] {
+		d3d_immediate_context_->Unmap(buffer.get(), subresource);
+	});
 }
 
 
