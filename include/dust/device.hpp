@@ -1,7 +1,7 @@
-#ifndef DUSK_VOODOO_DEVICE_HPP
-#define DUSK_VOODOO_DEVICE_HPP
+#ifndef DUST_VOODOO_DEVICE_HPP
+#define DUST_VOODOO_DEVICE_HPP
 //======================================================================
-#include <dusk/format.hpp>
+#include <dust/format.hpp>
 //======================================================================
 #include <fooey/widgets/window.hpp>
 //======================================================================
@@ -13,7 +13,7 @@
 //======================================================================
 #include <d3d11.h>
 //======================================================================
-namespace dusk {
+namespace dust {
 	
 	uint32_t const primary_adapter = 0;
 	uint32_t const primary_output = 0;
@@ -67,7 +67,7 @@ namespace voodoo {
 	
 //======================================================================
 } // namespace voodoo
-} // namespace dusk
+} // namespace dust
 //======================================================================
 #endif
 //======================================================================

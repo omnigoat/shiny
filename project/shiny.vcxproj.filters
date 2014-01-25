@@ -9,102 +9,84 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="include\plumbing">
-      <UniqueIdentifier>{fc291042-cd2c-4bad-a684-7e5e96610196}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="source\plumbing">
-      <UniqueIdentifier>{1257461d-a961-47af-b332-316f5e7abb71}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\voodoo">
-      <UniqueIdentifier>{dafada6f-7bd4-4d86-b003-4aa311689b36}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="source\voodoo">
-      <UniqueIdentifier>{51726eb3-2f88-4c7a-81e4-f960ee2f8985}</UniqueIdentifier>
-    </Filter>
     <Filter Include="shaders">
       <UniqueIdentifier>{69726e24-bf27-40cc-88f6-f6f41ad69449}</UniqueIdentifier>
     </Filter>
-    <Filter Include="source\thread">
-      <UniqueIdentifier>{4991b7c1-9e32-4484-8d3c-b5cb4d23fc5e}</UniqueIdentifier>
+    <Filter Include="include\dust">
+      <UniqueIdentifier>{0765283e-e4b3-488e-9908-c8c02ee3dec1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\thread">
-      <UniqueIdentifier>{189e963b-dc17-4d80-bfa2-fa65b394effd}</UniqueIdentifier>
+    <Filter Include="source\dust">
+      <UniqueIdentifier>{37b2a706-0ef2-40d5-a9ab-1b21d9a2e0c6}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\source\plumbing\vertex_buffer.cpp">
-      <Filter>source\plumbing</Filter>
+    <ClCompile Include="..\source\dust\context.cpp">
+      <Filter>source\dust</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\dust\device.cpp">
+      <Filter>source\dust</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\dust\index_buffer.cpp">
+      <Filter>source\dust</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\dust\prime_thread.cpp">
+      <Filter>source\dust</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\dust\resources.cpp">
+      <Filter>source\dust</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\dust\scoped_runtime.cpp">
+      <Filter>source\dust</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\dust\thread.cpp">
+      <Filter>source\dust</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\dust\vertex_buffer.cpp">
+      <Filter>source\dust</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\dust\vertex_declaration.cpp">
+      <Filter>source\dust</Filter>
     </ClCompile>
     <ClCompile Include="..\source\main.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\scoped_runtime.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\voodoo\device.cpp">
-      <Filter>source\voodoo</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\voodoo\resources.cpp">
-      <Filter>source\voodoo</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\voodoo\thread.cpp">
-      <Filter>source\voodoo</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\plumbing\index_buffer.cpp">
-      <Filter>source\plumbing</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\plumbing\vertex_declaration.cpp">
-      <Filter>source\plumbing</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\voodoo\prime_thread.cpp">
-      <Filter>source\voodoo</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\context.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\include\shiny\plumbing\vertex_buffer.hpp">
-      <Filter>include\plumbing</Filter>
+    <ClInclude Include="..\include\dust\command.hpp">
+      <Filter>include\dust</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\shiny\plumbing\lock.hpp">
-      <Filter>include\plumbing</Filter>
+    <ClInclude Include="..\include\dust\device.hpp">
+      <Filter>include\dust</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\shiny\scoped_runtime.hpp">
-      <Filter>include</Filter>
+    <ClInclude Include="..\include\dust\resources.hpp">
+      <Filter>include\dust</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\shiny\voodoo\scoped_command_batch.hpp">
-      <Filter>include\voodoo</Filter>
+    <ClInclude Include="..\include\dust\scoped_command_batch.hpp">
+      <Filter>include\dust</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\shiny\voodoo\command.hpp">
-      <Filter>include\voodoo</Filter>
+    <ClInclude Include="..\include\dust\thread.hpp">
+      <Filter>include\dust</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\shiny\voodoo\device.hpp">
-      <Filter>include\voodoo</Filter>
+    <ClInclude Include="..\include\dust\context.hpp">
+      <Filter>include\dust</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\shiny\voodoo\resources.hpp">
-      <Filter>include\voodoo</Filter>
+    <ClInclude Include="..\include\dust\format.hpp">
+      <Filter>include\dust</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\shiny\voodoo\thread.hpp">
-      <Filter>include\voodoo</Filter>
+    <ClInclude Include="..\include\dust\scoped_runtime.hpp">
+      <Filter>include\dust</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\shiny\plumbing\index_buffer.hpp">
-      <Filter>include\plumbing</Filter>
+    <ClInclude Include="..\include\dust\index_buffer.hpp">
+      <Filter>include\dust</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\shiny\plumbing\vertex_declaration.hpp">
-      <Filter>include\plumbing</Filter>
+    <ClInclude Include="..\include\dust\lock.hpp">
+      <Filter>include\dust</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\shiny\voodoo\prime_thread.hpp">
-      <Filter>include\voodoo</Filter>
+    <ClInclude Include="..\include\dust\vertex_buffer.hpp">
+      <Filter>include\dust</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\shiny\format.hpp">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\shiny\thread\this_thread.hpp">
-      <Filter>include\thread</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\shiny\context.hpp">
-      <Filter>include</Filter>
+    <ClInclude Include="..\include\dust\vertex_declaration.hpp">
+      <Filter>include\dust</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -1,9 +1,9 @@
-#ifndef DUSK_PLUMBING_VERTEX_DECLARATION_HPP
-#define DUSK_PLUMBING_VERTEX_DECLARATION_HPP
+#ifndef DUST_PLUMBING_VERTEX_DECLARATION_HPP
+#define DUST_PLUMBING_VERTEX_DECLARATION_HPP
 //======================================================================
-#include <dusk/lock.hpp>
+#include <dust/lock.hpp>
 //======================================================================
-#include <dusk/resources.hpp>
+#include <dust/resources.hpp>
 //======================================================================
 #include <atma/assert.hpp>
 //======================================================================
@@ -13,7 +13,7 @@
 #include <thread>
 #include <initializer_list>
 //======================================================================
-namespace dusk {
+namespace dust {
 namespace plumbing {
 //======================================================================
 	
@@ -80,7 +80,7 @@ namespace plumbing {
 
 //======================================================================
 } // namespace plumbing
-} // namespace dusk
+} // namespace dust
 //======================================================================
 #endif
 //======================================================================

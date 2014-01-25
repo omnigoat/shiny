@@ -1,9 +1,9 @@
-#ifndef DUSK_CONTEXT_HPP
-#define DUSK_CONTEXT_HPP
+#ifndef DUST_CONTEXT_HPP
+#define DUST_CONTEXT_HPP
 //======================================================================
-#include <dusk/device.hpp>
-#include <dusk/resources.hpp>
-#include <dusk/format.hpp>
+#include <dust/device.hpp>
+#include <dust/resources.hpp>
+#include <dust/format.hpp>
 //======================================================================
 #include <fooey/widgets/window.hpp>
 #include <fooey/events/resize.hpp>
@@ -14,7 +14,7 @@
 #include <thread>
 #include <mutex>
 //======================================================================
-namespace dusk {
+namespace dust {
 //======================================================================
 	
 	namespace detail {
@@ -87,7 +87,7 @@ namespace dusk {
 	
 
 //======================================================================
-} // namespace dusk
+} // namespace dust
 //======================================================================
 #endif
 //======================================================================

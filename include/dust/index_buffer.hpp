@@ -1,9 +1,9 @@
-#ifndef DUSK_PLUMBING_INDEX_BUFFER_HPP
-#define DUSK_PLUMBING_INDEX_BUFFER_HPP
+#ifndef DUST_PLUMBING_INDEX_BUFFER_HPP
+#define DUST_PLUMBING_INDEX_BUFFER_HPP
 //======================================================================
-#include <dusk/lock.hpp>
+#include <dust/lock.hpp>
 //======================================================================
-#include <dusk/resources.hpp>
+#include <dust/resources.hpp>
 //======================================================================
 #include <atma/assert.hpp>
 //======================================================================
@@ -12,7 +12,7 @@
 #include <vector>
 #include <thread>
 //======================================================================
-namespace dusk {
+namespace dust {
 namespace plumbing {
 //======================================================================
 	
@@ -93,7 +93,7 @@ namespace plumbing {
 
 //======================================================================
 } // namespace plumbing
-} // namespace dusk
+} // namespace dust
 //======================================================================
 #endif
 //======================================================================

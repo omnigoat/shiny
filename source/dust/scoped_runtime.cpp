@@ -1,26 +1,28 @@
-#include <shiny/scoped_runtime.hpp>
+#include <dust/scoped_runtime.hpp>
 //======================================================================
-#include <shiny/voodoo/device.hpp>
-#include <shiny/voodoo/thread.hpp>
-#include <shiny/voodoo/prime_thread.hpp>
+#include <dust/device.hpp>
+#include <dust/thread.hpp>
 //======================================================================
 #include <algorithm>
 #include <dwmapi.h>
-using shiny::scoped_runtime_t;
+using dust::scoped_runtime_t;
 
 scoped_runtime_t::scoped_runtime_t() {
 #pragma warning(push)
 #pragma warning(disable: 4995)
 	//DwmEnableComposition(DWM_EC_DISABLECOMPOSITION);
 #pragma warning(pop)
-	voodoo::prime_thread::spawn();
+	//voodoo::prime_thread::spawn();
+	voodoo::setup_dxgi();
+	voodoo::setup_d3d_device();
 }
 
 scoped_runtime_t::~scoped_runtime_t() {
 
 	std::for_each(threads_.begin(), threads_.end(), std::mem_fn(&std::thread::join));
 	
-	voodoo::prime_thread::join();
+	//voodoo::prime_thread::join();
+	
 
 #pragma warning(push)
 #pragma warning(disable: 4995)

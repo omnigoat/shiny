@@ -1,12 +1,12 @@
-#include <dusk/index_buffer.hpp>
-#include <dusk/thread.hpp>
+#include <dust/index_buffer.hpp>
+#include <dust/thread.hpp>
 #include <atma/assert.hpp>
 
-using dusk::plumbing::index_buffer_t;
-using dusk::plumbing::locked_index_buffer_t;
-using dusk::plumbing::lock_type_t;
-using dusk::plumbing::gpu_access_t;
-using dusk::plumbing::cpu_access_t;
+using dust::plumbing::index_buffer_t;
+using dust::plumbing::locked_index_buffer_t;
+using dust::plumbing::lock_type_t;
+using dust::plumbing::gpu_access_t;
+using dust::plumbing::cpu_access_t;
 
 #if 0
 //======================================================================

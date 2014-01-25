@@ -1,7 +1,7 @@
-#include <dusk/vertex_declaration.hpp>
+#include <dust/vertex_declaration.hpp>
 
-using dusk::plumbing::vertex_stream_t;
-using dusk::plumbing::vertex_declaration_t;
+using dust::plumbing::vertex_stream_t;
+using dust::plumbing::vertex_declaration_t;
 
 //======================================================================
 // vertex_stream_t

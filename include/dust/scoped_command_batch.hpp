@@ -1,7 +1,7 @@
-#ifndef DUSK_VOODOO_SCOPED_COMMAND_BATCH_HPP
-#define DUSK_VOODOO_SCOPED_COMMAND_BATCH_HPP
+#ifndef DUST_VOODOO_SCOPED_COMMAND_BATCH_HPP
+#define DUST_VOODOO_SCOPED_COMMAND_BATCH_HPP
 //======================================================================
-namespace dusk {
+namespace dust {
 namespace voodoo {
 //======================================================================
 	
@@ -9,7 +9,7 @@ namespace voodoo {
 
 //======================================================================
 } // namespace voodoo
-} // namespace dusk
+} // namespace dust
 //======================================================================
 #endif
 //======================================================================

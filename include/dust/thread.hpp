@@ -1,5 +1,5 @@
-#ifndef DUSK_VOODOO_THREAD_HPP
-#define DUSK_VOODOO_THREAD_HPP
+#ifndef DUST_VOODOO_THREAD_HPP
+#define DUST_VOODOO_THREAD_HPP
 //======================================================================
 #include <thread>
 #include <atomic>
@@ -8,10 +8,10 @@
 //======================================================================
 #include <atma/assert.hpp>
 #include <atma/lockfree/queue.hpp>
-#include <dusk/device.hpp>
-#include <dusk/command.hpp>
+#include <dust/device.hpp>
+#include <dust/command.hpp>
 //======================================================================
-namespace dusk {
+namespace dust {
 namespace voodoo {
 //======================================================================
 	
@@ -63,7 +63,7 @@ namespace voodoo {
 
 //======================================================================
 } // namespace voodoo
-} // namespace dusk
+} // namespace dust
 //======================================================================
 #endif
 //======================================================================

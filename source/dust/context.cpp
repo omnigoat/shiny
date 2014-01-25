@@ -1,14 +1,13 @@
-#include <shiny/context.hpp>
+#include <dust/context.hpp>
 
-#include <shiny/voodoo/prime_thread.hpp>
-#include <shiny/voodoo/device.hpp>
+#include <dust/device.hpp>
 #include <fooey/events/resize.hpp>
 #include <fooey/keys.hpp>
 
 #include <vector>
 
-using namespace shiny;
-using shiny::context_t;
+using namespace dust;
+using dust::context_t;
 
 namespace
 {
@@ -26,7 +25,7 @@ namespace
 //======================================================================
 // context creation
 //======================================================================
-auto shiny::create_context(fooey::window_ptr const& window, uint32_t adapter) -> shiny::context_ptr
+auto dust::create_context(fooey::window_ptr const& window, uint32_t adapter) -> dust::context_ptr
 {
 	return context_ptr(new context_t(window, adapter));
 }
@@ -63,7 +62,7 @@ context_t::~context_t()
 auto context_t::bind_events(fooey::window_ptr const& window) -> void
 {
 	bound_events_ = window->on({
-		{"resize-dc.shiny.context", [this](fooey::events::resize_t& e) { on_resize(e); }}
+		{"resize-dc.dust.context", [this](fooey::events::resize_t& e) { on_resize(e); }}
 	});
 }
 

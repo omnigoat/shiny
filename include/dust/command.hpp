@@ -1,14 +1,14 @@
-#ifndef DUSK_VOODOO_COMMAND_HPP
-#define DUSK_VOODOO_COMMAND_HPP
+#ifndef DUST_VOODOO_COMMAND_HPP
+#define DUST_VOODOO_COMMAND_HPP
 //======================================================================
 #include <condition_variable>
 #include <memory>
 #include <atma/intrusive_ptr.hpp>
 #include <atma/xtm/tuple.hpp>
 //======================================================================
-#include <dusk/device.hpp>
+#include <dust/device.hpp>
 //======================================================================
-namespace dusk {
+namespace dust {
 namespace voodoo {
 //======================================================================
 	
@@ -126,7 +126,7 @@ namespace voodoo {
 	
 //======================================================================
 } // namespace voodoo
-} // namespace dusk
+} // namespace dust
 //======================================================================
 #endif
 //======================================================================

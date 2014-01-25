@@ -1,15 +1,15 @@
-#include <dusk/vertex_buffer.hpp>
-#include <dusk/thread.hpp>
+#include <dust/vertex_buffer.hpp>
+#include <dust/thread.hpp>
 #include <atma/assert.hpp>
 
-using dusk::plumbing::vertex_buffer_t;
-using dusk::plumbing::vertex_buffer_ptr;
-using dusk::plumbing::locked_vertex_buffer_t;
-using dusk::plumbing::lock_type_t;
-using dusk::plumbing::gpu_access_t;
-using dusk::plumbing::cpu_access_t;
+using dust::plumbing::vertex_buffer_t;
+using dust::plumbing::vertex_buffer_ptr;
+using dust::plumbing::locked_vertex_buffer_t;
+using dust::plumbing::lock_type_t;
+using dust::plumbing::gpu_access_t;
+using dust::plumbing::cpu_access_t;
 
-using dusk::context_ptr;
+using dust::context_ptr;
 
 //======================================================================
 // vertex_buffer_t

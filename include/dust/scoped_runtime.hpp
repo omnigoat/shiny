@@ -1,11 +1,11 @@
-#ifndef DUSK_SCOPED_RUNTIME_HPP
-#define DUSK_SCOPED_RUNTIME_HPP
+#ifndef DUST_SCOPED_RUNTIME_HPP
+#define DUST_SCOPED_RUNTIME_HPP
 //======================================================================
 #include <functional>
 #include <vector>
 #include <thread>
 //======================================================================
-namespace dusk {
+namespace dust {
 //======================================================================
 	
 	struct scoped_runtime_t
@@ -22,7 +22,7 @@ namespace dusk {
 	};
 
 //======================================================================
-} // namespace dusk
+} // namespace dust
 //======================================================================
 #endif
 //======================================================================

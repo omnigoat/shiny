@@ -13,7 +13,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{8E03B685-D9CE-45BF-8597-E7EF57E62B8D}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>shiny</RootNamespace>
+    <RootNamespace>dust</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -92,32 +92,30 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\source\context.cpp" />
+    <ClCompile Include="..\source\dust\context.cpp" />
+    <ClCompile Include="..\source\dust\index_buffer.cpp" />
+    <ClCompile Include="..\source\dust\vertex_buffer.cpp" />
+    <ClCompile Include="..\source\dust\vertex_declaration.cpp" />
+    <ClCompile Include="..\source\dust\scoped_runtime.cpp" />
+    <ClCompile Include="..\source\dust\device.cpp" />
+    <ClCompile Include="..\source\dust\prime_thread.cpp" />
+    <ClCompile Include="..\source\dust\resources.cpp" />
+    <ClCompile Include="..\source\dust\thread.cpp" />
     <ClCompile Include="..\source\main.cpp" />
-    <ClCompile Include="..\source\plumbing\index_buffer.cpp" />
-    <ClCompile Include="..\source\plumbing\vertex_buffer.cpp" />
-    <ClCompile Include="..\source\plumbing\vertex_declaration.cpp" />
-    <ClCompile Include="..\source\scoped_runtime.cpp" />
-    <ClCompile Include="..\source\voodoo\device.cpp" />
-    <ClCompile Include="..\source\voodoo\prime_thread.cpp" />
-    <ClCompile Include="..\source\voodoo\resources.cpp" />
-    <ClCompile Include="..\source\voodoo\thread.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\include\shiny\context.hpp" />
-    <ClInclude Include="..\include\shiny\format.hpp" />
-    <ClInclude Include="..\include\shiny\plumbing\index_buffer.hpp" />
-    <ClInclude Include="..\include\shiny\plumbing\lock.hpp" />
-    <ClInclude Include="..\include\shiny\plumbing\vertex_buffer.hpp" />
-    <ClInclude Include="..\include\shiny\plumbing\vertex_declaration.hpp" />
-    <ClInclude Include="..\include\shiny\scoped_runtime.hpp" />
-    <ClInclude Include="..\include\shiny\thread\this_thread.hpp" />
-    <ClInclude Include="..\include\shiny\voodoo\command.hpp" />
-    <ClInclude Include="..\include\shiny\voodoo\device.hpp" />
-    <ClInclude Include="..\include\shiny\voodoo\prime_thread.hpp" />
-    <ClInclude Include="..\include\shiny\voodoo\resources.hpp" />
-    <ClInclude Include="..\include\shiny\voodoo\scoped_command_batch.hpp" />
-    <ClInclude Include="..\include\shiny\voodoo\thread.hpp" />
+    <ClInclude Include="..\include\dust\context.hpp" />
+    <ClInclude Include="..\include\dust\format.hpp" />
+    <ClInclude Include="..\include\dust\index_buffer.hpp" />
+    <ClInclude Include="..\include\dust\lock.hpp" />
+    <ClInclude Include="..\include\dust\vertex_buffer.hpp" />
+    <ClInclude Include="..\include\dust\vertex_declaration.hpp" />
+    <ClInclude Include="..\include\dust\scoped_runtime.hpp" />
+    <ClInclude Include="..\include\dust\command.hpp" />
+    <ClInclude Include="..\include\dust\device.hpp" />
+    <ClInclude Include="..\include\dust\resources.hpp" />
+    <ClInclude Include="..\include\dust\scoped_command_batch.hpp" />
+    <ClInclude Include="..\include\dust\thread.hpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="..\shaders\vs_basic.hlsl">
