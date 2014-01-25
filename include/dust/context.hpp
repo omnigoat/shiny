@@ -1,9 +1,9 @@
-#ifndef SHINY_CONTEXT_HPP
-#define SHINY_CONTEXT_HPP
+#ifndef DUSK_CONTEXT_HPP
+#define DUSK_CONTEXT_HPP
 //======================================================================
-#include <shiny/voodoo/device.hpp>
-#include <shiny/voodoo/resources.hpp>
-#include <shiny/format.hpp>
+#include <dusk/device.hpp>
+#include <dusk/resources.hpp>
+#include <dusk/format.hpp>
 //======================================================================
 #include <fooey/widgets/window.hpp>
 #include <fooey/events/resize.hpp>
@@ -14,7 +14,7 @@
 #include <thread>
 #include <mutex>
 //======================================================================
-namespace shiny {
+namespace dusk {
 //======================================================================
 	
 	namespace detail {
@@ -87,7 +87,7 @@ namespace shiny {
 	
 
 //======================================================================
-} // namespace shiny
+} // namespace dusk
 //======================================================================
 #endif
 //======================================================================

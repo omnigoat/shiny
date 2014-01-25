@@ -1,6 +1,4 @@
-#include <shiny/voodoo/device.hpp>
-
-
+#include <dusk/device.hpp>
 
 #include <atma/assert.hpp>
 
@@ -17,7 +15,7 @@
 //======================================================================
 namespace
 {
-	using namespace shiny;
+	using namespace dusk;
 
 	// dxgi factory
 	atma::com_ptr<IDXGIFactory1> dxgi_factory_;
@@ -48,7 +46,7 @@ namespace
 		auto modes = std::unique_ptr<DXGI_MODE_DESC[]>(new DXGI_MODE_DESC[mode_count]);
 		ATMA_ENSURE_IS(S_OK, dxgi_output->GetDisplayModeList(format, 0, &mode_count, modes.get()));
 
-		// convert dxgi format to shiny's format
+		// convert dxgi format to dusk's format
 		for (auto i = modes.get(); i != modes.get() + mode_count; ++i)
 		{
 			dest.push_back({
@@ -68,7 +66,7 @@ namespace
 //======================================================================
 namespace
 {
-	using namespace shiny::voodoo;
+	using namespace dusk::voodoo;
 
 	std::map<dxgi_adapter_ptr, d3d_device_ptr> d3d_devices_;
 }
@@ -81,21 +79,21 @@ atma::com_ptr<ID3D11Device> d3d_device_ = nullptr;
 atma::com_ptr<ID3D11DeviceContext> d3d_immediate_context_ = nullptr;
 std::mutex immediate_context_mutex_;
 
-__declspec(thread) ID3D11DeviceContext* shiny::voodoo::detail::d3d_local_context_ = nullptr;
+__declspec(thread) ID3D11DeviceContext* dusk::voodoo::detail::d3d_local_context_ = nullptr;
 
 // dxgi factory
-atma::com_ptr<IDXGIFactory1> shiny::voodoo::detail::dxgi_factory_;
+atma::com_ptr<IDXGIFactory1> dusk::voodoo::detail::dxgi_factory_;
 
 // dxgi device for the d3d-device
-atma::com_ptr<IDXGIDevice1> shiny::voodoo::detail::dxgi_device_;
+atma::com_ptr<IDXGIDevice1> dusk::voodoo::detail::dxgi_device_;
 
 // dxgi adapters
-std::vector<atma::com_ptr<IDXGIAdapter1>> shiny::voodoo::detail::dxgi_adapters_;
-atma::com_ptr<IDXGIAdapter1> shiny::voodoo::detail::dxgi_primary_adapter_;
+std::vector<atma::com_ptr<IDXGIAdapter1>> dusk::voodoo::detail::dxgi_adapters_;
+atma::com_ptr<IDXGIAdapter1> dusk::voodoo::detail::dxgi_primary_adapter_;
 
 // outputs/surface for primary adapter
-std::vector<atma::com_ptr<IDXGIOutput>> shiny::voodoo::detail::dxgi_primary_adaptor_outputs_;
-atma::com_ptr<IDXGIOutput> shiny::voodoo::detail::dxgi_primary_output_;
+std::vector<atma::com_ptr<IDXGIOutput>> dusk::voodoo::detail::dxgi_primary_adaptor_outputs_;
+atma::com_ptr<IDXGIOutput> dusk::voodoo::detail::dxgi_primary_output_;
 #endif
 
 
@@ -104,7 +102,7 @@ atma::com_ptr<IDXGIOutput> shiny::voodoo::detail::dxgi_primary_output_;
 // scoped_IC_lock
 //======================================================================
 #if 0
-using shiny::voodoo::detail::scoped_async_immediate_context_t;
+using dusk::voodoo::detail::scoped_async_immediate_context_t;
 scoped_async_immediate_context_t::scoped_async_immediate_context_t()
 {
 	immediate_context_mutex_.lock();
@@ -123,7 +121,7 @@ auto scoped_async_immediate_context_t::operator -> () const -> atma::com_ptr<ID3
 //======================================================================
 // device management
 //======================================================================
-auto shiny::voodoo::setup_dxgi() -> void
+auto dusk::voodoo::setup_dxgi() -> void
 {
 	// create dxgi factory
 	ATMA_ENSURE_IS(S_OK, CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)&dxgi_factory_));
@@ -165,7 +163,7 @@ auto shiny::voodoo::setup_dxgi() -> void
 }
 
 
-auto shiny::voodoo::setup_d3d_device() -> void
+auto dusk::voodoo::setup_d3d_device() -> void
 {
 #if 0
 	ATMA_ASSERT(detail::d3d_device_ == nullptr);
@@ -181,7 +179,7 @@ auto shiny::voodoo::setup_d3d_device() -> void
 #endif
 }
 
-auto shiny::voodoo::teardown_d3d_device() -> void
+auto dusk::voodoo::teardown_d3d_device() -> void
 {
 #if 0
 	detail::d3d_immediate_context_.reset();
@@ -207,17 +205,17 @@ auto shiny::voodoo::teardown_d3d_device() -> void
 #endif
 }
 
-auto shiny::voodoo::dxgi_factory() -> dxgi_factory_ptr
+auto dusk::voodoo::dxgi_factory() -> dxgi_factory_ptr
 {
 	return dxgi_factory_;
 }
 
-auto shiny::voodoo::output_at(dxgi_adapter_ptr const& adapter, uint32_t index) -> dxgi_output_ptr
+auto dusk::voodoo::output_at(dxgi_adapter_ptr const& adapter, uint32_t index) -> dxgi_output_ptr
 {
 	return dxgi_outputs_mapping_[adapter][index];
 }
 
-auto shiny::voodoo::dxgi_and_d3d_at(uint32_t adapter_index) -> std::tuple<dxgi_adapter_ptr, d3d_device_ptr, d3d_context_ptr>
+auto dusk::voodoo::dxgi_and_d3d_at(uint32_t adapter_index) -> std::tuple<dxgi_adapter_ptr, d3d_device_ptr, d3d_context_ptr>
 {
 	dxgi_adapter_ptr adapter = dxgi_adapters_[adapter_index];
 	d3d_device_ptr device;
@@ -244,7 +242,7 @@ auto shiny::voodoo::dxgi_and_d3d_at(uint32_t adapter_index) -> std::tuple<dxgi_a
 	return std::make_tuple(dxgi_adapters_[adapter_index], device, context);
 }
 
-auto shiny::voodoo::closest_matching_format(dxgi_output_ptr const& output, uint32_t width, uint32_t height) -> display_mode_t
+auto dusk::voodoo::closest_matching_format(dxgi_output_ptr const& output, uint32_t width, uint32_t height) -> display_mode_t
 {
 	for (auto const& x : dxgi_backbuffer_formats_[output])
 	{

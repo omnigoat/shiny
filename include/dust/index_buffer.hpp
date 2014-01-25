@@ -1,11 +1,9 @@
-#ifndef SHINY_PLUMBING_INDEX_BUFFER_HPP
-#define SHINY_PLUMBING_INDEX_BUFFER_HPP
+#ifndef DUSK_PLUMBING_INDEX_BUFFER_HPP
+#define DUSK_PLUMBING_INDEX_BUFFER_HPP
 //======================================================================
-#include <shiny/plumbing/lock.hpp>
-#include <shiny/plumbing/prime_thread.hpp>
-#include <shiny/plumbing/commands/map_unmap_copy.hpp>
+#include <dusk/lock.hpp>
 //======================================================================
-#include <shiny/voodoo/resources.hpp>
+#include <dusk/resources.hpp>
 //======================================================================
 #include <atma/assert.hpp>
 //======================================================================
@@ -14,7 +12,7 @@
 #include <vector>
 #include <thread>
 //======================================================================
-namespace shiny {
+namespace dusk {
 namespace plumbing {
 //======================================================================
 	
@@ -95,7 +93,7 @@ namespace plumbing {
 
 //======================================================================
 } // namespace plumbing
-} // namespace shiny
+} // namespace dusk
 //======================================================================
 #endif
 //======================================================================

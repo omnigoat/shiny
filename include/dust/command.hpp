@@ -1,14 +1,14 @@
-#ifndef SHINY_VOODOO_COMMAND_HPP
-#define SHINY_VOODOO_COMMAND_HPP
+#ifndef DUSK_VOODOO_COMMAND_HPP
+#define DUSK_VOODOO_COMMAND_HPP
 //======================================================================
 #include <condition_variable>
 #include <memory>
 #include <atma/intrusive_ptr.hpp>
 #include <atma/xtm/tuple.hpp>
 //======================================================================
-#include <shiny/voodoo/device.hpp>
+#include <dusk/device.hpp>
 //======================================================================
-namespace shiny {
+namespace dusk {
 namespace voodoo {
 //======================================================================
 	
@@ -126,7 +126,7 @@ namespace voodoo {
 	
 //======================================================================
 } // namespace voodoo
-} // namespace shiny
+} // namespace dusk
 //======================================================================
 #endif
 //======================================================================

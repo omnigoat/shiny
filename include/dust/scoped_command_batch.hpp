@@ -1,7 +1,7 @@
-#ifndef SHINY_VOODOO_SCOPED_COMMAND_BATCH_HPP
-#define SHINY_VOODOO_SCOPED_COMMAND_BATCH_HPP
+#ifndef DUSK_VOODOO_SCOPED_COMMAND_BATCH_HPP
+#define DUSK_VOODOO_SCOPED_COMMAND_BATCH_HPP
 //======================================================================
-namespace shiny {
+namespace dusk {
 namespace voodoo {
 //======================================================================
 	
@@ -9,7 +9,7 @@ namespace voodoo {
 
 //======================================================================
 } // namespace voodoo
-} // namespace shiny
+} // namespace dusk
 //======================================================================
 #endif
 //======================================================================

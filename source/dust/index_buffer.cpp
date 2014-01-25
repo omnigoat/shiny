@@ -1,17 +1,14 @@
-#include <shiny/plumbing/index_buffer.hpp>
-#include <shiny/voodoo/thread.hpp>
-#include <shiny/voodoo/command.hpp>
-#include <shiny/voodoo/prime_thread.hpp>
+#include <dusk/index_buffer.hpp>
+#include <dusk/thread.hpp>
 #include <atma/assert.hpp>
 
-namespace prime_thread = shiny::voodoo::prime_thread;
+using dusk::plumbing::index_buffer_t;
+using dusk::plumbing::locked_index_buffer_t;
+using dusk::plumbing::lock_type_t;
+using dusk::plumbing::gpu_access_t;
+using dusk::plumbing::cpu_access_t;
 
-using shiny::plumbing::index_buffer_t;
-using shiny::plumbing::locked_index_buffer_t;
-using shiny::plumbing::lock_type_t;
-using shiny::plumbing::gpu_access_t;
-using shiny::plumbing::cpu_access_t;
-
+#if 0
 //======================================================================
 // index_buffer_t
 //======================================================================
@@ -151,3 +148,4 @@ locked_index_buffer_t::~locked_index_buffer_t()
 	prime_thread::enqueue_block();
 }
 
+#endif

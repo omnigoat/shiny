@@ -1,12 +1,12 @@
-#ifndef SHINY_VOODOO_RESOURCES_HPP
-#define SHINY_VOODOO_RESOURCES_HPP
+#ifndef DUSK_VOODOO_RESOURCES_HPP
+#define DUSK_VOODOO_RESOURCES_HPP
 //======================================================================
 #include <thread>
 #include <atomic>
 //======================================================================
 #include <d3d11.h>
 //======================================================================
-namespace shiny {
+namespace dusk {
 namespace voodoo {
 //======================================================================
 
@@ -38,7 +38,7 @@ namespace voodoo {
 	typedef voodoo::gpu_access_t gpu_access_t;
 	typedef voodoo::cpu_access_t cpu_access_t;
 
-} // namespace shiny
+} // namespace dusk
 //======================================================================
 #endif
 //======================================================================

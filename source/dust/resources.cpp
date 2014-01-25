@@ -1,16 +1,16 @@
-#include <shiny/voodoo/resources.hpp>
-#include <shiny/voodoo/device.hpp>
+#include <dusk/resources.hpp>
+#include <dusk/win32/device.hpp>
 #include <atma/assert.hpp>
 
-using shiny::voodoo::gpu_access_t;
-using shiny::voodoo::cpu_access_t;
+using dusk::voodoo::gpu_access_t;
+using dusk::voodoo::cpu_access_t;
 
 namespace {
 	uint32_t const ptr_size = sizeof(ID3D11Buffer*);
 	GUID const mapped_context_guid = { 0x01, 0x02, 0x03, "ctx_map" };
 }
 
-auto shiny::voodoo::create_buffer(ID3D11Buffer** buffer, gpu_access_t gpu_access, cpu_access_t cpu_access, uint32_t data_size, void* data) -> void
+auto dusk::voodoo::create_buffer(ID3D11Buffer** buffer, gpu_access_t gpu_access, cpu_access_t cpu_access, uint32_t data_size, void* data) -> void
 {
 	// calcualte the buffer usage based off our gpu-access/cpu-access flags
 	D3D11_USAGE buffer_usage = D3D11_USAGE_DEFAULT;
@@ -56,7 +56,7 @@ auto shiny::voodoo::create_buffer(ID3D11Buffer** buffer, gpu_access_t gpu_access
 
 
 
-auto shiny::voodoo::create_index_buffer(ID3D11Buffer** buffer, gpu_access_t gpu_access, cpu_access_t cpu_access, uint32_t data_size, void* data) -> void
+auto dusk::voodoo::create_index_buffer(ID3D11Buffer** buffer, gpu_access_t gpu_access, cpu_access_t cpu_access, uint32_t data_size, void* data) -> void
 {
 	// calcualte the buffer usage based off our gpu-access/cpu-access flags
 	D3D11_USAGE buffer_usage = D3D11_USAGE_DEFAULT;
@@ -100,7 +100,7 @@ auto shiny::voodoo::create_index_buffer(ID3D11Buffer** buffer, gpu_access_t gpu_
 #endif
 }
 
-auto shiny::voodoo::map(ID3D11Resource* d3d_resource, D3D11_MAPPED_SUBRESOURCE* d3d_mapped_resource, D3D11_MAP map_type, uint32_t subresource) -> void
+auto dusk::voodoo::map(ID3D11Resource* d3d_resource, D3D11_MAPPED_SUBRESOURCE* d3d_mapped_resource, D3D11_MAP map_type, uint32_t subresource) -> void
 {
 #if 0
 	detail::d3d_local_context_->Map(d3d_resource, subresource, map_type, 0, d3d_mapped_resource);
@@ -111,12 +111,12 @@ auto shiny::voodoo::map(ID3D11Resource* d3d_resource, D3D11_MAPPED_SUBRESOURCE* 
 #endif
 }
 
-auto shiny::voodoo::map_vb(ID3D11Buffer* d3d_resource, D3D11_MAPPED_SUBRESOURCE* d3d_mapped_resource, D3D11_MAP map_type, uint32_t subresource) -> void
+auto dusk::voodoo::map_vb(ID3D11Buffer* d3d_resource, D3D11_MAPPED_SUBRESOURCE* d3d_mapped_resource, D3D11_MAP map_type, uint32_t subresource) -> void
 {
 	map((ID3D11Resource*)d3d_resource, d3d_mapped_resource, map_type, subresource);
 }
 
-auto shiny::voodoo::unmap(ID3D11Resource* d3d_resource, uint32_t subresource) -> void
+auto dusk::voodoo::unmap(ID3D11Resource* d3d_resource, uint32_t subresource) -> void
 {
 #if 0
 	// use the device stored in private data to assert it's the same thread

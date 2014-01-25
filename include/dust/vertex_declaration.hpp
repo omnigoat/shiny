@@ -1,11 +1,9 @@
-#ifndef SHINY_PLUMBING_VERTEX_DECLARATION_HPP
-#define SHINY_PLUMBING_VERTEX_DECLARATION_HPP
+#ifndef DUSK_PLUMBING_VERTEX_DECLARATION_HPP
+#define DUSK_PLUMBING_VERTEX_DECLARATION_HPP
 //======================================================================
-#include <shiny/plumbing/lock.hpp>
-#include <shiny/plumbing/prime_thread.hpp>
-#include <shiny/plumbing/commands/map_unmap_copy.hpp>
+#include <dusk/lock.hpp>
 //======================================================================
-#include <shiny/voodoo/resources.hpp>
+#include <dusk/resources.hpp>
 //======================================================================
 #include <atma/assert.hpp>
 //======================================================================
@@ -15,7 +13,7 @@
 #include <thread>
 #include <initializer_list>
 //======================================================================
-namespace shiny {
+namespace dusk {
 namespace plumbing {
 //======================================================================
 	
@@ -82,7 +80,7 @@ namespace plumbing {
 
 //======================================================================
 } // namespace plumbing
-} // namespace shiny
+} // namespace dusk
 //======================================================================
 #endif
 //======================================================================

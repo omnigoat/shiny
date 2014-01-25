@@ -1,7 +1,7 @@
-#ifndef SHINY_PLUMBING_HARDWARE_BUFFER_HPP
-#define SHINY_PLUMBING_HARDWARE_BUFFER_HPP
+#ifndef DUSK_PLUMBING_HARDWARE_BUFFER_HPP
+#define DUSK_PLUMBING_HARDWARE_BUFFER_HPP
 //======================================================================
-namespace shiny {
+namespace dusk {
 namespace plumbing {
 //======================================================================
 	
@@ -31,7 +31,7 @@ namespace plumbing {
 
 //======================================================================
 } // namespace plumbing
-} // namespace shiny
+} // namespace dusk
 //======================================================================
 #endif
 //======================================================================

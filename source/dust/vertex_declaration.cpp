@@ -1,7 +1,7 @@
-#include <shiny/plumbing/vertex_declaration.hpp>
+#include <dusk/vertex_declaration.hpp>
 
-using shiny::plumbing::vertex_stream_t;
-using shiny::plumbing::vertex_declaration_t;
+using dusk::plumbing::vertex_stream_t;
+using dusk::plumbing::vertex_declaration_t;
 
 //======================================================================
 // vertex_stream_t
@@ -80,6 +80,7 @@ auto vertex_declaration_t::stride() const -> uint32_t
 
 auto vertex_declaration_t::build() -> void
 {
+	
 	// require a shader to bind to
 	//voodoo::create_input_layout(
 }

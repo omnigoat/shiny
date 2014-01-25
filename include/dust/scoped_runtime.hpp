@@ -1,28 +1,28 @@
-#ifndef SHINY_FORMAT_HPP
-#define SHINY_FORMAT_HPP
+#ifndef DUSK_SCOPED_RUNTIME_HPP
+#define DUSK_SCOPED_RUNTIME_HPP
 //======================================================================
-#include <cstdint>
+#include <functional>
+#include <vector>
+#include <thread>
 //======================================================================
-namespace shiny {
+namespace dusk {
 //======================================================================
 	
-	enum class display_format_t
+	struct scoped_runtime_t
 	{
-		unknown,
-		r32g32b32a32 = 1,
-		r32g32b32a32_f32 = 2,
-		r8g8b8a8_unorm = 28
-	};
+		scoped_runtime_t();
+		~scoped_runtime_t();
 
-	struct display_mode_t
-	{
-		uint32_t width, height;
-		uint32_t refreshrate_frames, refreshrate_period;
-		display_format_t format;
+		auto add_thread(std::function<void()> fn) -> void;
+		auto add_context_thread(std::function<void()> fn) -> void;
+
+	private:
+		typedef std::vector<std::thread> threads_t;
+		threads_t threads_;
 	};
 
 //======================================================================
-} // namespace shiny
+} // namespace dusk
 //======================================================================
 #endif
 //======================================================================
