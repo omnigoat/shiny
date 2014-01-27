@@ -2,6 +2,7 @@
 #define DUST_VOODOO_DEVICE_HPP
 //======================================================================
 #include <dust/format.hpp>
+#include <dust/output.hpp>
 //======================================================================
 #include <fooey/widgets/window.hpp>
 //======================================================================
@@ -11,26 +12,10 @@
 #include <atomic>
 #include <mutex>
 //======================================================================
-#include <d3d11.h>
-//======================================================================
 namespace dust {
-	
-	uint32_t const primary_adapter = 0;
-	uint32_t const primary_output = 0;
-
 namespace voodoo {
 //======================================================================
 	
-	// dxgi
-	typedef atma::com_ptr<IDXGIFactory1> dxgi_factory_ptr;
-	typedef atma::com_ptr<IDXGIAdapter1> dxgi_adapter_ptr;
-	typedef atma::com_ptr<IDXGIOutput> dxgi_output_ptr;
-	typedef atma::com_ptr<IDXGISwapChain> dxgi_swap_chain_ptr;
-	
-	// d3d
-	typedef atma::com_ptr<ID3D11Device> d3d_device_ptr;
-	typedef atma::com_ptr<ID3D11DeviceContext> d3d_context_ptr;
-	typedef atma::com_ptr<ID3D11Buffer> d3d_buffer_ptr;
 
 	//======================================================================
 	// the devil lies here.
@@ -38,19 +23,6 @@ namespace voodoo {
 	namespace detail
 	{
 		
-		// this is the device context for this thread
-		//extern __declspec(thread) ID3D11DeviceContext* d3d_local_context_;
-
-
-		auto output_for_window(fooey::window_ptr const&) -> atma::com_ptr<IDXGIOutput>;
-
-		struct scoped_async_immediate_context_t
-		{
-			scoped_async_immediate_context_t();
-			~scoped_async_immediate_context_t();
-
-			auto operator -> () const -> atma::com_ptr<ID3D11DeviceContext> const&;
-		};
 	}
 
 	auto dxgi_factory() -> dxgi_factory_ptr;
