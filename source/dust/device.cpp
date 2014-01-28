@@ -2,10 +2,6 @@
 
 #include <atma/assert.hpp>
 
-#ifdef _DEBUG
-#include <initguid.h>
-#include <dxgidebug.h>
-#endif
 
 #include <map>
 #include <tuple>
@@ -123,43 +119,7 @@ auto scoped_async_immediate_context_t::operator -> () const -> atma::com_ptr<ID3
 //======================================================================
 auto dust::voodoo::setup_dxgi() -> void
 {
-	// create dxgi factory
-	ATMA_ENSURE_IS(S_OK, CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)&dxgi_factory_));
-
-	// get all the adapters
-	{
-		atma::com_ptr<IDXGIAdapter1> adapter;
-		uint32_t i = 0;
-		while (dxgi_factory_->EnumAdapters1(i++, adapter.assign()) != DXGI_ERROR_NOT_FOUND)
-			dxgi_adapters_.push_back(adapter);
-	}
-
-	// get all outputs for the adapters
-	{
-		for (auto& x : dxgi_adapters_)
-		{
-			atma::com_ptr<IDXGIOutput> output;
-			uint32_t i = 0;
-			while (x->EnumOutputs(i++, output.assign()) != DXGI_ERROR_NOT_FOUND) {
-				dxgi_outputs_mapping_[x].push_back(output);
-				enumerate_backbuffers(dxgi_backbuffer_formats_[output], output);
-			}
-		}
-	}
-
-
-	ATMA_ASSERT(dxgi_factory_);
-
-	// get debug thing
-#ifdef _DEBUG
-	{
-		typedef HRESULT(__stdcall *fPtr)(const IID&, void**);
-		HMODULE hDll = GetModuleHandleW(L"dxgidebug.dll");
-		fPtr DXGIGetDebugInterface = (fPtr)GetProcAddress(hDll, "DXGIGetDebugInterface");
-
-		DXGIGetDebugInterface(__uuidof(IDXGIDebug), (void**)&dxgi_debug_);
-	}
-#endif
+	
 }
 
 

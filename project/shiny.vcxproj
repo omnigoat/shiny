@@ -94,6 +94,7 @@
   <ItemGroup>
     <ClCompile Include="..\source\dust\context.cpp" />
     <ClCompile Include="..\source\dust\index_buffer.cpp" />
+    <ClCompile Include="..\source\dust\platform\win32\runtime.cpp" />
     <ClCompile Include="..\source\dust\vertex_buffer.cpp" />
     <ClCompile Include="..\source\dust\vertex_declaration.cpp" />
     <ClCompile Include="..\source\dust\scoped_runtime.cpp" />
@@ -108,6 +109,12 @@
     <ClInclude Include="..\include\dust\format.hpp" />
     <ClInclude Include="..\include\dust\index_buffer.hpp" />
     <ClInclude Include="..\include\dust\lock.hpp" />
+    <ClInclude Include="..\include\dust\output.hpp" />
+    <ClInclude Include="..\include\dust\platform\win32\runtime.hpp" />
+    <ClInclude Include="..\include\dust\runtime.hpp" />
+    <ClInclude Include="..\include\dust\platform\win32\d3d_fwd.hpp" />
+    <ClInclude Include="..\include\dust\platform\win32\dxgi_fwd.hpp" />
+    <ClInclude Include="..\include\dust\platform\win32\output.hpp" />
     <ClInclude Include="..\include\dust\vertex_buffer.hpp" />
     <ClInclude Include="..\include\dust\vertex_declaration.hpp" />
     <ClInclude Include="..\include\dust\scoped_runtime.hpp" />

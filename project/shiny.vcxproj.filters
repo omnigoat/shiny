@@ -18,6 +18,18 @@
     <Filter Include="source\dust">
       <UniqueIdentifier>{37b2a706-0ef2-40d5-a9ab-1b21d9a2e0c6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\dust\platform">
+      <UniqueIdentifier>{4328ccf7-da32-4577-8d54-d83deb61c71f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\dust\platform\win32">
+      <UniqueIdentifier>{d04ba51c-92e4-49af-9871-fa6333127067}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\dust\platform">
+      <UniqueIdentifier>{12a41398-3e52-463b-9511-7b7d7694b954}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\dust\platform\win32">
+      <UniqueIdentifier>{37dcddbd-688b-4d43-b54b-6a7f2c8fc705}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\dust\context.cpp">
@@ -49,6 +61,9 @@
     </ClCompile>
     <ClCompile Include="..\source\main.cpp">
       <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\dust\platform\win32\runtime.cpp">
+      <Filter>source\dust\platform\win32</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -87,6 +102,24 @@
     </ClInclude>
     <ClInclude Include="..\include\dust\vertex_declaration.hpp">
       <Filter>include\dust</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\dust\output.hpp">
+      <Filter>include\dust</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\dust\platform\win32\output.hpp">
+      <Filter>include\dust\platform\win32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\dust\platform\win32\dxgi_fwd.hpp">
+      <Filter>include\dust\platform\win32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\dust\platform\win32\d3d_fwd.hpp">
+      <Filter>include\dust\platform\win32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\dust\runtime.hpp">
+      <Filter>include\dust</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\dust\platform\win32\runtime.hpp">
+      <Filter>include\dust\platform\win32</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
