@@ -1,6 +1,8 @@
 #ifndef DUST_RUNTIME_HPP
 #define DUST_RUNTIME_HPP
 //======================================================================
+#include <atma/config/platform.hpp>
+
 #include <functional>
 #include <vector>
 #include <thread>

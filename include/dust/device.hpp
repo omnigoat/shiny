@@ -16,7 +16,7 @@ namespace dust {
 namespace voodoo {
 //======================================================================
 	
-
+#if 0
 	//======================================================================
 	// the devil lies here.
 	//======================================================================
@@ -36,7 +36,8 @@ namespace voodoo {
 	auto teardown_dxgi() -> void;
 	auto setup_d3d_device() -> void;
 	auto teardown_d3d_device() -> void;
-	
+#endif
+
 //======================================================================
 } // namespace voodoo
 } // namespace dust

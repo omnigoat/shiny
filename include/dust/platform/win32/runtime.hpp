@@ -27,9 +27,16 @@ namespace dust {
 		~runtime_t();
 		
 		runtime_t(runtime_t const&) = delete;
-		runtime_t(runtime_t&) = delete;
+		runtime_t(runtime_t&&) = delete;
 
+		// non-platform-specific functions
+		auto output_for_window(fooey::window_ptr const&)->output_ptr;
+
+
+		// platform-specific functions
+	public:
 		auto dxgi_and_d3d_at(uint32_t adapter_index) -> std::tuple<platform::dxgi_adapter_ptr, platform::d3d_device_ptr, platform::d3d_context_ptr>;
+
 
 	private:
 		platform::dxgi_factory_ptr factory_;
@@ -51,7 +58,7 @@ namespace dust {
 		typedef std::map<platform::dxgi_output_ptr, display_modes_t> dxgi_backbuffer_formats_t;
 		dxgi_backbuffer_formats_t dxgi_backbuffer_formats_;
 	};
-	
+
 //======================================================================
 } // namespace dust
 //======================================================================
