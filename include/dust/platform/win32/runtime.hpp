@@ -1,5 +1,4 @@
-#ifndef DUST_PLATFORM_WIN32_RUNTIME_HPP
-#define DUST_PLATFORM_WIN32_RUNTIME_HPP
+#pragma once
 //======================================================================
 #include <dust/platform/win32/dxgi_fwd.hpp>
 #include <dust/platform/win32/d3d_fwd.hpp>
@@ -7,12 +6,12 @@
 #include <dust/output.hpp>
 
 #include <fooey/widgets/window.hpp>
-//======================================================================
+
 #ifdef _DEBUG
 #include <initguid.h>
 #include <dxgidebug.h>
 #endif
-//======================================================================
+
 #include <vector>
 #include <map>
 //======================================================================
@@ -36,7 +35,7 @@ namespace dust {
 		auto output_for_window(fooey::window_ptr const&) -> output_ptr;
 
 	
-		platform::dxgi_factory_ptr factory;
+		platform::dxgi_factory_ptr dxgi_factory;
 
 #ifdef _DEBUG
 		atma::com_ptr<IDXGIDebug> dxgi_debug;
@@ -54,6 +53,8 @@ namespace dust {
 		typedef std::vector<display_mode_t> display_modes_t;
 		typedef std::map<platform::dxgi_output_ptr, display_modes_t> dxgi_backbuffer_formats_t;
 		dxgi_backbuffer_formats_t dxgi_backbuffer_formats;
+
+		std::map<platform::dxgi_adapter_ptr, platform::d3d_device_ptr> d3d_devices;
 	};
 
 

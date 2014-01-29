@@ -103,7 +103,7 @@ auto context_t::signal_fullscreen_toggle(uint32_t output_index) -> void
 		if (fullscreen_)
 		{
 			// get output of our adapter
-			dxgi_output_ = voodoo::output_at(dxgi_adapter_, output_index);
+			dxgi_output_ = platform::output_at(runtime_, dxgi_adapter_, output_index);
 			ATMA_ASSERT(dxgi_output_);
 
 			// find best-fitting fullscreen resolution
@@ -146,8 +146,8 @@ auto context_t::signal_create_swapchain() -> void
 		DXGI_SWAP_EFFECT_DISCARD, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH
 	};
 
-	ATMA_ENSURE_IS(S_OK, voodoo::dxgi_factory()->CreateSwapChain(d3d_device_.get(), &desc, dxgi_swap_chain_.assign()));
-	ATMA_ENSURE_IS(S_OK, voodoo::dxgi_factory()->MakeWindowAssociation(window_->hwnd(), DXGI_MWA_NO_WINDOW_CHANGES));
+	ATMA_ENSURE_IS(S_OK, runtime_.dxgi_factory->CreateSwapChain(d3d_device_.get(), &desc, dxgi_swap_chain_.assign()));
+	ATMA_ENSURE_IS(S_OK, runtime_.dxgi_factory->MakeWindowAssociation(window_->hwnd(), DXGI_MWA_NO_WINDOW_CHANGES));
 }
 
 auto context_t::signal_setup_backbuffer() -> void
@@ -194,7 +194,7 @@ auto context_t::on_resize(fooey::events::resize_t& e) -> void
 	//});
 }
 
-auto context_t::create_d3d_buffer(voodoo::d3d_buffer_ptr& buffer, gpu_access_t gpu_access, cpu_access_t cpu_access, uint32_t data_size, void* data) -> void
+auto context_t::create_d3d_buffer(platform::d3d_buffer_ptr& buffer, gpu_access_t gpu_access, cpu_access_t cpu_access, uint32_t data_size, void* data) -> void
 {
 	// calcualte the buffer usage based off our gpu-access/cpu-access flags
 	D3D11_USAGE buffer_usage = D3D11_USAGE_DEFAULT;
@@ -237,7 +237,7 @@ auto context_t::create_d3d_buffer(voodoo::d3d_buffer_ptr& buffer, gpu_access_t g
 	}
 }
 
-auto context_t::signal_d3d_map(voodoo::d3d_buffer_ptr& buffer, D3D11_MAPPED_SUBRESOURCE* mapped_resource, D3D11_MAP map_type, uint32_t subresource, std::function<void(D3D11_MAPPED_SUBRESOURCE*)> const& fn) -> void
+auto context_t::signal_d3d_map(platform::d3d_buffer_ptr& buffer, D3D11_MAPPED_SUBRESOURCE* mapped_resource, D3D11_MAP map_type, uint32_t subresource, std::function<void(D3D11_MAPPED_SUBRESOURCE*)> const& fn) -> void
 {
 	engine_.signal([&, mapped_resource, map_type, subresource] {
 		d3d_immediate_context_->Map(buffer.get(), subresource, map_type, 0, mapped_resource);
@@ -246,7 +246,7 @@ auto context_t::signal_d3d_map(voodoo::d3d_buffer_ptr& buffer, D3D11_MAPPED_SUBR
 	});
 }
 
-auto context_t::signal_d3d_unmap(voodoo::d3d_buffer_ptr& buffer, uint32_t subresource) -> void
+auto context_t::signal_d3d_unmap(platform::d3d_buffer_ptr& buffer, uint32_t subresource) -> void
 {
 	engine_.signal([&, buffer, subresource] {
 		d3d_immediate_context_->Unmap(buffer.get(), subresource);

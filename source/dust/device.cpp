@@ -5,7 +5,7 @@
 
 #include <map>
 #include <tuple>
-
+#if 0
 //======================================================================
 // DXGI
 //======================================================================
@@ -212,3 +212,4 @@ auto dust::voodoo::closest_matching_format(dxgi_output_ptr const& output, uint32
 
 	return display_mode_t();
 }
+#endif

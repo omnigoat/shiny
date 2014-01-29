@@ -3,7 +3,7 @@
 using namespace dust;
 using namespace dust::platform;
 
-using dust::platform::runtime_t;
+using dust::runtime_t;
 
 
 //======================================================================
@@ -11,7 +11,7 @@ using dust::platform::runtime_t;
 //======================================================================
 namespace
 {
-	auto enumerate_backbuffers(display_modes_t& dest, voodoo::dxgi_output_ptr const& dxgi_output) -> void
+	auto enumerate_backbuffers(runtime_t::display_modes_t& dest, platform::dxgi_output_ptr const& dxgi_output) -> void
 	{
 		auto format = DXGI_FORMAT_R8G8B8A8_UNORM;
 
@@ -42,31 +42,31 @@ namespace
 runtime_t::runtime_t()
 {
 	// create dxgi factory
-	ATMA_ENSURE_IS(S_OK, CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)&dxgi_factory_));
+	ATMA_ENSURE_IS(S_OK, CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)&dxgi_factory));
 
 	// get all the adapters
 	{
 		dxgi_adapter_ptr adapter;
 		uint32_t i = 0;
-		while (dxgi_factory_->EnumAdapters1(i++, adapter.assign()) != DXGI_ERROR_NOT_FOUND)
-			dxgi_adapters_.push_back(adapter);
+		while (dxgi_factory->EnumAdapters1(i++, adapter.assign()) != DXGI_ERROR_NOT_FOUND)
+			dxgi_adapters.push_back(adapter);
 	}
 
 	// get all outputs for the adapters
 	{
-		for (auto& x : dxgi_adapters_)
+		for (auto& x : dxgi_adapters)
 		{
 			dxgi_output_ptr output;
 			uint32_t i = 0;
 			while (x->EnumOutputs(i++, output.assign()) != DXGI_ERROR_NOT_FOUND) {
-				dxgi_outputs_mapping_[x].push_back(output);
-				enumerate_backbuffers(dxgi_backbuffer_formats_[output], output);
+				dxgi_outputs_mapping[x].push_back(output);
+				enumerate_backbuffers(dxgi_backbuffer_formats[output], output);
 			}
 		}
 	}
 
 
-	ATMA_ASSERT(dxgi_factory_);
+	ATMA_ASSERT(dxgi_factory);
 
 	// get debug thing
 #ifdef _DEBUG
@@ -75,7 +75,7 @@ runtime_t::runtime_t()
 		HMODULE hDll = GetModuleHandleW(L"dxgidebug.dll");
 		fPtr DXGIGetDebugInterface = (fPtr)GetProcAddress(hDll, "DXGIGetDebugInterface");
 
-		DXGIGetDebugInterface(__uuidof(IDXGIDebug), (void**)&dxgi_debug_);
+		DXGIGetDebugInterface(__uuidof(IDXGIDebug), (void**)&dxgi_debug);
 	}
 #endif
 }
@@ -85,15 +85,15 @@ runtime_t::~runtime_t()
 }
 
 
-auto runtime_t::dxgi_and_d3d_at(uint32_t adapter_index) -> std::tuple<dxgi_adapter_ptr, d3d_device_ptr, d3d_context_ptr>
+auto dust::platform::dxgi_and_d3d_at(runtime_t& runtime, uint32_t adapter_index) -> std::tuple<dxgi_adapter_ptr, d3d_device_ptr, d3d_context_ptr>
 {
-	dxgi_adapter_ptr adapter = dxgi_adapters_[adapter_index];
+	dxgi_adapter_ptr adapter = runtime.dxgi_adapters[adapter_index];
 	d3d_device_ptr device;
 	d3d_context_ptr context;
 
 	// get or craete device for adapter
-	auto i = d3d_devices_.find(adapter);
-	if (i != d3d_devices_.end()) {
+	auto i = d3d_devices.find(adapter);
+	if (i != d3d_devices.end()) {
 		device = i->second;
 		device->GetImmediateContext(context.assign());
 	}
@@ -107,10 +107,10 @@ auto runtime_t::dxgi_and_d3d_at(uint32_t adapter_index) -> std::tuple<dxgi_adapt
 			context.assign()
 		));
 
-		d3d_devices_[adapter] = device;
+		runtime.d3d_devices[adapter] = device;
 	}
 
-	return std::make_tuple(dxgi_adapters_[adapter_index], device, context);
+	return std::make_tuple(runtime.dxgi_adapters[adapter_index], device, context);
 }
 
 
