@@ -25,12 +25,16 @@ namespace dust {
 	private:
 		platform::dxgi_output_ptr dxgi_output_;
 	};
-	
 
-	//======================================================================
-	// primary-output
-	//======================================================================
-	uint32_t const primary_output = 0;
+
+
+
+	struct runtime_t;
+
+	namespace platform
+	{
+		auto output_at(runtime_t const&, dxgi_adapter_ptr const&, uint32_t output_index) -> dxgi_output_ptr;
+	}
 
 //======================================================================
 } // namespace dust

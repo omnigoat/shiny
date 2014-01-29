@@ -94,6 +94,7 @@
   <ItemGroup>
     <ClCompile Include="..\source\dust\context.cpp" />
     <ClCompile Include="..\source\dust\index_buffer.cpp" />
+    <ClCompile Include="..\source\dust\platform\win32\output.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\runtime.cpp" />
     <ClCompile Include="..\source\dust\vertex_buffer.cpp" />
     <ClCompile Include="..\source\dust\vertex_declaration.cpp" />

@@ -26,7 +26,7 @@ namespace dust {
 	//======================================================================
 	struct context_t : atma::ref_counted<context_t>
 	{
-		context_t(fooey::window_ptr const&, uint32_t adapter);
+		context_t(runtime_t&, fooey::window_ptr const&, uint32_t adapter);
 		~context_t();
 
 		auto signal_block() -> void;
@@ -48,6 +48,7 @@ namespace dust {
 
 	private:
 		atma::thread::engine_t engine_;
+		runtime_t& runtime_;
 
 		// dxgi
 		platform::dxgi_adapter_ptr dxgi_adapter_;
@@ -76,10 +77,6 @@ namespace dust {
 	};
 
 	typedef atma::intrusive_ptr<context_t> context_ptr;
-	
-	
-	auto create_context(fooey::window_ptr const&, uint32_t adapter = primary_adapter) -> context_ptr;
-	
 
 //======================================================================
 } // namespace dust

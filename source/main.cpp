@@ -13,7 +13,7 @@
 
 int main()
 {
-#if 0
+#if 1
 	// setup up gui
 	auto renderer = fooey::system_renderer();
 	auto window = fooey::window("Excitement.", 480, 360);
@@ -22,5 +22,5 @@ int main()
 
 	// initialise dust
 	auto dust_runtime = dust::runtime_t();
-	//auto gfx = dust::create_context(window, dust::primary_adapter);
+	auto gfx = dust::create_context(dust_runtime, window, dust::primary_adapter);
 }

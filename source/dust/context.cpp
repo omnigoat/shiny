@@ -25,21 +25,21 @@ namespace
 //======================================================================
 // context creation
 //======================================================================
-auto dust::create_context(fooey::window_ptr const& window, uint32_t adapter) -> dust::context_ptr
+auto dust::create_context(runtime_t& runtime, fooey::window_ptr const& window, uint32_t adapter) -> dust::context_ptr
 {
-	return context_ptr(new context_t(window, adapter));
+	return context_ptr(new context_t(runtime, window, adapter));
 }
 
 //======================================================================
 // context_t
 //======================================================================
-context_t::context_t(fooey::window_ptr const& window, uint32_t adapter)
-: fullscreen_()
+context_t::context_t(runtime_t& runtime, fooey::window_ptr const& window, uint32_t adapter)
+: runtime_(runtime), fullscreen_()
 {
 	allow_present_ = true;
 
 	engine_.signal([=]{
-		std::tie(dxgi_adapter_, d3d_device_, d3d_immediate_context_) = voodoo::dxgi_and_d3d_at(adapter);
+		std::tie(dxgi_adapter_, d3d_device_, d3d_immediate_context_) = platform::dxgi_and_d3d_at(runtime_, adapter);
 		window_ = window;
 		signal_create_swapchain();
 		bind_events(window);
@@ -236,19 +236,6 @@ auto context_t::create_d3d_buffer(voodoo::d3d_buffer_ptr& buffer, gpu_access_t g
 		ATMA_ENSURE_IS(S_OK, d3d_device_->CreateBuffer(&buffer_desc, NULL, buffer.assign()));
 	}
 }
-
-
-//auto context_t::immediate_d3d_map(voodoo::d3d_buffer_ptr& buffer, D3D11_MAPPED_SUBRESOURCE* mapped_resource, D3D11_MAP map_type, uint32_t subresource) -> void
-//{
-//	d3d_deferred_context_->Map(buffer.get(), subresource, map_type, 0, mapped_resource);
-//}
-
-//auto context_t::signal_d3d_map(voodoo::d3d_buffer_ptr& buffer, D3D11_MAPPED_SUBRESOURCE* mapped_resource, D3D11_MAP map_type, uint32_t subresource) -> void
-//{
-//	engine_.signal([&, mapped_resource, map_type, subresource] {
-//		d3d_immediate_context_->Map(buffer.get(), subresource, map_type, 0, mapped_resource);
-//	});
-//}
 
 auto context_t::signal_d3d_map(voodoo::d3d_buffer_ptr& buffer, D3D11_MAPPED_SUBRESOURCE* mapped_resource, D3D11_MAP map_type, uint32_t subresource, std::function<void(D3D11_MAPPED_SUBRESOURCE*)> const& fn) -> void
 {
