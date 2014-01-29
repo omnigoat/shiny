@@ -4,6 +4,9 @@
 #include <dust/platform/win32/dxgi_fwd.hpp>
 #include <dust/platform/win32/d3d_fwd.hpp>
 #include <dust/format.hpp>
+#include <dust/output.hpp>
+
+#include <fooey/widgets/window.hpp>
 //======================================================================
 #ifdef _DEBUG
 #include <initguid.h>
@@ -30,7 +33,7 @@ namespace dust {
 		runtime_t(runtime_t&&) = delete;
 
 		// non-platform-specific functions
-		auto output_for_window(fooey::window_ptr const&)->output_ptr;
+		auto output_for_window(fooey::window_ptr const&) -> output_ptr;
 
 
 		// platform-specific functions

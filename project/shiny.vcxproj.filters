@@ -124,6 +124,12 @@
     <ClInclude Include="..\include\dust\platform\win32\context.hpp">
       <Filter>include\dust\platform\win32</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\dust\platform\win32\adapter.hpp">
+      <Filter>include\dust\platform\win32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\dust\adapter.hpp">
+      <Filter>include\dust</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="..\shaders\vs_basic.hlsl">

@@ -3,6 +3,8 @@
 #include <dust/device.hpp>
 #include <dust/resources.hpp>
 #include <dust/format.hpp>
+#include <dust/adapter.hpp>
+#include <dust/output.hpp>
 
 #include <fooey/widgets/window.hpp>
 #include <fooey/events/resize.hpp>

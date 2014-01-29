@@ -9,28 +9,26 @@ namespace dust {
 //======================================================================
 	
 	//======================================================================
-	// output_t (win32/dxgi)
+	// adapter_t (win32/dxgi)
 	// ------------------------
-	//   represents one display device. wrapper around IDXGIOutput.
+	//   represents one graphics card. wrapper around IDXGIAdapter.
 	//======================================================================
-	struct output_t;
-	typedef atma::intrusive_ptr<output_t> output_ptr;
+	struct adapter_t;
+	typedef atma::intrusive_ptr<adapter_t> adapter_ptr;
 
-	struct output_t : atma::ref_counted<output_t>
+	struct adapter_t : atma::ref_counted<adapter_t>
 	{
-		auto native_resolution() const -> std::pair<uint32_t, uint32_t>;
-		
-		auto dxgi_output() const -> platform::dxgi_output_ptr const& { return dxgi_output_; }
+		auto dxgi_adapter() const -> platform::dxgi_adapter_ptr const& { return dxgi_adapter_; }
 
 	private:
-		platform::dxgi_output_ptr dxgi_output_;
+		platform::dxgi_adapter_ptr dxgi_adapter_;
 	};
 	
 
 	//======================================================================
-	// primary-output
+	// primary-adapter
 	//======================================================================
-	uint32_t const primary_output = 0;
+	uint32_t const primary_adapter = 0;
 
 //======================================================================
 } // namespace dust

@@ -105,11 +105,13 @@
     <ClCompile Include="..\source\main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\include\dust\adapter.hpp" />
     <ClInclude Include="..\include\dust\context.hpp" />
     <ClInclude Include="..\include\dust\format.hpp" />
     <ClInclude Include="..\include\dust\index_buffer.hpp" />
     <ClInclude Include="..\include\dust\lock.hpp" />
     <ClInclude Include="..\include\dust\output.hpp" />
+    <ClInclude Include="..\include\dust\platform\win32\adapter.hpp" />
     <ClInclude Include="..\include\dust\platform\win32\context.hpp" />
     <ClInclude Include="..\include\dust\platform\win32\runtime.hpp" />
     <ClInclude Include="..\include\dust\runtime.hpp" />
