@@ -9,6 +9,8 @@
 
 //======================================================================
 // display_mode_t is common to all outputs
+//
+// SERIOUSLY, find a better spot for this
 //======================================================================
 namespace dust
 {

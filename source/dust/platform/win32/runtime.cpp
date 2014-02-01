@@ -92,8 +92,8 @@ auto dust::platform::dxgi_and_d3d_at(runtime_t& runtime, uint32_t adapter_index)
 	d3d_context_ptr context;
 
 	// get or craete device for adapter
-	auto i = d3d_devices.find(adapter);
-	if (i != d3d_devices.end()) {
+	auto i = runtime.d3d_devices.find(adapter);
+	if (i != runtime.d3d_devices.end()) {
 		device = i->second;
 		device->GetImmediateContext(context.assign());
 	}

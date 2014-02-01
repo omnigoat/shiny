@@ -38,24 +38,6 @@
     <ClCompile Include="..\source\dust\device.cpp">
       <Filter>source\dust</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\dust\index_buffer.cpp">
-      <Filter>source\dust</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\dust\prime_thread.cpp">
-      <Filter>source\dust</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\dust\resources.cpp">
-      <Filter>source\dust</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\dust\scoped_runtime.cpp">
-      <Filter>source\dust</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\dust\thread.cpp">
-      <Filter>source\dust</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\dust\vertex_buffer.cpp">
-      <Filter>source\dust</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\dust\vertex_declaration.cpp">
       <Filter>source\dust</Filter>
     </ClCompile>
@@ -70,16 +52,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\include\dust\command.hpp">
-      <Filter>include\dust</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\dust\device.hpp">
-      <Filter>include\dust</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\dust\resources.hpp">
-      <Filter>include\dust</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\dust\scoped_command_batch.hpp">
       <Filter>include\dust</Filter>
     </ClInclude>
     <ClInclude Include="..\include\dust\thread.hpp">
@@ -89,9 +62,6 @@
       <Filter>include\dust</Filter>
     </ClInclude>
     <ClInclude Include="..\include\dust\format.hpp">
-      <Filter>include\dust</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\dust\scoped_runtime.hpp">
       <Filter>include\dust</Filter>
     </ClInclude>
     <ClInclude Include="..\include\dust\index_buffer.hpp">

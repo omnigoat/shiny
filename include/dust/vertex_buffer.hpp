@@ -1,31 +1,22 @@
-#ifndef DUST_PLUMBING_VERTEX_BUFFER_HPP
-#define DUST_PLUMBING_VERTEX_BUFFER_HPP
+#pragma once
 //======================================================================
 #include <dust/lock.hpp>
-//======================================================================
-#include <dust/resources.hpp>
 #include <dust/context.hpp>
-//======================================================================
+
 #include <atma/assert.hpp>
 #include <atma/aligned_allocator.hpp>
-//======================================================================
+
 #include <d3d11.h>
-//======================================================================
+
 #include <vector>
 #include <thread>
 //======================================================================
 namespace dust {
-namespace plumbing {
 //======================================================================
 	
-	using voodoo::gpu_access_t;
-	using voodoo::cpu_access_t;
-
-
 	struct vertex_buffer_t;
 	typedef atma::intrusive_ptr<vertex_buffer_t> vertex_buffer_ptr;
 
-	
 
 	//======================================================================
 	// vertex_buffer_t
@@ -70,7 +61,7 @@ namespace plumbing {
 
 	private:
 		usage_t usage_;
-		voodoo::d3d_buffer_ptr d3d_buffer_;
+		platform::d3d_buffer_ptr d3d_buffer_;
 		gpu_access_t gpu_access_;
 		cpu_access_t cpu_access_;
 		uint32_t data_size_;
@@ -82,7 +73,7 @@ namespace plumbing {
 		std::mutex inflight_mutex_;
 
 		context_ptr context_;
-		//std::map<std::tuple<context_ptr, voodoo::dxgi_adapter_ptr>, voodoo::d3d_buffer_ptr> d3d_buffers_;
+		//std::map<std::tuple<context_ptr, platform::dxgi_adapter_ptr>, platform::d3d_buffer_ptr> d3d_buffers_;
 
 		friend struct locked_vertex_buffer_t;
 	};
@@ -125,8 +116,5 @@ namespace plumbing {
 
 
 //======================================================================
-} // namespace plumbing
 } // namespace dust
-//======================================================================
-#endif
 //======================================================================

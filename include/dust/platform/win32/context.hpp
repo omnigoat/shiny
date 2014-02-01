@@ -1,7 +1,6 @@
 #pragma once
 //======================================================================
 #include <dust/device.hpp>
-#include <dust/resources.hpp>
 #include <dust/format.hpp>
 #include <dust/adapter.hpp>
 #include <dust/output.hpp>
@@ -18,12 +17,6 @@
 namespace dust {
 //======================================================================
 
-
-	//======================================================================
-	// context_t
-	// -----------
-	//   manages lifetime and threading of a swapchain
-	//======================================================================
 	struct context_t : atma::ref_counted<context_t>
 	{
 		context_t(runtime_t&, fooey::window_ptr const&, uint32_t adapter);

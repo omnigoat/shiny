@@ -77,7 +77,6 @@ auto context_t::signal_block() -> void
 
 auto context_t::signal_present() -> void
 {
-#if 1
 	engine_.signal([&] {
 		if (!allow_present_)
 			return;
@@ -86,7 +85,6 @@ auto context_t::signal_present() -> void
 		//ATMA_ENSURE_IS(S_OK, dxgi_swap_chain_->Present(DXGI_SWAP_EFFECT_DISCARD, 0));
 		dxgi_swap_chain_->Present(DXGI_SWAP_EFFECT_DISCARD, 0);
 	});
-#endif
 }
 
 auto context_t::signal_fullscreen_toggle(uint32_t output_index) -> void

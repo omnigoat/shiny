@@ -93,16 +93,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\source\dust\context.cpp" />
-    <ClCompile Include="..\source\dust\index_buffer.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\output.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\runtime.cpp" />
-    <ClCompile Include="..\source\dust\vertex_buffer.cpp" />
     <ClCompile Include="..\source\dust\vertex_declaration.cpp" />
-    <ClCompile Include="..\source\dust\scoped_runtime.cpp" />
     <ClCompile Include="..\source\dust\device.cpp" />
-    <ClCompile Include="..\source\dust\prime_thread.cpp" />
-    <ClCompile Include="..\source\dust\resources.cpp" />
-    <ClCompile Include="..\source\dust\thread.cpp" />
     <ClCompile Include="..\source\main.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -121,11 +115,7 @@
     <ClInclude Include="..\include\dust\platform\win32\output.hpp" />
     <ClInclude Include="..\include\dust\vertex_buffer.hpp" />
     <ClInclude Include="..\include\dust\vertex_declaration.hpp" />
-    <ClInclude Include="..\include\dust\scoped_runtime.hpp" />
-    <ClInclude Include="..\include\dust\command.hpp" />
     <ClInclude Include="..\include\dust\device.hpp" />
-    <ClInclude Include="..\include\dust\resources.hpp" />
-    <ClInclude Include="..\include\dust\scoped_command_batch.hpp" />
     <ClInclude Include="..\include\dust\thread.hpp" />
   </ItemGroup>
   <ItemGroup>

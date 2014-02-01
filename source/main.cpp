@@ -13,14 +13,24 @@
 
 int main()
 {
-#if 1
 	// setup up gui
 	auto renderer = fooey::system_renderer();
 	auto window = fooey::window("Excitement.", 480, 360);
 	renderer->add_window(window);
-#endif
 
 	// initialise dust
 	auto dust_runtime = dust::runtime_t();
 	auto gfx = dust::create_context(dust_runtime, window, dust::primary_adapter);
+
+	bool running = true;
+	window->on({
+		{"close", [&running](fooey::event_t const&){
+			running = false;
+		}}
+	});
+
+	while (running) {
+		gfx->signal_block();
+		gfx->signal_present();
+	}
 }

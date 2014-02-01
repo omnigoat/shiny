@@ -31,7 +31,7 @@ namespace dust {
 		runtime_t(runtime_t const&) = delete;
 		runtime_t(runtime_t&&) = delete;
 
-		// non-platform-specific functions
+		// generic functions
 		auto output_for_window(fooey::window_ptr const&) -> output_ptr;
 
 	
@@ -65,6 +65,4 @@ namespace dust {
 
 //======================================================================
 } // namespace dust
-//======================================================================
-#endif
 //======================================================================
