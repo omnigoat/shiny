@@ -32,15 +32,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\source\dust\context.cpp">
-      <Filter>source\dust</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\dust\device.cpp">
-      <Filter>source\dust</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\dust\vertex_declaration.cpp">
-      <Filter>source\dust</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\main.cpp">
       <Filter>source</Filter>
     </ClCompile>
@@ -48,6 +39,9 @@
       <Filter>source\dust\platform\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\source\dust\platform\win32\output.cpp">
+      <Filter>source\dust\platform\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\dust\platform\win32\context.cpp">
       <Filter>source\dust\platform\win32</Filter>
     </ClCompile>
   </ItemGroup>

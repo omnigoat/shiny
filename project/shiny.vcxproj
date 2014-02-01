@@ -92,11 +92,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\source\dust\context.cpp" />
+    <ClCompile Include="..\source\dust\platform\win32\context.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\output.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\runtime.cpp" />
-    <ClCompile Include="..\source\dust\vertex_declaration.cpp" />
-    <ClCompile Include="..\source\dust\device.cpp" />
     <ClCompile Include="..\source\main.cpp" />
   </ItemGroup>
   <ItemGroup>
