@@ -192,7 +192,7 @@ auto context_t::on_resize(fooey::events::resize_t& e) -> void
 	//});
 }
 
-auto context_t::create_d3d_buffer(platform::d3d_buffer_ptr& buffer, gpu_access_t gpu_access, cpu_access_t cpu_access, uint32_t data_size, void* data) -> void
+auto context_t::create_d3d_buffer(platform::d3d_buffer_ptr& buffer, gpu_access_t gpu_access, cpu_access_t cpu_access, size_t data_size, void* data) -> void
 {
 	// calcualte the buffer usage based off our gpu-access/cpu-access flags
 	D3D11_USAGE buffer_usage = D3D11_USAGE_DEFAULT;
@@ -221,13 +221,13 @@ auto context_t::create_d3d_buffer(platform::d3d_buffer_ptr& buffer, gpu_access_t
 		case cpu_access_t::read_write: cpua = static_cast<D3D11_CPU_ACCESS_FLAG>(D3D11_CPU_ACCESS_READ | D3D11_CPU_ACCESS_WRITE); break;
 	}
 
-	D3D11_BUFFER_DESC buffer_desc{data_size, buffer_usage, D3D11_BIND_VERTEX_BUFFER, cpua, 0, 0};
+	D3D11_BUFFER_DESC buffer_desc{(UINT)data_size, buffer_usage, D3D11_BIND_VERTEX_BUFFER, cpua, 0, 0};
 
 
 	if (data) {
 		// for vertex buffers, the pitch and slice-pitch mean nothing, so we'll just
 		// pass along stats to help with debugging (1xdata_size buffer created)
-		D3D11_SUBRESOURCE_DATA d3d_data{data, 1, data_size};
+		D3D11_SUBRESOURCE_DATA d3d_data{data, 1, (UINT)data_size};
 		ATMA_ENSURE_IS(S_OK, d3d_device_->CreateBuffer(&buffer_desc, &d3d_data, buffer.assign()));
 	}
 	else {
