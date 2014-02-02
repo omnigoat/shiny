@@ -1,8 +1,8 @@
 
 ; ignore visual studio files
-project/Debug/
-project/Release/
-project/*.opensdf
-project/*.suo
-project/*.sdf
-project/*.user
+Debug/
+Release/
+*.opensdf
+*.suo
+*.sdf
+*.user

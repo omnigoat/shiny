@@ -44,6 +44,12 @@
     <ClCompile Include="..\source\dust\platform\win32\context.cpp">
       <Filter>source\dust\platform\win32</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\dust\platform\win32\vertex_buffer.cpp">
+      <Filter>source\dust\platform\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\dust\platform\win32\vertex_declaration.cpp">
+      <Filter>source\dust\platform\win32</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\dust\device.hpp">

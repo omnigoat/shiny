@@ -3,13 +3,12 @@
 //======================================================================
 #include <thread>
 #include <atomic>
-//======================================================================
+
 #include <d3d11.h>
-//======================================================================
+
 #include <atma/assert.hpp>
 #include <atma/lockfree/queue.hpp>
 #include <dust/device.hpp>
-#include <dust/command.hpp>
 //======================================================================
 namespace dust {
 namespace voodoo {

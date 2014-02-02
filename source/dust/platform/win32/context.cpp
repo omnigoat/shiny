@@ -251,4 +251,10 @@ auto context_t::signal_d3d_unmap(platform::d3d_buffer_ptr& buffer, uint32_t subr
 	});
 }
 
+auto context_t::signal_d3d_buffer_upload(platform::d3d_buffer_ptr& buffer, void const* data, uint32_t row_pitch, uint32_t depth_pitch) -> void
+{
+	engine_.signal([&, buffer, data, row_pitch, depth_pitch] {
+		d3d_immediate_context_->UpdateSubresource(buffer.get(), 0, nullptr, data, row_pitch, depth_pitch);
+	});
+}
 

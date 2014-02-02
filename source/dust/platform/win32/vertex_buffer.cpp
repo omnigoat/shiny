@@ -1,15 +1,16 @@
 #include <dust/vertex_buffer.hpp>
-#include <dust/thread.hpp>
+
 #include <atma/assert.hpp>
 
-using dust::plumbing::vertex_buffer_t;
-using dust::plumbing::vertex_buffer_ptr;
-using dust::plumbing::locked_vertex_buffer_t;
-using dust::plumbing::lock_type_t;
-using dust::plumbing::gpu_access_t;
-using dust::plumbing::cpu_access_t;
+
+using dust::vertex_buffer_t;
+using dust::vertex_buffer_ptr;
+using dust::locked_vertex_buffer_t;
+using dust::gpu_access_t;
+using dust::cpu_access_t;
 
 using dust::context_ptr;
+
 
 //======================================================================
 // vertex_buffer_t
@@ -40,29 +41,25 @@ vertex_buffer_t::vertex_buffer_t(context_ptr const& context, usage_t usage, bool
 		cpu_access_ = cpu_access_t::none;
 
 		context_->create_d3d_buffer(d3d_buffer_, gpu_access_t::read, cpu_access_t::none, data_size, data);
-		return;
 	}
 	else if (usage_ == usage_t::long_lived)
 	{
 		gpu_access_ = gpu_access_t::read;
 		cpu_access_ = cpu_access_t::write;
 
-		context_->create_d3d_buffer(d3d_buffer_, gpu_access_, cpu_access_, data_size, data);
-
 		// if we're shadowing, then stick the data in the shadow buffer, and then upload
-		// it, because the shadow-buffer is aligned correctly, and garuaneteed to be fastest.
-		if (shadowing_)
-		{
-			if (data) {
-				ATMA_ASSERT(data);
-				data_.assign(reinterpret_cast<char*>(data), reinterpret_cast<char*>(data)+ data_size_);
+		// it, because the shadow-buffer is aligned correctly, and guaranteed to be fastest.
+		if (shadowing_ && data) {
+			data_.assign(reinterpret_cast<char*>(data), reinterpret_cast<char*>(data)+ data_size_);
 
-				reload_from_shadow_buffer();
-			}
-			else {
-				data_.resize(data_size);
-			}
+			upload_shadow_buffer();
+			return;
 		}
+
+		if (shadowing_)
+			data_.resize(data_size);
+
+		context_->create_d3d_buffer(d3d_buffer_, gpu_access_, cpu_access_, data_size, data);
 	}
 }
 
@@ -106,58 +103,48 @@ auto vertex_buffer_t::is_shadowing() const -> bool
 	return shadowing_;
 }
 
-auto vertex_buffer_t::reload_from_shadow_buffer() -> void
+auto vertex_buffer_t::allocate_shadow_buffer() -> void
 {
-	ATMA_ASSERT(shadowing_);
-	
-	#if 0
-	for (auto& x : d3d_buffers_) {
-		x.second
-	}
-	#endif
-
-	//context_->signal_buffer_upload(d3d_buffer_, &data_[0], data_size_);
-
-	locked_vertex_buffer_t L(*this, lock_type_t::write_discard);
-	std::copy_n(&data_.front(), data_size_, L.begin<char>());
+	ATMA_ASSERT(!shadowing_);
+	data_.resize(data_size_);
+	shadowing_ = true;
 }
 
 auto vertex_buffer_t::release_shadow_buffer() -> void
 {
 	ATMA_ASSERT(shadowing_);
-	
+
 	data_.clear();
 	data_.shrink_to_fit();
 	shadowing_ = false;
 }
 
-auto vertex_buffer_t::aquire_shadow_buffer(bool pull_from_hardware) -> void
+auto vertex_buffer_t::fill_shadow_buffer(vertex_buffer_t::data_t const& buffer, uint32_t offset) -> void
 {
-	ATMA_ASSERT(!shadowing_);
-	ATMA_ASSERT(false);
-	shadowing_ = true;
+	ATMA_ASSERT(offset + buffer.size() <= data_size_);
+
+	memcpy(&data_[0] + offset, &buffer[0], buffer.size());
 }
 
-auto vertex_buffer_t::rebase_from_buffer(vertex_buffer_t::data_t&& buffer, bool upload_to_hardware) -> void
+auto vertex_buffer_t::fill_shadow_buffer(vertex_buffer_t::data_t&& buffer) -> void
 {
 	ATMA_ASSERT(data_size_ == buffer.size());
 
 	data_.swap(buffer);
-	if (upload_to_hardware)
-		reload_from_shadow_buffer();
 }
 
-auto vertex_buffer_t::rebase_from_buffer(vertex_buffer_t::data_t const& buffer, bool upload_to_hardware) -> void
+auto vertex_buffer_t::upload_shadow_buffer(bool block) -> void
 {
-	ATMA_ASSERT(data_size_ == buffer.size());
+	ATMA_ASSERT(shadowing_);
 
-	std::copy(buffer.begin(), buffer.end(), data_.begin());
-
-	if (upload_to_hardware)
-		reload_from_shadow_buffer();
+	context_->signal_d3d_buffer_upload(d3d_buffer_, &data_[0], data_.size(), 1);
+	if (block)
+		context_->signal_block();
 }
 
 
+
+#if 0
 //======================================================================
 // locked_vertex_buffer_t
 //======================================================================
@@ -218,4 +205,5 @@ locked_vertex_buffer_t::~locked_vertex_buffer_t()
 	owner_->context_->signal_d3d_unmap(owner_->d3d_buffer_, 0);
 	owner_->context_->signal_block();
 }
+#endif
 

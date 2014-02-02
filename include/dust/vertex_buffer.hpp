@@ -31,20 +31,15 @@ namespace dust {
 
 		typedef std::vector<char, atma::aligned_allocator_t<char, 4>> data_t;
 
-		// variadic factory
-		template <typename... Args>
-		static auto create(Args const&... args) -> vertex_buffer_ptr {
-			return vertex_buffer_ptr(new vertex_buffer_t(args...));
-		}
-
 		auto usage() const -> usage_t { return usage_; }
 		auto is_shadowing() const -> bool;
+		auto size() const -> uint32_t;
 
-		auto reload_from_shadow_buffer() -> void;
+		auto allocate_shadow_buffer() -> void;
 		auto release_shadow_buffer() -> void;
-		auto aquire_shadow_buffer(bool pull_from_hardware = true) -> void;
-		auto rebase_from_buffer(data_t&&, bool upload_to_hardware = true) -> void;
-		auto rebase_from_buffer(data_t const&, bool upload_to_hardware = true) -> void;
+		auto fill_shadow_buffer(data_t const&, uint32_t offset = 0) -> void;
+		auto fill_shadow_buffer(data_t&&) -> void;
+		auto upload_shadow_buffer(bool block = false) -> void;
 
 		//
 		auto bind_to(context_ptr const&) -> void;
@@ -53,10 +48,13 @@ namespace dust {
 		struct context_binding_t;
 
 		vertex_buffer_t(context_ptr const&, usage_t, bool shadow, uint32_t data_size, void* data);
-		//vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, uint32_t data_size);
-		//vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, uint32_t data_size, void* data);
-		//vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, data_t const& data);
-		//vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, data_t&& data);
+#if 0
+		vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, uint32_t data_size);
+		vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, uint32_t data_size, void* data);
+		vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, data_t const& data);
+		vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, data_t&& data);
+#endif
+
 		~vertex_buffer_t();
 
 	private:
@@ -73,13 +71,15 @@ namespace dust {
 		std::mutex inflight_mutex_;
 
 		context_ptr context_;
-		//std::map<std::tuple<context_ptr, platform::dxgi_adapter_ptr>, platform::d3d_buffer_ptr> d3d_buffers_;
 
 		friend struct locked_vertex_buffer_t;
 	};
 
 
 
+
+
+#if 0
 	//======================================================================
 	// locked_vertex_buffer_t
 	//======================================================================
@@ -112,7 +112,7 @@ namespace dust {
 		std::lock_guard<std::mutex> guard_;
 		D3D11_MAPPED_SUBRESOURCE d3d_resource_;
 	};
-
+#endif
 
 
 //======================================================================
