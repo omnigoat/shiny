@@ -17,7 +17,7 @@
 namespace dust {
 //======================================================================
 
-	struct context_t : atma::ref_counted<context_t>
+	struct context_t : atma::ref_counted
 	{
 		context_t(runtime_t&, fooey::window_ptr const&, uint32_t adapter);
 		~context_t();

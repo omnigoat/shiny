@@ -16,7 +16,7 @@ namespace dust {
 	struct adapter_t;
 	typedef atma::intrusive_ptr<adapter_t> adapter_ptr;
 
-	struct adapter_t : atma::ref_counted<adapter_t>
+	struct adapter_t : atma::ref_counted
 	{
 		auto dxgi_adapter() const -> platform::dxgi_adapter_ptr const& { return dxgi_adapter_; }
 

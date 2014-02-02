@@ -2,14 +2,8 @@
 
 #include <atma/assert.hpp>
 
-
+using namespace dust;
 using dust::vertex_buffer_t;
-using dust::vertex_buffer_ptr;
-using dust::locked_vertex_buffer_t;
-using dust::gpu_access_t;
-using dust::cpu_access_t;
-
-using dust::context_ptr;
 
 
 //======================================================================
@@ -28,12 +22,12 @@ auto vertex_buffer_t::create(std::initializer_list<context_ptr> contexts, gpu_ac
 }
 #endif
 
-vertex_buffer_t::vertex_buffer_t(context_ptr const& context, usage_t usage, bool shadow, uint32_t data_size, void* data)
+vertex_buffer_t::vertex_buffer_t(context_ptr const& context, vb_usage_t usage, bool shadow, uint32_t data_size, void* data)
 : context_(context), gpu_access_(), cpu_access_(), usage_(usage), shadowing_(shadow), data_size_(data_size)
 {
 	ATMA_ASSERT(data_size > 0);
 
-	if (usage_ == usage_t::immutable)
+	if (usage_ == vb_usage_t::immutable)
 	{
 		ATMA_ASSERT_MSG(data, "immutable buffers require data upon initialisation");
 
@@ -42,7 +36,7 @@ vertex_buffer_t::vertex_buffer_t(context_ptr const& context, usage_t usage, bool
 
 		context_->create_d3d_buffer(d3d_buffer_, gpu_access_t::read, cpu_access_t::none, data_size, data);
 	}
-	else if (usage_ == usage_t::long_lived)
+	else if (usage_ == vb_usage_t::long_lived)
 	{
 		gpu_access_ = gpu_access_t::read;
 		cpu_access_ = cpu_access_t::write;

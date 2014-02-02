@@ -17,21 +17,18 @@ namespace dust {
 	struct vertex_buffer_t;
 	typedef atma::intrusive_ptr<vertex_buffer_t> vertex_buffer_ptr;
 
-
-	//======================================================================
-	// vertex_buffer_t
-	//======================================================================
-	struct vertex_buffer_t : atma::ref_counted<vertex_buffer_t>
+	enum class vb_usage_t
 	{
-		enum class usage_t
-		{
-			immutable,
-			long_lived
-		};
+		immutable,
+		long_lived
+	};
 
+	
+	struct vertex_buffer_t : atma::ref_counted
+	{
 		typedef std::vector<char, atma::aligned_allocator_t<char, 4>> data_t;
 
-		auto usage() const -> usage_t { return usage_; }
+		auto usage() const -> vb_usage_t { return usage_; }
 		auto is_shadowing() const -> bool;
 		auto size() const -> uint32_t;
 
@@ -41,13 +38,10 @@ namespace dust {
 		auto fill_shadow_buffer(data_t&&) -> void;
 		auto upload_shadow_buffer(bool block = false) -> void;
 
-		//
-		auto bind_to(context_ptr const&) -> void;
-
 	private:
 		struct context_binding_t;
 
-		vertex_buffer_t(context_ptr const&, usage_t, bool shadow, uint32_t data_size, void* data);
+		vertex_buffer_t(context_ptr const&, vb_usage_t, bool shadow, uint32_t data_size, void* data);
 #if 0
 		vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, uint32_t data_size);
 		vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, uint32_t data_size, void* data);
@@ -58,7 +52,7 @@ namespace dust {
 		~vertex_buffer_t();
 
 	private:
-		usage_t usage_;
+		vb_usage_t usage_;
 		platform::d3d_buffer_ptr d3d_buffer_;
 		gpu_access_t gpu_access_;
 		cpu_access_t cpu_access_;
@@ -75,7 +69,7 @@ namespace dust {
 		friend struct locked_vertex_buffer_t;
 	};
 
-
+	auto create_vertex_buffer(context_ptr const&, vb_usage_t, bool shadow, uint32_t data_size, void* data) -> vertex_buffer_ptr;
 
 
 

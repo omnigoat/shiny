@@ -16,7 +16,7 @@ namespace dust {
 	struct output_t;
 	typedef atma::intrusive_ptr<output_t> output_ptr;
 
-	struct output_t : atma::ref_counted<output_t>
+	struct output_t : atma::ref_counted
 	{
 		auto native_resolution() const -> std::pair<uint32_t, uint32_t>;
 		
