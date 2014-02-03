@@ -1,6 +1,8 @@
 #include <dust/context.hpp>
 
-#include <dust/device.hpp>
+#include <dust/vertex_declaration.hpp>
+#include <dust/vertex_buffer.hpp>
+
 #include <fooey/events/resize.hpp>
 #include <fooey/keys.hpp>
 
@@ -262,14 +264,9 @@ auto context_t::signal_d3d_buffer_upload(platform::d3d_buffer_ptr& buffer, void 
 
 auto context_t::signal_draw(vertex_declaration_t const& vd, vertex_buffer_ptr const& vb) -> void
 {
+	vd.build();
+
 	engine_.signal([&, vd, vb]{
-		d3d_immediate_context_->IASetInputLayout(vd.)
+		d3d_immediate_context_->IASetInputLayout(vd.d3d_input_layout().get());
 	});
-
-	auto str = "cbuffer vert_in { float4x4 wvp_matrix; }  float4 main(float4 position : POSITION) : SV_POSITION { return mul(wvp_matrix, position); }";
-
-	ID3DBlob* blob;
-	D3DCompile(str, strlen(str), "temp", nullptr, nullptr, "main", "vs_5_0", 0, 0, &blob, nullptr);
-
-	d3d_device_->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), )
 }

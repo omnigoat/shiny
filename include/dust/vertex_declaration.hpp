@@ -74,7 +74,8 @@ namespace dust {
 
 		streams_t streams_;
 		uint32_t stride_;
-		platform::d3d_input_layout_ptr d3d_layout_;
+		platform::d3d_input_layout_ptr d3d_input_layout_;
+		bool built_;
 	};
 
 

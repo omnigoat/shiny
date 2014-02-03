@@ -1,4 +1,5 @@
 #include <dust/vertex_declaration.hpp>
+#include <d3dcompiler.h>
 
 using namespace dust;
 using dust::vertex_stream_t;
@@ -62,7 +63,7 @@ auto vertex_stream_t::size() const -> uint32_t
 // vertex_declaration_t
 //======================================================================
 vertex_declaration_t::vertex_declaration_t( context_ptr const& context, std::initializer_list<vertex_stream_t> streams )
-	: context_(context), streams_(streams.begin(), streams.end()), stride_(), d3d_layout_()
+: context_(context), streams_(streams.begin(), streams.end()), stride_(), d3d_input_layout_(), built_()
 {
 	// calculate stride
 	for (auto const& x : streams_)
@@ -79,9 +80,34 @@ auto vertex_declaration_t::stride() const -> uint32_t
 	return stride_;
 }
 
+auto vertex_declaration_t::d3d_input_layout() const -> platform::d3d_input_layout_ptr const&
+{
+	return d3d_input_layout_;
+}
+
 auto vertex_declaration_t::build() -> void
 {
-	//context_->signal_shader_compile()
-	// require a shader to bind to
-	//voodoo::create_input_layout(
+	if (built_)
+		return;
+
+	std::vector<D3D11_INPUT_ELEMENT_DESC> d3d_elements;
+	for (auto const& x : streams_)
+		d3d_elements.push_back({
+			"position", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0
+		});
+
+	auto str = "cbuffer vert_in { float4x4 wvp_matrix; }  float4 main(float4 position : POSITION) : SV_POSITION { return mul(wvp_matrix, position); }";
+
+	ID3DBlob* blob;
+	D3DCompile(str, strlen(str), "temp", nullptr, nullptr, "main", "vs_5_0", 0, 0, &blob, nullptr);
+
+	ID3D11VertexShader* vs = nullptr;
+	
+	auto const& device = context_->d3d_device();
+	ATMA_ENSURE_IS(S_OK, device->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, &vs));
+
+	ATMA_ENSURE_IS(S_OK, device->CreateInputLayout(&d3d_elements[0], (uint32_t)d3d_elements.size(),
+		blob->GetBufferPointer(), blob->GetBufferSize(), d3d_input_layout_.assign()));
+
+	built_ = true;
 }

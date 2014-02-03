@@ -42,9 +42,9 @@ int main()
 	};
 
 	auto vb = dust::create_vertex_buffer(gfx, dust::vb_usage_t::immutable, 12, D);
-	auto vd = dust::vertex_declaration_t{
+	auto vd = dust::vertex_declaration_t(gfx, {
 		{dust::vertex_stream_t::usage_t::position, 0, dust::vertex_stream_t::element_type_t::float32, 4}
-	};
+	});
 
 	while (running) {
 		gfx->signal_block();
