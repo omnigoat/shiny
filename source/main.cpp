@@ -1,6 +1,7 @@
 #include <dust/runtime.hpp>
 #include <dust/context.hpp>
 #include <dust/vertex_buffer.hpp>
+#include <dust/vertex_declaration.hpp>
 
 #include <fooey/widgets/window.hpp>
 #include <fooey/fooey.hpp>
@@ -41,11 +42,13 @@ int main()
 	};
 
 	auto vb = dust::create_vertex_buffer(gfx, dust::vb_usage_t::immutable, 12, D);
-	
-	
-	
+	auto vd = dust::vertex_declaration_t{
+		{dust::vertex_stream_t::usage_t::position, 0, dust::vertex_stream_t::element_type_t::float32, 4}
+	};
+
 	while (running) {
 		gfx->signal_block();
+		gfx->signal_draw(vd, vb);
 		gfx->signal_present();
 	}
 }

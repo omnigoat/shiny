@@ -16,7 +16,14 @@
 //======================================================================
 namespace dust {
 //======================================================================
+	
+	// forward declares
+	struct vertex_declaration_t;
+	struct vertex_buffer_t;
+	typedef atma::intrusive_ptr<vertex_buffer_t> vertex_buffer_ptr;
 
+
+	// context_t
 	struct context_t : atma::ref_counted
 	{
 		context_t(runtime_t&, fooey::window_ptr const&, uint32_t adapter);
@@ -29,6 +36,7 @@ namespace dust {
 		auto signal_d3d_map(platform::d3d_buffer_ptr&, D3D11_MAPPED_SUBRESOURCE*, D3D11_MAP, uint32_t subresource, std::function<void(D3D11_MAPPED_SUBRESOURCE*)> const& = std::function<void(D3D11_MAPPED_SUBRESOURCE*)>()) -> void;
 		auto signal_d3d_unmap(platform::d3d_buffer_ptr&, uint32_t subresource) -> void;
 		auto signal_d3d_buffer_upload(platform::d3d_buffer_ptr&, void const* data, uint32_t row_pitch, uint32_t depth_pitch) -> void;
+		auto signal_draw(vertex_declaration_t const&, vertex_buffer_ptr const&) -> void;
 
 		auto create_d3d_buffer(platform::d3d_buffer_ptr&, gpu_access_t, cpu_access_t, size_t data_size, void* data) -> void;
 

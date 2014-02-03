@@ -1,6 +1,6 @@
 #pragma once
 //======================================================================
-#include <dust/lock.hpp>
+#include <dust/context.hpp>
 
 #include <atma/assert.hpp>
 
@@ -11,7 +11,6 @@
 #include <initializer_list>
 //======================================================================
 namespace dust {
-namespace plumbing {
 //======================================================================
 	
 	//======================================================================
@@ -61,21 +60,24 @@ namespace plumbing {
 	{
 		typedef std::vector<vertex_stream_t> streams_t;
 		
-		vertex_declaration_t( std::initializer_list<vertex_stream_t> streams );
+		vertex_declaration_t(context_ptr const&, std::initializer_list<vertex_stream_t> streams);
 		
 		auto streams() const -> streams_t const&;
 		auto stride() const -> uint32_t;
 
+		auto d3d_input_layout() const -> platform::d3d_input_layout_ptr const&;
+
 	private:
 		auto build() -> void;
 
+		context_ptr context_;
+
 		streams_t streams_;
 		uint32_t stride_;
-		ID3D11InputLayout* d3d_layout_;
+		platform::d3d_input_layout_ptr d3d_layout_;
 	};
 
 
 //======================================================================
-} // namespace plumbing
 } // namespace dust
 //======================================================================

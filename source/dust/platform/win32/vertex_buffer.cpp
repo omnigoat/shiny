@@ -9,7 +9,7 @@ using dust::vertex_buffer_t;
 //======================================================================
 // vertex_buffer_t
 //======================================================================
-inline auto dust::create_vertex_buffer(context_ptr const& context, vb_usage_t usage, size_t size, void* data) -> vertex_buffer_ptr
+auto dust::create_vertex_buffer(context_ptr const& context, vb_usage_t usage, size_t size, void* data) -> vertex_buffer_ptr
 {
 	return vertex_buffer_ptr(new vertex_buffer_t(context, usage, size, data));
 }

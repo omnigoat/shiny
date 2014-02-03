@@ -1,7 +1,8 @@
 #include <dust/vertex_declaration.hpp>
 
-using dust::plumbing::vertex_stream_t;
-using dust::plumbing::vertex_declaration_t;
+using namespace dust;
+using dust::vertex_stream_t;
+using dust::vertex_declaration_t;
 
 //======================================================================
 // vertex_stream_t
@@ -60,8 +61,8 @@ auto vertex_stream_t::size() const -> uint32_t
 //======================================================================
 // vertex_declaration_t
 //======================================================================
-vertex_declaration_t::vertex_declaration_t( std::initializer_list<vertex_stream_t> streams )
-	: streams_(streams.begin(), streams.end()), stride_(), d3d_layout_()
+vertex_declaration_t::vertex_declaration_t( context_ptr const& context, std::initializer_list<vertex_stream_t> streams )
+	: context_(context), streams_(streams.begin(), streams.end()), stride_(), d3d_layout_()
 {
 	// calculate stride
 	for (auto const& x : streams_)
@@ -80,7 +81,7 @@ auto vertex_declaration_t::stride() const -> uint32_t
 
 auto vertex_declaration_t::build() -> void
 {
-	
+	//context_->signal_shader_compile()
 	// require a shader to bind to
 	//voodoo::create_input_layout(
 }
