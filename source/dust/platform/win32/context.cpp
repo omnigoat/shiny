@@ -264,9 +264,15 @@ auto context_t::signal_d3d_buffer_upload(platform::d3d_buffer_ptr& buffer, void 
 
 auto context_t::signal_draw(vertex_declaration_t const& vd, vertex_buffer_ptr const& vb) -> void
 {
-	vd.build();
-
 	engine_.signal([&, vd, vb]{
+		uint32_t stride = 12;
+		uint32_t offset = 0;
+
+		auto vbs = vb->d3d_buffer().get();
+
 		d3d_immediate_context_->IASetInputLayout(vd.d3d_input_layout().get());
+		d3d_immediate_context_->IASetVertexBuffers(0, 1, &vbs, &stride, &offset);
+		d3d_immediate_context_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		d3d_immediate_context_->Draw(3, 0);
 	});
 }

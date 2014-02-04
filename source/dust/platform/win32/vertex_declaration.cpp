@@ -68,6 +68,8 @@ vertex_declaration_t::vertex_declaration_t( context_ptr const& context, std::ini
 	// calculate stride
 	for (auto const& x : streams_)
 		stride_ += x.size();
+
+	build();
 }
 
 auto vertex_declaration_t::streams() const -> streams_t const&
@@ -96,15 +98,15 @@ auto vertex_declaration_t::build() -> void
 			"position", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0
 		});
 
-	auto str = "cbuffer vert_in { float4x4 wvp_matrix; }  float4 main(float4 position : POSITION) : SV_POSITION { return mul(wvp_matrix, position); }";
-
+	
 	ID3DBlob* blob;
-	D3DCompile(str, strlen(str), "temp", nullptr, nullptr, "main", "vs_5_0", 0, 0, &blob, nullptr);
+	auto r = D3DCompileFromFile(L"../shaders/vs_basic.hlsl", nullptr, nullptr, "main", "vs_4_0", 0, 0, &blob, nullptr);
 
 	ID3D11VertexShader* vs = nullptr;
 	
 	auto const& device = context_->d3d_device();
-	ATMA_ENSURE_IS(S_OK, device->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, &vs));
+	auto r2 = device->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, &vs);
+	//ATMA_ENSURE_IS(S_OK, device->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, &vs));
 
 	ATMA_ENSURE_IS(S_OK, device->CreateInputLayout(&d3d_elements[0], (uint32_t)d3d_elements.size(),
 		blob->GetBufferPointer(), blob->GetBufferSize(), d3d_input_layout_.assign()));

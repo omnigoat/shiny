@@ -32,14 +32,13 @@ namespace dust {
 		auto is_shadowing() const -> bool;
 		auto capacity() const -> size_t;
 		auto size() const -> size_t;
-		
+		auto d3d_buffer() const -> platform::d3d_buffer_ptr const& { return d3d_buffer_; }
+
 		// maps the vertex buffer, and calls a function with the mapped range
 		template <typename T, typename FN>
 		auto with_map(FN) -> void;
 		
-		//auto map_fill(data_t const&, uint32_t offset = 0) -> void;
-		//auto map_fill(data_t&&) -> void;
-
+		
 	private:
 		struct context_binding_t;
 
