@@ -28,6 +28,8 @@ namespace
 	}
 }
 
+bool middle_ = false;
+
 //======================================================================
 // context creation
 //======================================================================
@@ -164,14 +166,14 @@ auto context_t::on_resize(fooey::events::resize_t& e) -> void
 		display_format_.height = e.height();
 	}
 
-	//engine_.signal([&, e] {
-		if (e.origin().expired())
+	engine_.signal([&, e] {
+		if (e.origin().expired() || middle_)
 			return;
 
 		auto wnd = std::dynamic_pointer_cast<fooey::window_t>(e.origin().lock());
 		ATMA_ASSERT(wnd);
 
-		std::cout << "on_resize " << e.width() << "x" << e.height() << std::endl;
+		//std::cout << "on_resize " << e.width() << "x" << e.height() << std::endl;
 
 		// teardown backbuffer rendertarget
 		d3d_render_target_.reset();
@@ -187,8 +189,8 @@ auto context_t::on_resize(fooey::events::resize_t& e) -> void
 		D3D11_VIEWPORT vp{0, 0, (float)window_->width(), (float)window_->height(), 0, 0};
 		d3d_immediate_context_->RSSetViewports(1, &vp);
 
-		std::cout << "on_resize - done" << std::endl;
-	//});
+		//std::cout << "on_resize - done" << std::endl;
+	});
 }
 
 auto context_t::create_d3d_buffer(platform::d3d_buffer_ptr& buffer, gpu_access_t gpu_access, cpu_access_t cpu_access, size_t data_size, void* data) -> void
@@ -271,13 +273,16 @@ auto context_t::signal_draw(vertex_declaration_t const& vd, vertex_buffer_ptr co
 		d3d_immediate_context_->IASetVertexBuffers(0, 1, &vbs, &stride, &offset);
 		d3d_immediate_context_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		d3d_immediate_context_->Draw(3, 0);
+		middle_ = true;
 	});
 }
 
 auto context_t::signal_present() -> void
 {
 	engine_.signal([&] {
-		dxgi_swap_chain_->Present(DXGI_SWAP_EFFECT_DISCARD, 0);
+		ATMA_ENSURE_IS(S_OK, dxgi_swap_chain_->Present(DXGI_SWAP_EFFECT_DISCARD, 0));
+
+		middle_ = false;
 	});
 }
 
@@ -286,5 +291,6 @@ auto context_t::signal_clear() -> void
 	engine_.signal([&] {
 		float g[4] ={.5f, .5f, 1.f, 1.f};
 		d3d_immediate_context_->ClearRenderTargetView(d3d_render_target_.get(), g);
+		middle_ = true;
 	});
 }

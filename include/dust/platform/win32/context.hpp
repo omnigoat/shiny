@@ -71,7 +71,7 @@ namespace dust {
 		platform::d3d_context_ptr d3d_deferred_context_;
 		atma::com_ptr<ID3D11RenderTargetView> d3d_render_target_;
 		bool is_immediate_thread_;
-
+		
 		std::atomic_bool allow_present_;
 
 		// fooey
