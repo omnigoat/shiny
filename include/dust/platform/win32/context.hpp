@@ -1,6 +1,5 @@
 #pragma once
 //======================================================================
-#include <dust/device.hpp>
 #include <dust/format.hpp>
 #include <dust/adapter.hpp>
 #include <dust/output.hpp>

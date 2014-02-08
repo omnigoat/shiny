@@ -93,21 +93,20 @@ auto vertex_declaration_t::build() -> void
 		return;
 
 	std::vector<D3D11_INPUT_ELEMENT_DESC> d3d_elements;
-	for (auto const& x : streams_)
+	//for (auto const& x : streams_)
 		d3d_elements.push_back({
 			"position", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0
 		});
 
 	
 	ID3DBlob* blob;
-	auto r = D3DCompileFromFile(L"../shaders/vs_basic.hlsl", nullptr, nullptr, "main", "vs_4_0", 0, 0, &blob, nullptr);
+	ATMA_ENSURE_IS(S_OK, D3DCompileFromFile(L"../shaders/vs_basic.hlsl", nullptr, nullptr, "main", "vs_5_0", 0, 0, &blob, nullptr));
 
 	ID3D11VertexShader* vs = nullptr;
 	
 	auto const& device = context_->d3d_device();
-	auto r2 = device->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, &vs);
-	//ATMA_ENSURE_IS(S_OK, device->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, &vs));
-
+	ATMA_ENSURE_IS(S_OK, device->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, &vs));
+	
 	ATMA_ENSURE_IS(S_OK, device->CreateInputLayout(&d3d_elements[0], (uint32_t)d3d_elements.size(),
 		blob->GetBufferPointer(), blob->GetBufferSize(), d3d_input_layout_.assign()));
 

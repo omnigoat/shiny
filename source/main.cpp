@@ -12,7 +12,6 @@
 
 #include <iostream>
 
-
 int main()
 {
 	bool running = true;
@@ -47,6 +46,7 @@ int main()
 	});
 
 	while (running) {
+
 		gfx->signal_block();
 		gfx->signal_draw(vd, vb);
 		gfx->signal_present();

@@ -52,12 +52,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\include\dust\device.hpp">
-      <Filter>include\dust</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\dust\thread.hpp">
-      <Filter>include\dust</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\dust\context.hpp">
       <Filter>include\dust</Filter>
     </ClInclude>

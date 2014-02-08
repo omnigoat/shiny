@@ -265,8 +265,8 @@ auto context_t::signal_d3d_buffer_upload(platform::d3d_buffer_ptr& buffer, void 
 auto context_t::signal_draw(vertex_declaration_t const& vd, vertex_buffer_ptr const& vb) -> void
 {
 	engine_.signal([&, vd, vb]{
-		uint32_t stride = 12;
-		uint32_t offset = 0;
+		UINT stride = sizeof(float) * 4;
+		UINT offset = 0;
 
 		auto vbs = vb->d3d_buffer().get();
 

@@ -15,7 +15,8 @@ namespace
 	{
 		auto format = DXGI_FORMAT_R8G8B8A8_UNORM;
 
-		uint32_t mode_count = 0;
+
+		UINT mode_count = 0;
 		ATMA_ENSURE_IS(S_OK, dxgi_output->GetDisplayModeList(format, 0, &mode_count, nullptr));
 
 		auto modes = std::unique_ptr<DXGI_MODE_DESC[]>(new DXGI_MODE_DESC[mode_count]);
