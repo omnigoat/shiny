@@ -2,6 +2,8 @@
 
 #include <dust/vertex_declaration.hpp>
 #include <dust/vertex_buffer.hpp>
+#include <dust/vertex_shader.hpp>
+#include <dust/pixel_shader.hpp>
 
 #include <fooey/events/resize.hpp>
 #include <fooey/keys.hpp>
@@ -79,18 +81,6 @@ auto context_t::signal_block() -> void
 }
 
 
-auto context_t::signal_present() -> void
-{
-	engine_.signal([&] {
-		if (!allow_present_)
-			return;
-		float g[4] = {.5f, .5f, 1.f, 1.f};
-		d3d_immediate_context_->ClearRenderTargetView(d3d_render_target_.get(), g);
-		//ATMA_ENSURE_IS(S_OK, dxgi_swap_chain_->Present(DXGI_SWAP_EFFECT_DISCARD, 0));
-		dxgi_swap_chain_->Present(DXGI_SWAP_EFFECT_DISCARD, 0);
-	});
-}
-
 auto context_t::signal_fullscreen_toggle(uint32_t output_index) -> void
 {
 	engine_.signal([&, output_index]
@@ -160,6 +150,9 @@ auto context_t::signal_setup_backbuffer() -> void
 		ATMA_ENSURE_IS(S_OK, dxgi_swap_chain_->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)backbuffer.assign()));
 		ATMA_ENSURE_IS(S_OK, d3d_device_->CreateRenderTargetView(backbuffer.get(), nullptr, d3d_render_target_.assign()));
 		d3d_immediate_context_->OMSetRenderTargets(1, &d3d_render_target_.get_ref(), nullptr);
+
+		D3D11_VIEWPORT vp{0, 0, (float)window_->width(), (float)window_->height(), 0, 0};
+		d3d_immediate_context_->RSSetViewports(1, &vp);
 	});
 }
 
@@ -191,6 +184,8 @@ auto context_t::on_resize(fooey::events::resize_t& e) -> void
 		ATMA_ENSURE_IS(S_OK, dxgi_swap_chain_->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)backbuffer.assign()));
 		ATMA_ENSURE_IS(S_OK, d3d_device_->CreateRenderTargetView(backbuffer.get(), nullptr, d3d_render_target_.assign()));
 		d3d_immediate_context_->OMSetRenderTargets(1, &d3d_render_target_.get_ref(), nullptr);
+		D3D11_VIEWPORT vp{0, 0, (float)window_->width(), (float)window_->height(), 0, 0};
+		d3d_immediate_context_->RSSetViewports(1, &vp);
 
 		std::cout << "on_resize - done" << std::endl;
 	//});
@@ -262,17 +257,34 @@ auto context_t::signal_d3d_buffer_upload(platform::d3d_buffer_ptr& buffer, void 
 	});
 }
 
-auto context_t::signal_draw(vertex_declaration_t const& vd, vertex_buffer_ptr const& vb) -> void
+auto context_t::signal_draw(vertex_declaration_t const& vd, vertex_buffer_ptr const& vb, vertex_shader_ptr const& vs, pixel_shader_ptr const& ps) -> void
 {
-	engine_.signal([&, vd, vb]{
+	engine_.signal([&, vd, vb, vs, ps]{
 		UINT stride = sizeof(float) * 4;
 		UINT offset = 0;
 
 		auto vbs = vb->d3d_buffer().get();
 
+		d3d_immediate_context_->VSSetShader(vs->d3d_vs().get(), nullptr, 0);
+		d3d_immediate_context_->PSSetShader(ps->d3d_ps().get(), nullptr, 0);
 		d3d_immediate_context_->IASetInputLayout(vd.d3d_input_layout().get());
 		d3d_immediate_context_->IASetVertexBuffers(0, 1, &vbs, &stride, &offset);
 		d3d_immediate_context_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		d3d_immediate_context_->Draw(3, 0);
+	});
+}
+
+auto context_t::signal_present() -> void
+{
+	engine_.signal([&] {
+		dxgi_swap_chain_->Present(DXGI_SWAP_EFFECT_DISCARD, 0);
+	});
+}
+
+auto context_t::signal_clear() -> void
+{
+	engine_.signal([&] {
+		float g[4] ={.5f, .5f, 1.f, 1.f};
+		d3d_immediate_context_->ClearRenderTargetView(d3d_render_target_.get(), g);
 	});
 }

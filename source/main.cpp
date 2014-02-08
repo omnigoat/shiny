@@ -2,6 +2,8 @@
 #include <dust/context.hpp>
 #include <dust/vertex_buffer.hpp>
 #include <dust/vertex_declaration.hpp>
+#include <dust/vertex_shader.hpp>
+#include <dust/pixel_shader.hpp>
 
 #include <fooey/widgets/window.hpp>
 #include <fooey/fooey.hpp>
@@ -35,20 +37,26 @@ int main()
 
 	// create vb
 	float D[] = {
-		0.f,0.f,0.f,1.f,
-		1.f,0.f,0.f,1.f,
-		1.f,1.f,0.f,1.f
+		 0.f,    0.5f, 0.f, 1.f,
+		 0.45f, -0.5f, 0.f, 1.f,
+		-0.45f, -0.5f, 0.f, 1.f
 	};
 
-	auto vb = dust::create_vertex_buffer(gfx, dust::vb_usage_t::immutable, 12, D);
-	auto vd = dust::vertex_declaration_t(gfx, {
+	auto vs = dust::vertex_shader_ptr(new dust::vertex_shader_t(gfx));
+	auto ps = dust::pixel_shader_ptr(new dust::pixel_shader_t(gfx));
+
+	auto vb = dust::create_vertex_buffer(gfx, dust::vb_usage_t::immutable, 16 * sizeof(float), D);
+	auto vd = dust::vertex_declaration_t(gfx, vs, {
 		{dust::vertex_stream_t::usage_t::position, 0, dust::vertex_stream_t::element_type_t::float32, 4}
 	});
+
+	
 
 	while (running) {
 
 		gfx->signal_block();
-		gfx->signal_draw(vd, vb);
+		gfx->signal_clear();
+		gfx->signal_draw(vd, vb, vs, ps);
 		gfx->signal_present();
 	}
 }

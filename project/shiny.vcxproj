@@ -173,9 +173,11 @@
   <ItemGroup>
     <ClCompile Include="..\source\dust\platform\win32\context.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\output.cpp" />
+    <ClCompile Include="..\source\dust\platform\win32\pixel_shader.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\runtime.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\vertex_buffer.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\vertex_declaration.cpp" />
+    <ClCompile Include="..\source\dust\platform\win32\vertex_shader.cpp" />
     <ClCompile Include="..\source\main.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -185,17 +187,24 @@
     <ClInclude Include="..\include\dust\index_buffer.hpp" />
     <ClInclude Include="..\include\dust\lock.hpp" />
     <ClInclude Include="..\include\dust\output.hpp" />
+    <ClInclude Include="..\include\dust\pixel_shader.hpp" />
     <ClInclude Include="..\include\dust\platform\win32\adapter.hpp" />
     <ClInclude Include="..\include\dust\platform\win32\context.hpp" />
+    <ClInclude Include="..\include\dust\platform\win32\pixel_shader.hpp" />
     <ClInclude Include="..\include\dust\platform\win32\runtime.hpp" />
+    <ClInclude Include="..\include\dust\platform\win32\vertex_shader.hpp" />
     <ClInclude Include="..\include\dust\runtime.hpp" />
     <ClInclude Include="..\include\dust\platform\win32\d3d_fwd.hpp" />
     <ClInclude Include="..\include\dust\platform\win32\dxgi_fwd.hpp" />
     <ClInclude Include="..\include\dust\platform\win32\output.hpp" />
     <ClInclude Include="..\include\dust\vertex_buffer.hpp" />
     <ClInclude Include="..\include\dust\vertex_declaration.hpp" />
+    <ClInclude Include="..\include\dust\vertex_shader.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="..\shaders\ps_basic.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+    </FxCompile>
     <FxCompile Include="..\shaders\vs_basic.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>

@@ -1,5 +1,7 @@
 #include <dust/vertex_declaration.hpp>
-#include <d3dcompiler.h>
+
+#include <dust/vertex_shader.hpp>
+
 
 using namespace dust;
 using dust::vertex_stream_t;
@@ -62,14 +64,14 @@ auto vertex_stream_t::size() const -> uint32_t
 //======================================================================
 // vertex_declaration_t
 //======================================================================
-vertex_declaration_t::vertex_declaration_t( context_ptr const& context, std::initializer_list<vertex_stream_t> streams )
+vertex_declaration_t::vertex_declaration_t( context_ptr const& context, vertex_shader_ptr const& vs, std::initializer_list<vertex_stream_t> streams )
 : context_(context), streams_(streams.begin(), streams.end()), stride_(), d3d_input_layout_(), built_()
 {
 	// calculate stride
 	for (auto const& x : streams_)
 		stride_ += x.size();
 
-	build();
+	build(vs);
 }
 
 auto vertex_declaration_t::streams() const -> streams_t const&
@@ -87,7 +89,7 @@ auto vertex_declaration_t::d3d_input_layout() const -> platform::d3d_input_layou
 	return d3d_input_layout_;
 }
 
-auto vertex_declaration_t::build() -> void
+auto vertex_declaration_t::build(vertex_shader_ptr const& vs) -> void
 {
 	if (built_)
 		return;
@@ -95,19 +97,17 @@ auto vertex_declaration_t::build() -> void
 	std::vector<D3D11_INPUT_ELEMENT_DESC> d3d_elements;
 	//for (auto const& x : streams_)
 		d3d_elements.push_back({
-			"position", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0
+			"POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0
 		});
 
-	
 	ID3DBlob* blob;
 	ATMA_ENSURE_IS(S_OK, D3DCompileFromFile(L"../shaders/vs_basic.hlsl", nullptr, nullptr, "main", "vs_5_0", 0, 0, &blob, nullptr));
 
-	ID3D11VertexShader* vs = nullptr;
-	
-	auto const& device = context_->d3d_device();
-	ATMA_ENSURE_IS(S_OK, device->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, &vs));
-	
-	ATMA_ENSURE_IS(S_OK, device->CreateInputLayout(&d3d_elements[0], (uint32_t)d3d_elements.size(),
+	//platform::d3d_vertex_shader_ptr d3d_vs_;
+	//auto const& device = context_->d3d_device();
+	//ATMA_ENSURE_IS(S_OK, device->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, d3d_vs_.assign()));
+
+	ATMA_ENSURE_IS(S_OK, context_->d3d_device()->CreateInputLayout(&d3d_elements[0], (uint32_t)d3d_elements.size(),
 		blob->GetBufferPointer(), blob->GetBufferSize(), d3d_input_layout_.assign()));
 
 	built_ = true;

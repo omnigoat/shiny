@@ -50,6 +50,12 @@
     <ClCompile Include="..\source\dust\platform\win32\vertex_declaration.cpp">
       <Filter>source\dust\platform\win32</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\dust\platform\win32\vertex_shader.cpp">
+      <Filter>source\dust\platform\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\dust\platform\win32\pixel_shader.cpp">
+      <Filter>source\dust\platform\win32</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\dust\context.hpp">
@@ -97,9 +103,24 @@
     <ClInclude Include="..\include\dust\adapter.hpp">
       <Filter>include\dust</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\dust\vertex_shader.hpp">
+      <Filter>include\dust</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\dust\platform\win32\vertex_shader.hpp">
+      <Filter>include\dust\platform\win32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\dust\platform\win32\pixel_shader.hpp">
+      <Filter>include\dust\platform\win32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\dust\pixel_shader.hpp">
+      <Filter>include\dust</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="..\shaders\vs_basic.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="..\shaders\ps_basic.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
   </ItemGroup>

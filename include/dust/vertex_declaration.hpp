@@ -4,8 +4,6 @@
 
 #include <atma/assert.hpp>
 
-#include <d3d11.h>
-
 #include <vector>
 #include <thread>
 #include <initializer_list>
@@ -52,6 +50,9 @@ namespace dust {
 	};
 
 
+	struct vertex_shader_t;
+	typedef atma::intrusive_ptr<vertex_shader_t> vertex_shader_ptr;
+
 
 	//======================================================================
 	// vertex_declaration_t
@@ -60,7 +61,7 @@ namespace dust {
 	{
 		typedef std::vector<vertex_stream_t> streams_t;
 		
-		vertex_declaration_t(context_ptr const&, std::initializer_list<vertex_stream_t> streams);
+		vertex_declaration_t(context_ptr const&, vertex_shader_ptr const&, std::initializer_list<vertex_stream_t> streams);
 		
 		auto streams() const -> streams_t const&;
 		auto stride() const -> uint32_t;
@@ -68,7 +69,7 @@ namespace dust {
 		auto d3d_input_layout() const -> platform::d3d_input_layout_ptr const&;
 
 	private:
-		auto build() -> void;
+		auto build(vertex_shader_ptr const&) -> void;
 
 		context_ptr context_;
 
