@@ -1,7 +1,5 @@
 #pragma once
 //======================================================================
-#include <dust/runtime.hpp>
-
 #include <atma/config/platform.hpp>
 
 #ifdef ATMA_PLATFORM_WIN32
@@ -10,5 +8,7 @@
 //======================================================================
 namespace dust
 {
+	struct runtime_t;
+
 	auto create_context(runtime_t&, fooey::window_ptr const&, uint32_t adapter = primary_adapter) -> context_ptr;
 }

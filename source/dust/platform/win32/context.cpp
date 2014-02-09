@@ -4,6 +4,7 @@
 #include <dust/vertex_buffer.hpp>
 #include <dust/vertex_shader.hpp>
 #include <dust/pixel_shader.hpp>
+#include <dust/runtime.hpp>
 
 #include <fooey/events/resize.hpp>
 #include <fooey/keys.hpp>
@@ -46,7 +47,7 @@ context_t::context_t(runtime_t& runtime, fooey::window_ptr const& window, uint32
 {
 	std::tie(dxgi_adapter_, d3d_device_, d3d_immediate_context_) = platform::dxgi_and_d3d_at(runtime_, adapter);
 	create_swapchain();
-	setup_backbuffer(window->width(), window->height());
+	setup_rendertarget(window->width(), window->height());
 
 	bind_events(window);
 }
@@ -69,14 +70,6 @@ auto context_t::bind_events(fooey::window_ptr const& window) -> void
 	});
 }
 
-
-
-
-auto context_t::signal_block() -> void
-{
-	engine_.signal_block();
-}
-
 auto context_t::create_swapchain() -> void
 {
 	display_format_.width = window_->width();
@@ -95,7 +88,7 @@ auto context_t::create_swapchain() -> void
 	ATMA_ENSURE_IS(S_OK, runtime_.dxgi_factory->MakeWindowAssociation(window_->hwnd(), DXGI_MWA_NO_WINDOW_CHANGES));
 }
 
-auto context_t::setup_backbuffer(uint32_t width, uint32_t height) -> void
+auto context_t::setup_rendertarget(uint32_t width, uint32_t height) -> void
 {
 	// create render-target & set it
 	atma::com_ptr<ID3D11Texture2D> backbuffer;
@@ -105,6 +98,18 @@ auto context_t::setup_backbuffer(uint32_t width, uint32_t height) -> void
 
 	D3D11_VIEWPORT vp{0, 0, (float)width, (float)height, 0, 0};
 	d3d_immediate_context_->RSSetViewports(1, &vp);
+}
+
+auto context_t::recreate_backbuffer() -> void
+{
+	d3d_render_target_.reset();
+
+	ATMA_ENSURE_IS(S_OK, dxgi_swap_chain_->ResizeBuffers(1, 0, 0, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH));
+}
+
+auto context_t::signal_block() -> void
+{
+	engine_.signal_block();
 }
 
 auto context_t::signal_fullscreen_toggle(uint32_t output_index) -> void
@@ -131,12 +136,9 @@ auto context_t::signal_fullscreen_toggle(uint32_t output_index) -> void
 			dxgi_output_->FindClosestMatchingMode(&candidate, &mode, d3d_device_.get());
 
 			dxgi_swap_chain_->ResizeTarget(&mode);
-			// teardown backbuffer rendertarget
-			d3d_render_target_.reset();
 
-			ATMA_ENSURE_IS(S_OK, dxgi_swap_chain_->ResizeBuffers(1, 0, 0, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH));
-
-			setup_backbuffer(800, 600);
+			recreate_backbuffer();
+			setup_rendertarget(800, 600);
 
 			dxgi_swap_chain_->SetFullscreenState(true, dxgi_output_.get());
 		}
@@ -156,7 +158,6 @@ auto context_t::on_resize(fooey::events::resize_t& e) -> void
 	if (fullscreen_)
 		return;
 
-
 	display_format_.width = e.width();
 	display_format_.height = e.height();
 
@@ -167,12 +168,8 @@ auto context_t::on_resize(fooey::events::resize_t& e) -> void
 		auto wnd = std::dynamic_pointer_cast<fooey::window_t>(e.origin().lock());
 		ATMA_ASSERT(wnd);
 
-		// teardown backbuffer rendertarget
-		d3d_render_target_.reset();
-
-		ATMA_ENSURE_IS(S_OK, dxgi_swap_chain_->ResizeBuffers(1, 0, 0, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH));
-
-		setup_backbuffer(window_->width(), window_->height());
+		recreate_backbuffer();
+		setup_rendertarget(window_->width(), window_->height());
 	});
 }
 
