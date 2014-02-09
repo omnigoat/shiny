@@ -51,8 +51,8 @@ namespace dust {
 
 	private:
 		auto bind_events(fooey::window_ptr const&) -> void;
-		auto signal_create_swapchain() -> void; 
-		auto signal_setup_backbuffer() -> void;
+		auto create_swapchain() -> void; 
+		auto setup_backbuffer(uint32_t width, uint32_t height) -> void;
 
 		// these functions are called on a fooey thread
 		auto on_resize(fooey::events::resize_t&) -> void;

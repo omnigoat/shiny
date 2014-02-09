@@ -30,7 +30,6 @@ int main()
 		}}
 	});
 
-
 	// initialise dust
 	auto dust_runtime = dust::runtime_t();
 	auto gfx = dust::create_context(dust_runtime, window, dust::primary_adapter);
@@ -51,6 +50,10 @@ int main()
 	});
 
 	
+	window->key_state.on_key(fooey::key_t::Alt + fooey::key_t::Enter, [gfx]{
+		gfx->signal_fullscreen_toggle();
+	});
+
 
 	while (running) {
 
