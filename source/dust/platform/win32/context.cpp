@@ -16,19 +16,6 @@
 using namespace dust;
 using dust::context_t;
 
-namespace
-{
-	struct monitor_info_t
-	{
-		int32_t width, height;
-	};
-
-	auto primary_monitor_resolution() -> monitor_info_t
-	{
-		return { GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN) };
-	}
-}
-
 bool middle_ = false;
 
 //======================================================================
@@ -47,7 +34,9 @@ context_t::context_t(runtime_t& runtime, fooey::window_ptr const& window, uint32
 {
 	std::tie(dxgi_adapter_, d3d_device_, d3d_immediate_context_) = platform::dxgi_and_d3d_at(runtime_, adapter);
 	create_swapchain();
-	setup_rendertarget(window->width(), window->height());
+
+	// SERIOUSLY, get window client width/height instead of full width height
+	setup_rendertarget(window->drawcontext_width(), window->drawcontext_height());
 
 	bind_events(window);
 }
@@ -169,7 +158,7 @@ auto context_t::on_resize(fooey::events::resize_t& e) -> void
 		ATMA_ASSERT(wnd);
 
 		recreate_backbuffer();
-		setup_rendertarget(window_->width(), window_->height());
+		setup_rendertarget(e.width(), e.height());
 	});
 }
 
@@ -260,8 +249,8 @@ auto context_t::signal_draw(vertex_declaration_t const& vd, vertex_buffer_ptr co
 auto context_t::signal_present() -> void
 {
 	engine_.signal([&] {
-		//ATMA_ENSURE_IS(S_OK, dxgi_swap_chain_->Present(DXGI_SWAP_EFFECT_DISCARD, 0));
-		dxgi_swap_chain_->Present(DXGI_SWAP_EFFECT_DISCARD, 0);
+		ATMA_ENSURE_IS(S_OK, dxgi_swap_chain_->Present(DXGI_SWAP_EFFECT_DISCARD, 0));
+		//dxgi_swap_chain_->Present(DXGI_SWAP_EFFECT_DISCARD, 0);
 
 		middle_ = false;
 	});
@@ -270,7 +259,7 @@ auto context_t::signal_present() -> void
 auto context_t::signal_clear() -> void
 {
 	engine_.signal([&] {
-		float g[4] ={.5f, .5f, 1.f, 1.f};
+		float g[4] ={.2f, .2f, .2f, 1.f};
 		d3d_immediate_context_->ClearRenderTargetView(d3d_render_target_.get(), g);
 		middle_ = true;
 	});

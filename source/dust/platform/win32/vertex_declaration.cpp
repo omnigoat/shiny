@@ -101,7 +101,7 @@ auto vertex_declaration_t::build(vertex_shader_ptr const& vs) -> void
 		});
 
 	ID3DBlob* blob;
-	ATMA_ENSURE_IS(S_OK, D3DCompileFromFile(L"../shaders/vs_basic.hlsl", nullptr, nullptr, "main", "vs_5_0", 0, 0, &blob, nullptr));
+	ATMA_ENSURE_IS(S_OK, D3DCompileFromFile(L"../shaders/vs_basic.hlsl", nullptr, nullptr, "main", "vs_4_0", 0, 0, &blob, nullptr));
 
 	//platform::d3d_vertex_shader_ptr d3d_vs_;
 	//auto const& device = context_->d3d_device();

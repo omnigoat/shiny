@@ -36,9 +36,9 @@ int main()
 
 	// create vb
 	float D[] = {
-		 0.f,    0.5f, 0.f, 1.f,
-		 0.45f, -0.5f, 0.f, 1.f,
-		-0.45f, -0.5f, 0.f, 1.f
+		 0.f,    1.f, 0.f, 1.f,
+		 1.f, -1.f, 0.f, 1.f,
+		-1.f, -1.f, 0.f, 1.f
 	};
 
 	auto vs = dust::vertex_shader_ptr(new dust::vertex_shader_t(gfx));
