@@ -1,22 +1,19 @@
 #pragma once
 //======================================================================
-#include <dust/lock.hpp>
-#include <dust/context.hpp>
+#include <dust/dust_fwd.hpp>
+
+#pragma message("move vertex_buffer to platform/win32")
+#include <dust/platform/win32/d3d_fwd.hpp>
+#include <dust/adapter.hpp>
 
 #include <atma/assert.hpp>
 #include <atma/aligned_allocator.hpp>
 
-#include <d3d11.h>
-
 #include <vector>
-#include <thread>
 //======================================================================
 namespace dust {
 //======================================================================
 	
-	struct vertex_buffer_t;
-	typedef atma::intrusive_ptr<vertex_buffer_t> vertex_buffer_ptr;
-
 	enum class vb_usage_t
 	{
 		immutable,

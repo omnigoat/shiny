@@ -100,15 +100,15 @@ auto vertex_declaration_t::build(vertex_shader_ptr const& vs) -> void
 			"POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0
 		});
 
-	ID3DBlob* blob;
-	ATMA_ENSURE_IS(S_OK, D3DCompileFromFile(L"../shaders/vs_basic.hlsl", nullptr, nullptr, "main", "vs_4_0", 0, 0, &blob, nullptr));
+	//ID3DBlob* blob;
+	//ATMA_ENSURE_IS(S_OK, D3DCompileFromFile(L"../shaders/vs_basic.hlsl", nullptr, nullptr, "main", "vs_4_0", 0, 0, &blob, nullptr));
 
 	//platform::d3d_vertex_shader_ptr d3d_vs_;
 	//auto const& device = context_->d3d_device();
 	//ATMA_ENSURE_IS(S_OK, device->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, d3d_vs_.assign()));
 
 	ATMA_ENSURE_IS(S_OK, context_->d3d_device()->CreateInputLayout(&d3d_elements[0], (uint32_t)d3d_elements.size(),
-		blob->GetBufferPointer(), blob->GetBufferSize(), d3d_input_layout_.assign()));
+		vs->d3d_blob()->GetBufferPointer(), vs->d3d_blob()->GetBufferSize(), d3d_input_layout_.assign()));
 
 	built_ = true;
 }

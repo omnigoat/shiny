@@ -115,6 +115,9 @@
     <ClInclude Include="..\include\dust\pixel_shader.hpp">
       <Filter>include\dust</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\dust\dust_fwd.hpp">
+      <Filter>include\dust</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="..\shaders\vs_basic.hlsl">

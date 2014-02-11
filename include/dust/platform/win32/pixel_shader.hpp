@@ -1,14 +1,9 @@
 #pragma once
 //======================================================================
+#include <dust/dust_fwd.hpp>
 #include <dust/platform/win32/d3d_fwd.hpp>
-
-#include <atma/intrusive_ptr.hpp>
 //======================================================================
 namespace dust {
-	
-	struct context_t;
-	typedef atma::intrusive_ptr<context_t> context_ptr;
-
 
 	struct pixel_shader_t : atma::ref_counted
 	{
@@ -21,7 +16,6 @@ namespace dust {
 		platform::d3d_pixel_shader_ptr d3d_ps_;
 	};
 
-	typedef atma::intrusive_ptr<pixel_shader_t> pixel_shader_ptr;
 }
 
 

@@ -1,5 +1,7 @@
 #include <dust/vertex_buffer.hpp>
 
+#include <dust/context.hpp>
+
 #include <atma/assert.hpp>
 
 using namespace dust;

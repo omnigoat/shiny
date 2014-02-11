@@ -183,6 +183,7 @@
   <ItemGroup>
     <ClInclude Include="..\include\dust\adapter.hpp" />
     <ClInclude Include="..\include\dust\context.hpp" />
+    <ClInclude Include="..\include\dust\dust_fwd.hpp" />
     <ClInclude Include="..\include\dust\format.hpp" />
     <ClInclude Include="..\include\dust\index_buffer.hpp" />
     <ClInclude Include="..\include\dust\lock.hpp" />
