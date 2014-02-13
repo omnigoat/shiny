@@ -1,6 +1,7 @@
 #include <dust/platform/win32/vertex_buffer.hpp>
 
 #include <dust/context.hpp>
+#include <dust/vertex_declaration.hpp>
 
 #include <atma/assert.hpp>
 
@@ -11,16 +12,16 @@ using dust::vertex_buffer_t;
 //======================================================================
 // vertex_buffer_t
 //======================================================================
-auto dust::create_vertex_buffer(context_ptr const& context, vb_usage_t usage, size_t size, void* data) -> vertex_buffer_ptr
+auto dust::create_vertex_buffer(context_ptr const& context, vb_usage_t usage, vertex_declaration_t const& vd, uint vertex_count, void* data) -> vertex_buffer_ptr
 {
-	return vertex_buffer_ptr(new vertex_buffer_t(context, usage, size, data));
+	return vertex_buffer_ptr(new vertex_buffer_t(context, usage, vd, vertex_count, data));
 }
 
-vertex_buffer_t::vertex_buffer_t(context_ptr const& context, vb_usage_t usage, size_t data_size, void* data)
-: context_(context), gpu_access_(), cpu_access_(), usage_(usage), capacity_(data_size), size_(data_size)
+vertex_buffer_t::vertex_buffer_t(context_ptr const& context, vb_usage_t usage, vertex_declaration_t const& vd, uint vertex_count, void* data)
+: context_(context), gpu_access_(), cpu_access_(), usage_(usage), capacity_(vd.stride() * vertex_count), size_(capacity_)
 {
-	ATMA_ASSERT(data_size > 0);
-
+	ATMA_ASSERT(capacity_);
+	
 	switch (usage_)
 	{
 		case vb_usage_t::immutable:
@@ -30,7 +31,7 @@ vertex_buffer_t::vertex_buffer_t(context_ptr const& context, vb_usage_t usage, s
 			gpu_access_ = gpu_access_t::read;
 			cpu_access_ = cpu_access_t::none;
 
-			context_->create_d3d_buffer(d3d_buffer_, gpu_access_t::read, cpu_access_t::none, data_size, data);
+			context_->create_d3d_buffer(d3d_buffer_, gpu_access_t::read, cpu_access_t::none, capacity_, data);
 			break;
 		}
 
@@ -44,8 +45,8 @@ vertex_buffer_t::vertex_buffer_t(context_ptr const& context, vb_usage_t usage, s
 				upload_shadow_buffer();
 			}
 			else {
-				shadow_buffer_.resize((uint32_t)capacity_);
-				context_->create_d3d_buffer(d3d_buffer_, gpu_access_, cpu_access_, data_size, data);
+				shadow_buffer_.resize((uint32)capacity_);
+				context_->create_d3d_buffer(d3d_buffer_, gpu_access_, cpu_access_, capacity_, data);
 			}
 			break;
 		}

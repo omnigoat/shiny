@@ -16,13 +16,13 @@ namespace dust
 {
 	struct display_mode_t
 	{
-		uint32_t width, height;
-		uint32_t refreshrate_frames, refreshrate_period;
+		uint32 width, height;
+		uint32 refreshrate_frames, refreshrate_period;
 		display_format_t format;
 	};
 
 
-	uint32_t const primary_output = 0;
+	uint32 const primary_output = 0;
 }
 
 #ifdef ATMA_PLATFORM_WIN32

@@ -44,10 +44,12 @@ int main()
 	auto vs = dust::vertex_shader_ptr(new dust::vertex_shader_t(gfx));
 	auto ps = dust::pixel_shader_ptr(new dust::pixel_shader_t(gfx));
 
-	auto vb = dust::create_vertex_buffer(gfx, dust::vb_usage_t::immutable, 16 * sizeof(float), D);
 	auto vd = dust::vertex_declaration_t(gfx, vs, {
 		{dust::vertex_stream_t::usage_t::position, 0, dust::vertex_stream_t::element_type_t::float32, 4}
 	});
+
+	auto vb = dust::create_vertex_buffer(gfx, dust::vb_usage_t::immutable, vd, 16, D); //16 * sizeof(float), D);
+
 
 	
 	window->key_state.on_key(fooey::key_t::Alt + fooey::key_t::Enter, [gfx]{

@@ -10,5 +10,5 @@ namespace dust
 {
 	struct runtime_t;
 
-	auto create_context(runtime_t&, fooey::window_ptr const&, uint32_t adapter = primary_adapter) -> context_ptr;
+	auto create_context(runtime_t&, fooey::window_ptr const&, uint32 adapter = primary_adapter) -> context_ptr;
 }

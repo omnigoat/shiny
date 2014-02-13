@@ -34,19 +34,19 @@ namespace dust {
 			int8
 		};
 
-		vertex_stream_t(usage_t, uint32_t index, element_type_t, uint32_t element_count);
+		vertex_stream_t(usage_t, uint32 index, element_type_t, uint32 element_count);
 
 		auto usage() const -> usage_t;
-		auto index() const -> uint32_t;
+		auto index() const -> uint32;
 		auto element_type() const -> element_type_t;
-		auto element_count() const -> uint32_t;
-		auto size() const -> uint32_t;
+		auto element_count() const -> uint32;
+		auto size() const -> uint32;
 
 	private:
 		usage_t usage_;
-		uint32_t index_;
+		uint32 index_;
 		element_type_t element_type_;
-		uint32_t element_count_;
+		uint32 element_count_;
 	};
 
 
@@ -64,7 +64,7 @@ namespace dust {
 		vertex_declaration_t(context_ptr const&, vertex_shader_ptr const&, std::initializer_list<vertex_stream_t> streams);
 		
 		auto streams() const -> streams_t const&;
-		auto stride() const -> uint32_t;
+		auto stride() const -> uint;
 
 		auto d3d_input_layout() const -> platform::d3d_input_layout_ptr const&;
 
@@ -74,7 +74,7 @@ namespace dust {
 		context_ptr context_;
 
 		streams_t streams_;
-		uint32_t stride_;
+		uint stride_;
 		platform::d3d_input_layout_ptr d3d_input_layout_;
 		bool built_;
 	};

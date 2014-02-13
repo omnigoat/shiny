@@ -10,7 +10,7 @@ using dust::vertex_declaration_t;
 //======================================================================
 // vertex_stream_t
 //======================================================================
-vertex_stream_t::vertex_stream_t(usage_t usage, uint32_t index, element_type_t element_type, uint32_t element_count)
+vertex_stream_t::vertex_stream_t(usage_t usage, uint32 index, element_type_t element_type, uint32 element_count)
 	: usage_(usage), index_(index), element_type_(element_type), element_count_(element_count)
 {
 }
@@ -19,7 +19,7 @@ auto vertex_stream_t::usage() const -> usage_t {
 	return usage_;
 }
 
-auto vertex_stream_t::index() const -> uint32_t {
+auto vertex_stream_t::index() const -> uint32 {
 	return index_;
 }
 
@@ -27,13 +27,13 @@ auto vertex_stream_t::element_type() const -> element_type_t {
 	return element_type_;
 }
 
-auto vertex_stream_t::element_count() const -> uint32_t {
+auto vertex_stream_t::element_count() const -> uint32 {
 	return element_count_;
 }
 
-auto vertex_stream_t::size() const -> uint32_t
+auto vertex_stream_t::size() const -> uint32
 {
-	uint32_t element_size = 0;
+	uint32 element_size = 0;
 	switch (element_type_)
 	{
 		case element_type_t::float32:
@@ -79,7 +79,7 @@ auto vertex_declaration_t::streams() const -> streams_t const&
 	return streams_;
 }
 
-auto vertex_declaration_t::stride() const -> uint32_t
+auto vertex_declaration_t::stride() const -> uint
 {
 	return stride_;
 }
@@ -107,7 +107,7 @@ auto vertex_declaration_t::build(vertex_shader_ptr const& vs) -> void
 	//auto const& device = context_->d3d_device();
 	//ATMA_ENSURE_IS(S_OK, device->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, d3d_vs_.assign()));
 
-	ATMA_ENSURE_IS(S_OK, context_->d3d_device()->CreateInputLayout(&d3d_elements[0], (uint32_t)d3d_elements.size(),
+	ATMA_ENSURE_IS(S_OK, context_->d3d_device()->CreateInputLayout(&d3d_elements[0], (uint32)d3d_elements.size(),
 		vs->d3d_blob()->GetBufferPointer(), vs->d3d_blob()->GetBufferSize(), d3d_input_layout_.assign()));
 
 	built_ = true;

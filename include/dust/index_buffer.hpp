@@ -28,8 +28,8 @@ namespace plumbing {
 	{
 		typedef std::vector<char> data_t;
 
-		index_buffer_t(gpu_access_t, cpu_access_t, bool shadow, uint32_t data_size);
-		index_buffer_t(gpu_access_t, cpu_access_t, bool shadow, uint32_t data_size, void* data);
+		index_buffer_t(gpu_access_t, cpu_access_t, bool shadow, uint32 data_size);
+		index_buffer_t(gpu_access_t, cpu_access_t, bool shadow, uint32 data_size, void* data);
 		index_buffer_t(gpu_access_t, cpu_access_t, bool shadow, data_t const& data);
 		index_buffer_t(gpu_access_t, cpu_access_t, bool shadow, data_t&& data);
 		~index_buffer_t();
@@ -48,7 +48,7 @@ namespace plumbing {
 		ID3D11Buffer* d3d_buffer_;
 		gpu_access_t gpu_access_;
 		cpu_access_t cpu_access_;
-		uint32_t data_size_;
+		uint32 data_size_;
 		std::vector<char> data_;
 		bool shadowing_;
 		std::mutex mutex_;

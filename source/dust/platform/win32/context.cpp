@@ -21,7 +21,7 @@ bool middle_ = false;
 //======================================================================
 // context creation
 //======================================================================
-auto dust::create_context(runtime_t& runtime, fooey::window_ptr const& window, uint32_t adapter) -> dust::context_ptr
+auto dust::create_context(runtime_t& runtime, fooey::window_ptr const& window, uint32 adapter) -> dust::context_ptr
 {
 	return context_ptr(new context_t(runtime, window, adapter));
 }
@@ -29,7 +29,7 @@ auto dust::create_context(runtime_t& runtime, fooey::window_ptr const& window, u
 //======================================================================
 // context_t
 //======================================================================
-context_t::context_t(runtime_t& runtime, fooey::window_ptr const& window, uint32_t adapter)
+context_t::context_t(runtime_t& runtime, fooey::window_ptr const& window, uint32 adapter)
 : runtime_(runtime), window_(window), fullscreen_()
 {
 	std::tie(dxgi_adapter_, d3d_device_, d3d_immediate_context_) = platform::dxgi_and_d3d_at(runtime_, adapter);
@@ -77,7 +77,7 @@ auto context_t::create_swapchain() -> void
 	ATMA_ENSURE_IS(S_OK, runtime_.dxgi_factory->MakeWindowAssociation(window_->hwnd(), DXGI_MWA_NO_WINDOW_CHANGES));
 }
 
-auto context_t::setup_rendertarget(uint32_t width, uint32_t height) -> void
+auto context_t::setup_rendertarget(uint32 width, uint32 height) -> void
 {
 	// create render-target & set it
 	atma::com_ptr<ID3D11Texture2D> backbuffer;
@@ -101,7 +101,7 @@ auto context_t::signal_block() -> void
 	engine_.signal_block();
 }
 
-auto context_t::signal_fullscreen_toggle(uint32_t output_index) -> void
+auto context_t::signal_fullscreen_toggle(uint32 output_index) -> void
 {
 	engine_.signal([&, output_index]
 	{
@@ -205,7 +205,7 @@ auto context_t::create_d3d_buffer(platform::d3d_buffer_ptr& buffer, gpu_access_t
 	}
 }
 
-auto context_t::signal_d3d_map(platform::d3d_buffer_ptr& buffer, D3D11_MAPPED_SUBRESOURCE* mapped_resource, D3D11_MAP map_type, uint32_t subresource, std::function<void(D3D11_MAPPED_SUBRESOURCE*)> const& fn) -> void
+auto context_t::signal_d3d_map(platform::d3d_buffer_ptr& buffer, D3D11_MAPPED_SUBRESOURCE* mapped_resource, D3D11_MAP map_type, uint32 subresource, std::function<void(D3D11_MAPPED_SUBRESOURCE*)> const& fn) -> void
 {
 	engine_.signal([&, mapped_resource, map_type, subresource] {
 		d3d_immediate_context_->Map(buffer.get(), subresource, map_type, 0, mapped_resource);
@@ -214,14 +214,14 @@ auto context_t::signal_d3d_map(platform::d3d_buffer_ptr& buffer, D3D11_MAPPED_SU
 	});
 }
 
-auto context_t::signal_d3d_unmap(platform::d3d_buffer_ptr& buffer, uint32_t subresource) -> void
+auto context_t::signal_d3d_unmap(platform::d3d_buffer_ptr& buffer, uint32 subresource) -> void
 {
 	engine_.signal([&, buffer, subresource] {
 		d3d_immediate_context_->Unmap(buffer.get(), subresource);
 	});
 }
 
-auto context_t::signal_d3d_buffer_upload(platform::d3d_buffer_ptr& buffer, void const* data, uint32_t row_pitch, uint32_t depth_pitch) -> void
+auto context_t::signal_d3d_buffer_upload(platform::d3d_buffer_ptr& buffer, void const* data, uint32 row_pitch, uint32 depth_pitch) -> void
 {
 	engine_.signal([&, buffer, data, row_pitch, depth_pitch] {
 		d3d_immediate_context_->UpdateSubresource(buffer.get(), 0, nullptr, data, row_pitch, depth_pitch);

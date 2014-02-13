@@ -48,7 +48,7 @@ runtime_t::runtime_t()
 	// get all the adapters
 	{
 		dxgi_adapter_ptr adapter;
-		uint32_t i = 0;
+		uint32 i = 0;
 		while (dxgi_factory->EnumAdapters1(i++, adapter.assign()) != DXGI_ERROR_NOT_FOUND)
 			dxgi_adapters.push_back(adapter);
 	}
@@ -58,7 +58,7 @@ runtime_t::runtime_t()
 		for (auto& x : dxgi_adapters)
 		{
 			dxgi_output_ptr output;
-			uint32_t i = 0;
+			uint32 i = 0;
 			while (x->EnumOutputs(i++, output.assign()) != DXGI_ERROR_NOT_FOUND) {
 				dxgi_outputs_mapping[x].push_back(output);
 				enumerate_backbuffers(dxgi_backbuffer_formats[output], output);
@@ -86,7 +86,7 @@ runtime_t::~runtime_t()
 }
 
 
-auto dust::platform::dxgi_and_d3d_at(runtime_t& runtime, uint32_t adapter_index) -> std::tuple<dxgi_adapter_ptr, d3d_device_ptr, d3d_context_ptr>
+auto dust::platform::dxgi_and_d3d_at(runtime_t& runtime, uint32 adapter_index) -> std::tuple<dxgi_adapter_ptr, d3d_device_ptr, d3d_context_ptr>
 {
 	dxgi_adapter_ptr adapter = runtime.dxgi_adapters[adapter_index];
 	d3d_device_ptr device;

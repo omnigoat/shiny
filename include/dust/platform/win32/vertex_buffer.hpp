@@ -38,10 +38,10 @@ namespace dust {
 	private:
 		struct context_binding_t;
 
-		vertex_buffer_t(context_ptr const&, vb_usage_t, size_t data_size, void* data);
+		vertex_buffer_t(context_ptr const&, vb_usage_t, vertex_declaration_t const&, uint vertex_count, void* data);
 #if 0
-		vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, uint32_t data_size);
-		vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, uint32_t data_size, void* data);
+		vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, uint32 data_size);
+		vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, uint32 data_size, void* data);
 		vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, data_t const& data);
 		vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, data_t&& data);
 #endif
@@ -66,7 +66,7 @@ namespace dust {
 		platform::d3d_buffer_ptr d3d_buffer_;
 
 
-		friend auto create_vertex_buffer(context_ptr const&, vb_usage_t, size_t data_size, void* data) -> vertex_buffer_ptr;
+		friend auto create_vertex_buffer(context_ptr const&, vb_usage_t, vertex_declaration_t const&, uint32 vertex_count, void* data) -> vertex_buffer_ptr;
 	};
 
 	
@@ -83,7 +83,7 @@ namespace dust {
 		{
 			case vb_usage_t::long_lived:
 				f( reinterpret_cast<T*>(&shadow_buffer_[0]), reinterpret_cast<T*>(&shadow_buffer_[0] + capacity_) );
-				context_->signal_d3d_buffer_upload(d3d_buffer_, &shadow_buffer_[0], (uint32_t)size_, 1);
+				context_->signal_d3d_buffer_upload(d3d_buffer_, &shadow_buffer_[0], (uint32)size_, 1);
 				break;
 		}
 	}

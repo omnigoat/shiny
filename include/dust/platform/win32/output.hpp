@@ -18,7 +18,7 @@ namespace dust {
 
 	struct output_t : atma::ref_counted
 	{
-		auto native_resolution() const -> std::pair<uint32_t, uint32_t>;
+		auto native_resolution() const -> std::pair<uint32, uint32>;
 		
 		auto dxgi_output() const -> platform::dxgi_output_ptr const& { return dxgi_output_; }
 
@@ -33,7 +33,7 @@ namespace dust {
 
 	namespace platform
 	{
-		auto output_at(runtime_t const&, dxgi_adapter_ptr const&, uint32_t output_index) -> dxgi_output_ptr;
+		auto output_at(runtime_t const&, dxgi_adapter_ptr const&, uint32 output_index) -> dxgi_output_ptr;
 	}
 
 //======================================================================

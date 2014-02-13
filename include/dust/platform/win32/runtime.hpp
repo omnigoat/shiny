@@ -60,7 +60,7 @@ namespace dust {
 
 	namespace platform
 	{
-		auto dxgi_and_d3d_at(runtime_t&, uint32_t adapter_index) ->  std::tuple<dxgi_adapter_ptr, d3d_device_ptr, d3d_context_ptr>;
+		auto dxgi_and_d3d_at(runtime_t&, uint32 adapter_index) ->  std::tuple<dxgi_adapter_ptr, d3d_device_ptr, d3d_context_ptr>;
 	}
 
 //======================================================================
