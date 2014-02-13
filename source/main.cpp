@@ -41,14 +41,14 @@ int main()
 		-1.f, -1.f, 0.f, 1.f
 	};
 
-	auto vs = dust::vertex_shader_ptr(new dust::vertex_shader_t(gfx));
-	auto ps = dust::pixel_shader_ptr(new dust::pixel_shader_t(gfx));
+	auto vs = dust::create_vertex_shader(gfx);
+	auto ps = dust::create_pixel_shader(gfx);
 
 	auto vd = dust::vertex_declaration_t(gfx, vs, {
 		{dust::vertex_stream_t::usage_t::position, 0, dust::vertex_stream_t::element_type_t::float32, 4}
 	});
 
-	auto vb = dust::create_vertex_buffer(gfx, dust::vb_usage_t::immutable, vd, 16, D); //16 * sizeof(float), D);
+	auto vb = dust::create_vertex_buffer(gfx, dust::vb_usage_t::immutable, vd, 3, D);
 
 
 	

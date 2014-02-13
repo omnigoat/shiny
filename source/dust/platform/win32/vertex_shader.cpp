@@ -1,4 +1,4 @@
-#include <dust/platform/win32/vertex_shader.hpp>
+#include <dust/vertex_shader.hpp>
 
 #include <dust/context.hpp>
 
@@ -6,6 +6,11 @@
 using namespace dust;
 using dust::vertex_shader_t;
 
+
+auto dust::create_vertex_shader(context_ptr const& context) -> vertex_shader_ptr
+{
+	return vertex_shader_ptr(new vertex_shader_t(context));
+}
 
 vertex_shader_t::vertex_shader_t(context_ptr const& context)
 : context_(context)

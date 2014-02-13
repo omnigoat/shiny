@@ -6,8 +6,7 @@
 #	include <dust/platform/win32/vertex_shader.hpp>
 #endif
 
+// implemented per-platform
 namespace dust {
-	
-	//inline auto create_vertex_shader(context_ptr const&)
-
+	auto create_vertex_shader(context_ptr const&) -> vertex_shader_ptr;
 }
