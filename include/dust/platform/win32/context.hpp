@@ -1,5 +1,6 @@
 #pragma once
 //======================================================================
+#include <dust/dust_fwd.hpp>
 #include <dust/format.hpp>
 #include <dust/adapter.hpp>
 #include <dust/output.hpp>
@@ -17,18 +18,6 @@
 //======================================================================
 namespace dust {
 //======================================================================
-	
-	// forward declares
-	struct vertex_declaration_t;
-	struct vertex_buffer_t;
-	typedef atma::intrusive_ptr<vertex_buffer_t> vertex_buffer_ptr;
-	struct vertex_shader_t;
-	typedef atma::intrusive_ptr<vertex_shader_t> vertex_shader_ptr;
-	struct pixel_shader_t;
-	typedef atma::intrusive_ptr<pixel_shader_t> pixel_shader_ptr;
-
-
-
 
 	struct context_t : atma::ref_counted
 	{
@@ -87,8 +76,6 @@ namespace dust {
 		// windowed
 		display_mode_t display_format_;
 	};
-
-	typedef atma::intrusive_ptr<context_t> context_ptr;
 
 //======================================================================
 } // namespace dust

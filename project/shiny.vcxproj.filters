@@ -118,6 +118,9 @@
     <ClInclude Include="..\include\dust\dust_fwd.hpp">
       <Filter>include\dust</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\dust\platform\win32\vertex_buffer.hpp">
+      <Filter>include\dust\platform\win32</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="..\shaders\vs_basic.hlsl">

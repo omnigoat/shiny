@@ -1,4 +1,4 @@
-#include <dust/vertex_buffer.hpp>
+#include <dust/platform/win32/vertex_buffer.hpp>
 
 #include <dust/context.hpp>
 

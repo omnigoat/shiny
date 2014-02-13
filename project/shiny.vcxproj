@@ -193,6 +193,7 @@
     <ClInclude Include="..\include\dust\platform\win32\context.hpp" />
     <ClInclude Include="..\include\dust\platform\win32\pixel_shader.hpp" />
     <ClInclude Include="..\include\dust\platform\win32\runtime.hpp" />
+    <ClInclude Include="..\include\dust\platform\win32\vertex_buffer.hpp" />
     <ClInclude Include="..\include\dust\platform\win32\vertex_shader.hpp" />
     <ClInclude Include="..\include\dust\runtime.hpp" />
     <ClInclude Include="..\include\dust\platform\win32\d3d_fwd.hpp" />
