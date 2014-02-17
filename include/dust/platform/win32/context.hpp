@@ -44,7 +44,7 @@ namespace dust {
 		auto setup_rendertarget(uint32 width, uint32 height) -> void;
 		auto recreate_backbuffer() -> void;
 		
-		auto pull_display_format(display_mode_t&, DXGI_SWAP_CHAIN_DESC&, bool copy_to_requested) -> void;
+		auto pull_display_format(display_mode_t&, DXGI_SWAP_CHAIN_DESC&) -> void;
 		auto push_display_format(DXGI_MODE_DESC&, display_mode_t const&) -> void;
 
 		auto update_display_mode() -> void;

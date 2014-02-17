@@ -53,7 +53,7 @@ int main()
 
 	
 	window->key_state.on_key(fooey::key_t::Alt + fooey::key_t::Enter, [gfx]{
-		gfx->signal_fullscreen_toggle();
+		gfx->signal_fullscreen_toggle(1);
 	});
 
 
