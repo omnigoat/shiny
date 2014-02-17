@@ -12,11 +12,12 @@
 #include <d3dcompiler.h>
 
 #include <vector>
+#include <atomic>
+
 
 using namespace dust;
 using dust::context_t;
 
-bool middle_ = false;
 
 //======================================================================
 // context creation
@@ -30,7 +31,7 @@ auto dust::create_context(runtime_t& runtime, fooey::window_ptr const& window, u
 // context_t
 //======================================================================
 context_t::context_t(runtime_t& runtime, fooey::window_ptr const& window, uint32 adapter)
-: runtime_(runtime), window_(window), fullscreen_()
+: runtime_(runtime), window_(window), current_display_mode_(&windowed_display_mode_), requested_display_mode_()
 {
 	std::tie(dxgi_adapter_, d3d_device_, d3d_immediate_context_) = platform::dxgi_and_d3d_at(runtime_, adapter);
 	create_swapchain();
@@ -51,6 +52,30 @@ context_t::~context_t()
 	engine_.signal_block();
 }
 
+auto context_t::pull_display_format(display_mode_t& mode, DXGI_SWAP_CHAIN_DESC& desc, bool copy_to_requested) -> void
+{
+	mode.width = desc.BufferDesc.Width;
+	mode.height = desc.BufferDesc.Height;
+	mode.fullscreen = desc.Windowed == FALSE;
+	mode.format = display_format_t::r8g8b8a8_unorm;
+	mode.refreshrate_frames = desc.BufferDesc.RefreshRate.Numerator;
+	mode.refreshrate_period = desc.BufferDesc.RefreshRate.Denominator;
+
+	if (copy_to_requested && &mode == &windowed_display_mode_)
+		requested_windowed_display_mode_ = mode;
+	else if (copy_to_requested && &mode == &fullscreen_display_mode_)
+		requested_fullscreen_display_mode_ = mode;
+}
+
+auto context_t::push_display_format(DXGI_MODE_DESC& dxgimode, display_mode_t const& mode) -> void
+{
+	dxgimode.Width = mode.width;
+	dxgimode.Height = mode.height;
+	dxgimode.RefreshRate = {mode.refreshrate_frames, mode.refreshrate_period};
+	dxgimode.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
+	dxgimode.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
+	dxgimode.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+}
 
 auto context_t::bind_events(fooey::window_ptr const& window) -> void
 {
@@ -61,9 +86,6 @@ auto context_t::bind_events(fooey::window_ptr const& window) -> void
 
 auto context_t::create_swapchain() -> void
 {
-	display_format_.width = window_->width();
-	display_format_.height = window_->height();
-
 	auto desc = DXGI_SWAP_CHAIN_DESC{
 		// DXGI_MODE_DESC
 		{0, 0, {0, 0}, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED, DXGI_MODE_SCALING_UNSPECIFIED},
@@ -75,6 +97,11 @@ auto context_t::create_swapchain() -> void
 
 	ATMA_ENSURE_IS(S_OK, runtime_.dxgi_factory->CreateSwapChain(d3d_device_.get(), &desc, dxgi_swap_chain_.assign()));
 	ATMA_ENSURE_IS(S_OK, runtime_.dxgi_factory->MakeWindowAssociation(window_->hwnd(), DXGI_MWA_NO_WINDOW_CHANGES));
+
+
+	// fill our internal display-format
+	dxgi_swap_chain_->GetDesc(&desc); 
+	pull_display_format(windowed_display_mode_, desc, false);
 }
 
 auto context_t::setup_rendertarget(uint32 width, uint32 height) -> void
@@ -96,6 +123,54 @@ auto context_t::recreate_backbuffer() -> void
 	ATMA_ENSURE_IS(S_OK, dxgi_swap_chain_->ResizeBuffers(1, 0, 0, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH));
 }
 
+auto context_t::update_display_mode() -> void
+{
+	// do post-present stuff here
+	if (requested_display_mode_)
+	{
+		// transition to fullscreen
+		if (current_display_mode_ == &windowed_display_mode_ && requested_display_mode_ == &requested_fullscreen_display_mode_)
+		{
+			DXGI_MODE_DESC mode;
+			push_display_format(mode, *requested_display_mode_);
+			dxgi_swap_chain_->ResizeTarget(&mode);
+
+			recreate_backbuffer();
+			setup_rendertarget(requested_display_mode_->width, requested_display_mode_->height);
+			dxgi_swap_chain_->SetFullscreenState(true, dxgi_output_.get());
+
+			DXGI_SWAP_CHAIN_DESC swap_chain_desc;
+			dxgi_swap_chain_->GetDesc(&swap_chain_desc);
+			pull_display_format(fullscreen_display_mode_, swap_chain_desc, false);
+
+			current_display_mode_ = &fullscreen_display_mode_;
+		}
+		// fullscreen to fullscreen, let's not support this yet
+		else if (current_display_mode_ == &fullscreen_display_mode_ && requested_display_mode_ == &requested_fullscreen_display_mode_)
+		{
+			ATMA_ASSERT_MSG(false, "fullscreen -> fullscreen resolution change not supported yet");
+		}
+		// windowed to windowed
+		else if (current_display_mode_ == &windowed_display_mode_ && requested_display_mode_ == &requested_windowed_display_mode_)
+		{
+			recreate_backbuffer();
+			setup_rendertarget(requested_windowed_display_mode_.width, requested_windowed_display_mode_.height);
+		}
+		// fullscreen to windowed transition
+		else if (current_display_mode_ == &fullscreen_display_mode_ && requested_display_mode_ == &requested_windowed_display_mode_)
+		{
+			dxgi_swap_chain_->SetFullscreenState(FALSE, nullptr);
+
+			// resize window back to what it was before fullscreening
+			auto mode = DXGI_MODE_DESC{windowed_display_mode_.width, windowed_display_mode_.height, {0, 0}, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED, DXGI_MODE_SCALING_UNSPECIFIED};
+			dxgi_swap_chain_->ResizeTarget(&mode);
+			current_display_mode_ = &windowed_display_mode_;
+		}
+
+		requested_display_mode_ = nullptr;
+	}
+}
+
 auto context_t::signal_block() -> void
 {
 	engine_.signal_block();
@@ -107,10 +182,8 @@ auto context_t::signal_fullscreen_toggle(uint32 output_index) -> void
 	{
 		ATMA_ASSERT(dxgi_adapter_);
 
-		fullscreen_ = !fullscreen_;
-		window_->fullscreen_ = fullscreen_;
-
-		if (fullscreen_)
+		// going to fullscreen
+		if (current_display_mode_ == &windowed_display_mode_)
 		{
 			// get output of our adapter
 			dxgi_output_ = platform::output_at(runtime_, dxgi_adapter_, output_index);
@@ -124,42 +197,36 @@ auto context_t::signal_fullscreen_toggle(uint32 output_index) -> void
 			auto mode = DXGI_MODE_DESC{};
 			dxgi_output_->FindClosestMatchingMode(&candidate, &mode, d3d_device_.get());
 
-			dxgi_swap_chain_->ResizeTarget(&mode);
+			DXGI_SWAP_CHAIN_DESC swap_chain_desc;
+			dxgi_swap_chain_->GetDesc(&swap_chain_desc);
+			swap_chain_desc.BufferDesc = mode;
 
-			recreate_backbuffer();
-			setup_rendertarget(800, 600);
+			pull_display_format(requested_fullscreen_display_mode_, swap_chain_desc, false);
 
-			dxgi_swap_chain_->SetFullscreenState(true, dxgi_output_.get());
+			requested_display_mode_ = &requested_fullscreen_display_mode_;
 		}
 		else
 		{
-			dxgi_swap_chain_->SetFullscreenState(FALSE, nullptr);
-
-			// resize window back to what it was before fullscreening
-			auto mode = DXGI_MODE_DESC{display_format_.width, display_format_.height, {0, 0}, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED, DXGI_MODE_SCALING_UNSPECIFIED};
-			dxgi_swap_chain_->ResizeTarget(&mode);
+			requested_display_mode_ = &requested_windowed_display_mode_;
 		}
 	});
 }
 
 auto context_t::on_resize(fooey::events::resize_t& e) -> void
 {
-	if (fullscreen_)
-		return;
+	requested_windowed_display_mode_.width = e.width();
+	requested_windowed_display_mode_.height = e.height();
 
-	display_format_.width = e.width();
-	display_format_.height = e.height();
+	// demand to be resized if we're not going to transition to fullscreen
+	if (!(current_display_mode_ == &windowed_display_mode_ && requested_display_mode_ == &requested_fullscreen_display_mode_))
+		requested_display_mode_ = &requested_windowed_display_mode_;
 
+#if 0
 	engine_.signal([&, e] {
-		if (e.origin().expired() || middle_)
-			return;
-
-		auto wnd = std::dynamic_pointer_cast<fooey::window_t>(e.origin().lock());
-		ATMA_ASSERT(wnd);
-
 		recreate_backbuffer();
 		setup_rendertarget(e.width(), e.height());
 	});
+#endif
 }
 
 auto context_t::create_d3d_buffer(platform::d3d_buffer_ptr& buffer, gpu_access_t gpu_access, cpu_access_t cpu_access, size_t data_size, void* data) -> void
@@ -242,7 +309,6 @@ auto context_t::signal_draw(vertex_declaration_t const& vd, vertex_buffer_ptr co
 		d3d_immediate_context_->IASetVertexBuffers(0, 1, &vbs, &stride, &offset);
 		d3d_immediate_context_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		d3d_immediate_context_->Draw(3, 0);
-		middle_ = true;
 	});
 }
 
@@ -250,9 +316,8 @@ auto context_t::signal_present() -> void
 {
 	engine_.signal([&] {
 		ATMA_ENSURE_IS(S_OK, dxgi_swap_chain_->Present(DXGI_SWAP_EFFECT_DISCARD, 0));
-		//dxgi_swap_chain_->Present(DXGI_SWAP_EFFECT_DISCARD, 0);
 
-		middle_ = false;
+		update_display_mode();
 	});
 }
 
@@ -261,6 +326,5 @@ auto context_t::signal_clear() -> void
 	engine_.signal([&] {
 		float g[4] ={.2f, .2f, .2f, 1.f};
 		d3d_immediate_context_->ClearRenderTargetView(d3d_render_target_.get(), g);
-		middle_ = true;
 	});
 }

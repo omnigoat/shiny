@@ -19,6 +19,7 @@ namespace platform {
 	typedef atma::com_ptr<ID3D11VertexShader> d3d_vertex_shader_ptr;
 	typedef atma::com_ptr<ID3D11PixelShader> d3d_pixel_shader_ptr;
 	typedef atma::com_ptr<ID3DBlob> d3d_blob_ptr;
+	typedef atma::com_ptr<ID3D11RenderTargetView> d3d_render_target_view_ptr;
 
 //======================================================================
 } // namespace platform

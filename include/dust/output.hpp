@@ -19,6 +19,7 @@ namespace dust
 		uint32 width, height;
 		uint32 refreshrate_frames, refreshrate_period;
 		display_format_t format;
+		bool fullscreen;
 	};
 
 

@@ -43,6 +43,11 @@ namespace dust {
 		auto create_swapchain() -> void; 
 		auto setup_rendertarget(uint32 width, uint32 height) -> void;
 		auto recreate_backbuffer() -> void;
+		
+		auto pull_display_format(display_mode_t&, DXGI_SWAP_CHAIN_DESC&, bool copy_to_requested) -> void;
+		auto push_display_format(DXGI_MODE_DESC&, display_mode_t const&) -> void;
+
+		auto update_display_mode() -> void;
 
 		// these functions are called on a fooey thread
 		auto on_resize(fooey::events::resize_t&) -> void;
@@ -51,30 +56,27 @@ namespace dust {
 		atma::thread::engine_t engine_;
 		runtime_t& runtime_;
 
-		// dxgi
 		platform::dxgi_adapter_ptr dxgi_adapter_;
 		platform::dxgi_swap_chain_ptr dxgi_swap_chain_;
-		
-		// d3d
+		platform::dxgi_output_ptr dxgi_output_;
+
 		platform::d3d_device_ptr d3d_device_;
 		platform::d3d_context_ptr d3d_immediate_context_;
 		platform::d3d_context_ptr d3d_deferred_context_;
-		atma::com_ptr<ID3D11RenderTargetView> d3d_render_target_;
-		bool is_immediate_thread_;
-		
-		std::atomic_bool allow_present_;
+		platform::d3d_render_target_view_ptr d3d_render_target_;
 
 		// fooey
 		fooey::window_ptr window_;
 		fooey::event_handler_t::delegate_set_t bound_events_;
 
-		// fullscreen
-		bool fullscreen_;
-		display_mode_t fullscreen_display_format_;
-		platform::dxgi_output_ptr dxgi_output_;
-
-		// windowed
-		display_mode_t display_format_;
+		// our current display format (windowed), current display format (fullscreen),
+		// which display mode we're currently at, the requested modes for both windowed
+		// and fullscreen, and which mode we should transition to (changing between
+		// windowed/fullscreen takes precedence over windowed/windowed size changes).
+		display_mode_t windowed_display_mode_, fullscreen_display_mode_;
+		display_mode_t* current_display_mode_;
+		display_mode_t requested_windowed_display_mode_, requested_fullscreen_display_mode_;
+		display_mode_t* requested_display_mode_;
 	};
 
 //======================================================================
