@@ -5,6 +5,7 @@
 #include <dust/vertex_shader.hpp>
 #include <dust/pixel_shader.hpp>
 #include <dust/runtime.hpp>
+#include <dust/constant_buffer.hpp>
 
 #include <fooey/events/resize.hpp>
 #include <fooey/keys.hpp>
@@ -220,23 +221,16 @@ auto context_t::signal_fullscreen_toggle(uint32 output_index) -> void
 
 auto context_t::on_resize(fooey::events::resize_t& e) -> void
 {
-	requested_windowed_display_mode_.width = e.width();
-	requested_windowed_display_mode_.height = e.height();
-
 	if (requested_display_mode_ == &requested_fullscreen_display_mode_)
 		return;
 
-	requested_display_mode_ = &requested_windowed_display_mode_;
+	requested_windowed_display_mode_.width = e.width();
+	requested_windowed_display_mode_.height = e.height();
 
-#if 0
-	engine_.signal([&, e] {
-		recreate_backbuffer();
-		setup_rendertarget(e.width(), e.height());
-	});
-#endif
+	requested_display_mode_ = &requested_windowed_display_mode_;
 }
 
-auto context_t::create_d3d_buffer(platform::d3d_buffer_ptr& buffer, gpu_access_t gpu_access, cpu_access_t cpu_access, size_t data_size, void* data) -> void
+auto context_t::create_d3d_buffer(platform::d3d_buffer_ptr& buffer, buffer_type_t buffer_type, gpu_access_t gpu_access, cpu_access_t cpu_access, size_t data_size, void* data) -> void
 {
 	// calcualte the buffer usage based off our gpu-access/cpu-access flags
 	D3D11_USAGE buffer_usage = D3D11_USAGE_DEFAULT;
@@ -265,7 +259,7 @@ auto context_t::create_d3d_buffer(platform::d3d_buffer_ptr& buffer, gpu_access_t
 		case cpu_access_t::read_write: cpua = static_cast<D3D11_CPU_ACCESS_FLAG>(D3D11_CPU_ACCESS_READ | D3D11_CPU_ACCESS_WRITE); break;
 	}
 
-	D3D11_BUFFER_DESC buffer_desc{(UINT)data_size, buffer_usage, D3D11_BIND_VERTEX_BUFFER, cpua, 0, 0};
+	D3D11_BUFFER_DESC buffer_desc{(UINT)data_size, buffer_usage, buffer_type == buffer_type_t::vertex_buffer ? D3D11_BIND_VERTEX_BUFFER : D3D11_BIND_CONSTANT_BUFFER, cpua, 0, 0};
 
 
 	if (data) {
@@ -333,5 +327,13 @@ auto context_t::signal_clear() -> void
 	engine_.signal([&] {
 		float g[4] ={.2f, .2f, .2f, 1.f};
 		d3d_immediate_context_->ClearRenderTargetView(d3d_render_target_.get(), g);
+	});
+}
+
+auto context_t::signal_upload_constant_buffer(uint index, constant_buffer_ptr const& buf) -> void
+{
+	engine_.signal([&, index, buf] {
+		auto k = buf->d3d_buffer().get();
+		d3d_immediate_context_->VSSetConstantBuffers(index, 1, &k);
 	});
 }

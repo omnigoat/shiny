@@ -31,7 +31,7 @@ vertex_buffer_t::vertex_buffer_t(context_ptr const& context, vb_usage_t usage, v
 			gpu_access_ = gpu_access_t::read;
 			cpu_access_ = cpu_access_t::none;
 
-			context_->create_d3d_buffer(d3d_buffer_, gpu_access_t::read, cpu_access_t::none, capacity_, data);
+			context_->create_d3d_buffer(d3d_buffer_, buffer_type_t::vertex_buffer, gpu_access_t::read, cpu_access_t::none, capacity_, data);
 			break;
 		}
 
@@ -46,7 +46,7 @@ vertex_buffer_t::vertex_buffer_t(context_ptr const& context, vb_usage_t usage, v
 			}
 			else {
 				shadow_buffer_.resize((uint32)capacity_);
-				context_->create_d3d_buffer(d3d_buffer_, gpu_access_, cpu_access_, capacity_, data);
+				context_->create_d3d_buffer(d3d_buffer_, buffer_type_t::vertex_buffer, gpu_access_, cpu_access_, capacity_, data);
 			}
 			break;
 		}

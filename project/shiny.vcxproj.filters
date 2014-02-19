@@ -56,6 +56,9 @@
     <ClCompile Include="..\source\dust\platform\win32\pixel_shader.cpp">
       <Filter>source\dust\platform\win32</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\dust\platform\win32\constant_buffer.cpp">
+      <Filter>source\dust\platform\win32</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\dust\context.hpp">
@@ -119,6 +122,12 @@
       <Filter>include\dust</Filter>
     </ClInclude>
     <ClInclude Include="..\include\dust\platform\win32\vertex_buffer.hpp">
+      <Filter>include\dust\platform\win32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\dust\constant_buffer.hpp">
+      <Filter>include\dust</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\dust\platform\win32\constant_buffer.hpp">
       <Filter>include\dust\platform\win32</Filter>
     </ClInclude>
   </ItemGroup>

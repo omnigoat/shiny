@@ -171,6 +171,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\source\dust\platform\win32\constant_buffer.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\context.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\output.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\pixel_shader.cpp" />
@@ -182,6 +183,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\dust\adapter.hpp" />
+    <ClInclude Include="..\include\dust\constant_buffer.hpp" />
     <ClInclude Include="..\include\dust\context.hpp" />
     <ClInclude Include="..\include\dust\dust_fwd.hpp" />
     <ClInclude Include="..\include\dust\format.hpp" />
@@ -190,6 +192,7 @@
     <ClInclude Include="..\include\dust\output.hpp" />
     <ClInclude Include="..\include\dust\pixel_shader.hpp" />
     <ClInclude Include="..\include\dust\platform\win32\adapter.hpp" />
+    <ClInclude Include="..\include\dust\platform\win32\constant_buffer.hpp" />
     <ClInclude Include="..\include\dust\platform\win32\context.hpp" />
     <ClInclude Include="..\include\dust\platform\win32\pixel_shader.hpp" />
     <ClInclude Include="..\include\dust\platform\win32\runtime.hpp" />

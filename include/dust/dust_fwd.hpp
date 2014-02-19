@@ -26,6 +26,8 @@ namespace dust {
 	struct vertex_buffer_t;
 	typedef atma::intrusive_ptr<vertex_buffer_t> vertex_buffer_ptr;
 
+	struct constant_buffer_t;
+	typedef atma::intrusive_ptr<constant_buffer_t> constant_buffer_ptr;
 }
 
 

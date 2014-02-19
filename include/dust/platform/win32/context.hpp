@@ -18,6 +18,13 @@
 //======================================================================
 namespace dust {
 //======================================================================
+	
+	enum class buffer_type_t
+	{
+		vertex_buffer,
+		index_buffer,
+		constant_buffer
+	};
 
 	struct context_t : atma::ref_counted
 	{
@@ -31,12 +38,14 @@ namespace dust {
 		auto signal_present() -> void;
 		auto signal_clear() -> void;
 		auto signal_draw(vertex_declaration_t const&, vertex_buffer_ptr const&, vertex_shader_ptr const&, pixel_shader_ptr const&) -> void;
+		auto signal_upload_constant_buffer(uint index, constant_buffer_ptr const&) -> void;
 
+		// d3d-specific
 		auto signal_d3d_map(platform::d3d_buffer_ptr&, D3D11_MAPPED_SUBRESOURCE*, D3D11_MAP, uint32 subresource, std::function<void(D3D11_MAPPED_SUBRESOURCE*)> const& = std::function<void(D3D11_MAPPED_SUBRESOURCE*)>()) -> void;
 		auto signal_d3d_unmap(platform::d3d_buffer_ptr&, uint32 subresource) -> void;
 		auto signal_d3d_buffer_upload(platform::d3d_buffer_ptr&, void const* data, uint32 row_pitch, uint32 depth_pitch) -> void;
 
-		auto create_d3d_buffer(platform::d3d_buffer_ptr&, gpu_access_t, cpu_access_t, size_t data_size, void* data) -> void;
+		auto create_d3d_buffer(platform::d3d_buffer_ptr&, buffer_type_t, gpu_access_t, cpu_access_t, size_t data_size, void* data) -> void;
 
 	private:
 		auto bind_events(fooey::window_ptr const&) -> void;
