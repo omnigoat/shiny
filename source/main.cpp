@@ -40,28 +40,21 @@ int main()
 	
 	// create vb
 	float D[] = {
-		 0.f,  1.f, 0.f, 1.f,
-		 1.f, -1.f, 0.f, 1.f,
-		-1.f, -1.f, 0.f, 1.f
+		 0.f,  0.f,  0.f, 1.f,
+		 0.f,  1.f,  0.f, 1.f,
+		-1.f,  0.f,  0.f, 1.f,
+		-1.f,  0.f,  0.f, 1.f,
+		 0.f,  1.f,  0.f, 1.f,
+		 0.f,  0.f,  0.f, 1.f
 	};
 
 	
 
 	
-	auto vb = dust::create_vertex_buffer(gfx, dust::vb_usage_t::immutable, vd, 3, D);
+	auto vb = dust::create_vertex_buffer(gfx, dust::vb_usage_t::immutable, vd, 6, D);
 
 	namespace math = atma::math;
 	
-	auto view = math::look_at(math::point4f(2.f, 4.f, 2.f), math::point4f(0.f, 0.f, 0.f), math::vector4f(0.f, 1.f, 0.f, 0.f));
-	auto proj = math::pespective(800, 600, 0.1f, 100.f);
-
-	auto m1 = math::matrix4f::identity();
-	auto m2 = math::matrix4f::identity();
-	m1[0][3] = 4.f;
-	m2[0][0] = 2.f;
-	auto v1 = math::point4f();
-	auto r = v1 * m1 * m2;
-
 	
 	//auto scene = dust::scene_queue_t(view, proj);
 	// gfx->signal_constant_buffer_upload(0, my_constant_buffer)
@@ -83,8 +76,8 @@ int main()
 		auto cb = dust::create_constant_buffer(gfx);
 
 		gfx->signal_block();
-		gfx->signal_upload_constant_buffer(0, cb);
 		gfx->signal_clear();
+		gfx->signal_upload_constant_buffer(0, cb);
 		gfx->signal_draw(vd, vb, vs, ps);
 		gfx->signal_present();
 	}

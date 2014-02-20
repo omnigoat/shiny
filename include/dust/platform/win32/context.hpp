@@ -73,6 +73,8 @@ namespace dust {
 		platform::d3d_context_ptr d3d_immediate_context_;
 		platform::d3d_context_ptr d3d_deferred_context_;
 		platform::d3d_render_target_view_ptr d3d_render_target_;
+		platform::d3d_depth_stencil_buffer_ptr d3d_depth_stencil_;
+		platform::d3d_texture2d_ptr d3d_depth_stencil_buffer_;
 
 		// fooey
 		fooey::window_ptr window_;

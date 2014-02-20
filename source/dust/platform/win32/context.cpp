@@ -104,13 +104,22 @@ auto context_t::create_swapchain() -> void
 
 auto context_t::setup_rendertarget(uint32 width, uint32 height) -> void
 {
-	// create render-target & set it
+	// create render-target
 	atma::com_ptr<ID3D11Texture2D> backbuffer;
 	ATMA_ENSURE_IS(S_OK, dxgi_swap_chain_->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)backbuffer.assign()));
 	ATMA_ENSURE_IS(S_OK, d3d_device_->CreateRenderTargetView(backbuffer.get(), nullptr, d3d_render_target_.assign()));
-	d3d_immediate_context_->OMSetRenderTargets(1, &d3d_render_target_.get_ref(), nullptr);
+	
+	// create depth-stencil buffer & depth-stencil
+	D3D11_TEXTURE2D_DESC texdesc{width, height, 1, 1, DXGI_FORMAT_D24_UNORM_S8_UINT, {1, 0}, D3D11_USAGE_DEFAULT, D3D11_BIND_DEPTH_STENCIL, 0, 0};
+	ATMA_ENSURE_IS(S_OK, d3d_device_->CreateTexture2D(&texdesc, nullptr, d3d_depth_stencil_buffer_.assign()));
+	D3D11_DEPTH_STENCIL_VIEW_DESC depthdesc{texdesc.Format, D3D11_DSV_DIMENSION_TEXTURE2D, {0}};
+	ATMA_ENSURE_IS(S_OK, d3d_device_->CreateDepthStencilView(d3d_depth_stencil_buffer_.get(), &depthdesc, d3d_depth_stencil_.assign()));
 
-	D3D11_VIEWPORT vp{0, 0, (float)width, (float)height, 0, 0};
+	// set render targets
+	d3d_immediate_context_->OMSetRenderTargets(1, &d3d_render_target_.get_ref(), d3d_depth_stencil_.get());
+
+	// create viewport
+	D3D11_VIEWPORT vp{0, 0, (float)width, (float)height, 0, 1.f};
 	d3d_immediate_context_->RSSetViewports(1, &vp);
 }
 
@@ -309,7 +318,7 @@ auto context_t::signal_draw(vertex_declaration_t const& vd, vertex_buffer_ptr co
 		d3d_immediate_context_->IASetInputLayout(vd.d3d_input_layout().get());
 		d3d_immediate_context_->IASetVertexBuffers(0, 1, &vbs, &stride, &offset);
 		d3d_immediate_context_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		d3d_immediate_context_->Draw(3, 0);
+		d3d_immediate_context_->Draw(6, 0);
 	});
 }
 
@@ -327,6 +336,7 @@ auto context_t::signal_clear() -> void
 	engine_.signal([&] {
 		float g[4] ={.2f, .2f, .2f, 1.f};
 		d3d_immediate_context_->ClearRenderTargetView(d3d_render_target_.get(), g);
+		d3d_immediate_context_->ClearDepthStencilView(d3d_depth_stencil_.get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 	});
 }
 
