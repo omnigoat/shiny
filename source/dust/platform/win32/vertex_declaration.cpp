@@ -31,9 +31,9 @@ auto vertex_stream_t::element_count() const -> uint32 {
 	return element_count_;
 }
 
-auto vertex_stream_t::size() const -> uint32
+auto vertex_stream_t::size() const -> uint
 {
-	uint32 element_size = 0;
+	uint element_size = 0;
 	switch (element_type_)
 	{
 		case element_type_t::float32:
@@ -94,18 +94,17 @@ auto vertex_declaration_t::build(vertex_shader_ptr const& vs) -> void
 	if (built_)
 		return;
 
+	uint offset = 0;
 	std::vector<D3D11_INPUT_ELEMENT_DESC> d3d_elements;
-	//for (auto const& x : streams_)
+	for (auto const& x : streams_)
+	{
 		d3d_elements.push_back({
-			"POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0
+			x.usage() == vertex_stream_t::usage_t::position ? "Position" : "Color",
+			0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offset, D3D11_INPUT_PER_VERTEX_DATA, 0
 		});
 
-	//ID3DBlob* blob;
-	//ATMA_ENSURE_IS(S_OK, D3DCompileFromFile(L"../shaders/vs_basic.hlsl", nullptr, nullptr, "main", "vs_4_0", 0, 0, &blob, nullptr));
-
-	//platform::d3d_vertex_shader_ptr d3d_vs_;
-	//auto const& device = context_->d3d_device();
-	//ATMA_ENSURE_IS(S_OK, device->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, d3d_vs_.assign()));
+		offset += x.size();
+	}
 
 	ATMA_ENSURE_IS(S_OK, context_->d3d_device()->CreateInputLayout(&d3d_elements[0], (uint32)d3d_elements.size(),
 		vs->d3d_blob()->GetBufferPointer(), vs->d3d_blob()->GetBufferSize(), d3d_input_layout_.assign()));

@@ -12,19 +12,19 @@ using dust::vertex_buffer_t;
 //======================================================================
 // vertex_buffer_t
 //======================================================================
-auto dust::create_vertex_buffer(context_ptr const& context, vb_usage_t usage, vertex_declaration_t const& vd, uint vertex_count, void* data) -> vertex_buffer_ptr
+auto dust::create_vertex_buffer(context_ptr const& context, buffer_usage_t usage, vertex_declaration_t const& vd, uint vertex_count, void* data) -> vertex_buffer_ptr
 {
 	return vertex_buffer_ptr(new vertex_buffer_t(context, usage, vd, vertex_count, data));
 }
 
-vertex_buffer_t::vertex_buffer_t(context_ptr const& context, vb_usage_t usage, vertex_declaration_t const& vd, uint vertex_count, void* data)
-: context_(context), gpu_access_(), cpu_access_(), usage_(usage), capacity_(vd.stride() * vertex_count), size_(capacity_)
+vertex_buffer_t::vertex_buffer_t(context_ptr const& context, buffer_usage_t usage, vertex_declaration_t const& vd, uint vertex_count, void* data)
+: context_(context), gpu_access_(), cpu_access_(), usage_(usage), capacity_(vd.stride() * vertex_count), size_(capacity_), vertex_count_(vertex_count)
 {
 	ATMA_ASSERT(capacity_);
 	
 	switch (usage_)
 	{
-		case vb_usage_t::immutable:
+		case buffer_usage_t::immutable:
 		{
 			ATMA_ASSERT_MSG(data, "immutable buffers require data upon initialisation");
 
@@ -35,7 +35,7 @@ vertex_buffer_t::vertex_buffer_t(context_ptr const& context, vb_usage_t usage, v
 			break;
 		}
 
-		case vb_usage_t::long_lived:
+		case buffer_usage_t::long_lived:
 		{
 			gpu_access_ = gpu_access_t::read;
 			cpu_access_ = cpu_access_t::write;

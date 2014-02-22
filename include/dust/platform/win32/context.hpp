@@ -19,13 +19,6 @@
 namespace dust {
 //======================================================================
 	
-	enum class buffer_type_t
-	{
-		vertex_buffer,
-		index_buffer,
-		constant_buffer
-	};
-
 	struct context_t : atma::ref_counted
 	{
 		context_t(runtime_t&, fooey::window_ptr const&, uint32 adapter);
@@ -38,6 +31,7 @@ namespace dust {
 		auto signal_present() -> void;
 		auto signal_clear() -> void;
 		auto signal_draw(vertex_declaration_t const&, vertex_buffer_ptr const&, vertex_shader_ptr const&, pixel_shader_ptr const&) -> void;
+		auto signal_draw(index_buffer_ptr const&, vertex_declaration_t const&, vertex_buffer_ptr const&, vertex_shader_ptr const&, pixel_shader_ptr const&) -> void;
 		auto signal_upload_constant_buffer(uint index, constant_buffer_ptr const&) -> void;
 
 		// d3d-specific

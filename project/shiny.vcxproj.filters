@@ -59,15 +59,15 @@
     <ClCompile Include="..\source\dust\platform\win32\constant_buffer.cpp">
       <Filter>source\dust\platform\win32</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\dust\platform\win32\index_buffer.cpp">
+      <Filter>source\dust\platform\win32</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\dust\context.hpp">
       <Filter>include\dust</Filter>
     </ClInclude>
     <ClInclude Include="..\include\dust\format.hpp">
-      <Filter>include\dust</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\dust\index_buffer.hpp">
       <Filter>include\dust</Filter>
     </ClInclude>
     <ClInclude Include="..\include\dust\lock.hpp">
@@ -129,6 +129,12 @@
     </ClInclude>
     <ClInclude Include="..\include\dust\platform\win32\constant_buffer.hpp">
       <Filter>include\dust\platform\win32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\dust\platform\win32\index_buffer.hpp">
+      <Filter>include\dust\platform\win32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\dust\index_buffer.hpp">
+      <Filter>include\dust</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

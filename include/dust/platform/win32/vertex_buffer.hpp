@@ -1,8 +1,7 @@
 #pragma once
 //======================================================================
-#include <dust/dust_fwd.hpp>
-
 #include <dust/adapter.hpp>
+#include <dust/dust_fwd.hpp>
 #include <dust/platform/win32/d3d_fwd.hpp>
 
 #include <atma/assert.hpp>
@@ -12,50 +11,30 @@
 //======================================================================
 namespace dust {
 //======================================================================
-	
-	enum class vb_usage_t
-	{
-		immutable,
-		long_lived
-	};
 
-	
 	struct vertex_buffer_t : atma::ref_counted
 	{
 		typedef std::vector<char, atma::aligned_allocator_t<char, 4>> data_t;
 
-		auto usage() const -> vb_usage_t { return usage_; }
+		auto usage() const -> buffer_usage_t { return usage_; }
 		auto is_shadowing() const -> bool;
 		auto capacity() const -> size_t;
 		auto size() const -> size_t;
 		auto d3d_buffer() const -> platform::d3d_buffer_ptr const& { return d3d_buffer_; }
+		auto vertex_count() const -> uint { return vertex_count_; }
 
-		// maps the vertex buffer, and calls a function with the mapped range
-		template <typename T, typename FN>
-		auto with_map(FN) -> void;
-		
-		
 	private:
-		struct context_binding_t;
-
-		vertex_buffer_t(context_ptr const&, vb_usage_t, vertex_declaration_t const&, uint vertex_count, void* data);
-#if 0
-		vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, uint32 data_size);
-		vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, uint32 data_size, void* data);
-		vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, data_t const& data);
-		vertex_buffer_t(gpu_access_t, cpu_access_t, bool shadow, data_t&& data);
-#endif
-
+		vertex_buffer_t(context_ptr const&, buffer_usage_t, vertex_declaration_t const&, uint vertex_count, void* data);
 		~vertex_buffer_t();
-
-	private:
+	
 		auto upload_shadow_buffer() -> void;
 
 	private:
-		vb_usage_t usage_;
+		buffer_usage_t usage_;
 		gpu_access_t gpu_access_;
 		cpu_access_t cpu_access_;
 
+		uint vertex_count_;
 		size_t capacity_;
 		size_t size_;
 		data_t shadow_buffer_;
@@ -66,29 +45,29 @@ namespace dust {
 		platform::d3d_buffer_ptr d3d_buffer_;
 
 
-		friend auto create_vertex_buffer(context_ptr const&, vb_usage_t, vertex_declaration_t const&, uint32 vertex_count, void* data) -> vertex_buffer_ptr;
+		friend auto create_vertex_buffer(context_ptr const&, buffer_usage_t, vertex_declaration_t const&, uint32 vertex_count, void* data) -> vertex_buffer_ptr;
 	};
 
 	
 
 
 
-
+#if 0
 	template <typename T, typename FN>
 	auto vertex_buffer_t::with_map(FN f) -> void
 	{
-		ATMA_ASSERT(usage_ != vb_usage_t::immutable);
+		ATMA_ASSERT(usage_ != buffer_usage_t::immutable);
 
 		switch (usage_)
 		{
-			case vb_usage_t::long_lived:
+			case buffer_usage_t::long_lived:
 				f( reinterpret_cast<T*>(&shadow_buffer_[0]), reinterpret_cast<T*>(&shadow_buffer_[0] + capacity_) );
 				context_->signal_d3d_buffer_upload(d3d_buffer_, &shadow_buffer_[0], (uint32)size_, 1);
 				break;
 		}
 	}
 
-#if 0
+
 	//======================================================================
 	// locked_vertex_buffer_t
 	//======================================================================

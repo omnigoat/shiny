@@ -173,6 +173,7 @@
   <ItemGroup>
     <ClCompile Include="..\source\dust\platform\win32\constant_buffer.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\context.cpp" />
+    <ClCompile Include="..\source\dust\platform\win32\index_buffer.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\output.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\pixel_shader.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\runtime.cpp" />
@@ -194,6 +195,7 @@
     <ClInclude Include="..\include\dust\platform\win32\adapter.hpp" />
     <ClInclude Include="..\include\dust\platform\win32\constant_buffer.hpp" />
     <ClInclude Include="..\include\dust\platform\win32\context.hpp" />
+    <ClInclude Include="..\include\dust\platform\win32\index_buffer.hpp" />
     <ClInclude Include="..\include\dust\platform\win32\pixel_shader.hpp" />
     <ClInclude Include="..\include\dust\platform\win32\runtime.hpp" />
     <ClInclude Include="..\include\dust\platform\win32\vertex_buffer.hpp" />

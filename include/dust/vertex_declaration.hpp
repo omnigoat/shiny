@@ -40,7 +40,7 @@ namespace dust {
 		auto index() const -> uint32;
 		auto element_type() const -> element_type_t;
 		auto element_count() const -> uint32;
-		auto size() const -> uint32;
+		auto size() const -> uint;
 
 	private:
 		usage_t usage_;

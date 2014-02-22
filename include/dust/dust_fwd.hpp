@@ -28,6 +28,38 @@ namespace dust {
 
 	struct constant_buffer_t;
 	typedef atma::intrusive_ptr<constant_buffer_t> constant_buffer_ptr;
+
+	struct index_buffer_t;
+	typedef atma::intrusive_ptr<index_buffer_t> index_buffer_ptr;
+
+	enum class buffer_usage_t
+	{
+		immutable,
+		long_lived
+	};
+
+	enum class gpu_access_t
+	{
+		read,
+		write,
+		read_write
+	};
+
+	enum class cpu_access_t
+	{
+		none,
+		read,
+		write,
+		read_write,
+	};
+
+	enum class buffer_type_t
+	{
+		vertex_buffer,
+		index_buffer,
+		constant_buffer
+	};
+
 }
 
 

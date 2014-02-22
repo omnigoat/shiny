@@ -6,6 +6,7 @@
 #include <dust/pixel_shader.hpp>
 #include <dust/runtime.hpp>
 #include <dust/constant_buffer.hpp>
+#include <dust/index_buffer.hpp>
 
 #include <fooey/events/resize.hpp>
 #include <fooey/keys.hpp>
@@ -19,6 +20,15 @@
 using namespace dust;
 using dust::context_t;
 
+namespace
+{
+	D3D11_BIND_FLAG buffer_usage_to_d3dbind[] =
+	{
+		D3D11_BIND_VERTEX_BUFFER,
+		D3D11_BIND_INDEX_BUFFER,
+		D3D11_BIND_CONSTANT_BUFFER
+	};
+}
 
 //======================================================================
 // context creation
@@ -268,7 +278,7 @@ auto context_t::create_d3d_buffer(platform::d3d_buffer_ptr& buffer, buffer_type_
 		case cpu_access_t::read_write: cpua = static_cast<D3D11_CPU_ACCESS_FLAG>(D3D11_CPU_ACCESS_READ | D3D11_CPU_ACCESS_WRITE); break;
 	}
 
-	D3D11_BUFFER_DESC buffer_desc{(UINT)data_size, buffer_usage, buffer_type == buffer_type_t::vertex_buffer ? D3D11_BIND_VERTEX_BUFFER : D3D11_BIND_CONSTANT_BUFFER, cpua, 0, 0};
+	D3D11_BUFFER_DESC buffer_desc{(UINT)data_size, buffer_usage, buffer_usage_to_d3dbind[static_cast<int>(buffer_type)], cpua, 0, 0};
 
 
 	if (data) {
@@ -308,9 +318,10 @@ auto context_t::signal_d3d_buffer_upload(platform::d3d_buffer_ptr& buffer, void 
 auto context_t::signal_draw(vertex_declaration_t const& vd, vertex_buffer_ptr const& vb, vertex_shader_ptr const& vs, pixel_shader_ptr const& ps) -> void
 {
 	engine_.signal([&, vd, vb, vs, ps]{
-		UINT stride = sizeof(float) * 4;
+		UINT stride = vd.stride();
 		UINT offset = 0;
 
+		
 		auto vbs = vb->d3d_buffer().get();
 
 		d3d_immediate_context_->VSSetShader(vs->d3d_vs().get(), nullptr, 0);
@@ -318,7 +329,25 @@ auto context_t::signal_draw(vertex_declaration_t const& vd, vertex_buffer_ptr co
 		d3d_immediate_context_->IASetInputLayout(vd.d3d_input_layout().get());
 		d3d_immediate_context_->IASetVertexBuffers(0, 1, &vbs, &stride, &offset);
 		d3d_immediate_context_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		d3d_immediate_context_->Draw(6, 0);
+		d3d_immediate_context_->Draw(vb->vertex_count(), 0);
+	});
+}
+
+auto context_t::signal_draw(index_buffer_ptr const& ib, vertex_declaration_t const& vd, vertex_buffer_ptr const& vb, vertex_shader_ptr const& vs, pixel_shader_ptr const& ps) -> void
+{
+	engine_.signal([&, ib, vd, vb, vs, ps]{
+		UINT stride = vd.stride();
+		UINT offset = 0;
+
+		auto vbs = vb->d3d_buffer().get();
+
+		d3d_immediate_context_->VSSetShader(vs->d3d_vs().get(), nullptr, 0);
+		d3d_immediate_context_->PSSetShader(ps->d3d_ps().get(), nullptr, 0);
+		d3d_immediate_context_->IASetInputLayout(vd.d3d_input_layout().get());
+		d3d_immediate_context_->IASetIndexBuffer(ib->d3d_buffer().get(), DXGI_FORMAT_R16_UINT, 0);
+		d3d_immediate_context_->IASetVertexBuffers(0, 1, &vbs, &stride, &offset);
+		d3d_immediate_context_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		d3d_immediate_context_->DrawIndexed(36, 0, 0);
 	});
 }
 
