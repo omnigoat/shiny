@@ -11,7 +11,7 @@ float4 main(ps_input input) : SV_Target
 	float3 light = float3(-2.f, 2.f, -2.f);
 	float3 lightdir = normalize(light - input.pos.xyz);
 
-	float c = dot(normalize(input.normal), lightdir);
-
+	float c = max(dot(normalize(input.normal), lightdir), 0.f);
+	c = max(c, c + 0.2f);
 	return float4(input.color.rgb * c, input.color.a);
 }
