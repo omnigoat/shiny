@@ -15,14 +15,14 @@ namespace dust {
 	{
 		typedef std::vector<char, atma::aligned_allocator_t<char, 4>> data_t;
 
-		index_buffer_t(context_ptr const&, buffer_usage_t, uint32 data_size, void* data);
+		index_buffer_t(context_ptr const&, buffer_usage_t, uint index_size, uint index_count, void* data);
 		~index_buffer_t();
 
 		auto usage() const -> buffer_usage_t { return usage_; }
 		auto is_shadowing() const -> bool;
 		auto capacity() const -> size_t;
 		auto size() const -> size_t;
-		auto index_count() const -> uint;
+		auto index_count() const -> uint { return index_count_; }
 		auto d3d_buffer() const -> platform::d3d_buffer_ptr const& { return d3d_buffer_; }
 
 	private:
@@ -32,6 +32,7 @@ namespace dust {
 		gpu_access_t gpu_access_;
 		cpu_access_t cpu_access_;
 
+		uint index_count_;
 		size_t capacity_;
 		size_t size_;
 		data_t shadow_buffer_;

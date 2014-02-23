@@ -15,6 +15,7 @@ constant_buffer_t::constant_buffer_t(context_ptr const& context)
 {
 	struct B
 	{
+		atma::math::matrix4f world;
 		atma::math::matrix4f view;
 		atma::math::matrix4f proj;
 		float time;
@@ -40,6 +41,8 @@ constant_buffer_t::constant_buffer_t(context_ptr const& context)
 	b.view = math::look_at(math::vector4f(x, 1.f, -1.f, 0.f), math::vector4f(0.f, 0.f, 0.f, 0.f), math::vector4f(0.f, 1.f, 0.f, 0.f));
 	b.proj = math::perspective_fov(XM_PIDIV2, 480.f / 360.f, 0.01f, 100.f);
 
+	auto R = XMMatrixTranspose(XMMatrixRotationY(t * 0.002f));
+	b.world = math::matrix4f(R.r[0], R.r[1], R.r[2], R.r[3]);
 	
 	M = XMMatrixTranspose(M);
 	P = XMMatrixTranspose(P);

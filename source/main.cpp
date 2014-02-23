@@ -49,7 +49,7 @@ int main()
 		-0.5f,  0.5f,  0.5f, 1.f,   1.f, 0.f, 1.f, 1.f,
 		-0.5f,  0.5f, -0.5f, 1.f,   0.f, 1.f, 1.f, 1.f,
 		-0.5f, -0.5f,  0.5f, 1.f,   1.f, 1.f, 1.f, 1.f,
-		-0.5f, -0.5f, -0.5f, 1.f,   0.f, 0.f, 0.f, 1.f
+		-0.5f, -0.5f, -0.5f, 1.f,   1.f, 0.f, 0.f, 1.f
 	};
 
 	uint16 IBD[] = {
@@ -65,7 +65,7 @@ int main()
 	
 	auto vb = dust::create_vertex_buffer(gfx, dust::buffer_usage_t::immutable, vd, 8, D);
 
-	auto ib = dust::create_index_buffer(gfx, dust::buffer_usage_t::immutable, 36 * sizeof(uint16), IBD);
+	auto ib = dust::create_index_buffer(gfx, dust::buffer_usage_t::immutable, 16, 36, IBD);
 
 	namespace math = atma::math;
 	

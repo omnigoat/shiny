@@ -9,10 +9,12 @@ using namespace dust;
 using dust::index_buffer_t;
 
 
-index_buffer_t::index_buffer_t(context_ptr const& context, buffer_usage_t usage, uint32 data_size, void* data)
-: context_(context), usage_(usage), capacity_(data_size), size_(data_size)
+index_buffer_t::index_buffer_t(context_ptr const& context, buffer_usage_t usage, uint index_size, uint index_count, void* data)
+: context_(context), usage_(usage), index_count_(index_count), capacity_(index_size * index_count), size_(capacity_)
 {
 	ATMA_ASSERT(capacity_);
+
+	auto data_size = index_size * index_count;
 
 	switch (usage_)
 	{

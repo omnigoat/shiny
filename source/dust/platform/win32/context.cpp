@@ -347,7 +347,7 @@ auto context_t::signal_draw(index_buffer_ptr const& ib, vertex_declaration_t con
 		d3d_immediate_context_->IASetIndexBuffer(ib->d3d_buffer().get(), DXGI_FORMAT_R16_UINT, 0);
 		d3d_immediate_context_->IASetVertexBuffers(0, 1, &vbs, &stride, &offset);
 		d3d_immediate_context_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		d3d_immediate_context_->DrawIndexed(36, 0, 0);
+		d3d_immediate_context_->DrawIndexed(ib->index_count(), 0, 0);
 	});
 }
 
