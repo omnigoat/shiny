@@ -2,59 +2,38 @@
 
 #include <dust/context.hpp>
 
-#include <atma/math/matrix4f.hpp>
-
-#include <DirectXMath.h>
 
 using namespace dust;
 using dust::constant_buffer_t;
 
 
-constant_buffer_t::constant_buffer_t(context_ptr const& context)
-: context_(context)
+constant_buffer_t::constant_buffer_t(context_ptr const& context, uint data_size, void* data)
+: context_(context), data_size_(data_size)
 {
-	struct B
-	{
-		atma::math::matrix4f world;
-		atma::math::matrix4f view;
-		atma::math::matrix4f proj;
-		float time;
-	};
-
-	B b;
-	static float t = 1.f;
-	
-	b.time = t;
-	t += 0.1f;
-
-	namespace math = atma::math;
-	static float x = 0.f;
-	static float y = 0.f;
-	if (GetAsyncKeyState(VK_LEFT))
-		x -= 0.001f;
-	else if (GetAsyncKeyState(VK_RIGHT))
-		x += 0.001f;
-	else if (GetAsyncKeyState(VK_UP))
-		y += 0.001f;
-	else if (GetAsyncKeyState(VK_DOWN))
-		y -= 0.001f;
-		
-	using namespace DirectX;
-	auto V = XMMatrixLookAtLH(XMVectorSet(sin(x) * cos(y) * 2.f, sin(y) * 2.f, cos(x) * cos(y) * 2.f, 0.f), XMVectorSet(0.f, 0.f, 0.f, 0.f), XMVectorSet(0.f, 1.f, 0.f, 0.f));
-	auto P = XMMatrixPerspectiveFovLH(XM_PIDIV2, 480.f / 360.f, 0.01f, 100.f);
-
-	
-	b.world = math::rotation_y(t * 0.002f);
-	b.view = math::look_at(math::point4f(sin(x) * cos(y) * 2.f, sin(y) * 2.f, cos(x) * cos(y) * 2.f), math::point4f(0.f, 0.f, 0.f), math::vector4f(0.f, 1.f, 0.f, 0.f));
-	b.proj = math::perspective_fov(math::pi_over_two, 480.f / 360.f, 0.01f, 100.f);
-	
-	
 	context_->create_d3d_buffer(d3d_buffer_,
 		buffer_type_t::constant_buffer, gpu_access_t::read, cpu_access_t::write,
-		sizeof(B), &b);
+		data_size_, data);
 }
 
-auto dust::create_constant_buffer(context_ptr const& context) -> constant_buffer_ptr
+auto constant_buffer_t::data_size() const -> uint
 {
-	return constant_buffer_ptr(new constant_buffer_t(context));
+	return data_size_;
+}
+
+auto constant_buffer_t::signal_upload_new_data(void* data) -> void
+{
+	D3D11_MAPPED_SUBRESOURCE dmap{data, data_size_, 1};
+
+	std::shared_ptr<char> data_copy(new char[data_size_], std::default_delete<char[]>());
+	memcpy(data_copy.get(), data, data_size_);
+
+	auto data_size = this->data_size_;
+	context_->signal_d3d_map(d3d_buffer_, &dmap, D3D11_MAP_WRITE_DISCARD, 0, [data_copy, data_size](D3D11_MAPPED_SUBRESOURCE* dmap) {
+		memcpy(dmap->pData, data_copy.get(), data_size);
+	});
+}
+
+auto dust::create_constant_buffer(context_ptr const& context, uint data_size, void* data) -> constant_buffer_ptr
+{
+	return constant_buffer_ptr(new constant_buffer_t(context, data_size, data));
 }

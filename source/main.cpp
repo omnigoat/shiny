@@ -16,6 +16,8 @@
 
 #include <iostream>
 
+#include <DirectXMath.h>
+
 int main()
 {
 	
@@ -85,14 +87,55 @@ int main()
 		gfx->signal_fullscreen_toggle(1);
 	});
 
+	struct B
+	{
+		atma::math::matrix4f world;
+		atma::math::matrix4f view;
+		atma::math::matrix4f proj;
+		float time;
+	};
 
-	while (running) {
-		auto cb = dust::create_constant_buffer(gfx);
+	B b;
+	static float t = 1.f;
+
+	auto cb = dust::create_constant_buffer(gfx, sizeof(B), &b);
+
+
+
+	while (running)
+	{
+
+		b.time = t;
+		t += 0.1f;
+
+		namespace math = atma::math;
+		static float x = 0.f;
+		static float y = 0.f;
+		if (GetAsyncKeyState(VK_LEFT))
+			x -= 0.001f;
+		else if (GetAsyncKeyState(VK_RIGHT))
+			x += 0.001f;
+		else if (GetAsyncKeyState(VK_UP))
+			y += 0.001f;
+		else if (GetAsyncKeyState(VK_DOWN))
+			y -= 0.001f;
+
+		using namespace DirectX;
+		auto V = XMMatrixLookAtLH(XMVectorSet(sin(x) * cos(y) * 2.f, sin(y) * 2.f, cos(x) * cos(y) * 2.f, 0.f), XMVectorSet(0.f, 0.f, 0.f, 0.f), XMVectorSet(0.f, 1.f, 0.f, 0.f));
+		auto P = XMMatrixPerspectiveFovLH(XM_PIDIV2, 480.f / 360.f, 0.01f, 100.f);
+
+
+		b.world = math::rotation_y(t * 0.002f);
+		b.view = math::look_at(math::point4f(sin(x) * cos(y) * 2.f, sin(y) * 2.f, cos(x) * cos(y) * 2.f), math::point4f(0.f, 0.f, 0.f), math::vector4f(0.f, 1.f, 0.f, 0.f));
+		b.proj = math::perspective_fov(math::pi_over_two, 480.f / 360.f, 0.01f, 100.f);
+
+
+		cb->signal_upload_new_data(&b);
 
 		gfx->signal_block();
 		gfx->signal_clear();
 		gfx->signal_upload_constant_buffer(0, cb);
-		gfx->signal_draw(vd, vb, vs, ps);
+		//gfx->signal_draw(vd, vb, vs, ps);
 		gfx->signal_draw(ib, vd, vb, vs, ps);
 		gfx->signal_present();
 	}

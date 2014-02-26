@@ -294,7 +294,7 @@ auto context_t::create_d3d_buffer(platform::d3d_buffer_ptr& buffer, buffer_type_
 
 auto context_t::signal_d3d_map(platform::d3d_buffer_ptr& buffer, D3D11_MAPPED_SUBRESOURCE* mapped_resource, D3D11_MAP map_type, uint32 subresource, std::function<void(D3D11_MAPPED_SUBRESOURCE*)> const& fn) -> void
 {
-	engine_.signal([&, mapped_resource, map_type, subresource] {
+	engine_.signal([&, mapped_resource, map_type, subresource, fn] {
 		d3d_immediate_context_->Map(buffer.get(), subresource, map_type, 0, mapped_resource);
 		if (fn)
 			fn(mapped_resource);
