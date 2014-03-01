@@ -171,6 +171,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\source\dust\camera.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\constant_buffer.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\context.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\index_buffer.cpp" />
@@ -180,10 +181,12 @@
     <ClCompile Include="..\source\dust\platform\win32\vertex_buffer.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\vertex_declaration.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\vertex_shader.cpp" />
+    <ClCompile Include="..\source\dust\scene.cpp" />
     <ClCompile Include="..\source\main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\dust\adapter.hpp" />
+    <ClInclude Include="..\include\dust\camera.hpp" />
     <ClInclude Include="..\include\dust\constant_buffer.hpp" />
     <ClInclude Include="..\include\dust\context.hpp" />
     <ClInclude Include="..\include\dust\dust_fwd.hpp" />
@@ -204,6 +207,7 @@
     <ClInclude Include="..\include\dust\platform\win32\d3d_fwd.hpp" />
     <ClInclude Include="..\include\dust\platform\win32\dxgi_fwd.hpp" />
     <ClInclude Include="..\include\dust\platform\win32\output.hpp" />
+    <ClInclude Include="..\include\dust\scene.hpp" />
     <ClInclude Include="..\include\dust\vertex_buffer.hpp" />
     <ClInclude Include="..\include\dust\vertex_declaration.hpp" />
     <ClInclude Include="..\include\dust\vertex_shader.hpp" />

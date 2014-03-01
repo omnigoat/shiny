@@ -32,6 +32,9 @@ namespace dust {
 	struct index_buffer_t;
 	typedef atma::intrusive_ptr<index_buffer_t> index_buffer_ptr;
 
+	struct camera_t;
+	struct scene_t;
+
 	enum class buffer_usage_t
 	{
 		immutable,

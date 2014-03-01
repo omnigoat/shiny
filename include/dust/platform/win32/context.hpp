@@ -32,10 +32,11 @@ namespace dust {
 		auto signal_clear() -> void;
 		auto signal_draw(vertex_declaration_t const&, vertex_buffer_ptr const&, vertex_shader_ptr const&, pixel_shader_ptr const&) -> void;
 		auto signal_draw(index_buffer_ptr const&, vertex_declaration_t const&, vertex_buffer_ptr const&, vertex_shader_ptr const&, pixel_shader_ptr const&) -> void;
-		auto signal_upload_constant_buffer(uint index, constant_buffer_ptr const&) -> void;
+		auto signal_constant_buffer_upload(uint index, constant_buffer_ptr const&) -> void;
+		auto signal_draw_scene(scene_t&) -> void;
 
 		// d3d-specific
-		auto signal_d3d_map(platform::d3d_buffer_ptr&, D3D11_MAPPED_SUBRESOURCE*, D3D11_MAP, uint32 subresource, std::function<void(D3D11_MAPPED_SUBRESOURCE*)> const& = std::function<void(D3D11_MAPPED_SUBRESOURCE*)>()) -> void;
+		auto signal_d3d_map(platform::d3d_buffer_ptr&, D3D11_MAP, uint32 subresource, std::function<void(D3D11_MAPPED_SUBRESOURCE*)> const& = std::function<void(D3D11_MAPPED_SUBRESOURCE*)>()) -> void;
 		auto signal_d3d_unmap(platform::d3d_buffer_ptr&, uint32 subresource) -> void;
 		auto signal_d3d_buffer_upload(platform::d3d_buffer_ptr&, void const* data, uint32 row_pitch, uint32 depth_pitch) -> void;
 

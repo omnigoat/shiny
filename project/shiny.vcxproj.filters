@@ -62,6 +62,12 @@
     <ClCompile Include="..\source\dust\platform\win32\index_buffer.cpp">
       <Filter>source\dust\platform\win32</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\dust\camera.cpp">
+      <Filter>source\dust</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\dust\scene.cpp">
+      <Filter>source\dust</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\dust\context.hpp">
@@ -134,6 +140,12 @@
       <Filter>include\dust\platform\win32</Filter>
     </ClInclude>
     <ClInclude Include="..\include\dust\index_buffer.hpp">
+      <Filter>include\dust</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\dust\camera.hpp">
+      <Filter>include\dust</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\dust\scene.hpp">
       <Filter>include\dust</Filter>
     </ClInclude>
   </ItemGroup>

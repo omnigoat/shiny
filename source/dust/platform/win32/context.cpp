@@ -7,6 +7,7 @@
 #include <dust/runtime.hpp>
 #include <dust/constant_buffer.hpp>
 #include <dust/index_buffer.hpp>
+#include <dust/scene.hpp>
 
 #include <fooey/events/resize.hpp>
 #include <fooey/keys.hpp>
@@ -292,12 +293,13 @@ auto context_t::create_d3d_buffer(platform::d3d_buffer_ptr& buffer, buffer_type_
 	}
 }
 
-auto context_t::signal_d3d_map(platform::d3d_buffer_ptr& buffer, D3D11_MAPPED_SUBRESOURCE* mapped_resource, D3D11_MAP map_type, uint32 subresource, std::function<void(D3D11_MAPPED_SUBRESOURCE*)> const& fn) -> void
+auto context_t::signal_d3d_map(platform::d3d_buffer_ptr& buffer, D3D11_MAP map_type, uint32 subresource, std::function<void(D3D11_MAPPED_SUBRESOURCE*)> const& fn) -> void
 {
-	engine_.signal([&, mapped_resource, map_type, subresource, fn] {
-		d3d_immediate_context_->Map(buffer.get(), subresource, map_type, 0, mapped_resource);
+	engine_.signal([&, map_type, subresource, fn] {
+		D3D11_MAPPED_SUBRESOURCE dmap;
+		d3d_immediate_context_->Map(buffer.get(), subresource, map_type, 0, &dmap);
 		if (fn)
-			fn(mapped_resource);
+			fn(&dmap);
 	});
 }
 
@@ -369,10 +371,15 @@ auto context_t::signal_clear() -> void
 	});
 }
 
-auto context_t::signal_upload_constant_buffer(uint index, constant_buffer_ptr const& buf) -> void
+auto context_t::signal_constant_buffer_upload(uint index, constant_buffer_ptr const& buf) -> void
 {
 	engine_.signal([&, index, buf] {
 		auto k = buf->d3d_buffer().get();
 		d3d_immediate_context_->VSSetConstantBuffers(index, 1, &k);
 	});
+}
+
+auto context_t::signal_draw_scene(scene_t& scene) -> void
+{
+	scene.execute();
 }

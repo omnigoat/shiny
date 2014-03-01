@@ -1,10 +1,15 @@
 cbuffer buf_scene : register(b0)
 {
-	matrix world;
 	matrix view;
 	matrix proj;
 	float time;
-}
+};
+
+cbuffer buf_model : register(b1)
+{
+	matrix world;
+};
+
 
 struct ps_input
 {
@@ -19,7 +24,6 @@ ps_input main(float4 position : Position, float4 color : Color)
 	ps_input output;
 
 	matrix wvp = mul(proj, mul(view, world));
-	
 
 	output.position = mul(wvp, position);
 	output.pos = output.position;
