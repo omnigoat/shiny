@@ -98,14 +98,8 @@ int main()
 
 	while (running)
 	{
-		auto scene = dust::scene_t(gfx, camera);
-
-		
-		
-
 		t += 0.1f;
 
-#if 0
 		static float x = 0.f;
 		static float y = 0.f;
 		if (GetAsyncKeyState(VK_LEFT))
@@ -116,28 +110,16 @@ int main()
 			y += 0.001f;
 		else if (GetAsyncKeyState(VK_DOWN))
 			y -= 0.001f;
-#endif
-#if 0
-		using namespace DirectX;
-		auto V = XMMatrixLookAtLH(XMVectorSet(sin(x) * cos(y) * 2.f, sin(y) * 2.f, cos(x) * cos(y) * 2.f, 0.f), XMVectorSet(0.f, 0.f, 0.f, 0.f), XMVectorSet(0.f, 1.f, 0.f, 0.f));
-		auto P = XMMatrixPerspectiveFovLH(XM_PIDIV2, 480.f / 360.f, 0.01f, 100.f);
-#endif
 
+		camera.move_to(math::point4f(sin(x) * cos(y) * 2.f, sin(y) * 2.f, cos(x) * cos(y) * 2.f));
+		auto scene = dust::scene_t(gfx, camera);
+
+		//scene.signal_constant_buffer_update(cb, &b);
 		world_matrix = math::rotation_y(t * 0.002f);
-		//cb->signal_upload_new_data(&world_matrix);
 		scene.signal_constant_buffer_upload(1, cb, &world_matrix);
 		scene.signal_draw(ib, vd, vb, vs, ps);
 
-
-		//b.view = math::look_at(math::point4f(sin(x) * cos(y) * 2.f, sin(y) * 2.f, cos(x) * cos(y) * 2.f), math::point4f(0.f, 0.f, 0.f), math::vector4f(0.f, 1.f, 0.f, 0.f));
-		//b.proj = math::perspective_fov(math::pi_over_two, 480.f / 360.f, 0.01f, 100.f);
-
-
-		//cb->signal_upload_new_data(&b);
-
 		gfx->signal_clear();
-		//gfx->signal_upload_constant_buffer(0, cb);
-		//gfx->signal_draw(ib, vd, vb, vs, ps);
 		gfx->signal_draw_scene(scene);
 		gfx->signal_block();
 		gfx->signal_present();

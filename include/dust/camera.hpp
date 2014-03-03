@@ -16,13 +16,13 @@ namespace dust {
 		auto far_distance() const -> float;
 		auto fov() const -> float;
 
-
 		auto move_to(atma::math::vector4f const&) -> void;
 		auto look_at(atma::math::vector4f const&) -> void;
 		auto set_fov(float radians) -> void;
 		auto set_clipping(float near, float far) -> void;
 
 	private:
+		atma::math::vector4f eye_, view_dir_, up_;
 		atma::math::matrix4f view_, proj_;
 	};
 

@@ -32,5 +32,10 @@ auto camera_t::fov() const -> float
 	return atan(1.f / proj_[1][1]) * 2.f;
 }
 
-
+auto move_to(atma::math::vector4f const& p) -> void
+{
+	view_ = atma::math::look_along(eye_, view_dir_, up_);
+	//auto view_dir = atma::math::vector4f(view_[0][2], view_[1][2], view_[2][2], 0.f);
+	//atma::math::look_along(p, view_dir, );
+}
 
