@@ -77,7 +77,7 @@ int main()
 	// camera
 	auto camera = dust::camera_t(
 		math::look_at(math::point4f(0.f, 0.f, 2.f), math::point4f(), math::vector4f(0.f, 1.f, 0.f, 0.f)),
-		math::perspective_fov(math::pi_over_two, (float)window->width() / window->height(), 0.01f, 100.f)
+		math::perspective_fov(math::pi_over_two, (float)window->width() / window->height(), 0.03434f, 120.f)
 	);
 
 	bool running = true;
@@ -111,7 +111,8 @@ int main()
 		else if (GetAsyncKeyState(VK_DOWN))
 			y -= 0.001f;
 
-		camera.move_to(math::point4f(sin(x) * cos(y) * 2.f, sin(y) * 2.f, cos(x) * cos(y) * 2.f));
+		//camera.move_to(math::point4f(sin(x) * cos(y) * 2.f, sin(y) * 2.f, cos(x) * cos(y) * 2.f));
+		camera.set_aspect(window->height() / (float)window->width());
 		auto scene = dust::scene_t(gfx, camera);
 
 		//scene.signal_constant_buffer_update(cb, &b);
