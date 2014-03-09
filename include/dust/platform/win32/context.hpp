@@ -12,6 +12,7 @@
 
 #include <atma/intrusive_ptr.hpp>
 #include <atma/thread/engine.hpp>
+#include <atma/shared_memory.hpp>
 
 #include <thread>
 #include <mutex>
@@ -34,12 +35,14 @@ namespace dust {
 		auto signal_draw(index_buffer_ptr const&, vertex_declaration_t const&, vertex_buffer_ptr const&, vertex_shader_ptr const&, pixel_shader_ptr const&) -> void;
 		auto signal_constant_buffer_upload(uint index, constant_buffer_ptr const&) -> void;
 		auto signal_draw_scene(scene_t&) -> void;
+		auto signal_update_constant_buffer(constant_buffer_ptr const&, uint data_size, void*) -> void;
+		auto signal_update_constant_buffer(constant_buffer_ptr const&, atma::shared_memory const&) -> void;
 
 		// d3d-specific
 		auto signal_d3d_map(platform::d3d_buffer_ptr&, D3D11_MAP, uint32 subresource, std::function<void(D3D11_MAPPED_SUBRESOURCE*)> const& = std::function<void(D3D11_MAPPED_SUBRESOURCE*)>()) -> void;
 		auto signal_d3d_unmap(platform::d3d_buffer_ptr&, uint32 subresource) -> void;
 		auto signal_d3d_buffer_upload(platform::d3d_buffer_ptr&, void const* data, uint32 row_pitch, uint32 depth_pitch) -> void;
-
+		
 		auto create_d3d_buffer(platform::d3d_buffer_ptr&, buffer_type_t, gpu_access_t, cpu_access_t, size_t data_size, void* data) -> void;
 
 	private:

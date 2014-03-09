@@ -19,6 +19,7 @@ namespace dust {
 		auto move_to(atma::math::vector4f const&) -> void;
 		auto look_at(atma::math::vector4f const&) -> void;
 		auto look_along(atma::math::vector4f const&) -> void;
+		auto move_and_look_at(atma::math::vector4f const& eye, atma::math::vector4f const& target) -> void;
 
 		auto set_aspect(float ratio) -> void;
 		auto set_fov(float radians) -> void;
@@ -27,16 +28,12 @@ namespace dust {
 		auto decompose_projection(float& fov, float& aspect, float& near, float& far) -> void;
 
 	private:
-		auto redo_view() -> void;
-		auto redo_projection() -> void;
+		mutable atma::math::matrix4f view_, proj_;
 
-	private:
-		atma::math::matrix4f view_, proj_;
-
-		// how to view
+		// we have 64 bytes to play around with because of matrix alignment
 		atma::math::vector4f eye_, view_dir_, up_;
-		// how to project
 		float fov_, aspect_, near_, far_;
+		mutable bool view_dirty_, proj_dirty_;
 	};
 
 //======================================================================

@@ -9,6 +9,8 @@
 #include <dust/vertex_shader.hpp>
 #include <dust/pixel_shader.hpp>
 
+#include <atma/shared_memory.hpp>
+
 
 using namespace dust;
 using dust::scene_t;
@@ -44,28 +46,35 @@ auto scene_t::signal_constant_buffer_upload(uint index, constant_buffer_ptr cons
 {
 	ATMA_ASSERT_MSG(index > 0, "constant-buffer[0] is reserved for the scene");
 
-	queue_.push(atma::thread::engine_t::signal_t([&, index, buf] {
+	queue_.push([&, index, buf] {
 		context_->signal_constant_buffer_upload(index, buf);
-	}));
+	});
 }
 
 auto scene_t::signal_constant_buffer_upload(uint index, constant_buffer_ptr const& buf, void* data) -> void
 {
 	ATMA_ASSERT_MSG(index > 0, "constant-buffer[0] is reserved for the scene");
 
-	queue_.push(atma::thread::engine_t::signal_t([&, index, buf, data] {
-		buf->signal_upload_new_data(data);
+	queue_.push([&, index, buf, data] {
+		context_->signal_update_constant_buffer(buf, buf->data_size(), data);
 		context_->signal_constant_buffer_upload(index, buf);
-	}));
+	});
 }
 
 auto scene_t::signal_draw(index_buffer_ptr const& ib, vertex_declaration_t const& vd, vertex_buffer_ptr const& vb, vertex_shader_ptr const& vs, pixel_shader_ptr const& ps) -> void
 {
-	queue_.push(atma::thread::engine_t::signal_t([&, ib, vd, vb, vs, ps] {
+	queue_.push([&, ib, vd, vb, vs, ps] {
 		context_->signal_draw(ib, vd, vb, vs, ps);
-	}));
+	});
 }
 
+auto scene_t::signal_update_constant_buffer(constant_buffer_ptr const& cb, uint data_size, void* data) -> void
+{
+	auto sm = atma::shared_memory(data_size, data);
 
+	queue_.push([&, cb, sm] {
+		context_->signal_update_constant_buffer(cb, sm);
+	});
+}
 
 

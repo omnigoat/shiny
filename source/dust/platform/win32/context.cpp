@@ -383,3 +383,21 @@ auto context_t::signal_draw_scene(scene_t& scene) -> void
 {
 	scene.execute();
 }
+
+
+auto context_t::signal_update_constant_buffer(constant_buffer_ptr const& cb, uint data_size, void* data) -> void
+{
+	std::shared_ptr<char> data_copy(new char[data_size], std::default_delete<char[]>());
+	memcpy(data_copy.get(), data, data_size);
+
+	signal_d3d_map(cb->d3d_buffer(), D3D11_MAP_WRITE_DISCARD, 0, [data_copy, data_size](D3D11_MAPPED_SUBRESOURCE* newdmap) {
+		memcpy(newdmap->pData, data_copy.get(), data_size);
+	});
+}
+
+auto context_t::signal_update_constant_buffer(constant_buffer_ptr const& cb, atma::shared_memory const& sm) -> void
+{
+	signal_d3d_map(cb->d3d_buffer(), D3D11_MAP_WRITE_DISCARD, 0, [sm](D3D11_MAPPED_SUBRESOURCE* newdmap) {
+		memcpy(newdmap->pData, sm.begin(), sm.size());
+	});
+}

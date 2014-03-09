@@ -76,7 +76,7 @@ int main()
 
 	// camera
 	auto camera = dust::camera_t(
-		math::look_at(math::point4f(0.f, 0.f, 2.f), math::point4f(), math::vector4f(0.f, 1.f, 0.f, 0.f)),
+		math::look_at(math::point4f(0.f, 0.f, 2.f), math::point4f(0.f, 0.1f, 0.f), math::vector4f(0.f, 1.f, 0.f, 0.f)),
 		math::perspective_fov(math::pi_over_two, (float)window->width() / window->height(), 0.03434f, 120.f)
 	);
 
@@ -111,13 +111,16 @@ int main()
 		else if (GetAsyncKeyState(VK_DOWN))
 			y -= 0.001f;
 
-		//camera.move_to(math::point4f(sin(x) * cos(y) * 2.f, sin(y) * 2.f, cos(x) * cos(y) * 2.f));
+		camera.move_to(math::point4f(sin(x) * cos(y) * 2.f, sin(y) * 2.f, cos(x) * cos(y) * 2.f));
+		camera.look_at(math::point4f());
+
 		camera.set_aspect(window->height() / (float)window->width());
 		auto scene = dust::scene_t(gfx, camera);
 
 		//scene.signal_constant_buffer_update(cb, &b);
 		world_matrix = math::rotation_y(t * 0.002f);
-		scene.signal_constant_buffer_upload(1, cb, &world_matrix);
+		scene.signal_update_constant_buffer(cb, sizeof(world_matrix), &world_matrix);
+		scene.signal_constant_buffer_upload(1, cb);
 		scene.signal_draw(ib, vd, vb, vs, ps);
 
 		gfx->signal_clear();

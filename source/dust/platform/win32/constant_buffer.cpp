@@ -20,16 +20,6 @@ auto constant_buffer_t::data_size() const -> uint
 	return data_size_;
 }
 
-auto constant_buffer_t::signal_upload_new_data(void* data) -> void
-{
-	std::shared_ptr<char> data_copy(new char[data_size_], std::default_delete<char[]>());
-	memcpy(data_copy.get(), data, data_size_);
-
-	auto data_size = this->data_size_;
-	context_->signal_d3d_map(d3d_buffer_, D3D11_MAP_WRITE_DISCARD, 0, [data_copy, data_size](D3D11_MAPPED_SUBRESOURCE* newdmap) {
-		memcpy(newdmap->pData, data_copy.get(), data_size);
-	});
-}
 
 auto dust::create_constant_buffer(context_ptr const& context, uint data_size, void const* data) -> constant_buffer_ptr
 {
