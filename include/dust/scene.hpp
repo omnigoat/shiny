@@ -12,10 +12,9 @@ namespace dust {
 	{
 		scene_t(context_ptr const&, camera_t const&);
 
-		auto signal_constant_buffer_upload(uint index, constant_buffer_ptr const&) -> void;
-		auto signal_constant_buffer_upload(uint index, constant_buffer_ptr const&, void*) -> void;
-
 		auto signal_update_constant_buffer(constant_buffer_ptr const&, uint data_size, void*) -> void;
+		auto signal_constant_buffer_upload(uint index, constant_buffer_ptr const&) -> void;
+
 		auto signal_draw(index_buffer_ptr const&, vertex_declaration_t const&, vertex_buffer_ptr const&, vertex_shader_ptr const&, pixel_shader_ptr const&) -> void;
 
 	private:
