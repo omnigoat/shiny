@@ -67,6 +67,12 @@ namespace dust {
 		constant_buffer
 	};
 
+	enum class texture_usage_t
+	{
+		normal,
+		render_target,
+		depth_stencil
+	};
 }
 
 

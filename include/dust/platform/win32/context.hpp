@@ -22,10 +22,8 @@ namespace dust {
 	
 	struct context_t : atma::ref_counted
 	{
-		context_t(runtime_t&, fooey::window_ptr const&, uint32 adapter);
+		static auto create(runtime_t&, fooey::window_ptr const&, uint32 adapter) -> context_ptr;
 		~context_t();
-
-		auto d3d_device() const -> platform::d3d_device_ptr { return d3d_device_; }
 
 		auto signal_block() -> void;
 		auto signal_fullscreen_toggle(uint32 output_index = primary_output) -> void;
@@ -46,7 +44,11 @@ namespace dust {
 		auto create_d3d_buffer(platform::d3d_buffer_ptr&, buffer_type_t, gpu_access_t, cpu_access_t, size_t data_size, void* data) -> void;
 		//auto create_d3d_texture2d(platform::d3d_texture2d_ptr&, texture_usage_t, surface_format_t, uint width, uint height) -> void;
 
+		auto d3d_device() const -> platform::d3d_device_ptr { return d3d_device_; }
+
 	private:
+		context_t(runtime_t&, fooey::window_ptr const&, uint32 adapter);
+
 		auto bind_events(fooey::window_ptr const&) -> void;
 		auto create_swapchain() -> void; 
 		auto setup_rendertarget(uint32 width, uint32 height) -> void;

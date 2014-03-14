@@ -10,13 +10,6 @@
 //======================================================================
 namespace dust
 {
-	enum class texture_usage_t
-	{
-		normal,
-		render_target,
-		depth_stencil
-	};
-
 	struct texture2d_t : atma::ref_counted
 	{
 		static auto create(context_ptr const&, surface_format_t, uint width, uint height) -> texture2d_ptr;
