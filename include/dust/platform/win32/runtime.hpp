@@ -2,7 +2,7 @@
 //======================================================================
 #include <dust/platform/win32/dxgi_fwd.hpp>
 #include <dust/platform/win32/d3d_fwd.hpp>
-#include <dust/format.hpp>
+#include <dust/surface_format.hpp>
 #include <dust/output.hpp>
 
 #include <fooey/widgets/window.hpp>

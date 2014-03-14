@@ -35,6 +35,10 @@ namespace dust {
 	struct camera_t;
 	struct scene_t;
 
+	struct texture2d_t;
+	typedef atma::intrusive_ptr<texture2d_t> texture2d_ptr;
+
+
 	enum class buffer_usage_t
 	{
 		immutable,

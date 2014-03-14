@@ -68,12 +68,12 @@
     <ClCompile Include="..\source\dust\scene.cpp">
       <Filter>source\dust</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\dust\platform\win32\textxure2d.cpp">
+      <Filter>source\dust\platform\win32</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\dust\context.hpp">
-      <Filter>include\dust</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\dust\format.hpp">
       <Filter>include\dust</Filter>
     </ClInclude>
     <ClInclude Include="..\include\dust\lock.hpp">
@@ -146,6 +146,12 @@
       <Filter>include\dust</Filter>
     </ClInclude>
     <ClInclude Include="..\include\dust\scene.hpp">
+      <Filter>include\dust</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\dust\platform\win32\texture2d.hpp">
+      <Filter>include\dust\platform\win32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\dust\surface_format.hpp">
       <Filter>include\dust</Filter>
     </ClInclude>
   </ItemGroup>

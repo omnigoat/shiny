@@ -69,7 +69,7 @@ auto context_t::pull_display_format(display_mode_t& mode, DXGI_SWAP_CHAIN_DESC& 
 	mode.width = desc.BufferDesc.Width;
 	mode.height = desc.BufferDesc.Height;
 	mode.fullscreen = desc.Windowed == FALSE;
-	mode.format = display_format_t::r8g8b8a8_unorm;
+	mode.format = surface_format_t::r8g8b8a8_unorm;
 	mode.refreshrate_frames = desc.BufferDesc.RefreshRate.Numerator;
 	mode.refreshrate_period = desc.BufferDesc.RefreshRate.Denominator;
 }
@@ -396,3 +396,11 @@ auto context_t::signal_update_constant_buffer(constant_buffer_ptr const& cb, atm
 		memcpy(newdmap->pData, sm.begin(), sm.size());
 	});
 }
+
+#if 0
+auto context_t::create_d3d_texture2d(platform::d3d_texture2d_ptr& texture, texture_usage_t usage, surface_format_t format, uint width, uint height) -> void
+{
+	D3D11_TEXTURE2D_DESC texdesc{width, height, 1, 1, DXGI_FORMAT_R8G8B8A8_UNORM, {1, 0}, D3D11_USAGE_DEFAULT, D3D11_BIND_DEPTH_STENCIL, 0, 0};
+	ATMA_ENSURE_IS(S_OK, d3d_device_->CreateTexture2D(&texdesc, nullptr, textxure.assign()));
+}
+#endif

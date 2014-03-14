@@ -1,6 +1,6 @@
 #pragma once
 //======================================================================
-#include <dust/format.hpp>
+#include <dust/surface_format.hpp>
 
 #include <fooey/widgets/window.hpp>
 
@@ -18,7 +18,7 @@ namespace dust
 	{
 		uint32 width, height;
 		uint32 refreshrate_frames, refreshrate_period;
-		display_format_t format;
+		surface_format_t format;
 		bool fullscreen;
 	};
 
