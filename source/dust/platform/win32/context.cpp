@@ -34,7 +34,7 @@ namespace
 //======================================================================
 // context_t
 //======================================================================
-auto dust::context_t::create(runtime_t& runtime, fooey::window_ptr const& window, uint32 adapter) -> dust::context_ptr {
+auto dust::create_context(runtime_t& runtime, fooey::window_ptr const& window, uint32 adapter) -> dust::context_ptr {
 	return context_ptr(new context_t(runtime, window, adapter));
 }
 

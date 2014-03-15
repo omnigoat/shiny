@@ -30,8 +30,8 @@ int main()
 
 	// initialise dust
 	auto dust_runtime = dust::runtime_t();
-	auto gfx = dust::context_t::create(dust_runtime, window, dust::primary_adapter);
-	
+	auto gfx = dust::create_context(dust_runtime, window, dust::primary_adapter);
+
 	// shaders
 	auto vs = dust::create_vertex_shader(gfx);
 	auto ps = dust::create_pixel_shader(gfx);

@@ -22,7 +22,6 @@ namespace dust {
 	
 	struct context_t : atma::ref_counted
 	{
-		static auto create(runtime_t&, fooey::window_ptr const&, uint32 adapter) -> context_ptr;
 		~context_t();
 
 		auto signal_block() -> void;
@@ -89,6 +88,8 @@ namespace dust {
 		display_mode_t* current_display_mode_;
 		display_mode_t requested_windowed_display_mode_, requested_fullscreen_display_mode_;
 		display_mode_t* requested_display_mode_;
+
+		friend auto create_context(runtime_t&, fooey::window_ptr const&, uint32 adapter) -> context_ptr;
 	};
 
 //======================================================================
