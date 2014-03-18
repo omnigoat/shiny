@@ -8,10 +8,12 @@
 #include <dust/index_buffer.hpp>
 #include <dust/camera.hpp>
 #include <dust/scene.hpp>
+#include <dust/texture2d.hpp>
 
 #include <fooey/widgets/window.hpp>
 #include <fooey/fooey.hpp>
 #include <fooey/events/resize.hpp>
+#include <fooey/events/mouse.hpp>
 
 #include <atma/math/vector4f.hpp>
 #include <atma/math/matrix4f.hpp>
@@ -22,7 +24,6 @@
 
 int main()
 {
-	
 	// setup up gui
 	auto renderer = fooey::system_renderer();
 	auto window = fooey::window("Excitement.", 480, 360);
@@ -73,6 +74,9 @@ int main()
 	atma::math::matrix4f world_matrix;
 	auto cb = dust::create_constant_buffer(gfx, sizeof(world_matrix), &world_matrix);
 
+	// texture
+	auto tx = dust::create_texture2d(gfx, dust::surface_format_t::r8g8b8a8_unorm, 128, 128);
+
 
 	// camera
 	auto camera = dust::camera_t(
@@ -92,24 +96,48 @@ int main()
 		gfx->signal_fullscreen_toggle(1);
 	});
 
+	float x = 0.f;
+	float y = 0.f;
+
+	bool mouse_down = false;
+	int ox = 0, oy = 0;
+	window->on({
+		{"mouse-move", [&](fooey::events::mouse_t const& e) {
+			//std::cout << "mouse-move " << e.x() << ":" << e.y() << std::endl;
+			
+			if (mouse_down)
+			{
+				auto dx = e.x() - ox;
+				x += dx * 0.01f;
+
+				auto dy = e.y() - oy;
+				y += dy * 0.01f;
+			}
+
+			ox = e.x();
+			oy = e.y();
+		}},
+
+		{"mouse-down.left", [&](fooey::events::mouse_t const& e) {
+			mouse_down = true;
+		}},
+		{"mouse-up.left", [&](fooey::events::mouse_t const& e) {
+			mouse_down = false;
+		}},
+		{"mouse-leave", [&]() {
+			mouse_down = false;
+		}}
+	});
+
 	
-
-
-
 	while (running)
 	{
 		t += 0.1f;
 
-		static float x = 0.f;
-		static float y = 0.f;
-		if (GetAsyncKeyState(VK_LEFT))
-			x -= 0.001f;
-		else if (GetAsyncKeyState(VK_RIGHT))
-			x += 0.001f;
-		else if (GetAsyncKeyState(VK_UP))
-			y += 0.001f;
-		else if (GetAsyncKeyState(VK_DOWN))
-			y -= 0.001f;
+		if (y > atma::math::pi_over_two - 0.1)
+			y = atma::math::pi_over_two - 0.1f;
+		else if (y < -atma::math::pi_over_two + 0.1f)
+			y = -atma::math::pi_over_two + 0.1f;
 
 		camera.move_to(math::point4f(sin(x) * cos(y) * 2.f, sin(y) * 2.f, cos(x) * cos(y) * 2.f));
 		camera.look_at(math::point4f());
@@ -117,7 +145,6 @@ int main()
 		camera.set_aspect(window->height() / (float)window->width());
 		auto scene = dust::scene_t(gfx, camera);
 
-		//scene.signal_constant_buffer_update(cb, &b);
 		world_matrix = math::rotation_y(t * 0.002f);
 		scene.signal_update_constant_buffer(cb, sizeof(world_matrix), &world_matrix);
 		scene.signal_constant_buffer_upload(1, cb);

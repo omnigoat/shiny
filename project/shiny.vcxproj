@@ -210,6 +210,7 @@
     <ClInclude Include="..\include\dust\platform\win32\dxgi_fwd.hpp" />
     <ClInclude Include="..\include\dust\platform\win32\output.hpp" />
     <ClInclude Include="..\include\dust\scene.hpp" />
+    <ClInclude Include="..\include\dust\texture2d.hpp" />
     <ClInclude Include="..\include\dust\vertex_buffer.hpp" />
     <ClInclude Include="..\include\dust\vertex_declaration.hpp" />
     <ClInclude Include="..\include\dust\vertex_shader.hpp" />

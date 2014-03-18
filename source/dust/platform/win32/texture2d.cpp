@@ -5,7 +5,7 @@
 using namespace dust;
 using dust::texture2d_t;
 
-auto texture2d_t::create(context_ptr const& context, surface_format_t format, uint width, uint height) -> texture2d_ptr
+auto dust::create_texture2d(context_ptr const& context, surface_format_t format, uint width, uint height) -> texture2d_ptr
 {
 	return texture2d_ptr(new texture2d_t(context, texture_usage_t::normal, format, width, height, 0));
 }
@@ -13,7 +13,7 @@ auto texture2d_t::create(context_ptr const& context, surface_format_t format, ui
 texture2d_t::texture2d_t(context_ptr const& context, texture_usage_t usage, surface_format_t format, uint width, uint height, uint mips)
 	: context_(context), usage_(usage), format_(format), width_(width), height_(height), mips_(mips)
 {
-	//context_->create_d3d_texture2d(d3d_texture_, usage_, format_, width_, height_, mips_);
+	context_->create_d3d_texture2d(d3d_texture_, usage_, format_, width_, height_, mips_);
 }
 
 auto texture2d_t::usage() const -> texture_usage_t

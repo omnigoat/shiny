@@ -154,6 +154,9 @@
     <ClInclude Include="..\include\dust\surface_format.hpp">
       <Filter>include\dust</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\dust\texture2d.hpp">
+      <Filter>include\dust</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="..\shaders\vs_basic.hlsl">

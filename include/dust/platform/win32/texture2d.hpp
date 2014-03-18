@@ -12,8 +12,8 @@ namespace dust
 {
 	struct texture2d_t : atma::ref_counted
 	{
-		static auto create(context_ptr const&, surface_format_t, uint width, uint height) -> texture2d_ptr;
-		static auto create(context_ptr const&, texture_usage_t, surface_format_t, uint width, uint height) -> texture2d_ptr;
+		friend auto create_texture2d(context_ptr const&, surface_format_t, uint width, uint height) -> texture2d_ptr;
+		friend auto create_texture2d(context_ptr const&, texture_usage_t, surface_format_t, uint width, uint height) -> texture2d_ptr;
 
 		auto usage() const -> texture_usage_t;
 		auto format() const -> surface_format_t;

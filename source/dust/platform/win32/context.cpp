@@ -388,15 +388,30 @@ auto context_t::signal_update_constant_buffer(constant_buffer_ptr const& cb, uin
 
 auto context_t::signal_update_constant_buffer(constant_buffer_ptr const& cb, atma::shared_memory const& sm) -> void
 {
-	signal_d3d_map(cb->d3d_buffer(), D3D11_MAP_WRITE_DISCARD, 0, [sm](D3D11_MAPPED_SUBRESOURCE* newdmap) {
-		memcpy(newdmap->pData, sm.begin(), sm.size());
+	signal_d3d_map(cb->d3d_buffer(), D3D11_MAP_WRITE_DISCARD, 0, [sm](D3D11_MAPPED_SUBRESOURCE* subresource) {
+		memcpy(subresource->pData, sm.begin(), sm.size());
 	});
 }
 
-#if 0
-auto context_t::create_d3d_texture2d(platform::d3d_texture2d_ptr& texture, texture_usage_t usage, surface_format_t format, uint width, uint height) -> void
+namespace
 {
-	D3D11_TEXTURE2D_DESC texdesc{width, height, 1, 1, DXGI_FORMAT_R8G8B8A8_UNORM, {1, 0}, D3D11_USAGE_DEFAULT, D3D11_BIND_DEPTH_STENCIL, 0, 0};
-	ATMA_ENSURE_IS(S_OK, d3d_device_->CreateTexture2D(&texdesc, nullptr, textxure.assign()));
+	uint const miplevels_of_texture_usage[] = {
+		0, 1, 1
+	};
+
+	D3D11_BIND_FLAG bind_flags_of_texture_usage[] = {
+		(D3D11_BIND_FLAG)0, D3D11_BIND_RENDER_TARGET, D3D11_BIND_DEPTH_STENCIL
+	};
 }
-#endif
+
+auto context_t::create_d3d_texture2d(platform::d3d_texture2d_ptr& texture, texture_usage_t usage, surface_format_t format, uint width, uint height, uint mips) -> void
+{
+	auto const miplevels = (usage == texture_usage_t::normal) ? mips : miplevels_of_texture_usage[(uint)usage];
+
+	D3D11_TEXTURE2D_DESC texdesc{
+		width, height, miplevels, 1, 
+		DXGI_FORMAT_R8G8B8A8_UNORM, {1, 0}, D3D11_USAGE_DEFAULT, bind_flags_of_texture_usage[(uint)usage],
+		0, 0};
+
+	ATMA_ENSURE_IS(S_OK, d3d_device_->CreateTexture2D(&texdesc, nullptr, texture.assign()));
+}
