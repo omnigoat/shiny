@@ -2,14 +2,23 @@
 
 #include <dust/context.hpp>
 
+
 using namespace dust;
 using dust::texture3d_t;
 
+
+//======================================================================
+// create_texture3d
+//======================================================================
 auto dust::create_texture3d(context_ptr const& context, surface_format_t format, uint mips, uint width, uint height, uint depth) -> texture3d_ptr
 {
 	return texture3d_ptr(new texture3d_t(context, format, mips, width, height, depth));
 }
 
+
+//======================================================================
+// texture3d
+//======================================================================
 texture3d_t::texture3d_t(context_ptr const& context, surface_format_t format, uint mips, uint width, uint height, uint depth)
 : context_(context), format_(format), mips_(mips), width_(width), height_(height), depth_(depth)
 {
