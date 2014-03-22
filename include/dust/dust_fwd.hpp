@@ -38,6 +38,8 @@ namespace dust {
 	struct texture2d_t;
 	typedef atma::intrusive_ptr<texture2d_t> texture2d_ptr;
 
+	struct texture3d_t;
+	typedef atma::intrusive_ptr<texture3d_t> texture3d_ptr;
 
 	enum class buffer_usage_t
 	{

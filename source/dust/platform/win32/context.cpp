@@ -404,7 +404,7 @@ namespace
 	};
 }
 
-auto context_t::create_d3d_texture2d(platform::d3d_texture2d_ptr& texture, texture_usage_t usage, surface_format_t format, uint width, uint height, uint mips) -> void
+auto context_t::create_d3d_texture2d(platform::d3d_texture2d_ptr& texture, texture_usage_t usage, surface_format_t format, uint mips, uint width, uint height) -> void
 {
 	auto const miplevels = (usage == texture_usage_t::normal) ? mips : miplevels_of_texture_usage[(uint)usage];
 
@@ -414,4 +414,11 @@ auto context_t::create_d3d_texture2d(platform::d3d_texture2d_ptr& texture, textu
 		0, 0};
 
 	ATMA_ENSURE_IS(S_OK, d3d_device_->CreateTexture2D(&texdesc, nullptr, texture.assign()));
+}
+
+auto context_t::create_d3d_texture3d(platform::d3d_texture3d_ptr& texture, surface_format_t format, uint mips, uint width, uint height, uint depth) -> void
+{
+	auto desc = D3D11_TEXTURE3D_DESC{width, height, depth, mips, DXGI_FORMAT_R8G8B8A8_UNORM, D3D11_USAGE_DEFAULT, 0, 0, 0};
+	
+	ATMA_ENSURE_IS(S_OK, d3d_device_->CreateTexture3D(&desc, nullptr, texture.assign()));
 }

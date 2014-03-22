@@ -8,10 +8,8 @@
 #undef min
 #undef max
 //======================================================================
-namespace dust {
-namespace platform {
-//======================================================================
-	
+namespace dust { namespace platform {
+
 	typedef atma::com_ptr<ID3D11Device> d3d_device_ptr;
 	typedef atma::com_ptr<ID3D11DeviceContext> d3d_context_ptr;
 	typedef atma::com_ptr<ID3D11Buffer> d3d_buffer_ptr;
@@ -22,8 +20,6 @@ namespace platform {
 	typedef atma::com_ptr<ID3D11RenderTargetView> d3d_render_target_view_ptr;
 	typedef atma::com_ptr<ID3D11DepthStencilView> d3d_depth_stencil_buffer_ptr;
 	typedef atma::com_ptr<ID3D11Texture2D> d3d_texture2d_ptr;
+	typedef atma::com_ptr<ID3D11Texture3D> d3d_texture3d_ptr;
 
-//======================================================================
-} // namespace platform
-} // namespace dust
-//======================================================================
+} }

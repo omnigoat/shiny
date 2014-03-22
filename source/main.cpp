@@ -1,3 +1,4 @@
+#include <memory>
 #include <dust/runtime.hpp>
 #include <dust/context.hpp>
 #include <dust/vertex_buffer.hpp>
@@ -31,8 +32,9 @@ int main()
 
 	// initialise dust
 	auto dust_runtime = dust::runtime_t();
-	auto gfx = dust::create_context(dust_runtime, window, dust::primary_adapter);
-
+	//auto gfx = dust::create_context(dust_runtime, window, dust::primary_adapter);
+	atma::intrusive_ptr<dust::context_t> gfx = dust::create_context(dust_runtime, window, dust::primary_adapter);
+	
 	// shaders
 	auto vs = dust::create_vertex_shader(gfx);
 	auto ps = dust::create_pixel_shader(gfx);

@@ -71,6 +71,9 @@
     <ClCompile Include="..\source\dust\platform\win32\texture2d.cpp">
       <Filter>source\dust\platform\win32</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\dust\platform\win32\texture3d.cpp">
+      <Filter>source\dust\platform\win32</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\dust\context.hpp">
@@ -156,6 +159,12 @@
     </ClInclude>
     <ClInclude Include="..\include\dust\texture2d.hpp">
       <Filter>include\dust</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\dust\texture3d.hpp">
+      <Filter>include\dust</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\dust\platform\win32\texture3d.hpp">
+      <Filter>include\dust\platform\win32</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

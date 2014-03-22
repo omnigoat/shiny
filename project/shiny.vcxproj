@@ -179,6 +179,7 @@
     <ClCompile Include="..\source\dust\platform\win32\pixel_shader.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\runtime.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\texture2d.cpp" />
+    <ClCompile Include="..\source\dust\platform\win32\texture3d.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\vertex_buffer.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\vertex_declaration.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\vertex_shader.cpp" />
@@ -191,6 +192,7 @@
     <ClInclude Include="..\include\dust\constant_buffer.hpp" />
     <ClInclude Include="..\include\dust\context.hpp" />
     <ClInclude Include="..\include\dust\dust_fwd.hpp" />
+    <ClInclude Include="..\include\dust\platform\win32\texture3d.hpp" />
     <ClInclude Include="..\include\dust\surface_format.hpp" />
     <ClInclude Include="..\include\dust\index_buffer.hpp" />
     <ClInclude Include="..\include\dust\lock.hpp" />
@@ -211,6 +213,7 @@
     <ClInclude Include="..\include\dust\platform\win32\output.hpp" />
     <ClInclude Include="..\include\dust\scene.hpp" />
     <ClInclude Include="..\include\dust\texture2d.hpp" />
+    <ClInclude Include="..\include\dust\texture3d.hpp" />
     <ClInclude Include="..\include\dust\vertex_buffer.hpp" />
     <ClInclude Include="..\include\dust\vertex_declaration.hpp" />
     <ClInclude Include="..\include\dust\vertex_shader.hpp" />
