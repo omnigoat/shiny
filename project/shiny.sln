@@ -13,6 +13,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "atma", "..\..\atma\project\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fooey", "..\..\fooey\project\fooey.vcxproj", "{82B83F8F-A8CF-4720-9ABD-F08682C1C325}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "atma_test", "..\..\atma\test\project\atma_test.vcxproj", "{AD2E1D66-97F7-4E55-8277-0FAFA8B4CB0F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{3301E1FA-9F23-43C6-A5E1-183204867D44} = {3301E1FA-9F23-43C6-A5E1-183204867D44}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM = Debug|ARM
@@ -50,6 +55,14 @@ Global
 		{82B83F8F-A8CF-4720-9ABD-F08682C1C325}.Release|Win32.ActiveCfg = Release|Win32
 		{82B83F8F-A8CF-4720-9ABD-F08682C1C325}.Release|Win32.Build.0 = Release|Win32
 		{82B83F8F-A8CF-4720-9ABD-F08682C1C325}.Release|x64.ActiveCfg = Release|Win32
+		{AD2E1D66-97F7-4E55-8277-0FAFA8B4CB0F}.Debug|ARM.ActiveCfg = Debug|Win32
+		{AD2E1D66-97F7-4E55-8277-0FAFA8B4CB0F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{AD2E1D66-97F7-4E55-8277-0FAFA8B4CB0F}.Debug|Win32.Build.0 = Debug|Win32
+		{AD2E1D66-97F7-4E55-8277-0FAFA8B4CB0F}.Debug|x64.ActiveCfg = Debug|Win32
+		{AD2E1D66-97F7-4E55-8277-0FAFA8B4CB0F}.Release|ARM.ActiveCfg = Release|Win32
+		{AD2E1D66-97F7-4E55-8277-0FAFA8B4CB0F}.Release|Win32.ActiveCfg = Release|Win32
+		{AD2E1D66-97F7-4E55-8277-0FAFA8B4CB0F}.Release|Win32.Build.0 = Release|Win32
+		{AD2E1D66-97F7-4E55-8277-0FAFA8B4CB0F}.Release|x64.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

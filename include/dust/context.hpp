@@ -15,6 +15,7 @@ namespace dust
 
 namespace dust_validation
 {
+	#pragma warning(disable: 4189)
 	inline void context_t()
 	{
 		// context_t

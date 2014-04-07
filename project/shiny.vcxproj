@@ -89,7 +89,6 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>ATMA_MATH_USE_SSE;WIN32;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <BufferSecurityCheck>false</BufferSecurityCheck>
@@ -98,6 +97,8 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
+      <SmallerTypeCheck>true</SmallerTypeCheck>
+      <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -172,6 +173,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\source\dust\camera.cpp" />
+    <ClCompile Include="..\source\dust\platform\win32\compute_shader.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\constant_buffer.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\context.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\index_buffer.cpp" />
@@ -189,9 +191,11 @@
   <ItemGroup>
     <ClInclude Include="..\include\dust\adapter.hpp" />
     <ClInclude Include="..\include\dust\camera.hpp" />
+    <ClInclude Include="..\include\dust\compute_shader.hpp" />
     <ClInclude Include="..\include\dust\constant_buffer.hpp" />
     <ClInclude Include="..\include\dust\context.hpp" />
     <ClInclude Include="..\include\dust\dust_fwd.hpp" />
+    <ClInclude Include="..\include\dust\platform\win32\compute_shader.hpp" />
     <ClInclude Include="..\include\dust\platform\win32\texture3d.hpp" />
     <ClInclude Include="..\include\dust\surface_format.hpp" />
     <ClInclude Include="..\include\dust\index_buffer.hpp" />
@@ -219,6 +223,10 @@
     <ClInclude Include="..\include\dust\vertex_shader.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="..\shaders\cs_test.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">5.0</ShaderModel>
+    </FxCompile>
     <FxCompile Include="..\shaders\ps_basic.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
     </FxCompile>

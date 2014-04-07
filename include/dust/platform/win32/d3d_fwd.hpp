@@ -2,8 +2,10 @@
 //======================================================================
 #include <atma/com_ptr.hpp>
 
+#pragma warning(push,3)
 #include <d3d11.h>
 #include <d3dcompiler.h>
+#pragma warning(pop)
 //======================================================================
 #undef min
 #undef max
@@ -16,6 +18,7 @@ namespace dust { namespace platform {
 	typedef atma::com_ptr<ID3D11InputLayout> d3d_input_layout_ptr;
 	typedef atma::com_ptr<ID3D11VertexShader> d3d_vertex_shader_ptr;
 	typedef atma::com_ptr<ID3D11PixelShader> d3d_pixel_shader_ptr;
+	typedef atma::com_ptr<ID3D11ComputeShader> d3d_compute_shader_ptr;
 	typedef atma::com_ptr<ID3DBlob> d3d_blob_ptr;
 	typedef atma::com_ptr<ID3D11RenderTargetView> d3d_render_target_view_ptr;
 	typedef atma::com_ptr<ID3D11DepthStencilView> d3d_depth_stencil_buffer_ptr;

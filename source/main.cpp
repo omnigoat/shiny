@@ -10,6 +10,7 @@
 #include <dust/camera.hpp>
 #include <dust/scene.hpp>
 #include <dust/texture2d.hpp>
+#include <dust/compute_shader.hpp>
 
 #include <fooey/widgets/window.hpp>
 #include <fooey/fooey.hpp>
@@ -18,10 +19,11 @@
 
 #include <atma/math/vector4f.hpp>
 #include <atma/math/matrix4f.hpp>
+#include <atma/filesystem/file.hpp>
+#include <atma/unique_memory.hpp>
 
 #include <iostream>
 
-#include <DirectXMath.h>
 
 int main()
 {
@@ -86,6 +88,26 @@ int main()
 		math::perspective_fov(math::pi_over_two, (float)window->width() / window->height(), 0.03434f, 120.f)
 	);
 
+	// compute shader?
+	//auto p = atma::filesystem::path_t{"blam/hooray/things/"};
+	auto cs = dust::compute_shader_ptr(); //  dust::create_compute_shader(
+	{
+		namespace afs = atma::filesystem;
+
+		auto f = afs::file_t{"Debug/cs_test.cso"};
+		auto fs = f.size();
+
+		auto m = atma::unique_memory(fs);
+		
+		//auto k = std::unique_ptr<char[]>(new char[fs], std::default_delete<char[]>());
+		//afs::copy(*m, f);
+		f.read(m.begin(), fs);
+
+		cs = dust::create_compute_shader(gfx, m.begin(), fs);
+	}
+
+	
+
 	bool running = true;
 
 	window->on({
@@ -120,13 +142,13 @@ int main()
 			oy = e.y();
 		}},
 
-		{"mouse-down.left", [&](fooey::events::mouse_t const& e) {
+		{"mouse-down.left", [&]{
 			mouse_down = true;
 		}},
-		{"mouse-up.left", [&](fooey::events::mouse_t const& e) {
+		{"mouse-up.left", [&]{
 			mouse_down = false;
 		}},
-		{"mouse-leave", [&]() {
+		{"mouse-leave", [&]{
 			mouse_down = false;
 		}}
 	});

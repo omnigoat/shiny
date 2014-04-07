@@ -8,8 +8,10 @@
 #include <fooey/widgets/window.hpp>
 
 #ifdef _DEBUG
+#pragma warning(push,3)
 #include <initguid.h>
 #include <dxgidebug.h>
+#pragma warning(pop)
 #endif
 
 #include <vector>

@@ -1,5 +1,4 @@
 #include <dust/camera.hpp>
-#include <DirectXMath.h>
 
 namespace math = atma::math;
 using namespace dust;

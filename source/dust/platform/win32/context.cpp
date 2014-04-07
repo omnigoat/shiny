@@ -12,7 +12,9 @@
 #include <fooey/events/resize.hpp>
 #include <fooey/keys.hpp>
 
+#pragma warning(push,3)
 #include <d3dcompiler.h>
+#pragma warning(pop)
 
 #include <vector>
 #include <atomic>

@@ -2,7 +2,9 @@
 //======================================================================
 #include <atma/com_ptr.hpp>
 
+#pragma warning(push,3)
 #include <dxgi.h>
+#pragma warning(pop)
 #undef min
 #undef max
 //======================================================================

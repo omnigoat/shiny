@@ -41,6 +41,12 @@ namespace dust {
 	struct texture3d_t;
 	typedef atma::intrusive_ptr<texture3d_t> texture3d_ptr;
 
+	struct compute_shader_t;
+	typedef atma::intrusive_ptr<compute_shader_t> compute_shader_ptr;
+
+
+
+
 	enum class buffer_usage_t
 	{
 		immutable,
