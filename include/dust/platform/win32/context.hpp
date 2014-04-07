@@ -33,7 +33,8 @@ namespace dust {
 		auto signal_constant_buffer_upload(uint index, constant_buffer_ptr const&) -> void;
 		auto signal_draw_scene(scene_t&) -> void;
 		auto signal_update_constant_buffer(constant_buffer_ptr const&, uint data_size, void*) -> void;
-		auto signal_update_constant_buffer(constant_buffer_ptr const&, atma::shared_memory const&) -> void;
+		auto signal_update_constant_buffer(constant_buffer_ptr const&, atma::shared_memory_t const&) -> void;
+		auto signal_upload_compute_shader(compute_shader_ptr const&) -> void;
 
 		// d3d-specific
 		auto signal_d3d_map(platform::d3d_buffer_ptr&, D3D11_MAP, uint32 subresource, std::function<void(D3D11_MAPPED_SUBRESOURCE*)> const& = std::function<void(D3D11_MAPPED_SUBRESOURCE*)>()) -> void;

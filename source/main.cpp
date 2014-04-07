@@ -95,15 +95,10 @@ int main()
 		namespace afs = atma::filesystem;
 
 		auto f = afs::file_t{"Debug/cs_test.cso"};
-		auto fs = f.size();
+		auto m = atma::unique_memory_t(f.size());
+		f.read(m.begin(), f.size());
 
-		auto m = atma::unique_memory(fs);
-		
-		//auto k = std::unique_ptr<char[]>(new char[fs], std::default_delete<char[]>());
-		//afs::copy(*m, f);
-		f.read(m.begin(), fs);
-
-		cs = dust::create_compute_shader(gfx, m.begin(), fs);
+		cs = dust::create_compute_shader(gfx, m.begin(), m.size());
 	}
 
 	
@@ -173,6 +168,10 @@ int main()
 		scene.signal_update_constant_buffer(cb, sizeof(world_matrix), &world_matrix);
 		scene.signal_constant_buffer_upload(1, cb);
 		scene.signal_draw(ib, vd, vb, vs, ps);
+
+		gfx->signal_upload_compute_shader(cs);
+		//gfx->signal_execute_compute_shader(cs)
+
 
 		gfx->signal_clear();
 		gfx->signal_draw_scene(scene);

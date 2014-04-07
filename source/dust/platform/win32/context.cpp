@@ -8,6 +8,7 @@
 #include <dust/constant_buffer.hpp>
 #include <dust/index_buffer.hpp>
 #include <dust/scene.hpp>
+#include <dust/compute_shader.hpp>
 
 #include <fooey/events/resize.hpp>
 #include <fooey/keys.hpp>
@@ -385,10 +386,10 @@ auto context_t::signal_draw_scene(scene_t& scene) -> void
 
 auto context_t::signal_update_constant_buffer(constant_buffer_ptr const& cb, uint data_size, void* data) -> void
 {
-	signal_update_constant_buffer(cb, atma::shared_memory(data_size, data));
+	signal_update_constant_buffer(cb, atma::shared_memory_t(data_size, data));
 }
 
-auto context_t::signal_update_constant_buffer(constant_buffer_ptr const& cb, atma::shared_memory const& sm) -> void
+auto context_t::signal_update_constant_buffer(constant_buffer_ptr const& cb, atma::shared_memory_t const& sm) -> void
 {
 	signal_d3d_map(cb->d3d_buffer(), D3D11_MAP_WRITE_DISCARD, 0, [sm](D3D11_MAPPED_SUBRESOURCE* subresource) {
 		memcpy(subresource->pData, sm.begin(), sm.size());
@@ -423,4 +424,11 @@ auto context_t::create_d3d_texture3d(platform::d3d_texture3d_ptr& texture, surfa
 	auto desc = D3D11_TEXTURE3D_DESC{width, height, depth, mips, DXGI_FORMAT_R8G8B8A8_UNORM, D3D11_USAGE_DEFAULT, 0, 0, 0};
 	
 	ATMA_ENSURE_IS(S_OK, d3d_device_->CreateTexture3D(&desc, nullptr, texture.assign()));
+}
+
+auto context_t::signal_upload_compute_shader(compute_shader_ptr const& cs) -> void
+{
+	engine_.signal([&, cs] {
+		d3d_immediate_context_->CSSetShader(cs->d3d_cs().get(), nullptr, 0);
+	});
 }
