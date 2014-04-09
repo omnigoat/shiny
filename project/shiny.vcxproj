@@ -173,6 +173,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\source\dust\camera.cpp" />
+    <ClCompile Include="..\source\dust\platform\win32\buffer.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\compute_shader.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\constant_buffer.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\context.cpp" />
@@ -195,6 +196,7 @@
     <ClInclude Include="..\include\dust\constant_buffer.hpp" />
     <ClInclude Include="..\include\dust\context.hpp" />
     <ClInclude Include="..\include\dust\dust_fwd.hpp" />
+    <ClInclude Include="..\include\dust\platform\win32\buffer.hpp" />
     <ClInclude Include="..\include\dust\platform\win32\compute_shader.hpp" />
     <ClInclude Include="..\include\dust\platform\win32\texture3d.hpp" />
     <ClInclude Include="..\include\dust\surface_format.hpp" />

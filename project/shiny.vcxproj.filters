@@ -77,6 +77,9 @@
     <ClCompile Include="..\source\dust\platform\win32\compute_shader.cpp">
       <Filter>source\dust\platform\win32</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\dust\platform\win32\buffer.cpp">
+      <Filter>source\dust\platform\win32</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\dust\context.hpp">
@@ -174,6 +177,9 @@
     </ClInclude>
     <ClInclude Include="..\include\dust\compute_shader.hpp">
       <Filter>include\dust</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\dust\platform\win32\buffer.hpp">
+      <Filter>include\dust\platform\win32</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

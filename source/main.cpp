@@ -91,7 +91,7 @@ int main()
 	// compute shader?
 	//auto p = atma::filesystem::path_t{"blam/hooray/things/"};
 	auto cs = dust::compute_shader_ptr(); //  dust::create_compute_shader(
-	{
+	if (false) {
 		namespace afs = atma::filesystem;
 
 		auto f = afs::file_t{"Debug/cs_test.cso"};
@@ -148,7 +148,6 @@ int main()
 		}}
 	});
 
-	
 	while (running)
 	{
 		t += 0.1f;
@@ -169,7 +168,7 @@ int main()
 		scene.signal_constant_buffer_upload(1, cb);
 		scene.signal_draw(ib, vd, vb, vs, ps);
 
-		gfx->signal_upload_compute_shader(cs);
+		//gfx->signal_upload_compute_shader(cs);
 		//gfx->signal_execute_compute_shader(cs)
 
 

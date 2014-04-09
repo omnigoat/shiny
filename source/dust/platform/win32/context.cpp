@@ -126,7 +126,7 @@ auto context_t::setup_rendertarget(uint32 width, uint32 height) -> void
 	ATMA_ENSURE_IS(S_OK, d3d_device_->CreateDepthStencilView(d3d_depth_stencil_buffer_.get(), &depthdesc, d3d_depth_stencil_.assign()));
 
 	// set render targets
-	d3d_immediate_context_->OMSetRenderTargets(1, &d3d_render_target_.get_ref(), d3d_depth_stencil_.get());
+	d3d_immediate_context_->OMSetRenderTargets(1, &d3d_render_target_.get(), d3d_depth_stencil_.get());
 
 	// create viewport
 	D3D11_VIEWPORT vp{0, 0, (float)width, (float)height, 0, 1.f};
@@ -249,8 +249,31 @@ auto context_t::on_resize(fooey::events::resize_t& e) -> void
 	requested_display_mode_ = &requested_windowed_display_mode_;
 }
 
-auto context_t::create_d3d_buffer(platform::d3d_buffer_ptr& buffer, buffer_type_t buffer_type, gpu_access_t gpu_access, cpu_access_t cpu_access, size_t data_size, void* data) -> void
+auto context_t::create_d3d_buffer(platform::d3d_buffer_ptr& buffer, buffer_type_t buffer_type, buffer_usage_t buffer_usage, size_t data_size, void* data) -> void
 {
+	D3D11_USAGE d3d_bu = (D3D11_USAGE)-1;
+	D3D11_CPU_ACCESS_FLAG d3d_ca = (D3D11_CPU_ACCESS_FLAG)-1;
+
+	switch (buffer_usage)
+	{
+		case buffer_usage_t::immutable:
+			d3d_bu = D3D11_USAGE_IMMUTABLE;
+			d3d_ca = (D3D11_CPU_ACCESS_FLAG)0;
+			break;
+
+		case buffer_usage_t::long_lived:
+			d3d_bu = D3D11_USAGE_DEFAULT;
+			d3d_ca = D3D11_CPU_ACCESS_WRITE;
+			break;
+
+		case buffer_usage_t::dynamic:
+			d3d_bu = D3D11_USAGE_DYNAMIC;
+			d3d_ca = D3D11_CPU_ACCESS_WRITE;
+	}
+
+	ATMA_ASSERT(d3d_bu != -1 && d3d_ca != -1);
+
+#if 0
 	// calcualte the buffer usage based off our gpu-access/cpu-access flags
 	D3D11_USAGE buffer_usage = D3D11_USAGE_DEFAULT;
 	if (cpu_access == cpu_access_t::write) {
@@ -277,8 +300,9 @@ auto context_t::create_d3d_buffer(platform::d3d_buffer_ptr& buffer, buffer_type_
 		case cpu_access_t::write: cpua = D3D11_CPU_ACCESS_WRITE; break;
 		case cpu_access_t::read_write: cpua = static_cast<D3D11_CPU_ACCESS_FLAG>(D3D11_CPU_ACCESS_READ | D3D11_CPU_ACCESS_WRITE); break;
 	}
+#endif
 
-	D3D11_BUFFER_DESC buffer_desc{(UINT)data_size, buffer_usage, buffer_usage_to_d3dbind[static_cast<int>(buffer_type)], cpua, 0, 0};
+	D3D11_BUFFER_DESC buffer_desc{(UINT)data_size, d3d_bu, buffer_usage_to_d3dbind[static_cast<int>(buffer_type)], d3d_ca, 0, 0};
 
 
 	if (data) {
@@ -373,8 +397,7 @@ auto context_t::signal_clear() -> void
 auto context_t::signal_constant_buffer_upload(uint index, constant_buffer_ptr const& buf) -> void
 {
 	engine_.signal([&, index, buf] {
-		auto k = buf->d3d_buffer().get();
-		d3d_immediate_context_->VSSetConstantBuffers(index, 1, &k);
+		d3d_immediate_context_->VSSetConstantBuffers(index, 1, &buf->d3d_buffer().get());
 	});
 }
 

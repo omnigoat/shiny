@@ -11,7 +11,7 @@ constant_buffer_t::constant_buffer_t(context_ptr const& context, uint data_size,
 : context_(context), data_size_(data_size)
 {
 	context_->create_d3d_buffer(d3d_buffer_,
-		buffer_type_t::constant_buffer, gpu_access_t::read, cpu_access_t::write,
+		buffer_type_t::constant_buffer, buffer_usage_t::dynamic,
 		data_size_, const_cast<void*>(data));
 }
 

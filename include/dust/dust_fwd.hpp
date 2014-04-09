@@ -44,13 +44,15 @@ namespace dust {
 	struct compute_shader_t;
 	typedef atma::intrusive_ptr<compute_shader_t> compute_shader_ptr;
 
-
+	struct buffer_t;
+	typedef atma::intrusive_ptr<buffer_t> buffer_ptr;
 
 
 	enum class buffer_usage_t
 	{
 		immutable,
-		long_lived
+		long_lived,
+		dynamic
 	};
 
 	enum class gpu_access_t
@@ -72,7 +74,8 @@ namespace dust {
 	{
 		vertex_buffer,
 		index_buffer,
-		constant_buffer
+		constant_buffer,
+		shader_resource,
 	};
 
 	enum class texture_usage_t
