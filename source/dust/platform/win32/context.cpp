@@ -249,7 +249,7 @@ auto context_t::on_resize(fooey::events::resize_t& e) -> void
 	requested_display_mode_ = &requested_windowed_display_mode_;
 }
 
-auto context_t::create_d3d_buffer(platform::d3d_buffer_ptr& buffer, buffer_type_t buffer_type, buffer_usage_t buffer_usage, size_t data_size, void* data) -> void
+auto context_t::create_d3d_buffer(platform::d3d_buffer_ptr& buffer, buffer_type_t buffer_type, buffer_usage_t buffer_usage, size_t data_size, void const* data) -> void
 {
 	D3D11_USAGE d3d_bu = (D3D11_USAGE)-1;
 	D3D11_CPU_ACCESS_FLAG d3d_ca = (D3D11_CPU_ACCESS_FLAG)-1;
@@ -272,35 +272,6 @@ auto context_t::create_d3d_buffer(platform::d3d_buffer_ptr& buffer, buffer_type_
 	}
 
 	ATMA_ASSERT(d3d_bu != -1 && d3d_ca != -1);
-
-#if 0
-	// calcualte the buffer usage based off our gpu-access/cpu-access flags
-	D3D11_USAGE buffer_usage = D3D11_USAGE_DEFAULT;
-	if (cpu_access == cpu_access_t::write) {
-		if (gpu_access == gpu_access_t::read) {
-			buffer_usage = D3D11_USAGE_DYNAMIC;
-		}
-		else if (gpu_access == gpu_access_t::write || gpu_access == gpu_access_t::read_write) {
-			buffer_usage = D3D11_USAGE_STAGING;
-		}
-	}
-	else if (cpu_access == cpu_access_t::read || cpu_access == cpu_access_t::read_write) {
-		buffer_usage = D3D11_USAGE_STAGING;
-	}
-	else {
-		if (gpu_access == gpu_access_t::read) {
-			buffer_usage = D3D11_USAGE_IMMUTABLE;
-		}
-	}
-
-	// cpu-usage still needs to be calculated
-	D3D11_CPU_ACCESS_FLAG cpua = static_cast<D3D11_CPU_ACCESS_FLAG>(0L);
-	switch (cpu_access) {
-		case cpu_access_t::read: cpua = D3D11_CPU_ACCESS_READ; break;
-		case cpu_access_t::write: cpua = D3D11_CPU_ACCESS_WRITE; break;
-		case cpu_access_t::read_write: cpua = static_cast<D3D11_CPU_ACCESS_FLAG>(D3D11_CPU_ACCESS_READ | D3D11_CPU_ACCESS_WRITE); break;
-	}
-#endif
 
 	D3D11_BUFFER_DESC buffer_desc{(UINT)data_size, d3d_bu, buffer_usage_to_d3dbind[static_cast<int>(buffer_type)], d3d_ca, 0, 0};
 

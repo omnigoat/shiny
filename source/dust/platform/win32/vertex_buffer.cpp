@@ -23,54 +23,13 @@ auto dust::create_vertex_buffer(context_ptr const& context, buffer_usage_t usage
 // vertex_buffer_t
 //======================================================================
 vertex_buffer_t::vertex_buffer_t(context_ptr const& context, buffer_usage_t usage, vertex_declaration_t const& vd, uint vertex_count, void* data)
-: context_(context), usage_(usage), size_(vd.stride() * vertex_count), vertex_count_(vertex_count)
+: buffer_t(context, buffer_type_t::vertex_buffer, usage, vd.stride() * vertex_count, data),
+  vertex_count_(vertex_count)
 {
-	ATMA_ASSERT(capacity_);
-	
-	switch (usage_)
-	{
-		case buffer_usage_t::immutable:
-		{
-			ATMA_ASSERT_MSG(data, "immutable buffers require data upon initialisation");
-
-			context_->create_d3d_buffer(d3d_buffer_, buffer_type_t::vertex_buffer, usage_, size_, data);
-			break;
-		}
-
-		case buffer_usage_t::long_lived:
-		{
-			gpu_access_ = gpu_access_t::read;
-			cpu_access_ = cpu_access_t::write;
-
-			if (data) {
-				shadow_buffer_.assign(reinterpret_cast<char*>(data), reinterpret_cast<char*>(data) + size_);
-				upload_shadow_buffer();
-			}
-			else {
-				shadow_buffer_.resize((uint32)capacity_);
-				context_->create_d3d_buffer(d3d_buffer_, buffer_type_t::vertex_buffer, usage_, size_, data);
-			}
-			break;
-		}
-	}
 }
-
 
 vertex_buffer_t::~vertex_buffer_t()
 {
-}
-
-auto vertex_buffer_t::is_shadowing() const -> bool
-{
-	return !shadow_buffer_.empty();
-}
-
-auto vertex_buffer_t::upload_shadow_buffer() -> void
-{
-	ATMA_ASSERT(!shadow_buffer_.empty());
-
-	context_->signal_d3d_buffer_upload(d3d_buffer_, &shadow_buffer_[0], shadow_buffer_.size(), 1);
-	context_->signal_block();
 }
 
 

@@ -14,26 +14,29 @@ namespace dust
 	{
 		typedef std::vector<char, atma::aligned_allocator_t<char, 4>> data_t;
 
+		auto is_shadowing() const -> bool { return !shadow_buffer_.empty(); }
 		auto usage() const -> buffer_usage_t { return usage_; }
 		auto size() const -> size_t { return size_; }
 		auto d3d_buffer() const -> platform::d3d_buffer_ptr const& { return d3d_buffer_; }
 
-	private:
-		buffer_t(context_ptr const&, buffer_usage_t, vertex_declaration_t const&, uint vertex_count, void* data);
-		~buffer_t();
+	protected:
+		buffer_t(context_ptr const&, buffer_type_t, buffer_usage_t, uint data_size, void const* data);
+		virtual ~buffer_t();
 
 		auto upload_shadow_buffer() -> void;
 
-	private:
+	protected:
 		context_ptr context_;
 
+		buffer_type_t type_;
 		buffer_usage_t usage_;
-		gpu_access_t gpu_access_;
-		cpu_access_t cpu_access_;
 		size_t size_;
+
+		data_t shadow_buffer_;
 
 		platform::d3d_buffer_ptr d3d_buffer_;
 
-		friend auto create_buffer(context_ptr const&, buffer_usage_t, vertex_declaration_t const&, uint32 vertex_count, void* data) -> vertex_buffer_ptr;
+
+		friend auto create_buffer(context_ptr const&, buffer_type_t, buffer_usage_t, uint data_size, void* data) -> buffer_ptr;
 	};
 }
