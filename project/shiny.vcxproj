@@ -191,6 +191,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\dust\adapter.hpp" />
+    <ClInclude Include="..\include\dust\buffer.hpp" />
     <ClInclude Include="..\include\dust\camera.hpp" />
     <ClInclude Include="..\include\dust\compute_shader.hpp" />
     <ClInclude Include="..\include\dust\constant_buffer.hpp" />

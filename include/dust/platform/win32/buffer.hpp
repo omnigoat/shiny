@@ -3,7 +3,6 @@
 #include <dust/dust_fwd.hpp>
 #include <dust/platform/win32/d3d_fwd.hpp>
 
-#include <atma/assert.hpp>
 #include <atma/aligned_allocator.hpp>
 
 #include <vector>

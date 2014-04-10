@@ -181,6 +181,9 @@
     <ClInclude Include="..\include\dust\platform\win32\buffer.hpp">
       <Filter>include\dust\platform\win32</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\dust\buffer.hpp">
+      <Filter>include\dust</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="..\shaders\vs_basic.hlsl">
