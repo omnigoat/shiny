@@ -28,6 +28,7 @@ namespace dust {
 
 	struct constant_buffer_t;
 	typedef atma::intrusive_ptr<constant_buffer_t> constant_buffer_ptr;
+	typedef atma::intrusive_ptr<constant_buffer_t const> constant_buffer_cptr;
 
 	struct index_buffer_t;
 	typedef atma::intrusive_ptr<index_buffer_t> index_buffer_ptr;
