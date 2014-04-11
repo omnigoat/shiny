@@ -42,7 +42,7 @@ auto scene_t::execute() -> void
 		s();
 }
 
-auto scene_t::signal_constant_buffer_upload(uint index, constant_buffer_ptr const& buf) -> void
+auto scene_t::signal_constant_buffer_upload(uint index, constant_buffer_cptr const& buf) -> void
 {
 	ATMA_ASSERT_MSG(index > 0, "constant-buffer[0] is reserved for the scene");
 
@@ -58,7 +58,7 @@ auto scene_t::signal_draw(index_buffer_ptr const& ib, vertex_declaration_t const
 	});
 }
 
-auto scene_t::signal_update_constant_buffer(constant_buffer_ptr const& cb, uint data_size, void* data) -> void
+auto scene_t::signal_update_constant_buffer(constant_buffer_ptr& cb, uint data_size, void* data) -> void
 {
 	auto sm = atma::shared_memory_t(data_size, data);
 

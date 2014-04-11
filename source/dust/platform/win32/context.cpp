@@ -287,7 +287,7 @@ auto context_t::create_d3d_buffer(platform::d3d_buffer_ptr& buffer, buffer_type_
 	}
 }
 
-auto context_t::signal_d3d_map(platform::d3d_buffer_ptr& buffer, D3D11_MAP map_type, uint32 subresource, std::function<void(D3D11_MAPPED_SUBRESOURCE*)> const& fn) -> void
+auto context_t::signal_d3d_map(platform::d3d_buffer_ptr const& buffer, D3D11_MAP map_type, uint32 subresource, std::function<void(D3D11_MAPPED_SUBRESOURCE*)> const& fn) -> void
 {
 	engine_.signal([&, map_type, subresource, fn] {
 		D3D11_MAPPED_SUBRESOURCE dmap;
@@ -297,14 +297,14 @@ auto context_t::signal_d3d_map(platform::d3d_buffer_ptr& buffer, D3D11_MAP map_t
 	});
 }
 
-auto context_t::signal_d3d_unmap(platform::d3d_buffer_ptr& buffer, uint32 subresource) -> void
+auto context_t::signal_d3d_unmap(platform::d3d_buffer_ptr const& buffer, uint32 subresource) -> void
 {
 	engine_.signal([&, buffer, subresource] {
 		d3d_immediate_context_->Unmap(buffer.get(), subresource);
 	});
 }
 
-auto context_t::signal_d3d_buffer_upload(platform::d3d_buffer_ptr& buffer, void const* data, uint32 row_pitch, uint32 depth_pitch) -> void
+auto context_t::signal_d3d_buffer_upload(platform::d3d_buffer_ptr const& buffer, void const* data, uint32 row_pitch, uint32 depth_pitch) -> void
 {
 	engine_.signal([&, buffer, data, row_pitch, depth_pitch] {
 		d3d_immediate_context_->UpdateSubresource(buffer.get(), 0, nullptr, data, row_pitch, depth_pitch);
@@ -365,7 +365,7 @@ auto context_t::signal_clear() -> void
 	});
 }
 
-auto context_t::signal_constant_buffer_upload(uint index, constant_buffer_ptr const& buf) -> void
+auto context_t::signal_constant_buffer_upload(uint index, constant_buffer_cptr const& buf) -> void
 {
 	engine_.signal([&, index, buf] {
 		d3d_immediate_context_->VSSetConstantBuffers(index, 1, &buf->d3d_buffer().get());

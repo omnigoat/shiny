@@ -16,8 +16,8 @@ namespace dust
 		auto is_shadowing() const -> bool { return !shadow_buffer_.empty(); }
 		auto usage() const -> buffer_usage_t { return usage_; }
 		auto size() const -> size_t { return size_; }
-		//auto d3d_buffer() const -> platform::d3d_buffer_ptr const& { return d3d_buffer_; }
-		auto d3d_buffer() -> platform::d3d_buffer_ptr const& { return d3d_buffer_; }
+
+		auto d3d_buffer() const -> platform::d3d_buffer_ptr const& { return d3d_buffer_; }
 
 	protected:
 		buffer_t(context_ptr const&, buffer_type_t, buffer_usage_t, uint data_size, void const* data);
