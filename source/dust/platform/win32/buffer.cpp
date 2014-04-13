@@ -22,8 +22,8 @@ auto dust::create_buffer(context_ptr const& context, buffer_usage_t usage, verte
 //======================================================================
 // buffer_t
 //======================================================================
-buffer_t::buffer_t(context_ptr const& context, buffer_type_t type, buffer_usage_t usage, uint data_size, void const* data)
-: context_(context), type_(type), usage_(usage), size_(data_size)
+buffer_t::buffer_t(context_ptr const& ctx, buffer_type_t type, buffer_usage_t usage, uint data_size, void const* data)
+: resource_t(ctx, resource_usage_t::buffer), type_(type), usage_(usage), size_(data_size)
 {
 	ATMA_ASSERT(size_);
 	
@@ -33,22 +33,26 @@ buffer_t::buffer_t(context_ptr const& context, buffer_type_t type, buffer_usage_
 		{
 			ATMA_ASSERT_MSG(data, "immutable buffers require data upon initialisation");
 
-			context_->create_d3d_buffer(d3d_buffer_, type_, usage_, size_, data);
+			context()->create_d3d_buffer(d3d_buffer_, type_, usage_, size_, data);
 			break;
 		}
 
 		case buffer_usage_t::long_lived:
+		case buffer_usage_t::dynamic:
 		{
 			if (data) {
 				shadow_buffer_.assign(reinterpret_cast<char const*>(data), reinterpret_cast<char const*>(data) + size_);
-				upload_shadow_buffer();
+				context()->create_d3d_buffer(d3d_buffer_, type_, usage_, size_, &shadow_buffer_[0]);
 			}
 			else {
 				shadow_buffer_.resize(size_);
-				context_->create_d3d_buffer(d3d_buffer_, type_, usage_, size_, nullptr);
+				context()->create_d3d_buffer(d3d_buffer_, type_, usage_, size_, nullptr);
 			}
 			break;
 		}
+
+		default:
+			ATMA_ASSERT_MSG(false, "buffer usage not optional");
 	}
 }
 
@@ -61,6 +65,6 @@ auto buffer_t::upload_shadow_buffer() -> void
 {
 	ATMA_ASSERT(is_shadowing());
 
-	context_->signal_d3d_buffer_upload(d3d_buffer_, &shadow_buffer_[0], shadow_buffer_.size(), 1);
-	context_->signal_block();
+	context()->signal_d3d_buffer_upload(d3d_buffer_, &shadow_buffer_[0], shadow_buffer_.size(), 1);
+	context()->signal_block();
 }

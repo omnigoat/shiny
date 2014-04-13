@@ -1,5 +1,6 @@
 #pragma once
 //======================================================================
+#include <atma/types.hpp>
 #include <atma/intrusive_ptr.hpp>
 //======================================================================
 namespace dust {
@@ -48,27 +49,17 @@ namespace dust {
 	struct buffer_t;
 	typedef atma::intrusive_ptr<buffer_t> buffer_ptr;
 
+	struct shader_resource_view_t;
+	typedef atma::intrusive_ptr<shader_resource_view_t> shader_resource_view_ptr;
+
+	struct resource_t;
+	typedef atma::intrusive_ptr<resource_t> resource_ptr;
 
 	enum class buffer_usage_t
 	{
 		immutable,
 		long_lived,
-		dynamic
-	};
-
-	enum class gpu_access_t
-	{
-		read,
-		write,
-		read_write
-	};
-
-	enum class cpu_access_t
-	{
-		none,
-		read,
-		write,
-		read_write,
+		dynamic,
 	};
 
 	enum class buffer_type_t
@@ -76,15 +67,42 @@ namespace dust {
 		vertex_buffer,
 		index_buffer,
 		constant_buffer,
-		shader_resource,
 	};
 
-	enum class texture_usage_t
+	enum class resource_usage_t
 	{
-		normal,
-		render_target,
-		depth_stencil
+		buffer = 1,
+		render_target = 2,
+		depth_stencil = 4,
+		shader_resource = 8,
 	};
+
+
+
+	template <typename T>
+	struct bitflags_t
+	{
+		bitflags_t(T x)
+			: flags_(1 << (uint)x)
+		{}
+
+		bitflags_t(std::initializer_list<T> const& xs)
+			: flags_()
+		{
+			for (auto x : xs)
+				flags_ |= 1 << (uint)x;
+		}
+
+		auto operator & (T x) const -> bool {
+			return (flags_ & (1 << (uint) x)) != 0;
+		}
+
+	private:
+		uint32 flags_;
+	};
+
+	typedef bitflags_t<resource_usage_t> resource_usage_flags_t;
+
 }
 
 

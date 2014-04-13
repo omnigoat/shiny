@@ -12,22 +12,17 @@ using dust::texture2d_t;
 //======================================================================
 auto dust::create_texture2d(context_ptr const& context, surface_format_t format, uint width, uint height) -> texture2d_ptr
 {
-	return texture2d_ptr(new texture2d_t(context, texture_usage_t::normal, format, 0, width, height));
+	return texture2d_ptr(new texture2d_t(context, {}, format, 0, width, height));
 }
 
 
 //======================================================================
 // texture2d
 //======================================================================
-texture2d_t::texture2d_t(context_ptr const& context, texture_usage_t usage, surface_format_t format, uint width, uint height, uint mips)
-: context_(context), usage_(usage), format_(format), width_(width), height_(height), mips_(mips)
+texture2d_t::texture2d_t(context_ptr const& context, resource_usage_flags_t usage_flags, surface_format_t format, uint width, uint height, uint mips)
+: resource_t(context, usage_flags), format_(format), width_(width), height_(height), mips_(mips)
 {
-	context_->create_d3d_texture2d(d3d_texture_, usage_, format_, width_, height_, mips_);
-}
-
-auto texture2d_t::usage() const -> texture_usage_t
-{
-	return usage_;
+	this->context()->create_d3d_texture2d(d3d_texture_, usage_flags, format_, width_, height_, mips_);
 }
 
 auto texture2d_t::format() const -> surface_format_t

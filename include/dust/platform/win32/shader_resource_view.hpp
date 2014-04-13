@@ -1,7 +1,6 @@
 #pragma once
 //======================================================================
 #include <dust/dust_fwd.hpp>
-#include <dust/resource.hpp>
 #include <dust/platform/win32/d3d_fwd.hpp>
 
 #include <atma/aligned_allocator.hpp>
@@ -10,7 +9,7 @@
 //======================================================================
 namespace dust
 {
-	struct buffer_t : resource_t
+	struct shader_resource_view_t : atma::ref_counted
 	{
 		typedef std::vector<char, atma::aligned_allocator_t<char, 4>> data_t;
 
@@ -27,6 +26,8 @@ namespace dust
 		auto upload_shadow_buffer() -> void;
 
 	protected:
+		context_ptr context_;
+
 		buffer_type_t type_;
 		buffer_usage_t usage_;
 		size_t size_;

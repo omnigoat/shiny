@@ -3,6 +3,7 @@
 #include <dust/platform/win32/d3d_fwd.hpp>
 
 #include <dust/dust_fwd.hpp>
+#include <dust/resource.hpp>
 #include <dust/surface_format.hpp>
 
 #include <atma/types.hpp>
@@ -10,12 +11,11 @@
 //======================================================================
 namespace dust
 {
-	struct texture2d_t : atma::ref_counted
+	struct texture2d_t : resource_t
 	{
+		friend auto create_texture2d(context_ptr const&, resource_usage_flags_t, surface_format_t, uint width, uint height) -> texture2d_ptr;
 		friend auto create_texture2d(context_ptr const&, surface_format_t, uint width, uint height) -> texture2d_ptr;
-		friend auto create_texture2d(context_ptr const&, texture_usage_t, surface_format_t, uint width, uint height) -> texture2d_ptr;
-
-		auto usage() const -> texture_usage_t;
+		
 		auto format() const -> surface_format_t;
 		auto width() const -> uint;
 		auto height() const -> uint;
@@ -25,11 +25,9 @@ namespace dust
 		auto d3d_texture() -> platform::d3d_texture2d_ptr&;
 
 	private:
-		texture2d_t(context_ptr const&, texture_usage_t, surface_format_t, uint width, uint height, uint mips);
+		texture2d_t(context_ptr const&, resource_usage_flags_t, surface_format_t, uint width, uint height, uint mips);
 
 	private:
-		context_ptr context_;
-		texture_usage_t usage_;
 		surface_format_t format_;
 		uint width_, height_;
 		uint mips_;

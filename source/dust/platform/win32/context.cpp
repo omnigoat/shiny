@@ -401,13 +401,23 @@ namespace
 	};
 }
 
-auto context_t::create_d3d_texture2d(platform::d3d_texture2d_ptr& texture, texture_usage_t usage, surface_format_t format, uint mips, uint width, uint height) -> void
+auto context_t::create_d3d_texture2d(platform::d3d_texture2d_ptr& texture, resource_usage_flags_t usage_flags, surface_format_t format, uint mips, uint width, uint height) -> void
 {
-	auto const miplevels = (usage == texture_usage_t::normal) ? mips : miplevels_of_texture_usage[(uint)usage];
+	auto const miplevels = 
+		(usage_flags & resource_usage_t::render_target) ? 1 :
+		(usage_flags & resource_usage_t::depth_stencil) ? 1 :
+		mips;
+
+	auto bind_flags = D3D11_BIND_FLAG();
+	if (usage_flags & resource_usage_t::render_target)
+		(uint&)bind_flags |= D3D11_BIND_RENDER_TARGET;
+	if (usage_flags & resource_usage_t::depth_stencil)
+		(uint&)bind_flags |= D3D11_BIND_DEPTH_STENCIL;
+
 
 	D3D11_TEXTURE2D_DESC texdesc{
 		width, height, miplevels, 1, 
-		DXGI_FORMAT_R8G8B8A8_UNORM, {1, 0}, D3D11_USAGE_DEFAULT, bind_flags_of_texture_usage[(uint)usage],
+		DXGI_FORMAT_R8G8B8A8_UNORM, {1, 0}, D3D11_USAGE_DEFAULT, bind_flags,
 		0, 0};
 
 	ATMA_ENSURE_IS(S_OK, d3d_device_->CreateTexture2D(&texdesc, nullptr, texture.assign()));
