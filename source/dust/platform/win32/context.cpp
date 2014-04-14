@@ -413,7 +413,10 @@ auto context_t::create_d3d_texture2d(platform::d3d_texture2d_ptr& texture, resou
 		(uint&)bind_flags |= D3D11_BIND_RENDER_TARGET;
 	if (usage_flags & resource_usage_t::depth_stencil)
 		(uint&)bind_flags |= D3D11_BIND_DEPTH_STENCIL;
-
+	if (usage_flags & resource_usage_t::shader_resource)
+		(uint&)bind_flags |= D3D11_BIND_SHADER_RESOURCE;
+	if (usage_flags & resource_usage_t::unordered_access)
+		(uint&)bind_flags |= D3D11_BIND_UNORDERED_ACCESS;
 
 	D3D11_TEXTURE2D_DESC texdesc{
 		width, height, miplevels, 1, 
@@ -436,3 +439,24 @@ auto context_t::signal_upload_compute_shader(compute_shader_ptr const& cs) -> vo
 		d3d_immediate_context_->CSSetShader(cs->d3d_cs().get(), nullptr, 0);
 	});
 }
+
+auto context_t::create_d3d_view(platform::d3d_shader_resource_view_ptr&, resource_ptr const& resource, view_type_t) -> void
+{
+	//D3D11_SHADER_RESOURCE_VIEW_DESC srvd;
+	auto srvd = D3D11_SHADER_RESOURCE_VIEW_DESC(); //{DXGI_FORMAT_R32_FLOAT, D3D11_RESOURCE_DIMENSION_TEXTURE2D, {0,1}};
+	srvd.Format = DXGI_FORMAT_R32_FLOAT;
+
+	if (resource.as<texture2d_t>())
+		srvd.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	else if (resource.as<texture3d_t>())
+		srvd.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE3D;
+	
+	
+	srvd.Texture2D.MipLevels = -1;
+	srvd.Texture2D.MostDetailedMip = 0;
+
+
+	d3d_device_->CreateShaderResourceView(nullptr, nullptr, nullptr);
+}
+
+

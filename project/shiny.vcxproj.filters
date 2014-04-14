@@ -80,6 +80,9 @@
     <ClCompile Include="..\source\dust\platform\win32\buffer.cpp">
       <Filter>source\dust\platform\win32</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\dust\platform\win32\shader_resource_view.cpp">
+      <Filter>source\dust\platform\win32</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\dust\context.hpp">

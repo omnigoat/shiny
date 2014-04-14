@@ -24,5 +24,7 @@ namespace dust { namespace platform {
 	typedef atma::com_ptr<ID3D11DepthStencilView> d3d_depth_stencil_buffer_ptr;
 	typedef atma::com_ptr<ID3D11Texture2D> d3d_texture2d_ptr;
 	typedef atma::com_ptr<ID3D11Texture3D> d3d_texture3d_ptr;
+	typedef atma::com_ptr<ID3D11ShaderResourceView> d3d_shader_resource_view_ptr;
+	typedef atma::com_ptr<ID3D11UnorderedAccessView> d3d_unordered_access_view_ptr;
 
 } }

@@ -71,10 +71,16 @@ namespace dust {
 
 	enum class resource_usage_t
 	{
-		buffer = 1,
-		render_target = 2,
-		depth_stencil = 4,
-		shader_resource = 8,
+		render_target = 1,
+		depth_stencil = 2,
+		shader_resource = 4,
+		unordered_access = 8,
+	};
+
+	enum class view_type_t
+	{
+		read_only,
+		read_write
 	};
 
 

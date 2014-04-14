@@ -81,7 +81,7 @@ int main()
 	// texture
 	auto tx = dust::create_texture2d(gfx, dust::surface_format_t::r8g8b8a8_unorm, 128, 128);
 
-
+	
 	// camera
 	auto camera = dust::camera_t(
 		math::look_at(math::point4f(0.f, 0.f, 2.f), math::point4f(0.f, 0.1f, 0.f), math::vector4f(0.f, 1.f, 0.f, 0.f)),
@@ -99,6 +99,15 @@ int main()
 		f.read(m.begin(), f.size());
 
 		cs = dust::create_compute_shader(gfx, m.begin(), m.size());
+
+		// 128x128 texture for reading
+		auto sr = dust::create_shader_resource2d(dust::surface_format_t::r8g8b8a8_unorm, 128);
+
+		dust::create_readonly_shader_resource2d()
+		//
+		//auto ar = dust::create_access_resource2d()
+		
+		//sr->underlying_resource()
 	}
 
 	

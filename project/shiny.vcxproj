@@ -181,6 +181,7 @@
     <ClCompile Include="..\source\dust\platform\win32\output.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\pixel_shader.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\runtime.cpp" />
+    <ClCompile Include="..\source\dust\platform\win32\shader_resource_view.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\texture2d.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\texture3d.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\vertex_buffer.cpp" />

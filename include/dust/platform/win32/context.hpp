@@ -44,7 +44,8 @@ namespace dust {
 		auto create_d3d_buffer(platform::d3d_buffer_ptr&, buffer_type_t, buffer_usage_t, size_t data_size, void const* data) -> void;
 		auto create_d3d_texture2d(platform::d3d_texture2d_ptr&, resource_usage_flags_t, surface_format_t, uint mips, uint width, uint height) -> void;
 		auto create_d3d_texture3d(platform::d3d_texture3d_ptr&, surface_format_t, uint mips, uint width, uint height, uint depth) -> void;
-		
+		auto create_d3d_view(platform::d3d_shader_resource_view_ptr&, view_type_t) -> void;
+
 		auto d3d_device() const -> platform::d3d_device_ptr { return d3d_device_; }
 
 	private:
