@@ -23,7 +23,7 @@ auto dust::create_buffer(context_ptr const& context, buffer_usage_t usage, verte
 // buffer_t
 //======================================================================
 buffer_t::buffer_t(context_ptr const& ctx, buffer_type_t type, buffer_usage_t usage, uint data_size, void const* data)
-: resource_t(ctx, resource_usage_t::buffer), type_(type), usage_(usage), size_(data_size)
+: resource_t(ctx, {}), type_(type), usage_(usage), size_(data_size)
 {
 	ATMA_ASSERT(size_);
 	

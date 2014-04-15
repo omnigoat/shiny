@@ -10,9 +10,14 @@ using dust::texture2d_t;
 //======================================================================
 // create_texture2d
 //======================================================================
+auto dust::create_texture2d(context_ptr const& context, resource_usage_flags_t flags, surface_format_t format, uint width, uint height) -> texture2d_ptr
+{
+	return texture2d_ptr(new texture2d_t(context, flags, format, 0, width, height));
+}
+
 auto dust::create_texture2d(context_ptr const& context, surface_format_t format, uint width, uint height) -> texture2d_ptr
 {
-	return texture2d_ptr(new texture2d_t(context, {}, format, 0, width, height));
+	return create_texture2d(context, {}, format, width, height);
 }
 
 

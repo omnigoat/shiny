@@ -12,6 +12,9 @@
 #include <dust/texture2d.hpp>
 #include <dust/compute_shader.hpp>
 
+#pragma message ("change these")
+#include <dust/platform/win32/shader_resource2d.hpp>
+
 #include <fooey/widgets/window.hpp>
 #include <fooey/fooey.hpp>
 #include <fooey/events/resize.hpp>
@@ -101,9 +104,9 @@ int main()
 		cs = dust::create_compute_shader(gfx, m.begin(), m.size());
 
 		// 128x128 texture for reading
-		auto sr = dust::create_shader_resource2d(dust::surface_format_t::r8g8b8a8_unorm, 128);
+		auto sr = dust::create_shader_resource2d(gfx, dust::view_type_t::read_only, dust::surface_format_t::generic_f32, 128, 128);
 
-		dust::create_readonly_shader_resource2d()
+		//dust::create_readonly_shader_resource2d()
 		//
 		//auto ar = dust::create_access_resource2d()
 		

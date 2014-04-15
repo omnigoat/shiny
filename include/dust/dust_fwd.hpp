@@ -49,8 +49,8 @@ namespace dust {
 	struct buffer_t;
 	typedef atma::intrusive_ptr<buffer_t> buffer_ptr;
 
-	struct shader_resource_view_t;
-	typedef atma::intrusive_ptr<shader_resource_view_t> shader_resource_view_ptr;
+	struct shader_resource2d_t;
+	typedef atma::intrusive_ptr<shader_resource2d_t> shader_resource2d_ptr;
 
 	struct resource_t;
 	typedef atma::intrusive_ptr<resource_t> resource_ptr;

@@ -9,6 +9,8 @@
 #include <dust/index_buffer.hpp>
 #include <dust/scene.hpp>
 #include <dust/compute_shader.hpp>
+#include <dust/texture2d.hpp>
+#include <dust/texture3d.hpp>
 
 #include <fooey/events/resize.hpp>
 #include <fooey/keys.hpp>
@@ -440,7 +442,7 @@ auto context_t::signal_upload_compute_shader(compute_shader_ptr const& cs) -> vo
 	});
 }
 
-auto context_t::create_d3d_view(platform::d3d_shader_resource_view_ptr&, resource_ptr const& resource, view_type_t) -> void
+auto context_t::create_d3d_shader_resource_view(platform::d3d_shader_resource_view_ptr&, resource_ptr const& resource, view_type_t) -> void
 {
 	//D3D11_SHADER_RESOURCE_VIEW_DESC srvd;
 	auto srvd = D3D11_SHADER_RESOURCE_VIEW_DESC(); //{DXGI_FORMAT_R32_FLOAT, D3D11_RESOURCE_DIMENSION_TEXTURE2D, {0,1}};

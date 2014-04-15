@@ -80,7 +80,7 @@
     <ClCompile Include="..\source\dust\platform\win32\buffer.cpp">
       <Filter>source\dust\platform\win32</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\dust\platform\win32\shader_resource_view.cpp">
+    <ClCompile Include="..\source\dust\platform\win32\shader_resource2d.cpp">
       <Filter>source\dust\platform\win32</Filter>
     </ClCompile>
   </ItemGroup>
@@ -187,14 +187,14 @@
     <ClInclude Include="..\include\dust\buffer.hpp">
       <Filter>include\dust</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\dust\platform\win32\shader_resource_view.hpp">
-      <Filter>include\dust\platform\win32</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\dust\platform\win32\resource.hpp">
       <Filter>include\dust\platform\win32</Filter>
     </ClInclude>
     <ClInclude Include="..\include\dust\resource.hpp">
       <Filter>include\dust</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\dust\platform\win32\shader_resource2d.hpp">
+      <Filter>include\dust\platform\win32</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
