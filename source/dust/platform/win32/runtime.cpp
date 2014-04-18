@@ -28,7 +28,7 @@ namespace
 			dest.push_back({
 				i->Width, i->Height,
 				i->RefreshRate.Numerator, i->RefreshRate.Denominator,
-				surface_format_t::r8g8b8a8_unorm
+				surface_format_t::un8x4
 			});
 		}
 	}

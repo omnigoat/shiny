@@ -15,6 +15,7 @@ namespace dust
 		~shader_resource2d_t();
 
 		auto view_type() const -> view_type_t { return view_type_; }
+		auto backing_texture() const -> texture2d_ptr const& { return texture_; }
 
 	protected:
 		context_ptr context_;
@@ -22,5 +23,7 @@ namespace dust
 
 		texture2d_ptr texture_;
 		platform::d3d_shader_resource_view_ptr d3d_srv_;
+		platform::d3d_unordered_access_view_ptr d3d_uav_;
+		platform::d3d_view_ptr d3d_view_;
 	};
 }

@@ -15,13 +15,9 @@
 #include <fooey/events/resize.hpp>
 #include <fooey/keys.hpp>
 
-#pragma warning(push,3)
-#include <d3dcompiler.h>
-#pragma warning(pop)
-
 #include <vector>
 #include <atomic>
-
+#include <map>
 
 using namespace dust;
 using dust::context_t;
@@ -34,6 +30,22 @@ namespace
 		D3D11_BIND_INDEX_BUFFER,
 		D3D11_BIND_CONSTANT_BUFFER
 	};
+
+	DXGI_FORMAT surface_format_to_dxgiformat[] =
+	{
+		DXGI_FORMAT_UNKNOWN,
+		DXGI_FORMAT_R8G8B8A8_TYPELESS,
+		DXGI_FORMAT_R8G8B8A8_SINT,
+		DXGI_FORMAT_R8G8B8A8_UINT,
+		DXGI_FORMAT_R8G8B8A8_SNORM,
+		DXGI_FORMAT_R8G8B8A8_UNORM,
+		DXGI_FORMAT_R32_TYPELESS,
+	};
+	/*
+		{surface_format_t::unknown, DXGI_FORMAT_UNKNOWN},
+		{surface_format_t::g32, DXGI_FORMAT_R32_TYPELESS}
+	};*/
+	
 }
 
 //======================================================================
@@ -70,7 +82,7 @@ auto context_t::pull_display_format(display_mode_t& mode, DXGI_SWAP_CHAIN_DESC& 
 	mode.width = desc.BufferDesc.Width;
 	mode.height = desc.BufferDesc.Height;
 	mode.fullscreen = desc.Windowed == FALSE;
-	mode.format = surface_format_t::r8g8b8a8_unorm;
+	mode.format = surface_format_t::un8x4;
 	mode.refreshrate_frames = desc.BufferDesc.RefreshRate.Numerator;
 	mode.refreshrate_period = desc.BufferDesc.RefreshRate.Denominator;
 }

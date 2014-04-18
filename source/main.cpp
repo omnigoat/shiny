@@ -82,7 +82,7 @@ int main()
 	auto cb = dust::create_constant_buffer(gfx, sizeof(world_matrix), &world_matrix);
 
 	// texture
-	auto tx = dust::create_texture2d(gfx, dust::surface_format_t::r8g8b8a8_unorm, 128, 128);
+	auto tx = dust::create_texture2d(gfx, dust::surface_format_t::un8x4, 128, 128);
 
 	
 	// camera
@@ -94,7 +94,7 @@ int main()
 	// compute shader?
 	//auto p = atma::filesystem::path_t{"blam/hooray/things/"};
 	auto cs = dust::compute_shader_ptr(); //  dust::create_compute_shader(
-	if (false) {
+	{
 		namespace afs = atma::filesystem;
 
 		auto f = afs::file_t{"Debug/cs_test.cso"};
@@ -104,8 +104,8 @@ int main()
 		cs = dust::create_compute_shader(gfx, m.begin(), m.size());
 
 		// 128x128 texture for reading
-		auto sr = dust::create_shader_resource2d(gfx, dust::view_type_t::read_only, dust::surface_format_t::generic_f32, 128, 128);
-
+		auto sr = dust::create_shader_resource2d(gfx, dust::view_type_t::read_only, dust::surface_format_t::un8x4, 128, 128);
+		auto ur = dust::create_shader_resource2d(gfx, dust::view_type_t::read_write, dust::surface_format_t::un8x4, 128, 128);
 		//dust::create_readonly_shader_resource2d()
 		//
 		//auto ar = dust::create_access_resource2d()
