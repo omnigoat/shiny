@@ -68,7 +68,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(ProjectDir)..\include;$(ProjectDir)..\..\atma\vendor;$(ProjectDir)..\..\atma\include;$(ProjectDir)..\..\fooey\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir);$(DXSDK_DIR)Include;..\include;$(ProjectDir)..\..\atma\vendor;$(ProjectDir)..\..\atma\include;$(ProjectDir)..\..\fooey\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -204,6 +204,7 @@
     <ClInclude Include="..\include\dust\platform\win32\shader_resource2d.hpp" />
     <ClInclude Include="..\include\dust\platform\win32\texture3d.hpp" />
     <ClInclude Include="..\include\dust\resource.hpp" />
+    <ClInclude Include="..\include\dust\shader_resource2d.hpp" />
     <ClInclude Include="..\include\dust\surface_format.hpp" />
     <ClInclude Include="..\include\dust\index_buffer.hpp" />
     <ClInclude Include="..\include\dust\lock.hpp" />
@@ -252,6 +253,9 @@
       <CopyLocalSatelliteAssemblies>false</CopyLocalSatelliteAssemblies>
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
       <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
+    </ProjectReference>
+    <ProjectReference Include="..\vendor\DirectXTex\DirectXTex_Desktop_2013.vcxproj">
+      <Project>{371b9fa9-4c90-4ac6-a123-aced756d6c77}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -7,3 +7,4 @@ Release/
 *.sdf
 *.user
 *.lib
+*.inc

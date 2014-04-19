@@ -35,6 +35,7 @@ namespace dust {
 		auto signal_update_constant_buffer(constant_buffer_ptr const&, uint data_size, void*) -> void;
 		auto signal_update_constant_buffer(constant_buffer_ptr const&, atma::shared_memory_t const&) -> void;
 		auto signal_upload_compute_shader(compute_shader_ptr const&) -> void;
+		auto signal_upload_shader_resource(view_type_t, shader_resource2d_ptr const&) -> void;
 
 		// d3d-specific
 		auto signal_d3d_map(platform::d3d_buffer_ptr const&, D3D11_MAP, uint32 subresource, std::function<void(D3D11_MAPPED_SUBRESOURCE*)> const& = std::function<void(D3D11_MAPPED_SUBRESOURCE*)>()) -> void;
@@ -47,6 +48,7 @@ namespace dust {
 		auto create_d3d_shader_resource_view(platform::d3d_shader_resource_view_ptr&, resource_ptr const&, view_type_t) -> void;
 
 		auto d3d_device() const -> platform::d3d_device_ptr { return d3d_device_; }
+		auto d3d_immediate_context() const -> platform::d3d_context_ptr { return d3d_immediate_context_; }
 
 	private:
 		context_t(runtime_t&, fooey::window_ptr const&, uint32 adapter);

@@ -11,9 +11,7 @@
 #include <dust/scene.hpp>
 #include <dust/texture2d.hpp>
 #include <dust/compute_shader.hpp>
-
-#pragma message ("change these")
-#include <dust/platform/win32/shader_resource2d.hpp>
+#include <dust/shader_resource2d.hpp>
 
 #include <fooey/widgets/window.hpp>
 #include <fooey/fooey.hpp>
@@ -27,25 +25,28 @@
 
 #include <iostream>
 
+#include <../vendor/DirectXTex/DirectXTex.h>
+
+
+
 
 int main()
 {
-	// setup up gui
+	// setup gui
 	auto renderer = fooey::system_renderer();
 	auto window = fooey::window("Excitement.", 480, 360);
 	renderer->add_window(window);
 
 	// initialise dust
 	auto dust_runtime = dust::runtime_t();
-	//auto gfx = dust::create_context(dust_runtime, window, dust::primary_adapter);
-	atma::intrusive_ptr<dust::context_t> gfx = dust::create_context(dust_runtime, window, dust::primary_adapter);
+	auto ctx = dust::create_context(dust_runtime, window, dust::primary_adapter);
 	
 	// shaders
-	auto vs = dust::create_vertex_shader(gfx);
-	auto ps = dust::create_pixel_shader(gfx);
+	auto vs = dust::create_vertex_shader(ctx);
+	auto ps = dust::create_pixel_shader(ctx);
 
 	// vertex declaration
-	auto vd = dust::vertex_declaration_t(gfx, vs, {
+	auto vd = dust::vertex_declaration_t(ctx, vs, {
 		{dust::vertex_stream_t::usage_t::position, 0, dust::vertex_stream_t::element_type_t::float32, 4},
 		{dust::vertex_stream_t::usage_t::color, 0, dust::vertex_stream_t::element_type_t::float32, 4}
 	});
@@ -61,7 +62,7 @@ int main()
 		-0.5f, -0.5f,  0.5f, 1.f,   1.f, 1.f, 1.f, 1.f,
 		-0.5f, -0.5f, -0.5f, 1.f,   1.f, 0.f, 0.f, 1.f,
 	};
-	auto vb = dust::create_vertex_buffer(gfx, dust::buffer_usage_t::immutable, vd, 8, vbd);
+	auto vb = dust::create_vertex_buffer(ctx, dust::buffer_usage_t::immutable, vd, 8, vbd);
 
 	// index-buffer
 	uint16 ibd[] = {
@@ -72,17 +73,17 @@ int main()
 		5, 1, 3, 3, 7, 5, // -z plane
 		6, 2, 0, 0, 4, 6, // +z plane
 	};
-	auto ib = dust::create_index_buffer(gfx, dust::buffer_usage_t::immutable, 16, 36, ibd);
+	auto ib = dust::create_index_buffer(ctx, dust::buffer_usage_t::immutable, 16, 36, ibd);
 
 	namespace math = atma::math;
 
 	// constant buffer
 	static float t = 0.f;
 	atma::math::matrix4f world_matrix;
-	auto cb = dust::create_constant_buffer(gfx, sizeof(world_matrix), &world_matrix);
+	auto cb = dust::create_constant_buffer(ctx, sizeof(world_matrix), &world_matrix);
 
 	// texture
-	auto tx = dust::create_texture2d(gfx, dust::surface_format_t::un8x4, 128, 128);
+	auto tx = dust::create_texture2d(ctx, dust::surface_format_t::un8x4, 128, 128);
 
 	
 	// camera
@@ -101,17 +102,12 @@ int main()
 		auto m = atma::unique_memory_t(f.size());
 		f.read(m.begin(), f.size());
 
-		cs = dust::create_compute_shader(gfx, m.begin(), m.size());
+		cs = dust::create_compute_shader(ctx, m.begin(), m.size());
 
 		// 128x128 texture for reading
-		auto sr = dust::create_shader_resource2d(gfx, dust::view_type_t::read_only, dust::surface_format_t::un8x4, 128, 128);
-		auto ur = dust::create_shader_resource2d(gfx, dust::view_type_t::read_write, dust::surface_format_t::un8x4, 128, 128);
-		//dust::create_readonly_shader_resource2d()
-		//
-		//auto ar = dust::create_access_resource2d()
-		
-		//sr->underlying_resource()
 	}
+	auto sr = dust::create_shader_resource2d(ctx, dust::view_type_t::read_only, dust::surface_format_t::un8x4, 128, 128);
+	auto ur = dust::create_shader_resource2d(ctx, dust::view_type_t::read_write, dust::surface_format_t::un8x4, 128, 128);
 
 	
 
@@ -123,8 +119,8 @@ int main()
 		}}
 	});
 
-	window->key_state.on_key(fooey::key_t::Alt + fooey::key_t::Enter, [gfx]{
-		gfx->signal_fullscreen_toggle(1);
+	window->key_state.on_key(fooey::key_t::Alt + fooey::key_t::Enter, [ctx]{
+		ctx->signal_fullscreen_toggle(1);
 	});
 
 	float x = 0.f;
@@ -173,20 +169,29 @@ int main()
 		camera.look_at(math::point4f());
 
 		camera.set_aspect(window->height() / (float)window->width());
-		auto scene = dust::scene_t(gfx, camera);
+		auto scene = dust::scene_t(ctx, camera);
 
 		world_matrix = math::rotation_y(t * 0.002f);
 		scene.signal_update_constant_buffer(cb, sizeof(world_matrix), &world_matrix);
 		scene.signal_constant_buffer_upload(1, cb);
 		scene.signal_draw(ib, vd, vb, vs, ps);
 
-		//gfx->signal_upload_compute_shader(cs);
-		//gfx->signal_execute_compute_shader(cs)
+		ctx->signal_upload_shader_resource(dust::view_type_t::read_only, sr);
+		ctx->signal_upload_shader_resource(dust::view_type_t::read_write, ur);
+		ctx->signal_upload_compute_shader(cs);
+
+		//ctx->signal_upload_compute_shader(cs);
+		//ctx->signal_execute_compute_shader(cs)
 
 
-		gfx->signal_clear();
-		gfx->signal_draw_scene(scene);
-		gfx->signal_block();
-		gfx->signal_present();
+		ctx->signal_clear();
+		ctx->signal_draw_scene(scene);
+		ctx->signal_block();
+		ctx->signal_present();
 	}
+	ctx->signal_block();
+
+	auto img = DirectX::ScratchImage();
+	DirectX::CaptureTexture(ctx->d3d_device().get(), ctx->d3d_immediate_context().get(), ur->backing_texture()->d3d_texture().get(), img);
+	DirectX::SaveToTGAFile(*img.GetImage(0, 0, 0), L"someimg.tga");
 }

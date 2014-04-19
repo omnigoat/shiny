@@ -196,6 +196,9 @@
     <ClInclude Include="..\include\dust\platform\win32\shader_resource2d.hpp">
       <Filter>include\dust\platform\win32</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\dust\shader_resource2d.hpp">
+      <Filter>include\dust</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="..\shaders\vs_basic.hlsl">

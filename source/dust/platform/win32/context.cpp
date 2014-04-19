@@ -11,6 +11,7 @@
 #include <dust/compute_shader.hpp>
 #include <dust/texture2d.hpp>
 #include <dust/texture3d.hpp>
+#include <dust/shader_resource2d.hpp>
 
 #include <fooey/events/resize.hpp>
 #include <fooey/keys.hpp>
@@ -19,8 +20,10 @@
 #include <atomic>
 #include <map>
 
+
 using namespace dust;
 using dust::context_t;
+
 
 namespace
 {
@@ -451,6 +454,7 @@ auto context_t::signal_upload_compute_shader(compute_shader_ptr const& cs) -> vo
 {
 	engine_.signal([&, cs] {
 		d3d_immediate_context_->CSSetShader(cs->d3d_cs().get(), nullptr, 0);
+		d3d_immediate_context_->Dispatch(4, 4, 1);
 	});
 }
 
@@ -473,4 +477,16 @@ auto context_t::create_d3d_shader_resource_view(platform::d3d_shader_resource_vi
 	d3d_device_->CreateShaderResourceView(nullptr, nullptr, nullptr);
 }
 
-
+auto context_t::signal_upload_shader_resource(view_type_t view_type, shader_resource2d_ptr const& rs) -> void
+{
+	if (view_type == view_type_t::read_only) {
+		engine_.signal([&, rs] {
+			d3d_immediate_context_->CSSetShaderResources(0, 1, &(ID3D11ShaderResourceView*&)rs->d3d_view().get());
+		});
+	}
+	else {
+		engine_.signal([&, rs] {
+			d3d_immediate_context_->CSSetUnorderedAccessViews(0, 1, &(ID3D11UnorderedAccessView*&)rs->d3d_view().get(), nullptr);
+		});
+	}
+}
