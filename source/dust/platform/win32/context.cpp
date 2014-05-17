@@ -102,7 +102,7 @@ auto context_t::push_display_format(DXGI_MODE_DESC& dxgimode, display_mode_t con
 
 auto context_t::bind_events(fooey::window_ptr const& window) -> void
 {
-	bound_events_ = window->on({
+	/*bound_events_ = */window->on({
 		{"resize-dc.dust.context", [this](fooey::events::resize_t& e) { on_resize(e); }}
 	});
 }
@@ -454,7 +454,6 @@ auto context_t::signal_upload_compute_shader(compute_shader_ptr const& cs) -> vo
 {
 	engine_.signal([&, cs] {
 		d3d_immediate_context_->CSSetShader(cs->d3d_cs().get(), nullptr, 0);
-		d3d_immediate_context_->Dispatch(4, 4, 1);
 	});
 }
 
@@ -490,3 +489,11 @@ auto context_t::signal_upload_shader_resource(view_type_t view_type, shader_reso
 		});
 	}
 }
+
+auto context_t::signal_compute_shader_dispatch(uint x, uint y, uint z) -> void
+{
+	engine_.signal([&, x, y, z]{
+		d3d_immediate_context_->Dispatch(x, y, z);
+	});
+}
+

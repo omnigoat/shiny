@@ -2,10 +2,7 @@
 //======================================================================
 #include <dust/surface_format.hpp>
 
-#include <fooey/widgets/window.hpp>
-
-#include <atma/com_ptr.hpp>
-
+#include <atma/types.hpp>
 
 //======================================================================
 // display_mode_t is common to all outputs

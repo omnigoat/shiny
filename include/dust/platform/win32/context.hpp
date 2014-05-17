@@ -7,9 +7,10 @@
 
 #include <dust/platform/win32/d3d_fwd.hpp>
 
-#include <fooey/widgets/window.hpp>
-#include <fooey/events/resize.hpp>
+#include <fooey/fooey_fwd.hpp>
+#include <fooey/event_handler.hpp>
 
+#include <atma/types.hpp>
 #include <atma/intrusive_ptr.hpp>
 #include <atma/thread/engine.hpp>
 #include <atma/shared_memory.hpp>
@@ -36,6 +37,7 @@ namespace dust {
 		auto signal_update_constant_buffer(constant_buffer_ptr const&, atma::shared_memory_t const&) -> void;
 		auto signal_upload_compute_shader(compute_shader_ptr const&) -> void;
 		auto signal_upload_shader_resource(view_type_t, shader_resource2d_ptr const&) -> void;
+		auto signal_compute_shader_dispatch(uint x, uint y, uint z) -> void;
 
 		// d3d-specific
 		auto signal_d3d_map(platform::d3d_buffer_ptr const&, D3D11_MAP, uint32 subresource, std::function<void(D3D11_MAPPED_SUBRESOURCE*)> const& = std::function<void(D3D11_MAPPED_SUBRESOURCE*)>()) -> void;

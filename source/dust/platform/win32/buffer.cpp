@@ -45,7 +45,7 @@ buffer_t::buffer_t(context_ptr const& ctx, buffer_type_t type, buffer_usage_t us
 				context()->create_d3d_buffer(d3d_buffer_, type_, usage_, size_, &shadow_buffer_[0]);
 			}
 			else {
-				shadow_buffer_.resize(size_);
+				shadow_buffer_.resize((uint)size_);
 				context()->create_d3d_buffer(d3d_buffer_, type_, usage_, size_, nullptr);
 			}
 			break;

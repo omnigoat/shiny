@@ -8,5 +8,5 @@
 
 // implemented per-platform
 namespace dust {
-	auto create_compute_shader(context_ptr const&, void const* data, uint data_size) -> compute_shader_ptr;
+	auto create_compute_shader(context_ptr const&, void const* data, size_t data_size) -> compute_shader_ptr;
 }

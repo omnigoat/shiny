@@ -5,7 +5,7 @@
 #include <dust/surface_format.hpp>
 #include <dust/output.hpp>
 
-#include <fooey/widgets/window.hpp>
+#include <fooey/fooey_fwd.hpp>
 
 #ifdef _DEBUG
 #pragma warning(push,3)

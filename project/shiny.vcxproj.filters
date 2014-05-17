@@ -30,6 +30,12 @@
     <Filter Include="source\dust\platform\win32">
       <UniqueIdentifier>{37dcddbd-688b-4d43-b54b-6a7f2c8fc705}</UniqueIdentifier>
     </Filter>
+    <Filter Include="vendor">
+      <UniqueIdentifier>{41b55faa-94eb-4ff9-9c11-b03b9b3cf483}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="vendor\zlib">
+      <UniqueIdentifier>{e98436a5-640f-4186-96dd-4a7572289df1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\main.cpp">
@@ -82,6 +88,63 @@
     </ClCompile>
     <ClCompile Include="..\source\dust\platform\win32\shader_resource2d.cpp">
       <Filter>source\dust\platform\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vendor\zlib\adler32.c">
+      <Filter>vendor\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vendor\zlib\compress.c">
+      <Filter>vendor\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vendor\zlib\crc32.c">
+      <Filter>vendor\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vendor\zlib\deflate.c">
+      <Filter>vendor\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vendor\zlib\gzclose.c">
+      <Filter>vendor\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vendor\zlib\gzlib.c">
+      <Filter>vendor\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vendor\zlib\gzread.c">
+      <Filter>vendor\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vendor\zlib\gzwrite.c">
+      <Filter>vendor\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vendor\zlib\infback.c">
+      <Filter>vendor\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vendor\zlib\contrib\masmx64\inffas8664.c">
+      <Filter>vendor\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vendor\zlib\inffast.c">
+      <Filter>vendor\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vendor\zlib\inflate.c">
+      <Filter>vendor\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vendor\zlib\inftrees.c">
+      <Filter>vendor\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vendor\zlib\contrib\minizip\ioapi.c">
+      <Filter>vendor\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vendor\zlib\trees.c">
+      <Filter>vendor\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vendor\zlib\uncompr.c">
+      <Filter>vendor\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vendor\zlib\contrib\minizip\unzip.c">
+      <Filter>vendor\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vendor\zlib\contrib\minizip\zip.c">
+      <Filter>vendor\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vendor\zlib\zutil.c">
+      <Filter>vendor\zlib</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -199,6 +262,33 @@
     <ClInclude Include="..\include\dust\shader_resource2d.hpp">
       <Filter>include\dust</Filter>
     </ClInclude>
+    <ClInclude Include="..\vendor\zlib\deflate.h">
+      <Filter>vendor\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vendor\zlib\infblock.h">
+      <Filter>vendor\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vendor\zlib\infcodes.h">
+      <Filter>vendor\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vendor\zlib\inffast.h">
+      <Filter>vendor\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vendor\zlib\inftrees.h">
+      <Filter>vendor\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vendor\zlib\infutil.h">
+      <Filter>vendor\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vendor\zlib\zconf.h">
+      <Filter>vendor\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vendor\zlib\zlib.h">
+      <Filter>vendor\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vendor\zlib\zutil.h">
+      <Filter>vendor\zlib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="..\shaders\vs_basic.hlsl">
@@ -210,5 +300,15 @@
     <FxCompile Include="..\shaders\cs_test.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\vendor\zlib\contrib\vstudio\vc11\zlib.rc">
+      <Filter>vendor\zlib</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\vendor\zlib\contrib\vstudio\vc11\zlibvc.def">
+      <Filter>vendor\zlib</Filter>
+    </None>
   </ItemGroup>
 </Project>

@@ -9,7 +9,7 @@ namespace dust
 {
 	struct compute_shader_t : atma::ref_counted
 	{
-		compute_shader_t(context_ptr const&, void const* data, uint data_size);
+		compute_shader_t(context_ptr const&, void const* data, size_t data_size);
 
 		auto d3d_cs() const -> platform::d3d_compute_shader_ptr const& { return d3d_cs_; }
 		auto d3d_blob() const -> platform::d3d_blob_ptr const& { return d3d_blob_; }

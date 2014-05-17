@@ -12,21 +12,104 @@
 #include <dust/texture2d.hpp>
 #include <dust/compute_shader.hpp>
 #include <dust/shader_resource2d.hpp>
+#include <dust/texture3d.hpp>
 
 #include <fooey/widgets/window.hpp>
 #include <fooey/fooey.hpp>
 #include <fooey/events/resize.hpp>
 #include <fooey/events/mouse.hpp>
+#include <fooey/event_handler.hpp>
 
 #include <atma/math/vector4f.hpp>
 #include <atma/math/matrix4f.hpp>
 #include <atma/filesystem/file.hpp>
 #include <atma/unique_memory.hpp>
 
+#include <atma/jflate/common.hpp>
+
+
 #include <iostream>
+
 
 #include <../vendor/DirectXTex/DirectXTex.h>
 
+#include <zlib.h>
+
+template <size_t AccumulateSize, size_t ReadSize, typename FN>
+auto zl_for_each_chunk(void const* begin, void const* end, FN const& fn) -> int
+{
+	auto strm = z_stream();
+	strm.zfree = Z_NULL;
+	strm.opaque = Z_NULL;
+	strm.avail_in = 0;
+	strm.next_in = Z_NULL;
+	int ret = inflateInit(&strm);
+	ATMA_ENSURE_IS(Z_OK, ret);
+
+	uint8 acc[AccumulateSize];
+	uint8 out[ReadSize];
+
+	size_t accoff = 0;
+	Bytef const* cur = reinterpret_cast<Bytef const*>(begin);
+	do
+	{
+		strm.avail_in = ReadSize;
+		strm.next_in = const_cast<Bytef*>(cur);
+		cur += ReadSize;
+
+		do
+		{
+			strm.avail_out = ReadSize;
+			strm.next_out = out;
+			auto ret = inflate(&strm, Z_NO_FLUSH);
+			switch (ret) {
+				case Z_NEED_DICT:
+					ret = Z_DATA_ERROR;
+				case Z_DATA_ERROR:
+				case Z_MEM_ERROR:
+					goto zread_fail;
+			}
+
+			size_t have = ReadSize - strm.avail_out;
+
+			// pass data to loader
+			size_t outoff = 0;
+			if (have + accoff > AccumulateSize)
+			{
+				if (accoff)
+				{
+					outoff = AccumulateSize - accoff;
+					memcpy(acc + accoff, out, outoff);
+					fn(acc);
+					accoff = 0;
+				}
+				for (; outoff + AccumulateSize <= have; outoff += AccumulateSize)
+					fn(out + outoff);
+7		7	}
+
+			if (outoff < have)
+			{
+				auto dhave = have - outoff;
+				memcpy(acc + accoff, out+outoff, dhave);
+				accoff += dhave;
+				if (accoff >= AccumulateSize)
+				{
+					fn(acc);
+					accoff = 0;
+				}
+			}
+
+		} while (strm.avail_out == 0);
+
+	} while (ret != Z_STREAM_END);
+
+	inflateEnd(&strm);
+	return 0;
+
+zread_fail:
+	inflateEnd(&strm);
+	return ret;
+}
 
 
 
@@ -109,6 +192,27 @@ int main()
 	auto sr = dust::create_shader_resource2d(ctx, dust::view_type_t::read_only, dust::surface_format_t::un8x4, 128, 128);
 	auto ur = dust::create_shader_resource2d(ctx, dust::view_type_t::read_write, dust::surface_format_t::un8x4, 128, 128);
 
+	// load voxels?
+	{
+		namespace afs = atma::filesystem;
+
+		// open file, read everything into memory
+		// todo: memory-mapped files
+		auto f = afs::file_t{"../data/dragon.oct"};
+		auto m = atma::unique_memory_t(f.size());
+		f.read(m.begin(), f.size());
+
+
+		// inflate 16kb at a time, and call our function for each brick
+		uint const bricksize = 8*8*8*sizeof(float)* 4;
+		zl_for_each_chunk<bricksize, 16 * 1024>(m.begin(), m.end(), [](void const* buf) {
+			
+		});
+
+		auto tx3 = dust::create_texture3d(ctx, dust::surface_format_t::f32x4, 0, 128);
+	}
+
+
 	
 
 	bool running = true;
@@ -121,6 +225,10 @@ int main()
 
 	window->key_state.on_key(fooey::key_t::Alt + fooey::key_t::Enter, [ctx]{
 		ctx->signal_fullscreen_toggle(1);
+	});
+
+	window->key_state.on_key(fooey::key_t::Esc, [&running]{
+		running = false;
 	});
 
 	float x = 0.f;
@@ -179,6 +287,7 @@ int main()
 		ctx->signal_upload_shader_resource(dust::view_type_t::read_only, sr);
 		ctx->signal_upload_shader_resource(dust::view_type_t::read_write, ur);
 		ctx->signal_upload_compute_shader(cs);
+		ctx->signal_compute_shader_dispatch(4, 4, 1);
 
 		//ctx->signal_upload_compute_shader(cs);
 		//ctx->signal_execute_compute_shader(cs)
