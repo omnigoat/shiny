@@ -304,17 +304,17 @@ auto context_t::create_d3d_buffer(platform::d3d_buffer_ptr& buffer, buffer_type_
 	}
 }
 
-auto context_t::signal_d3d_map(platform::d3d_buffer_ptr const& buffer, D3D11_MAP map_type, uint32 subresource, std::function<void(D3D11_MAPPED_SUBRESOURCE*)> const& fn) -> void
+auto context_t::signal_d3d_map(platform::d3d_resource_ptr const& buffer, D3D11_MAP map_type, uint32 subresource, std::function<void(D3D11_MAPPED_SUBRESOURCE*)> const& fn) -> void
 {
-	engine_.signal([&, map_type, subresource, fn] {
+	engine_.signal([&, buffer, map_type, subresource, fn] {
 		D3D11_MAPPED_SUBRESOURCE dmap;
-		d3d_immediate_context_->Map(buffer.get(), subresource, map_type, 0, &dmap);
+		ATMA_ENSURE_IS(S_OK, d3d_immediate_context_->Map(buffer.get(), subresource, map_type, 0, &dmap));
 		if (fn)
 			fn(&dmap);
 	});
 }
 
-auto context_t::signal_d3d_unmap(platform::d3d_buffer_ptr const& buffer, uint32 subresource) -> void
+auto context_t::signal_d3d_unmap(platform::d3d_resource_ptr const& buffer, uint32 subresource) -> void
 {
 	engine_.signal([&, buffer, subresource] {
 		d3d_immediate_context_->Unmap(buffer.get(), subresource);
@@ -445,7 +445,7 @@ auto context_t::create_d3d_texture2d(platform::d3d_texture2d_ptr& texture, resou
 
 auto context_t::create_d3d_texture3d(platform::d3d_texture3d_ptr& texture, surface_format_t format, uint mips, uint width, uint height, uint depth) -> void
 {
-	auto desc = D3D11_TEXTURE3D_DESC{width, height, depth, mips, DXGI_FORMAT_R8G8B8A8_UNORM, D3D11_USAGE_DEFAULT, 0, 0, 0};
+	auto desc = D3D11_TEXTURE3D_DESC{width, height, depth, mips, DXGI_FORMAT_R8G8B8A8_UNORM, D3D11_USAGE_DYNAMIC, 0, 0, 0};
 	
 	ATMA_ENSURE_IS(S_OK, d3d_device_->CreateTexture3D(&desc, nullptr, texture.assign()));
 }

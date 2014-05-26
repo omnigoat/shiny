@@ -40,8 +40,8 @@ namespace dust {
 		auto signal_compute_shader_dispatch(uint x, uint y, uint z) -> void;
 
 		// d3d-specific
-		auto signal_d3d_map(platform::d3d_buffer_ptr const&, D3D11_MAP, uint32 subresource, std::function<void(D3D11_MAPPED_SUBRESOURCE*)> const& = std::function<void(D3D11_MAPPED_SUBRESOURCE*)>()) -> void;
-		auto signal_d3d_unmap(platform::d3d_buffer_ptr const&, uint32 subresource) -> void;
+		auto signal_d3d_map(platform::d3d_resource_ptr const&, D3D11_MAP, uint32 subresource, std::function<void(D3D11_MAPPED_SUBRESOURCE*)> const& = std::function<void(D3D11_MAPPED_SUBRESOURCE*)>()) -> void;
+		auto signal_d3d_unmap(platform::d3d_resource_ptr const&, uint32 subresource) -> void;
 		auto signal_d3d_buffer_upload(platform::d3d_buffer_ptr const&, void const* data, uint32 row_pitch, uint32 depth_pitch) -> void;
 		
 		auto create_d3d_buffer(platform::d3d_buffer_ptr&, buffer_type_t, buffer_usage_t, size_t data_size, void const* data) -> void;

@@ -22,6 +22,8 @@ namespace dust
 		auto height() const -> uint;
 		auto depth() const -> uint;
 
+		//auto lock() -> 
+
 		auto d3d_texture() const -> platform::d3d_texture3d_ptr const&;
 		auto d3d_texture() -> platform::d3d_texture3d_ptr&;
 

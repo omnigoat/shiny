@@ -191,10 +191,6 @@
     <ClCompile Include="..\source\main.cpp" />
     <ClCompile Include="..\vendor\zlib\adler32.c" />
     <ClCompile Include="..\vendor\zlib\compress.c" />
-    <ClCompile Include="..\vendor\zlib\contrib\masmx64\inffas8664.c" />
-    <ClCompile Include="..\vendor\zlib\contrib\minizip\ioapi.c" />
-    <ClCompile Include="..\vendor\zlib\contrib\minizip\unzip.c" />
-    <ClCompile Include="..\vendor\zlib\contrib\minizip\zip.c" />
     <ClCompile Include="..\vendor\zlib\crc32.c" />
     <ClCompile Include="..\vendor\zlib\deflate.c" />
     <ClCompile Include="..\vendor\zlib\gzclose.c" />
@@ -249,11 +245,8 @@
     <ClInclude Include="..\include\dust\vertex_declaration.hpp" />
     <ClInclude Include="..\include\dust\vertex_shader.hpp" />
     <ClInclude Include="..\vendor\zlib\deflate.h" />
-    <ClInclude Include="..\vendor\zlib\infblock.h" />
-    <ClInclude Include="..\vendor\zlib\infcodes.h" />
     <ClInclude Include="..\vendor\zlib\inffast.h" />
     <ClInclude Include="..\vendor\zlib\inftrees.h" />
-    <ClInclude Include="..\vendor\zlib\infutil.h" />
     <ClInclude Include="..\vendor\zlib\zconf.h" />
     <ClInclude Include="..\vendor\zlib\zlib.h" />
     <ClInclude Include="..\vendor\zlib\zutil.h" />
@@ -290,12 +283,6 @@
     <ProjectReference Include="..\vendor\DirectXTex\DirectXTex_Desktop_2013.vcxproj">
       <Project>{371b9fa9-4c90-4ac6-a123-aced756d6c77}</Project>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="..\vendor\zlib\contrib\vstudio\vc11\zlib.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\vendor\zlib\contrib\vstudio\vc11\zlibvc.def" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

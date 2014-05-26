@@ -25,9 +25,6 @@
 #include <atma/filesystem/file.hpp>
 #include <atma/unique_memory.hpp>
 
-#include <atma/jflate/common.hpp>
-
-
 #include <iostream>
 
 
@@ -85,7 +82,7 @@ auto zl_for_each_chunk(void const* begin, void const* end, FN const& fn) -> int
 				}
 				for (; outoff + AccumulateSize <= have; outoff += AccumulateSize)
 					fn(out + outoff);
-7		7	}
+			}
 
 			if (outoff < have)
 			{
@@ -193,23 +190,34 @@ int main()
 	auto ur = dust::create_shader_resource2d(ctx, dust::view_type_t::read_write, dust::surface_format_t::un8x4, 128, 128);
 
 	// load voxels?
+	//if (false)
 	{
 		namespace afs = atma::filesystem;
 
 		// open file, read everything into memory
 		// todo: memory-mapped files
-		auto f = afs::file_t{"../data/dragon.oct"};
-		auto m = atma::unique_memory_t(f.size());
-		f.read(m.begin(), f.size());
-
-
-		// inflate 16kb at a time, and call our function for each brick
-		uint const bricksize = 8*8*8*sizeof(float)* 4;
-		zl_for_each_chunk<bricksize, 16 * 1024>(m.begin(), m.end(), [](void const* buf) {
-			
-		});
-
 		auto tx3 = dust::create_texture3d(ctx, dust::surface_format_t::f32x4, 0, 128);
+		
+		// inflate 16kb at a time, and call our function for each brick
+		ctx->signal_d3d_map(tx3->d3d_texture(), D3D11_MAP_WRITE, 0, [&](D3D11_MAPPED_SUBRESOURCE* sr)
+		{
+			int blocks;
+			
+			auto f = afs::file_t{"../data/dragon.oct"};
+			auto m = atma::unique_memory_t(f.size());
+			f.read(m.begin(), f.size());
+			
+			auto i = (char const*)m.begin();
+			i += 4; // skip check
+			blocks = *((int const*)i);
+			i += 12;
+			i += 64 * blocks;
+
+			uint const bricksize = 8*8*8*sizeof(float)* 4;
+			zl_for_each_chunk<bricksize, 16 * 1024>(i, m.end(), [&ctx, &sr, &bricksize](void const* buf) {
+				memcpy(sr->pData, buf, bricksize);
+			});
+		});
 	}
 
 

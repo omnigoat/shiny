@@ -12,6 +12,7 @@
 //======================================================================
 namespace dust { namespace platform {
 
+	typedef atma::com_ptr<ID3D11Resource> d3d_resource_ptr;
 	typedef atma::com_ptr<ID3D11Device> d3d_device_ptr;
 	typedef atma::com_ptr<ID3D11DeviceContext> d3d_context_ptr;
 	typedef atma::com_ptr<ID3D11Buffer> d3d_buffer_ptr;
