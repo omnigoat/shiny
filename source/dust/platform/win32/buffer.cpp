@@ -68,3 +68,8 @@ auto buffer_t::upload_shadow_buffer() -> void
 	context()->signal_d3d_buffer_upload(d3d_buffer_, &shadow_buffer_[0], shadow_buffer_.size(), 1);
 	context()->signal_block();
 }
+
+auto buffer_t::d3d_resource() const -> platform::d3d_resource_ptr
+{
+	return d3d_buffer_;
+}

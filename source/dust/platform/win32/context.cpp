@@ -497,3 +497,19 @@ auto context_t::signal_compute_shader_dispatch(uint x, uint y, uint z) -> void
 	});
 }
 
+auto context_t::signal_map(resource_ptr const& rs, uint32 subresource, map_type_t maptype, map_callback_t const& fn) -> void
+{
+	auto d3dmap = 
+		maptype == map_type_t::read ? D3D11_MAP_READ :
+		maptype == map_type_t::write ? D3D11_MAP_WRITE :
+		maptype == map_type_t::write_discard ? D3D11_MAP_WRITE_DISCARD : 
+		D3D11_MAP_READ_WRITE
+		;
+
+	engine_.signal([&, rs, subresource, d3dmap, fn] {
+		D3D11_MAPPED_SUBRESOURCE sr;
+		ATMA_ENSURE_IS(S_OK, d3d_immediate_context_->Map(rs->d3d_resource().get(), subresource, d3dmap, 0, &sr));
+
+		fn(sr);
+	});
+}

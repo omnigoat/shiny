@@ -23,6 +23,8 @@ namespace dust {
 	
 	struct context_t : atma::ref_counted
 	{
+		using map_callback_t = std::function<void(D3D11_MAPPED_SUBRESOURCE&)>;
+
 		~context_t();
 
 		auto signal_block() -> void;
@@ -38,6 +40,9 @@ namespace dust {
 		auto signal_upload_compute_shader(compute_shader_ptr const&) -> void;
 		auto signal_upload_shader_resource(view_type_t, shader_resource2d_ptr const&) -> void;
 		auto signal_compute_shader_dispatch(uint x, uint y, uint z) -> void;
+
+		auto signal_map(resource_ptr const&, uint32 subresource, map_type_t, map_callback_t const&) -> void;
+
 
 		// d3d-specific
 		auto signal_d3d_map(platform::d3d_resource_ptr const&, D3D11_MAP, uint32 subresource, std::function<void(D3D11_MAPPED_SUBRESOURCE*)> const& = std::function<void(D3D11_MAPPED_SUBRESOURCE*)>()) -> void;

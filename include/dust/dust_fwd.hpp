@@ -83,7 +83,12 @@ namespace dust {
 		read_write
 	};
 
-
+	enum class map_type_t
+	{
+		write,
+		read,
+		write_discard,
+	};
 
 	template <typename T>
 	struct bitflags_t

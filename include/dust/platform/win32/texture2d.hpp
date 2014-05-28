@@ -24,6 +24,8 @@ namespace dust
 		auto d3d_texture() const -> platform::d3d_texture2d_ptr const&;
 		auto d3d_texture() -> platform::d3d_texture2d_ptr&;
 
+		auto d3d_resource() const -> platform::d3d_resource_ptr override;
+
 	private:
 		texture2d_t(context_ptr const&, resource_usage_flags_t, surface_format_t, uint width, uint height, uint mips);
 

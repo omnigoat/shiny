@@ -60,3 +60,7 @@ auto texture2d_t::d3d_texture() -> platform::d3d_texture2d_ptr&
 	return d3d_texture_;
 }
 
+auto texture2d_t::d3d_resource() const -> platform::d3d_resource_ptr
+{
+	return d3d_texture_;
+}

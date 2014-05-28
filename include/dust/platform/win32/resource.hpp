@@ -1,5 +1,6 @@
 #pragma once
 //======================================================================
+#include <dust/platform/win32/d3d_fwd.hpp>
 #include <dust/dust_fwd.hpp>
 //======================================================================
 namespace dust
@@ -16,10 +17,16 @@ namespace dust
 		auto context() const -> context_ptr const& { return context_; }
 		auto usage_flags() const -> resource_usage_flags_t { return usage_flags_; }
 
-		//auto create_view()
+		virtual auto d3d_resource() const -> platform::d3d_resource_ptr = 0;
 
 	private:
 		context_ptr context_;
 		resource_usage_flags_t usage_flags_;
+	};
+
+	struct mapped_subresource_t
+	{
+		void const* data;
+		uint size;
 	};
 }
