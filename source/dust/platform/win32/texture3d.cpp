@@ -2,7 +2,6 @@
 
 #include <dust/context.hpp>
 
-
 using namespace dust;
 using dust::texture3d_t;
 
@@ -10,19 +9,48 @@ using dust::texture3d_t;
 //======================================================================
 // create_texture3d
 //======================================================================
-auto dust::create_texture3d(context_ptr const& context, surface_format_t format, uint mips, uint width, uint height, uint depth) -> texture3d_ptr
+auto dust::create_texture3d(context_ptr const& context, texture_usage_t usage, surface_format_t format, uint width, uint height, uint depth, uint mips) -> texture3d_ptr
 {
-	return texture3d_ptr(new texture3d_t(context, {}, format, mips, width, height, depth));
+	return texture3d_ptr(new texture3d_t(context, usage, format, width, height, depth, mips));
 }
 
+auto dust::create_texture3d(context_ptr const& context, texture_usage_t usage, surface_format_t format, uint width, uint mips) -> texture3d_ptr
+{
+	return create_texture3d(context, usage, format, width, width, width, mips);
+}
 
 //======================================================================
 // texture3d
 //======================================================================
-texture3d_t::texture3d_t(context_ptr const& context, resource_usage_flags_t usage_flags, surface_format_t format, uint mips, uint width, uint height, uint depth)
-: resource_t(context, usage_flags), format_(format), mips_(mips), width_(width), height_(height), depth_(depth)
+texture3d_t::texture3d_t(context_ptr const& context, texture_usage_t usage, surface_format_t format, uint width, uint height, uint depth, uint mips)
+: resource_t(context, usage), format_(format), mips_(mips), width_(width), height_(height), depth_(depth)
 {
-	this->context()->create_d3d_texture3d(d3d_texture_, format_, mips_, width_, height_, depth_);
+	auto d3dusage = D3D11_USAGE();
+	auto d3dbind = D3D11_BIND_SHADER_RESOURCE;
+	auto d3dcpu = D3D11_CPU_ACCESS_FLAG();
+	auto d3dfmt = platform::dxgi_format_of(format);
+
+	switch (usage)
+	{
+		case texture_usage_t::render_target:
+		case texture_usage_t::depth_stencil:
+			ATMA_HALT("not possible!");
+			break;
+
+		case texture_usage_t::immutable:
+			ATMA_HALT("not possible!");	
+			d3dusage = D3D11_USAGE_IMMUTABLE;
+			break;
+
+		case texture_usage_t::streaming:
+			d3dusage = D3D11_USAGE_DYNAMIC;
+			d3dcpu = D3D11_CPU_ACCESS_WRITE;
+			break;
+	}
+
+	auto desc = D3D11_TEXTURE3D_DESC{width, height, depth, 1, d3dfmt, d3dusage, d3dbind, d3dcpu, 0};
+
+	ATMA_ENSURE_IS(S_OK, this->context()->d3d_device()->CreateTexture3D(&desc, nullptr, d3d_texture_.assign()));
 }
 
 auto texture3d_t::format() const -> surface_format_t

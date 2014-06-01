@@ -3,6 +3,7 @@
 #include <dust/surface_format.hpp>
 
 #include <atma/types.hpp>
+#include <atma/config/platform.hpp>
 
 //======================================================================
 // display_mode_t is common to all outputs

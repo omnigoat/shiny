@@ -65,6 +65,11 @@ auto zl_for_each_chunk(void const* begin, void const* end, FN const& fn) -> int
 				case Z_DATA_ERROR:
 				case Z_MEM_ERROR:
 					goto zread_fail;
+				case Z_FINISH:
+				case Z_STREAM_END:
+					goto zread_done;
+				default:
+					break;
 			}
 
 			size_t have = ReadSize - strm.avail_out;
@@ -100,6 +105,7 @@ auto zl_for_each_chunk(void const* begin, void const* end, FN const& fn) -> int
 
 	} while (ret != Z_STREAM_END);
 
+zread_done:
 	inflateEnd(&strm);
 	return 0;
 
@@ -196,10 +202,10 @@ int main()
 
 		// open file, read everything into memory
 		// todo: memory-mapped files
-		auto tx3 = dust::create_texture3d(ctx, dust::surface_format_t::f32x4, 0, 128);
+		auto tx3 = dust::create_texture3d(ctx, dust::texture_usage_t::streaming, dust::surface_format_t::f32x4, 128);
 		
 		// inflate 16kb at a time, and call our function for each brick
-		ctx->signal_d3d_map(tx3->d3d_texture(), D3D11_MAP_WRITE, 0, [&](D3D11_MAPPED_SUBRESOURCE* sr)
+		ctx->signal_d3d_map(tx3->d3d_texture(), D3D11_MAP_WRITE_DISCARD, 0, [&](D3D11_MAPPED_SUBRESOURCE* sr)
 		{
 			int blocks;
 			

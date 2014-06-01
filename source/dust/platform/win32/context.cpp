@@ -1,5 +1,8 @@
 #include <dust/context.hpp>
 
+#include <dust/platform/win32/d3d_fwd.hpp>
+#include <dust/platform/win32/dxgi_fwd.hpp>
+
 #include <dust/vertex_declaration.hpp>
 #include <dust/vertex_buffer.hpp>
 #include <dust/vertex_shader.hpp>
@@ -27,28 +30,6 @@ using dust::context_t;
 
 namespace
 {
-	D3D11_BIND_FLAG buffer_usage_to_d3dbind[] =
-	{
-		D3D11_BIND_VERTEX_BUFFER,
-		D3D11_BIND_INDEX_BUFFER,
-		D3D11_BIND_CONSTANT_BUFFER
-	};
-
-	DXGI_FORMAT surface_format_to_dxgiformat[] =
-	{
-		DXGI_FORMAT_UNKNOWN,
-		DXGI_FORMAT_R8G8B8A8_TYPELESS,
-		DXGI_FORMAT_R8G8B8A8_SINT,
-		DXGI_FORMAT_R8G8B8A8_UINT,
-		DXGI_FORMAT_R8G8B8A8_SNORM,
-		DXGI_FORMAT_R8G8B8A8_UNORM,
-		DXGI_FORMAT_R32_TYPELESS,
-	};
-	/*
-		{surface_format_t::unknown, DXGI_FORMAT_UNKNOWN},
-		{surface_format_t::g32, DXGI_FORMAT_R32_TYPELESS}
-	};*/
-	
 }
 
 //======================================================================
@@ -290,7 +271,7 @@ auto context_t::create_d3d_buffer(platform::d3d_buffer_ptr& buffer, buffer_type_
 
 	ATMA_ASSERT(d3d_bu != -1 && d3d_ca != -1);
 
-	D3D11_BUFFER_DESC buffer_desc{(UINT)data_size, d3d_bu, buffer_usage_to_d3dbind[static_cast<int>(buffer_type)], d3d_ca, 0, 0};
+	D3D11_BUFFER_DESC buffer_desc{(UINT)data_size, d3d_bu, platform::d3dbind_of(buffer_type), d3d_ca, 0, 0};
 
 
 	if (data) {
@@ -443,9 +424,26 @@ auto context_t::create_d3d_texture2d(platform::d3d_texture2d_ptr& texture, resou
 	ATMA_ENSURE_IS(S_OK, d3d_device_->CreateTexture2D(&texdesc, nullptr, texture.assign()));
 }
 
-auto context_t::create_d3d_texture3d(platform::d3d_texture3d_ptr& texture, surface_format_t format, uint mips, uint width, uint height, uint depth) -> void
+auto context_t::create_d3d_texture3d(platform::d3d_texture3d_ptr& texture, resource_usage_flags_t usage_flags, surface_format_t format, uint mips, uint width, uint height, uint depth) -> void
 {
-	auto desc = D3D11_TEXTURE3D_DESC{width, height, depth, mips, DXGI_FORMAT_R8G8B8A8_UNORM, D3D11_USAGE_DYNAMIC, 0, 0, 0};
+	auto const miplevels =
+		(usage_flags & resource_usage_t::render_target) ? 1 :
+		(usage_flags & resource_usage_t::depth_stencil) ? 1 :
+		mips;
+
+	auto bind_flags = D3D11_BIND_FLAG();
+	if (usage_flags & resource_usage_t::render_target)
+		(uint&)bind_flags |= D3D11_BIND_RENDER_TARGET;
+	if (usage_flags & resource_usage_t::depth_stencil)
+		(uint&)bind_flags |= D3D11_BIND_DEPTH_STENCIL;
+	if (usage_flags & resource_usage_t::shader_resource)
+		(uint&)bind_flags |= D3D11_BIND_SHADER_RESOURCE;
+	if (usage_flags & resource_usage_t::unordered_access)
+		(uint&)bind_flags |= D3D11_BIND_UNORDERED_ACCESS;
+	
+	auto desc = D3D11_TEXTURE3D_DESC{
+		width, height, depth, mips,
+		DXGI_FORMAT_R8G8B8A8_UNORM, D3D11_USAGE_DYNAMIC, 0, 0, 0};
 	
 	ATMA_ENSURE_IS(S_OK, d3d_device_->CreateTexture3D(&desc, nullptr, texture.assign()));
 }

@@ -13,8 +13,7 @@ namespace dust
 {
 	struct texture3d_t : resource_t
 	{
-		friend auto create_texture3d(context_ptr const&, surface_format_t, uint mips, uint width, uint height, uint depth) -> texture3d_ptr;
-		friend auto create_texture3d(context_ptr const&, surface_format_t, uint mips, uint width) -> texture3d_ptr;
+		friend auto create_texture3d(context_ptr const&, texture_usage_t, surface_format_t, uint width, uint height, uint depth, uint mips = 0) -> texture3d_ptr;
 
 		auto format() const -> surface_format_t;
 		auto mips() const -> uint;
@@ -22,15 +21,12 @@ namespace dust
 		auto height() const -> uint;
 		auto depth() const -> uint;
 
-		//auto lock() -> 
-
 		auto d3d_texture() const -> platform::d3d_texture3d_ptr const&;
 		auto d3d_texture() -> platform::d3d_texture3d_ptr&;
-
 		auto d3d_resource() const -> platform::d3d_resource_ptr override;
 
 	private:
-		texture3d_t(context_ptr const&, resource_usage_flags_t, surface_format_t, uint mips, uint width, uint height, uint depth);
+		texture3d_t(context_ptr const&, texture_usage_t, surface_format_t, uint width, uint height, uint depth, uint mips);
 
 	private:
 		surface_format_t format_;
@@ -41,8 +37,5 @@ namespace dust
 	};
 
 
-	inline auto create_texture3d(context_ptr const& context, surface_format_t format, uint mips, uint width) -> texture3d_ptr
-	{
-		return create_texture3d(context, format, mips, width, width, width);
-	}
+	auto create_texture3d(context_ptr const& context, texture_usage_t usage, surface_format_t format, uint width, uint mips = 0) -> texture3d_ptr;
 }

@@ -2,6 +2,8 @@
 //======================================================================
 #include <atma/com_ptr.hpp>
 
+#include <dust/dust_fwd.hpp>
+
 #pragma warning(push,3)
 #include <d3d11.h>
 #include <d3dcompiler.h>
@@ -28,5 +30,19 @@ namespace dust { namespace platform {
 	typedef atma::com_ptr<ID3D11ShaderResourceView> d3d_shader_resource_view_ptr;
 	typedef atma::com_ptr<ID3D11UnorderedAccessView> d3d_unordered_access_view_ptr;
 	typedef atma::com_ptr<ID3D11View> d3d_view_ptr;
+
+
+	inline auto d3dbind_of(buffer_type_t bu) -> D3D11_BIND_FLAG
+	{
+		static D3D11_BIND_FLAG const mapping[] =
+		{
+			D3D11_BIND_VERTEX_BUFFER,
+			D3D11_BIND_INDEX_BUFFER,
+			D3D11_BIND_CONSTANT_BUFFER
+		};
+
+		ATMA_ASSERT((uint)bu < std::extent<decltype(mapping)>::value);
+		return mapping[(uint)bu];
+	}
 
 } }

@@ -1,10 +1,7 @@
 #pragma once
 //======================================================================
-#include <atma/config/platform.hpp>
-//======================================================================
 namespace dust
 {
-
 	// how to read:
 	//  g: untyped (generic)
 	//  s: signed integer

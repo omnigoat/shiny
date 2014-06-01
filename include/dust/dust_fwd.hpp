@@ -71,10 +71,10 @@ namespace dust {
 
 	enum class resource_usage_t
 	{
-		render_target = 1,
-		depth_stencil = 2,
-		shader_resource = 4,
-		unordered_access = 8,
+		render_target,
+		depth_stencil,
+		shader_resource,
+		unordered_access,
 	};
 
 	enum class view_type_t
@@ -90,15 +90,28 @@ namespace dust {
 		write_discard,
 	};
 
+	enum class texture_usage_t
+	{
+		render_target,
+		depth_stencil,
+
+		immutable,
+		streaming,
+	};
+
 	template <typename T>
 	struct bitflags_t
 	{
+		bitflags_t()
+		: flags_()
+		{}
+
 		bitflags_t(T x)
-			: flags_(1 << (uint)x)
+		: flags_(1 << (uint)x)
 		{}
 
 		bitflags_t(std::initializer_list<T> const& xs)
-			: flags_()
+		: flags_()
 		{
 			for (auto x : xs)
 				flags_ |= 1 << (uint)x;
@@ -106,6 +119,10 @@ namespace dust {
 
 		auto operator & (T x) const -> bool {
 			return (flags_ & (1 << (uint) x)) != 0;
+		}
+
+		auto operator |= (T x) -> void {
+			flags_ |= (1 << (uint)x);
 		}
 
 	private:
