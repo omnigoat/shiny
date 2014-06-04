@@ -1,6 +1,8 @@
 #include <dust/platform/win32/texture3d.hpp>
 
+#include <dust/platform/win32/dxgid3d_convert.hpp>
 #include <dust/context.hpp>
+
 
 using namespace dust;
 using dust::texture3d_t;
@@ -18,6 +20,7 @@ auto dust::create_texture3d(context_ptr const& context, texture_usage_t usage, s
 {
 	return create_texture3d(context, usage, format, width, width, width, mips);
 }
+
 
 //======================================================================
 // texture3d

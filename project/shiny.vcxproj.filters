@@ -268,6 +268,9 @@
     <ClInclude Include="..\vendor\zlib\zutil.h">
       <Filter>vendor\zlib</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\dust\platform\win32\dxgid3d_convert.hpp">
+      <Filter>include\dust\platform\win32</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="..\shaders\vs_basic.hlsl">

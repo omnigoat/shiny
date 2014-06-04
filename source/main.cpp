@@ -202,7 +202,7 @@ int main()
 
 		// open file, read everything into memory
 		// todo: memory-mapped files
-		auto tx3 = dust::create_texture3d(ctx, dust::texture_usage_t::streaming, dust::surface_format_t::f32x4, 128);
+		auto tx3 = dust::create_texture3d(ctx, dust::texture_usage_t::streaming, dust::surface_format_t::f16x4, 128);
 		
 		// inflate 16kb at a time, and call our function for each brick
 		ctx->signal_d3d_map(tx3->d3d_texture(), D3D11_MAP_WRITE_DISCARD, 0, [&](D3D11_MAPPED_SUBRESOURCE* sr)

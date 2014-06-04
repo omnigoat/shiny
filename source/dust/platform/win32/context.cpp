@@ -1,5 +1,6 @@
 #include <dust/context.hpp>
 
+#include <dust/platform/win32/dxgid3d_convert.hpp>
 #include <dust/platform/win32/d3d_fwd.hpp>
 #include <dust/platform/win32/dxgi_fwd.hpp>
 
