@@ -8,9 +8,8 @@ using namespace dust;
 using dust::texture3d_t;
 
 
-//======================================================================
-// create_texture3d
-//======================================================================
+
+
 auto dust::create_texture3d(context_ptr const& context, texture_usage_t usage, surface_format_t format, uint width, uint height, uint depth, uint mips) -> texture3d_ptr
 {
 	return texture3d_ptr(new texture3d_t(context, usage, format, width, height, depth, mips));
@@ -22,9 +21,8 @@ auto dust::create_texture3d(context_ptr const& context, texture_usage_t usage, s
 }
 
 
-//======================================================================
-// texture3d
-//======================================================================
+
+
 texture3d_t::texture3d_t(context_ptr const& context, texture_usage_t usage, surface_format_t format, uint width, uint height, uint depth, uint mips)
 : resource_t(context, usage), format_(format), mips_(mips), width_(width), height_(height), depth_(depth)
 {

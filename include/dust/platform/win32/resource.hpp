@@ -40,10 +40,4 @@ namespace dust
 		context_ptr context_;
 		resource_usage_flags_t usage_flags_;
 	};
-
-	struct mapped_subresource_t
-	{
-		void const* data;
-		uint size;
-	};
 }

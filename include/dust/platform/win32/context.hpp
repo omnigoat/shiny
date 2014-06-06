@@ -23,7 +23,7 @@ namespace dust {
 	
 	struct context_t : atma::ref_counted
 	{
-		using map_callback_t = std::function<void(D3D11_MAPPED_SUBRESOURCE&)>;
+		using map_callback_t = std::function<void(mapped_subresource_t&)>;
 
 		~context_t();
 

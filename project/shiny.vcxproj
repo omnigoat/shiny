@@ -68,7 +68,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>E:\dev\c++\shiny\vendor\zlib;$(ProjectDir);$(DXSDK_DIR)Include;..\include;$(ProjectDir)..\..\atma\vendor;$(ProjectDir)..\..\atma\include;$(ProjectDir)..\..\fooey\include;$(IncludePath)</IncludePath>
+    <IncludePath>..\vendor\zlib;$(ProjectDir);$(DXSDK_DIR)Include;..\include;$(ProjectDir)..\..\atma\vendor;$(ProjectDir)..\..\atma\include;$(ProjectDir)..\..\fooey\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>

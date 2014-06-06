@@ -36,6 +36,9 @@
     <Filter Include="vendor\zlib">
       <UniqueIdentifier>{e98436a5-640f-4186-96dd-4a7572289df1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\shelf">
+      <UniqueIdentifier>{82679630-1638-4ba9-ab13-c504af59b576}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\main.cpp">

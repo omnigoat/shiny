@@ -205,14 +205,14 @@ int main()
 		auto tx3 = dust::create_texture3d(ctx, dust::texture_usage_t::streaming, dust::surface_format_t::f16x4, 128);
 		
 		// inflate 16kb at a time, and call our function for each brick
-		ctx->signal_d3d_map(tx3->d3d_texture(), D3D11_MAP_WRITE_DISCARD, 0, [&](D3D11_MAPPED_SUBRESOURCE* sr)
+		ctx->signal_map(tx3, 0, dust::map_type_t::write_discard, [&](dust::mapped_subresource_t& sr)
 		{
 			int blocks;
-			
+
 			auto f = afs::file_t{"../data/dragon.oct"};
 			auto m = atma::unique_memory_t(f.size());
 			f.read(m.begin(), f.size());
-			
+
 			auto i = (char const*)m.begin();
 			i += 4; // skip check
 			blocks = *((int const*)i);
@@ -221,7 +221,7 @@ int main()
 
 			uint const bricksize = 8*8*8*sizeof(float)* 4;
 			zl_for_each_chunk<bricksize, 16 * 1024>(i, m.end(), [&ctx, &sr, &bricksize](void const* buf) {
-				memcpy(sr->pData, buf, bricksize);
+				memcpy(sr.data, buf, bricksize);
 			});
 		});
 	}

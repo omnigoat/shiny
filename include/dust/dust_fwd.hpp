@@ -55,6 +55,14 @@ namespace dust {
 	struct resource_t;
 	typedef atma::intrusive_ptr<resource_t> resource_ptr;
 
+	struct mapped_subresource_t
+	{
+		void* data;
+		uint pitch_y, pitch_z;
+	};
+
+
+
 	enum class buffer_usage_t
 	{
 		immutable,
