@@ -16,9 +16,8 @@ namespace dust
 	};
 
 
-	template <typename... Args>
-	inline auto create_vertex_buffer(Args&&... args) -> vertex_buffer_ptr {
-		return vertex_buffer_ptr(new vertex_buffer_t(std::forward<Args>(args)...));
+	inline auto create_vertex_buffer(context_ptr const& ctx, buffer_usage_t usage, vertex_declaration_t const& vd, uint vertex_count, void* data) -> vertex_buffer_ptr {
+		return vertex_buffer_ptr(new vertex_buffer_t(ctx, usage, vd, vertex_count, data));
 	}
 }
 

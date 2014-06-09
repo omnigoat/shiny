@@ -285,5 +285,8 @@
     <FxCompile Include="..\shaders\cs_test.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
+    <FxCompile Include="..\shaders\voxel.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

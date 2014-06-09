@@ -32,6 +32,13 @@
 
 #include <zlib.h>
 
+
+#define CS_TEST 0
+
+
+
+
+
 template <size_t AccumulateSize, size_t ReadSize, typename FN>
 auto zl_for_each_chunk(void const* begin, void const* end, FN const& fn) -> int
 {
@@ -161,6 +168,9 @@ int main()
 	};
 	auto ib = dust::create_index_buffer(ctx, dust::buffer_usage_t::immutable, 16, 36, ibd);
 
+
+
+
 	namespace math = atma::math;
 
 	// constant buffer
@@ -168,10 +178,6 @@ int main()
 	atma::math::matrix4f world_matrix;
 	auto cb = dust::create_constant_buffer(ctx, sizeof(world_matrix), &world_matrix);
 
-	// texture
-	auto tx = dust::create_texture2d(ctx, dust::surface_format_t::un8x4, 128, 128);
-
-	
 	// camera
 	auto camera = dust::camera_t(
 		math::look_at(math::point4f(0.f, 0.f, 2.f), math::point4f(0.f, 0.1f, 0.f), math::vector4f(0.f, 1.f, 0.f, 0.f)),
@@ -179,8 +185,8 @@ int main()
 	);
 
 	// compute shader?
-	//auto p = atma::filesystem::path_t{"blam/hooray/things/"};
-	auto cs = dust::compute_shader_ptr(); //  dust::create_compute_shader(
+#if CS_TEST
+	auto cs = dust::compute_shader_ptr();
 	{
 		namespace afs = atma::filesystem;
 
@@ -189,27 +195,29 @@ int main()
 		f.read(m.begin(), f.size());
 
 		cs = dust::create_compute_shader(ctx, m.begin(), m.size());
-
-		// 128x128 texture for reading
 	}
+
+	// surfaces for compute shader test
 	auto sr = dust::create_shader_resource2d(ctx, dust::view_type_t::read_only, dust::surface_format_t::un8x4, 128, 128);
 	auto ur = dust::create_shader_resource2d(ctx, dust::view_type_t::read_write, dust::surface_format_t::un8x4, 128, 128);
+#endif
 
-	// load voxels?
-	//if (false)
+
+
+	// 
 	{
-		namespace afs = atma::filesystem;
-
 		// open file, read everything into memory
 		// todo: memory-mapped files
 		auto tx3 = dust::create_texture3d(ctx, dust::texture_usage_t::streaming, dust::surface_format_t::f16x4, 128);
-		
+		//auto bufvox = dust::create_buffer(ctx, dust::buffer_type_t::constant_buffer, dust::buffer_usage_t::immutable, )
+
+
 		// inflate 16kb at a time, and call our function for each brick
 		ctx->signal_map(tx3, 0, dust::map_type_t::write_discard, [&](dust::mapped_subresource_t& sr)
 		{
 			int blocks;
 
-			auto f = afs::file_t{"../data/dragon.oct"};
+			auto f = atma::filesystem::file_t{"../data/dragon.oct"};
 			auto m = atma::unique_memory_t(f.size());
 			f.read(m.begin(), f.size());
 
@@ -217,6 +225,21 @@ int main()
 			i += 4; // skip check
 			blocks = *((int const*)i);
 			i += 12;
+
+			auto nodes = atma::unique_memory_t(64 * 1000000);
+			
+			// create node buffer
+			auto bdesc = D3D11_BUFFER_DESC{64 * 1000000, D3D11_USAGE_IMMUTABLE, D3D11_BIND_SHADER_RESOURCE, 0, 0, 8};
+			auto gh = D3D11_SUBRESOURCE_DATA{i, 64 * blocks, 0};
+
+			ID3D11Buffer* b = nullptr;
+			ATMA_ENSURE_IS(S_OK, ctx->d3d_device()->CreateBuffer(&bdesc, &gh, &b));
+			b->Release();
+			//auto buf = dust::platform::d3d_buffer_ptr();
+			//ctx->create_d3d_buffer(buf, dust::buffer_type_t::vertex_buffer, dust::buffer_usage_t::dynamic, 64 * 1000000, i)
+
+
+
 			i += 64 * blocks;
 
 			uint const bricksize = 8*8*8*sizeof(float)* 4;
@@ -230,12 +253,6 @@ int main()
 	
 
 	bool running = true;
-
-	window->on({
-		{"close", [&running](fooey::event_t const&){
-			running = false;
-		}}
-	});
 
 	window->key_state.on_key(fooey::key_t::Alt + fooey::key_t::Enter, [ctx]{
 		ctx->signal_fullscreen_toggle(1);
@@ -251,8 +268,11 @@ int main()
 	bool mouse_down = false;
 	int ox = 0, oy = 0;
 	window->on({
+		{"close", [&running](fooey::event_t const&){
+			running = false;
+		}},
+
 		{"mouse-move", [&](fooey::events::mouse_t const& e) {
-			//std::cout << "mouse-move " << e.x() << ":" << e.y() << std::endl;
 			
 			if (mouse_down)
 			{
@@ -298,13 +318,12 @@ int main()
 		scene.signal_constant_buffer_upload(1, cb);
 		scene.signal_draw(ib, vd, vb, vs, ps);
 
+#if CS_TEST
 		ctx->signal_upload_shader_resource(dust::view_type_t::read_only, sr);
 		ctx->signal_upload_shader_resource(dust::view_type_t::read_write, ur);
 		ctx->signal_upload_compute_shader(cs);
 		ctx->signal_compute_shader_dispatch(4, 4, 1);
-
-		//ctx->signal_upload_compute_shader(cs);
-		//ctx->signal_execute_compute_shader(cs)
+#endif
 
 
 		ctx->signal_clear();
@@ -314,7 +333,9 @@ int main()
 	}
 	ctx->signal_block();
 
+#if CS_TEST
 	auto img = DirectX::ScratchImage();
 	DirectX::CaptureTexture(ctx->d3d_device().get(), ctx->d3d_immediate_context().get(), ur->backing_texture()->d3d_texture().get(), img);
 	DirectX::SaveToTGAFile(*img.GetImage(0, 0, 0), L"someimg.tga");
+#endif
 }
