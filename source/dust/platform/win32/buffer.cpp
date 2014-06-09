@@ -9,19 +9,7 @@
 using namespace dust;
 using dust::buffer_t;
 
-#if 0
-//======================================================================
-// create_buffer
-//======================================================================
-auto dust::create_buffer(context_ptr const& context, buffer_usage_t usage, vertex_declaration_t const& vd, uint vertex_count, void* data) -> vertex_buffer_ptr
-{
-	return buffer_ptr(new buffer_t(context, usage, vd, vertex_count, data));
-}
-#endif
 
-//======================================================================
-// buffer_t
-//======================================================================
 buffer_t::buffer_t(context_ptr const& ctx, buffer_type_t type, buffer_usage_t usage, uint data_size, void const* data)
 : resource_t(ctx, {}), type_(type), usage_(usage), size_(data_size)
 {

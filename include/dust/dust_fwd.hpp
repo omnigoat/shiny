@@ -62,19 +62,19 @@ namespace dust {
 	};
 
 
+	enum class buffer_type_t
+	{
+		vertex_buffer,
+		index_buffer,
+		constant_buffer,
+		generic_buffer,
+	};
 
 	enum class buffer_usage_t
 	{
 		immutable,
 		long_lived,
 		dynamic,
-	};
-
-	enum class buffer_type_t
-	{
-		vertex_buffer,
-		index_buffer,
-		constant_buffer,
 	};
 
 	enum class resource_usage_t
