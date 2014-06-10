@@ -19,7 +19,7 @@ buffer_t::buffer_t(context_ptr const& ctx, buffer_type_t type, buffer_usage_t us
 	if (data != nullptr && data_size == 0)
 		data_size = buffer_size;
 
-	// determine buffer-usage and cpu-accses
+	// determine buffer-usage and cpu-access
 	auto d3d_bu = D3D11_USAGE();
 	auto d3d_ca = D3D11_CPU_ACCESS_FLAG();
 	switch (usage_)
@@ -46,16 +46,15 @@ buffer_t::buffer_t(context_ptr const& ctx, buffer_type_t type, buffer_usage_t us
 	}
 
 
-	// allocate shadow buffers if need be
+	// allocate shadow-buffer if need be
 	switch (usage_)
 	{
 		case buffer_usage_t::long_lived_shadowed:
 		case buffer_usage_t::dynamic_shadowed:
 		{
+			shadow_buffer_.resize(size_);
 			if (data)
-				shadow_buffer_.assign(reinterpret_cast<char const*>(data), reinterpret_cast<char const*>(data)+ data_size);
-			else
-				shadow_buffer_.resize(size_);
+				memcpy(&shadow_buffer_[0], data, data_size);
 			break;
 		}
 
