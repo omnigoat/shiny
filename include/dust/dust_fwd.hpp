@@ -72,9 +72,14 @@ namespace dust {
 
 	enum class buffer_usage_t
 	{
+		// gpu-only
 		immutable,
-		long_lived,
 		dynamic,
+		long_lived,
+
+		// backed by shadow-buffer
+		dynamic_shadowed,
+		long_lived_shadowed,
 	};
 
 	enum class resource_usage_t

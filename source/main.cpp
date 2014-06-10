@@ -232,9 +232,9 @@ int main()
 			auto bdesc = D3D11_BUFFER_DESC{64 * 1000000, D3D11_USAGE_IMMUTABLE, D3D11_BIND_SHADER_RESOURCE, 0, 0, 8};
 			auto gh = D3D11_SUBRESOURCE_DATA{i, 64 * blocks, 0};
 
-			ID3D11Buffer* b = nullptr;
-			ATMA_ENSURE_IS(S_OK, ctx->d3d_device()->CreateBuffer(&bdesc, &gh, &b));
-			b->Release();
+			//ID3D11Buffer* b = nullptr;
+			//ATMA_ENSURE_IS(S_OK, ctx->d3d_device()->CreateBuffer(&bdesc, &gh, &b));
+			//b->Release();
 			//auto buf = dust::platform::d3d_buffer_ptr();
 			//ctx->create_d3d_buffer(buf, dust::buffer_type_t::vertex_buffer, dust::buffer_usage_t::dynamic, 64 * 1000000, i)
 

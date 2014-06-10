@@ -70,7 +70,7 @@ runtime_t::runtime_t()
 	ATMA_ASSERT(dxgi_factory);
 
 	// get debug thing
-#ifdef _DEBUG
+#ifdef _DEBUGj
 	{
 		typedef HRESULT(__stdcall *fPtr)(const IID&, void**);
 		HMODULE hDll = GetModuleHandleW(L"dxgidebug.dll");

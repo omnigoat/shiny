@@ -22,7 +22,7 @@ namespace dust
 		auto d3d_resource() const -> platform::d3d_resource_ptr override;
 
 	protected:
-		buffer_t(context_ptr const&, buffer_type_t, buffer_usage_t, uint data_size, void const* data);
+		buffer_t(context_ptr const&, buffer_type_t, buffer_usage_t, size_t buffer_size, void const* data, size_t data_size);
 		virtual ~buffer_t();
 
 		auto upload_shadow_buffer() -> void;
