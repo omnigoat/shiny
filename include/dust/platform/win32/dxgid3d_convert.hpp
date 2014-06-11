@@ -12,6 +12,7 @@ namespace dust { namespace platform {
 		static DXGI_FORMAT const mapping[] =
 		{
 			DXGI_FORMAT_UNKNOWN,
+			
 			DXGI_FORMAT_R8G8B8A8_TYPELESS,
 			DXGI_FORMAT_R8G8B8A8_SINT,
 			DXGI_FORMAT_R8G8B8A8_UINT,
@@ -19,7 +20,34 @@ namespace dust { namespace platform {
 			DXGI_FORMAT_R8G8B8A8_UNORM,
 			DXGI_FORMAT_R16G16B16A16_FLOAT,
 			DXGI_FORMAT_R32G32B32A32_FLOAT,
+
+			DXGI_FORMAT_R32G32_UINT,
+
 			DXGI_FORMAT_R32_TYPELESS,
+		};
+
+		ATMA_ASSERT((uint)fmt < std::extent<decltype(mapping)>::value);
+		return mapping[(uint)fmt];
+	}
+
+
+	inline auto dxgi_size_of(surface_format_t fmt) -> uint
+	{
+		static uint const mapping[] =
+		{
+			0,
+
+			32,
+			32,
+			32,
+			32,
+			32,
+			64,
+			128,
+
+			64,
+
+			32
 		};
 
 		ATMA_ASSERT((uint)fmt < std::extent<decltype(mapping)>::value);
@@ -33,7 +61,8 @@ namespace dust { namespace platform {
 		{
 			D3D11_BIND_VERTEX_BUFFER,
 			D3D11_BIND_INDEX_BUFFER,
-			D3D11_BIND_CONSTANT_BUFFER
+			D3D11_BIND_CONSTANT_BUFFER,
+			D3D11_BIND_SHADER_RESOURCE
 		};
 
 		ATMA_ASSERT((uint)bu < std::extent<decltype(mapping)>::value);

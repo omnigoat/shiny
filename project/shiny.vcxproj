@@ -213,9 +213,11 @@
     <ClInclude Include="..\include\dust\constant_buffer.hpp" />
     <ClInclude Include="..\include\dust\context.hpp" />
     <ClInclude Include="..\include\dust\dust_fwd.hpp" />
+    <ClInclude Include="..\include\dust\generic_buffer.hpp" />
     <ClInclude Include="..\include\dust\platform\win32\buffer.hpp" />
     <ClInclude Include="..\include\dust\platform\win32\compute_shader.hpp" />
     <ClInclude Include="..\include\dust\platform\win32\dxgid3d_convert.hpp" />
+    <ClInclude Include="..\include\dust\platform\win32\generic_buffer.hpp" />
     <ClInclude Include="..\include\dust\platform\win32\resource.hpp" />
     <ClInclude Include="..\include\dust\platform\win32\shader_resource2d.hpp" />
     <ClInclude Include="..\include\dust\platform\win32\texture3d.hpp" />

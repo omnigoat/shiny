@@ -10,14 +10,17 @@
 using namespace dust;
 using dust::buffer_t;
 
-
-buffer_t::buffer_t(context_ptr const& ctx, buffer_type_t type, buffer_usage_t usage, size_t buffer_size, void const* data, size_t data_size)
-: resource_t(ctx, {}), type_(type), usage_(usage), size_(buffer_size)
+buffer_t::buffer_t(context_ptr const& ctx, buffer_type_t type, buffer_usage_t usage, uint element_size, uint element_count, void const* data, uint data_element_count)
+: resource_t(ctx, {}), type_(type), usage_(usage), size_(element_size * element_count)
 {
 	ATMA_ASSERT(size_);
 
-	if (data != nullptr && data_size == 0)
-		data_size = buffer_size;
+
+	// fixup default element-count, figure out size of data
+	if (data_element_count == 0)
+		data_element_count = element_count;
+	auto data_size = element_size * data_element_count;
+
 
 	// determine buffer-usage and cpu-access
 	auto d3d_bu = D3D11_USAGE();
@@ -41,7 +44,17 @@ buffer_t::buffer_t(context_ptr const& ctx, buffer_type_t type, buffer_usage_t us
 			break;
 
 		default:
-			ATMA_HALT("buffer usage not optional");
+			ATMA_HALT("buffer usage is ill-formed");
+			break;
+	}
+
+
+	// determine special flags based off buffer-type
+	auto misc_flags = D3D11_RESOURCE_MISC_FLAG();
+	switch (type_)
+	{
+		case buffer_type_t::generic_buffer:
+			(uint&)misc_flags |= D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
 			break;
 	}
 
@@ -64,13 +77,14 @@ buffer_t::buffer_t(context_ptr const& ctx, buffer_type_t type, buffer_usage_t us
 
 
 	// create buffer
-	auto buffer_desc = D3D11_BUFFER_DESC{(UINT)buffer_size, d3d_bu, platform::d3dbind_of(type_), d3d_ca, 0, 0};
+	auto buffer_desc = D3D11_BUFFER_DESC{(UINT)size_, d3d_bu, platform::d3dbind_of(type_), d3d_ca, misc_flags, element_size};
 	switch (usage_)
 	{
 		case buffer_usage_t::immutable:
 		{
 			ATMA_ASSERT_MSG(data, "immutable buffers require data upon initialisation");
-			ATMA_ASSERT_MSG(buffer_size == data_size, "immutable buffer: you are allocating more than you're filling");
+			ATMA_ASSERT_MSG(size_ == data_size, "immutable buffer: you are allocating more than you're filling");
+			ATMA_ASSERT_MSG(d3d_ca == 0, "immutable buffer with cpu access? silly.");
 
 			auto d3d_data = D3D11_SUBRESOURCE_DATA{data, 1, (UINT)data_size};
 			ATMA_ENSURE_IS(S_OK, context()->d3d_device()->CreateBuffer(&buffer_desc, &d3d_data, d3d_buffer_.assign()));

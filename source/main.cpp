@@ -13,6 +13,7 @@
 #include <dust/compute_shader.hpp>
 #include <dust/shader_resource2d.hpp>
 #include <dust/texture3d.hpp>
+#include <dust/platform/win32/generic_buffer.hpp>
 
 #include <fooey/widgets/window.hpp>
 #include <fooey/fooey.hpp>
@@ -33,7 +34,9 @@
 #include <zlib.h>
 
 
-#define CS_TEST 0
+
+#define LOAD_VOXELS 0
+#define CS_TEST 1
 
 
 
@@ -200,17 +203,22 @@ int main()
 	// surfaces for compute shader test
 	auto sr = dust::create_shader_resource2d(ctx, dust::view_type_t::read_only, dust::surface_format_t::un8x4, 128, 128);
 	auto ur = dust::create_shader_resource2d(ctx, dust::view_type_t::read_write, dust::surface_format_t::un8x4, 128, 128);
+
+	// testing generic buffers too
+	float color[4] = {.0f, .4f, .4f, 1.f};
+	auto gb = dust::create_generic_buffer(ctx, dust::buffer_usage_t::immutable, dust::surface_format_t::f32x4, 1, color, 1);
 #endif
 
 
 
-	// 
+	// loading voxels?
+#if LOAD_VOXELS
 	{
 		// open file, read everything into memory
 		// todo: memory-mapped files
 		auto tx3 = dust::create_texture3d(ctx, dust::texture_usage_t::streaming, dust::surface_format_t::f16x4, 128);
 		//auto bufvox = dust::create_buffer(ctx, dust::buffer_type_t::constant_buffer, dust::buffer_usage_t::immutable, )
-
+		auto nodebuf = dust::buffer_ptr();
 
 		// inflate 16kb at a time, and call our function for each brick
 		ctx->signal_map(tx3, 0, dust::map_type_t::write_discard, [&](dust::mapped_subresource_t& sr)
@@ -229,16 +237,7 @@ int main()
 			auto nodes = atma::unique_memory_t(64 * 1000000);
 			
 			// create node buffer
-			auto bdesc = D3D11_BUFFER_DESC{64 * 1000000, D3D11_USAGE_IMMUTABLE, D3D11_BIND_SHADER_RESOURCE, 0, 0, 8};
-			auto gh = D3D11_SUBRESOURCE_DATA{i, 64 * blocks, 0};
-
-			//ID3D11Buffer* b = nullptr;
-			//ATMA_ENSURE_IS(S_OK, ctx->d3d_device()->CreateBuffer(&bdesc, &gh, &b));
-			//b->Release();
-			//auto buf = dust::platform::d3d_buffer_ptr();
-			//ctx->create_d3d_buffer(buf, dust::buffer_type_t::vertex_buffer, dust::buffer_usage_t::dynamic, 64 * 1000000, i)
-
-
+			auto nodebuf = dust::create_generic_buffer(ctx, dust::buffer_usage_t::immutable, dust::surface_format_t::u32x2, blocks, nodes.begin(), blocks);
 
 			i += 64 * blocks;
 
@@ -248,7 +247,7 @@ int main()
 			});
 		});
 	}
-
+#endif
 
 	
 
@@ -321,6 +320,7 @@ int main()
 #if CS_TEST
 		ctx->signal_upload_shader_resource(dust::view_type_t::read_only, sr);
 		ctx->signal_upload_shader_resource(dust::view_type_t::read_write, ur);
+		ctx->signal_cs_upload_generic_buffer(1, gb);
 		ctx->signal_upload_compute_shader(cs);
 		ctx->signal_compute_shader_dispatch(4, 4, 1);
 #endif

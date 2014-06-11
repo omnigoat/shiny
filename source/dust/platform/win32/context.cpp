@@ -16,6 +16,7 @@
 #include <dust/texture2d.hpp>
 #include <dust/texture3d.hpp>
 #include <dust/shader_resource2d.hpp>
+#include <dust/generic_buffer.hpp>
 
 #include <fooey/events/resize.hpp>
 #include <fooey/keys.hpp>
@@ -510,5 +511,12 @@ auto context_t::signal_map(resource_ptr const& rs, uint32 subresource, map_type_
 		ATMA_ENSURE_IS(S_OK, d3d_immediate_context_->Map(rs->d3d_resource().get(), subresource, d3dmap, 0, &sr));
 		mapped_subresource_t msr{sr.pData, sr.RowPitch, sr.DepthPitch};
 		fn(msr);
+	});
+}
+
+auto context_t::signal_cs_upload_generic_buffer(uint index, generic_buffer_ptr const& buf) -> void
+{
+	engine_.signal([&, index, buf] {
+		d3d_immediate_context_->CSSetShaderResources(index, 1, &buf->d3d_shader_resource_view().get());
 	});
 }

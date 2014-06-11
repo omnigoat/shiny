@@ -55,6 +55,9 @@ namespace dust {
 	struct resource_t;
 	typedef atma::intrusive_ptr<resource_t> resource_ptr;
 
+	struct generic_buffer_t;
+	typedef atma::intrusive_ptr<generic_buffer_t> generic_buffer_ptr;
+
 	struct mapped_subresource_t
 	{
 		void* data;
@@ -68,6 +71,9 @@ namespace dust {
 		index_buffer,
 		constant_buffer,
 		generic_buffer,
+
+		// maybe for unordered access views?
+		//generic_random_buffer,
 	};
 
 	enum class buffer_usage_t

@@ -41,6 +41,8 @@ namespace dust {
 		auto signal_upload_shader_resource(view_type_t, shader_resource2d_ptr const&) -> void;
 		auto signal_compute_shader_dispatch(uint x, uint y, uint z) -> void;
 
+		auto signal_cs_upload_generic_buffer(uint index, generic_buffer_ptr const&) -> void;
+
 		auto signal_map(resource_ptr const&, uint32 subresource, map_type_t, map_callback_t const&) -> void;
 
 

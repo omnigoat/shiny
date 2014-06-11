@@ -1,6 +1,6 @@
 Texture2D<float4> Input : register(t0);
 RWTexture2D<float4> Output : register(u0);
-
+StructuredBuffer<float4> Color : register(u1);
 
 [numthreads(32, 32, 1)]
 void main(uint3 threadID : SV_DispatchThreadID)

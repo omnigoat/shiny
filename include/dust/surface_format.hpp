@@ -21,6 +21,9 @@ namespace dust
 		g8x4, s8x4, u8x4, sn8x4, un8x4,
 		f16x4, f32x4,
 
+		// 2-component
+		u32x2,
+
 		// 1-component
 		g32,
 	};
