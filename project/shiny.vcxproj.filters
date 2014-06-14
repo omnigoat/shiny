@@ -137,6 +137,9 @@
     <ClCompile Include="..\vendor\zlib\zutil.c">
       <Filter>vendor\zlib</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\dust\platform\win32\generic_buffer.cpp">
+      <Filter>source\dust\platform\win32</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\dust\context.hpp">

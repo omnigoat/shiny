@@ -177,6 +177,7 @@
     <ClCompile Include="..\source\dust\platform\win32\compute_shader.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\constant_buffer.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\context.cpp" />
+    <ClCompile Include="..\source\dust\platform\win32\generic_buffer.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\index_buffer.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\output.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\pixel_shader.cpp" />
