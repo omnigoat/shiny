@@ -2,9 +2,11 @@
 ; ignore visual studio files
 Debug/
 Release/
+data/
 *.opensdf
 *.suo
 *.sdf
 *.user
 *.lib
 *.inc
+*.ipch
