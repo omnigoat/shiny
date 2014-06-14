@@ -19,6 +19,20 @@ struct node_t
 
 StructuredBuffer<node_t> nodes;
 
+// brick pool
+texture3D bricks;
+SamplerState brick_sampler
+{
+	
+	Filter = MIN_MAG_MIP_POINT;
+	AddressU = Clamp;
+	AddressV = Clamp;
+};
+
+
+static const uint brick_size = 8;
+static const uint brick_count = 48;
+static const float brick_sizef = 8.f;
 
 uint oct_child(inout float4 box, float3 pos)
 {
@@ -58,7 +72,7 @@ uint find_brick(inout float4 box, float3 pos, float size)
 	uint child = 0;
 	uint index = 0;
 	uint brick_size = 0;
-	float volume = 1.f / brick_size;
+	float volume = 1.f / brick_sizef;
 	uint tmp = 0;
 
 	while (volume > size)
@@ -92,6 +106,8 @@ bool inside(float4 box, float3 position)
 
 bool enter(in float3 position, in float3 normal, out float3 result)
 {
+	result = float3(0.f, 0.f, 0.f);
+
 	float3 near = {
 		normal.x < 0.f ? 1.f : 0.f,
 		normal.y < 0.f ? 1.f : 0.f,
@@ -130,8 +146,64 @@ bool enter(in float3 position, in float3 normal, out float3 result)
 
 float3 escape(float4 box, float3 position, float3 normal)
 {
-	float3 f = {0.f, 0.f, 90.f};
-	return f;
+	float3 far = {
+		normal.x < 0 ? box.x - box.w : box.x + box.w,
+		normal.y < 0 ? box.y - box.w : box.y + box.w,
+		normal.z < 0 ? box.z - box.w : box.z + box.w
+	};
+
+	if (normal.x == 0) normal.x += vdelta * 100.f;
+	if (normal.y == 0) normal.y += vdelta * 100.f;
+	if (normal.z == 0) normal.z += vdelta * 100.f;
+
+	float3 ratio = (far - position) / normal;
+	float rmin = min(min(ratio.x, ratio.y), ratio.z);
+	return rmin * normal + position;
+}
+
+float3 brick_origin(uint brick_id)
+{
+	float3 brick_pos;
+	uint brick_tmp;
+
+	brick_pos.x = float(brick_id % brick_count);
+	brick_tmp = (brick_id - uint(brick_pos.x)) / brick_count;
+	brick_pos.y = float(brick_tmp % brick_count);
+	brick_pos.z = float((brick_tmp - uint(brick_pos.y))/brick_count);
+
+	return brick_pos / float(brick_count);
+}
+
+
+void brick_ray(uint brick_id, float3 near, float3 far, inout float4 color, inout float rem)
+{
+	float inv_size = 1.f / brick_size;
+	float inv_count = 1.f / brick_count;
+	float half_size = 0.5f * inv_size;
+	near = near * (inv_size * (brick_size - 1)) + half_size;
+	far = far * (inv_size * (brick_size - 1)) + half_size;
+	float len = length(far - near);
+	float3 brick_pos = brick_origin(brick_id);
+	float4 result = color;
+
+	if (len < 0.1f)
+		return;
+
+	float steps = 1.f / (len * brick_size);
+
+	float pos;
+	for (pos = steps * rem; pos < 1.f; pos += steps)
+	{
+		float3 sample_loc = lerp(near, far, pos) * inv_count;
+		float4 voxel = bricks.SampleLevel(brick_sampler, sample_loc + brick_pos, 0);
+		result.xyz += ((1.f - result.a) * (1.f - result.a) * voxel.xyz) / (1.f - result.xyz * voxel.xyz);
+		result.w = result.w + (1.f - result.w) * voxel.w;
+		if (result.w > 1.f)
+			break;
+	}
+
+	rem = (pos - 1.f) * (len * brick_size);
+	color = result;
 }
 
 float4 brick_path(float3 position, float3 normal, float ratio)
@@ -146,7 +218,44 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 	else if (!enter(position, normal, hit))
 		discard;
 
-	return float4(0, 0, 0, 1);
+	float len = length(hit - position);
+	distance += len;
+
+	float4 colour = float4(0.0, 0.0, 0.0, 0.0);
+	uint brick_id = find_brick(box, hit, size);
+	float rem = 0.0;
+	for (int i = 0; i < 50 && colour.w < 1.f; ++i)
+	{
+		float3 far = escape(box, hit, normal);
+		len = length(far - hit);
+		float3 step = normal * len;
+		if (brick_id != 0)
+		{
+			float3 brick_near = (hit - box.xyz) / box.w;
+			float3 brick_far = (far - box.xyz) / box.w;
+			brick_ray(brick_id, brick_near, brick_far, colour, rem);
+		}
+		else rem = 0; // box.w / float(B_SIZE);
+
+		float3 tmp = hit + step*1.010;
+		if (!inside(float4(.5f, .5f, .5f, .5f), tmp))break;
+		brick_id = find_brick(box, tmp, size);
+		hit = tmp;
+	}
+	float3 n = normalize(colour.xyz);
+
+	float3 lamb = float3(.4f, .4f, .4f);
+	float3 lpwr = float3(.3f, .3f, .3f);
+	float3 ldir = float3(0, -1, 0);
+	// diffuse lighting
+	float i2  = dot(ldir, n);
+	float4 color = float4(lamb+ i * lpwr, colour.w);
+	// specular lighting
+	float3 h = normalize(ldir + normal);
+	i = clamp(pow(dot(n, h), 15), 0, 1);
+	color += float4(i * lpwr, 0);
+	
+	return color;
 }
 
 float4 main(ps_input_t input) : SV_Target
