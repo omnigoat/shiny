@@ -10,12 +10,12 @@ using dust::texture3d_t;
 
 
 
-auto dust::create_texture3d(context_ptr const& context, texture_usage_t usage, surface_format_t format, uint width, uint height, uint depth, uint mips) -> texture3d_ptr
+auto dust::create_texture3d(context_ptr const& context, texture_usage_t usage, element_format_t format, uint width, uint height, uint depth, uint mips) -> texture3d_ptr
 {
 	return texture3d_ptr(new texture3d_t(context, usage, format, width, height, depth, mips));
 }
 
-auto dust::create_texture3d(context_ptr const& context, texture_usage_t usage, surface_format_t format, uint width, uint mips) -> texture3d_ptr
+auto dust::create_texture3d(context_ptr const& context, texture_usage_t usage, element_format_t format, uint width, uint mips) -> texture3d_ptr
 {
 	return create_texture3d(context, usage, format, width, width, width, mips);
 }
@@ -23,7 +23,7 @@ auto dust::create_texture3d(context_ptr const& context, texture_usage_t usage, s
 
 
 
-texture3d_t::texture3d_t(context_ptr const& context, texture_usage_t usage, surface_format_t format, uint width, uint height, uint depth, uint mips)
+texture3d_t::texture3d_t(context_ptr const& context, texture_usage_t usage, element_format_t format, uint width, uint height, uint depth, uint mips)
 : resource_t(context, usage), format_(format), mips_(mips), width_(width), height_(height), depth_(depth)
 {
 	auto d3dusage = D3D11_USAGE();
@@ -54,7 +54,7 @@ texture3d_t::texture3d_t(context_ptr const& context, texture_usage_t usage, surf
 	ATMA_ENSURE_IS(S_OK, this->context()->d3d_device()->CreateTexture3D(&desc, nullptr, d3d_texture_.assign()));
 }
 
-auto texture3d_t::format() const -> surface_format_t
+auto texture3d_t::format() const -> element_format_t
 {
 	return format_;
 }

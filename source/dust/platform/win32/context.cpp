@@ -68,7 +68,7 @@ auto context_t::pull_display_format(display_mode_t& mode, DXGI_SWAP_CHAIN_DESC& 
 	mode.width = desc.BufferDesc.Width;
 	mode.height = desc.BufferDesc.Height;
 	mode.fullscreen = desc.Windowed == FALSE;
-	mode.format = surface_format_t::un8x4;
+	mode.format = element_format_t::un8x4;
 	mode.refreshrate_frames = desc.BufferDesc.RefreshRate.Numerator;
 	mode.refreshrate_period = desc.BufferDesc.RefreshRate.Denominator;
 }
@@ -311,35 +311,48 @@ auto context_t::signal_d3d_buffer_upload(platform::d3d_buffer_ptr const& buffer,
 	});
 }
 
-auto context_t::signal_draw(vertex_declaration_t const& vd, vertex_buffer_ptr const& vb, vertex_shader_ptr const& vs, pixel_shader_ptr const& ps) -> void
+auto context_t::signal_draw(vertex_declaration_t const* vd, vertex_buffer_ptr const& vb, vertex_shader_ptr const& vs, pixel_shader_ptr const& ps) -> void
 {
 	engine_.signal([&, vd, vb, vs, ps]{
-		UINT stride = vd.stride();
+		UINT stride = vd->stride();
 		UINT offset = 0;
 
-		
 		auto vbs = vb->d3d_buffer().get();
+
+		// input-layout
+		auto ILkey = std::make_tuple(vs, vd);
+		auto IL = cached_input_layouts_.find(ILkey);
+		if (IL == cached_input_layouts_.end()) {
+			IL = cached_input_layouts_.insert(std::make_pair(ILkey, create_d3d_input_layout(vs, vd))).first;
+		}
 
 		d3d_immediate_context_->VSSetShader(vs->d3d_vs().get(), nullptr, 0);
 		d3d_immediate_context_->PSSetShader(ps->d3d_ps().get(), nullptr, 0);
-		d3d_immediate_context_->IASetInputLayout(vd.d3d_input_layout().get());
+		d3d_immediate_context_->IASetInputLayout(IL->second.get());
 		d3d_immediate_context_->IASetVertexBuffers(0, 1, &vbs, &stride, &offset);
 		d3d_immediate_context_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		d3d_immediate_context_->Draw(vb->vertex_count(), 0);
 	});
 }
 
-auto context_t::signal_draw(index_buffer_ptr const& ib, vertex_declaration_t const& vd, vertex_buffer_ptr const& vb, vertex_shader_ptr const& vs, pixel_shader_ptr const& ps) -> void
+auto context_t::signal_draw(index_buffer_ptr const& ib, vertex_declaration_t const* vd, vertex_buffer_ptr const& vb, vertex_shader_ptr const& vs, pixel_shader_ptr const& ps) -> void
 {
 	engine_.signal([&, ib, vd, vb, vs, ps]{
-		UINT stride = vd.stride();
+		UINT stride = vd->stride();
 		UINT offset = 0;
 
 		auto vbs = vb->d3d_buffer().get();
 
+		// input-layout
+		auto ILkey = std::make_tuple(vs, vd);
+		auto IL = cached_input_layouts_.find(ILkey);
+		if (IL == cached_input_layouts_.end()) {
+			IL = cached_input_layouts_.insert(std::make_pair(ILkey, create_d3d_input_layout(vs, vd))).first;
+		}
+
 		d3d_immediate_context_->VSSetShader(vs->d3d_vs().get(), nullptr, 0);
 		d3d_immediate_context_->PSSetShader(ps->d3d_ps().get(), nullptr, 0);
-		d3d_immediate_context_->IASetInputLayout(vd.d3d_input_layout().get());
+		d3d_immediate_context_->IASetInputLayout(IL->second.get());
 		d3d_immediate_context_->IASetIndexBuffer(ib->d3d_buffer().get(), DXGI_FORMAT_R16_UINT, 0);
 		d3d_immediate_context_->IASetVertexBuffers(0, 1, &vbs, &stride, &offset);
 		d3d_immediate_context_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -401,7 +414,7 @@ namespace
 	};
 }
 
-auto context_t::create_d3d_texture2d(platform::d3d_texture2d_ptr& texture, resource_usage_flags_t usage_flags, surface_format_t format, uint mips, uint width, uint height) -> void
+auto context_t::create_d3d_texture2d(platform::d3d_texture2d_ptr& texture, resource_usage_flags_t usage_flags, element_format_t format, uint mips, uint width, uint height) -> void
 {
 	auto const miplevels = 
 		(usage_flags & resource_usage_t::render_target) ? 1 :
@@ -426,7 +439,7 @@ auto context_t::create_d3d_texture2d(platform::d3d_texture2d_ptr& texture, resou
 	ATMA_ENSURE_IS(S_OK, d3d_device_->CreateTexture2D(&texdesc, nullptr, texture.assign()));
 }
 
-auto context_t::create_d3d_texture3d(platform::d3d_texture3d_ptr& texture, resource_usage_flags_t usage_flags, surface_format_t format, uint mips, uint width, uint height, uint depth) -> void
+auto context_t::create_d3d_texture3d(platform::d3d_texture3d_ptr& texture, resource_usage_flags_t usage_flags, element_format_t format, uint mips, uint width, uint height, uint depth) -> void
 {
 	auto const miplevels =
 		(usage_flags & resource_usage_t::render_target) ? 1 :
@@ -519,4 +532,25 @@ auto context_t::signal_cs_upload_generic_buffer(uint index, generic_buffer_ptr c
 	engine_.signal([&, index, buf] {
 		d3d_immediate_context_->CSSetShaderResources(index, 1, &buf->d3d_shader_resource_view().get());
 	});
+}
+
+auto context_t::create_d3d_input_layout(vertex_shader_ptr const& vs, vertex_declaration_t const* vd) -> platform::d3d_input_layout_ptr
+{
+	uint offset = 0;
+	std::vector<D3D11_INPUT_ELEMENT_DESC> d3d_elements;
+	for (auto const& x : vd->streams())
+	{
+		d3d_elements.push_back({
+			x.semantic() == vertex_stream_semantic_t::position ? "Position" : "Color",
+			0, platform::dxgi_format_of(x.element_format()), 0, offset, D3D11_INPUT_PER_VERTEX_DATA, 0
+		});
+
+		offset += x.size();
+	}
+
+	platform::d3d_input_layout_ptr result;
+	ATMA_ENSURE_IS(S_OK, d3d_device_->CreateInputLayout(&d3d_elements[0], (uint32)d3d_elements.size(),
+		vs->d3d_blob()->GetBufferPointer(), vs->d3d_blob()->GetBufferSize(), result.assign()));
+
+	return result;
 }

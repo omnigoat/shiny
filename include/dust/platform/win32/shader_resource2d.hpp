@@ -2,16 +2,16 @@
 //======================================================================
 #include <dust/dust_fwd.hpp>
 #include <dust/platform/win32/d3d_fwd.hpp>
-#include <dust/surface_format.hpp>
+#include <dust/element_format.hpp>
 //======================================================================
 namespace dust
 {
 	struct shader_resource2d_t : atma::ref_counted
 	{
-		friend auto create_shader_resource2d(context_ptr const&, view_type_t, surface_format_t, uint width, uint height) -> shader_resource2d_ptr;
+		friend auto create_shader_resource2d(context_ptr const&, view_type_t, element_format_t, uint width, uint height) -> shader_resource2d_ptr;
 
 
-		shader_resource2d_t(context_ptr const&, view_type_t, surface_format_t, uint width, uint height);
+		shader_resource2d_t(context_ptr const&, view_type_t, element_format_t, uint width, uint height);
 		~shader_resource2d_t();
 
 		auto view_type() const -> view_type_t { return view_type_; }

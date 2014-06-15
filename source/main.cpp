@@ -36,7 +36,9 @@
 
 
 #define LOAD_VOXELS 0
-#define CS_TEST 1
+#define RENDER_VOXELS 0
+#define RENDER_CUBE 1
+#define CS_TEST 0
 
 
 
@@ -142,11 +144,11 @@ int main()
 	auto ps = dust::create_pixel_shader(ctx);
 
 	// vertex declaration
-	auto vd = dust::vertex_declaration_t(ctx, vs, {
-		{dust::vertex_stream_t::usage_t::position, 0, dust::vertex_stream_t::element_type_t::float32, 4},
-		{dust::vertex_stream_t::usage_t::color, 0, dust::vertex_stream_t::element_type_t::float32, 4}
+	auto vd = dust::vertex_declaration_t::get({
+		{dust::vertex_stream_semantic_t::position, 0, dust::element_format_t::f32x4},
+		{dust::vertex_stream_semantic_t::color, 0, dust::element_format_t::f32x4}
 	});
-	
+
 	// vertex-buffer
 	float vbd[] = {
 		 0.5f,  0.5f,  0.5f, 1.f,   1.f, 0.f, 0.f, 1.f,
@@ -201,45 +203,43 @@ int main()
 	}
 
 	// surfaces for compute shader test
-	auto sr = dust::create_shader_resource2d(ctx, dust::view_type_t::read_only, dust::surface_format_t::un8x4, 128, 128);
-	auto ur = dust::create_shader_resource2d(ctx, dust::view_type_t::read_write, dust::surface_format_t::un8x4, 128, 128);
+	auto sr = dust::create_shader_resource2d(ctx, dust::view_type_t::read_only, dust::element_format_t::un8x4, 128, 128);
+	auto ur = dust::create_shader_resource2d(ctx, dust::view_type_t::read_write, dust::element_format_t::un8x4, 128, 128);
 
 	// testing generic buffers too
 	float color[4] = {.0f, .4f, .4f, 1.f};
-	auto gb = dust::create_generic_buffer(ctx, dust::buffer_usage_t::immutable, dust::surface_format_t::f32x4, 1, color, 1);
+	auto gb = dust::create_generic_buffer(ctx, dust::buffer_usage_t::immutable, dust::element_format_t::f32x4, 1, color, 1);
 #endif
 
 
 
 	// loading voxels?
 #if LOAD_VOXELS
+	auto tx3 = dust::create_texture3d(ctx, dust::texture_usage_t::streaming, dust::element_format_t::f16x4, 128);
+	auto nodebuf = dust::buffer_ptr();
+	
 	{
 		// open file, read everything into memory
 		// todo: memory-mapped files
-		auto tx3 = dust::create_texture3d(ctx, dust::texture_usage_t::streaming, dust::surface_format_t::f16x4, 128);
-		//auto bufvox = dust::create_buffer(ctx, dust::buffer_type_t::constant_buffer, dust::buffer_usage_t::immutable, )
-		auto nodebuf = dust::buffer_ptr();
-
+		
 		// inflate 16kb at a time, and call our function for each brick
 		ctx->signal_map(tx3, 0, dust::map_type_t::write_discard, [&](dust::mapped_subresource_t& sr)
 		{
-			int blocks;
-
 			auto f = atma::filesystem::file_t{"../data/dragon.oct"};
 			auto m = atma::unique_memory_t(f.size());
 			f.read(m.begin(), f.size());
 
 			auto i = (char const*)m.begin();
 			i += 4; // skip check
-			blocks = *((int const*)i);
+			int node_count = *((int const*)i);
 			i += 12;
 
-			auto nodes = atma::unique_memory_t(64 * 1000000);
+			auto nodes = atma::unique_memory_t(64 * node_count);
 			
 			// create node buffer
-			auto nodebuf = dust::create_generic_buffer(ctx, dust::buffer_usage_t::immutable, dust::surface_format_t::u32x2, blocks, nodes.begin(), blocks);
+			nodebuf = dust::create_generic_buffer(ctx, dust::buffer_usage_t::immutable, dust::element_format_t::u32x2, node_count, nodes.begin(), node_count);
 
-			i += 64 * blocks;
+			i += 64 * node_count;
 
 			uint const bricksize = 8*8*8*sizeof(float)* 4;
 			zl_for_each_chunk<bricksize, 16 * 1024>(i, m.end(), [&ctx, &sr, &bricksize](void const* buf) {
@@ -311,11 +311,15 @@ int main()
 
 		camera.set_aspect(window->height() / (float)window->width());
 		auto scene = dust::scene_t(ctx, camera);
+		ctx->signal_clear();
 
+#if RENDER_CUBE
 		world_matrix = math::rotation_y(t * 0.002f);
 		scene.signal_update_constant_buffer(cb, sizeof(world_matrix), &world_matrix);
 		scene.signal_constant_buffer_upload(1, cb);
 		scene.signal_draw(ib, vd, vb, vs, ps);
+		ctx->signal_draw_scene(scene);
+#endif
 
 #if CS_TEST
 		ctx->signal_upload_shader_resource(dust::view_type_t::read_only, sr);
@@ -326,8 +330,6 @@ int main()
 #endif
 
 
-		ctx->signal_clear();
-		ctx->signal_draw_scene(scene);
 		ctx->signal_block();
 		ctx->signal_present();
 	}

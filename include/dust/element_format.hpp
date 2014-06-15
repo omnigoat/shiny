@@ -13,7 +13,7 @@ namespace dust
 	//  x4: 4 components
 	//  x3: 3 components, etc
 	//
-	enum class surface_format_t
+	enum class element_format_t
 	{
 		unknown,
 
@@ -27,4 +27,8 @@ namespace dust
 		// 1-component
 		g32,
 	};
+
+
+	auto element_count(element_format_t) -> int;
+	auto element_size(element_format_t) -> int;
 }

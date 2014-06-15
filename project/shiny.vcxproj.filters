@@ -140,6 +140,15 @@
     <ClCompile Include="..\source\dust\platform\win32\generic_buffer.cpp">
       <Filter>source\dust\platform\win32</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\voxels.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\dust\element_format.cpp">
+      <Filter>source\dust</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\dust\vertex_stream.cpp">
+      <Filter>source\dust</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\dust\context.hpp">
@@ -220,9 +229,6 @@
     <ClInclude Include="..\include\dust\platform\win32\texture2d.hpp">
       <Filter>include\dust\platform\win32</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\dust\surface_format.hpp">
-      <Filter>include\dust</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\dust\texture2d.hpp">
       <Filter>include\dust</Filter>
     </ClInclude>
@@ -281,6 +287,15 @@
       <Filter>include\dust\platform\win32</Filter>
     </ClInclude>
     <ClInclude Include="..\include\dust\generic_buffer.hpp">
+      <Filter>include\dust</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\dust\platform\win32\vertex_declaration.hpp">
+      <Filter>include\dust\platform\win32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\dust\element_format.hpp">
+      <Filter>include\dust</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\dust\vertex_stream.hpp">
       <Filter>include\dust</Filter>
     </ClInclude>
   </ItemGroup>

@@ -4,7 +4,7 @@
 
 #include <dust/dust_fwd.hpp>
 #include <dust/resource.hpp>
-#include <dust/surface_format.hpp>
+#include <dust/element_format.hpp>
 
 #include <atma/types.hpp>
 #include <atma/intrusive_ptr.hpp>
@@ -13,9 +13,9 @@ namespace dust
 {
 	struct texture3d_t : resource_t
 	{
-		friend auto create_texture3d(context_ptr const&, texture_usage_t, surface_format_t, uint width, uint height, uint depth, uint mips = 0) -> texture3d_ptr;
+		friend auto create_texture3d(context_ptr const&, texture_usage_t, element_format_t, uint width, uint height, uint depth, uint mips = 0) -> texture3d_ptr;
 
-		auto format() const -> surface_format_t;
+		auto format() const -> element_format_t;
 		auto mips() const -> uint;
 		auto width() const -> uint;
 		auto height() const -> uint;
@@ -26,10 +26,10 @@ namespace dust
 		auto d3d_resource() const -> platform::d3d_resource_ptr override;
 
 	private:
-		texture3d_t(context_ptr const&, texture_usage_t, surface_format_t, uint width, uint height, uint depth, uint mips);
+		texture3d_t(context_ptr const&, texture_usage_t, element_format_t, uint width, uint height, uint depth, uint mips);
 
 	private:
-		surface_format_t format_;
+		element_format_t format_;
 		uint mips_;
 		uint width_, height_, depth_;
 
@@ -37,5 +37,5 @@ namespace dust
 	};
 
 
-	auto create_texture3d(context_ptr const& context, texture_usage_t usage, surface_format_t format, uint width, uint mips = 0) -> texture3d_ptr;
+	auto create_texture3d(context_ptr const& context, texture_usage_t usage, element_format_t format, uint width, uint mips = 0) -> texture3d_ptr;
 }

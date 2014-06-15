@@ -6,8 +6,8 @@ using namespace dust;
 using dust::generic_buffer_t;
 
 
-generic_buffer_t::generic_buffer_t(context_ptr const& ctx, buffer_usage_t usage, surface_format_t format, uint elements, void const* data, uint data_elemcount)
-: buffer_t(ctx, buffer_type_t::generic_buffer, usage, platform::dxgi_size_of(format), elements, data, data_elemcount),
+generic_buffer_t::generic_buffer_t(context_ptr const& ctx, buffer_usage_t usage, element_format_t format, uint elements, void const* data, uint data_elemcount)
+: buffer_t(ctx, buffer_type_t::generic_buffer, usage, element_size(format), elements, data, data_elemcount),
   element_count_(elements)
 {
 	auto desc = D3D11_SHADER_RESOURCE_VIEW_DESC{};

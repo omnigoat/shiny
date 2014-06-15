@@ -7,71 +7,25 @@ using namespace dust;
 using dust::vertex_stream_t;
 using dust::vertex_declaration_t;
 
-//======================================================================
-// vertex_stream_t
-//======================================================================
-vertex_stream_t::vertex_stream_t(usage_t usage, uint32 index, element_type_t element_type, uint32 element_count)
-	: usage_(usage), index_(index), element_type_(element_type), element_count_(element_count)
+
+std::map<vertex_declaration_t::streams_t, std::unique_ptr<vertex_declaration_t>> dust::vertex_declaration_t::cache_;
+
+auto dust::vertex_declaration_t::get(streams_t const& streams) -> vertex_declaration_t const*
 {
-}
-
-auto vertex_stream_t::usage() const -> usage_t {
-	return usage_;
-}
-
-auto vertex_stream_t::index() const -> uint32 {
-	return index_;
-}
-
-auto vertex_stream_t::element_type() const -> element_type_t {
-	return element_type_;
-}
-
-auto vertex_stream_t::element_count() const -> uint32 {
-	return element_count_;
-}
-
-auto vertex_stream_t::size() const -> uint
-{
-	uint element_size = 0;
-	switch (element_type_)
-	{
-		case element_type_t::float32:
-		case element_type_t::int32:
-		case element_type_t::uint32:
-			element_size = 4;
-			break;
-
-		case element_type_t::int16:
-		case element_type_t::uint16:
-			element_size = 2;
-			break;
-
-		case element_type_t::int8:
-		case element_type_t::uint8:
-			element_size = 1;
-			break;
+	auto i = cache_.find(streams);
+	if (i == cache_.end()) {
+		auto p = std::unique_ptr<vertex_declaration_t>(new vertex_declaration_t(streams));
+		i = cache_.insert(std::make_pair(streams, std::move(p))).first;
 	}
-
-	ATMA_ASSERT(element_size > 0);
 	
-	return element_size * element_count_;
+	return i->second.get();
 }
 
-
-
-
-//======================================================================
-// vertex_declaration_t
-//======================================================================
-vertex_declaration_t::vertex_declaration_t( context_ptr const& context, vertex_shader_ptr const& vs, std::initializer_list<vertex_stream_t> streams )
-: context_(context), streams_(streams.begin(), streams.end()), stride_(), d3d_input_layout_(), built_()
+vertex_declaration_t::vertex_declaration_t(streams_t const& streams)
+: streams_(streams), stride_()
 {
-	// calculate stride
 	for (auto const& x : streams_)
 		stride_ += x.size();
-
-	build(vs);
 }
 
 auto vertex_declaration_t::streams() const -> streams_t const&
@@ -84,11 +38,7 @@ auto vertex_declaration_t::stride() const -> uint
 	return stride_;
 }
 
-auto vertex_declaration_t::d3d_input_layout() const -> platform::d3d_input_layout_ptr const&
-{
-	return d3d_input_layout_;
-}
-
+#if 0
 auto vertex_declaration_t::build(vertex_shader_ptr const& vs) -> void
 {
 	if (built_)
@@ -111,3 +61,4 @@ auto vertex_declaration_t::build(vertex_shader_ptr const& vs) -> void
 
 	built_ = true;
 }
+#endif

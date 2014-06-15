@@ -2,12 +2,12 @@
 
 #include <dust/platform/win32/d3d_fwd.hpp>
 #include <dust/platform/win32/dxgi_fwd.hpp>
-#include <dust/surface_format.hpp>
+#include <dust/element_format.hpp>
 
 
 namespace dust { namespace platform {
 	
-	inline auto dxgi_format_of(surface_format_t fmt) -> DXGI_FORMAT
+	inline auto dxgi_format_of(element_format_t fmt) -> DXGI_FORMAT
 	{
 		static DXGI_FORMAT const mapping[] =
 		{
@@ -29,31 +29,6 @@ namespace dust { namespace platform {
 		ATMA_ASSERT((uint)fmt < std::extent<decltype(mapping)>::value);
 		return mapping[(uint)fmt];
 	}
-
-
-	inline auto dxgi_size_of(surface_format_t fmt) -> uint
-	{
-		static uint const mapping[] =
-		{
-			0,
-
-			32,
-			32,
-			32,
-			32,
-			32,
-			64,
-			128,
-
-			64,
-
-			32
-		};
-
-		ATMA_ASSERT((uint)fmt < std::extent<decltype(mapping)>::value);
-		return mapping[(uint)fmt];
-	}
-
 
 	inline auto d3dbind_of(buffer_type_t bu) -> D3D11_BIND_FLAG
 	{

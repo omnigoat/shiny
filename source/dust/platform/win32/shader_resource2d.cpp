@@ -9,12 +9,12 @@
 using namespace dust;
 using dust::shader_resource2d_t;
 
-auto dust::create_shader_resource2d(context_ptr const& ctx, view_type_t view_type, surface_format_t sf, uint width, uint height) -> dust::shader_resource2d_ptr
+auto dust::create_shader_resource2d(context_ptr const& ctx, view_type_t view_type, element_format_t sf, uint width, uint height) -> dust::shader_resource2d_ptr
 {
 	return dust::shader_resource2d_ptr(new shader_resource2d_t(ctx, view_type, sf, width, height));
 }
 
-shader_resource2d_t::shader_resource2d_t(context_ptr const& ctx, view_type_t view_type, surface_format_t sf, uint width, uint height)
+shader_resource2d_t::shader_resource2d_t(context_ptr const& ctx, view_type_t view_type, element_format_t sf, uint width, uint height)
 	: context_(ctx), view_type_(view_type)
 {
 	texture_ = dust::create_texture2d(context_, {resource_usage_t::shader_resource, resource_usage_t::unordered_access}, sf, width, height);

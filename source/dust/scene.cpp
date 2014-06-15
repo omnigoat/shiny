@@ -51,7 +51,7 @@ auto scene_t::signal_constant_buffer_upload(uint index, constant_buffer_cptr con
 	});
 }
 
-auto scene_t::signal_draw(index_buffer_ptr const& ib, vertex_declaration_t const& vd, vertex_buffer_ptr const& vb, vertex_shader_ptr const& vs, pixel_shader_ptr const& ps) -> void
+auto scene_t::signal_draw(index_buffer_ptr const& ib, vertex_declaration_t const* vd, vertex_buffer_ptr const& vb, vertex_shader_ptr const& vs, pixel_shader_ptr const& ps) -> void
 {
 	queue_.push([&, ib, vd, vb, vs, ps] {
 		context_->signal_draw(ib, vd, vb, vs, ps);

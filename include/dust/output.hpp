@@ -1,6 +1,6 @@
 #pragma once
 //======================================================================
-#include <dust/surface_format.hpp>
+#include <dust/element_format.hpp>
 
 #include <atma/types.hpp>
 #include <atma/config/platform.hpp>
@@ -16,7 +16,7 @@ namespace dust
 	{
 		uint32 width, height;
 		uint32 refreshrate_frames, refreshrate_period;
-		surface_format_t format;
+		element_format_t format;
 		bool fullscreen;
 	};
 
