@@ -143,7 +143,10 @@ int main()
 	auto f = atma::filesystem::file_t("../shaders/vs_basic.hlsl");
 	auto fm = f.read_into_memory();
 	auto vs = dust::create_vertex_shader(ctx, fm, false);
-	auto ps = dust::create_pixel_shader(ctx);
+
+	auto f2 = atma::filesystem::file_t("../shaders/ps_basic.hlsl");
+	auto fm2 = f2.read_into_memory();
+	auto ps = dust::create_pixel_shader(ctx, fm2, false);
 
 	// vertex declaration
 	auto vd = dust::get_vertex_declaration({

@@ -44,9 +44,16 @@ void voxels_init(dust::context_ptr const& ctx)
 
 	vb = dust::create_vertex_buffer(ctx, dust::buffer_usage_t::immutable, vd, 8, vbd);
 	
-	//auto f = shelf::file_t("")
 	auto f = atma::filesystem::file_t("../shaders/vs_voxels.hlsl");
 	auto fm = f.read_into_memory();
+	vs = dust::create_vertex_shader(ctx, fm, false, "vs_main");
+	ps = dust::create_pixel_shader(ctx, fm, false, "ps_main");
 
-	vs = dust::create_vertex_shader(ctx, fm, false);
+}
+
+void voxels_render(dust::context_ptr const& ctx)
+{
+	ctx->signal_draw(vd, vb, vs, ps);
+
+
 }
