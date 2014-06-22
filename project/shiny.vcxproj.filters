@@ -149,6 +149,9 @@
     <ClCompile Include="..\source\dust\vertex_stream.cpp">
       <Filter>source\dust</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\dust\platform\win32\resource.cpp">
+      <Filter>source\dust\platform\win32</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\dust\context.hpp">
@@ -297,6 +300,9 @@
     </ClInclude>
     <ClInclude Include="..\include\dust\vertex_stream.hpp">
       <Filter>include\dust</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\shelf\file.hpp">
+      <Filter>include\shelf</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

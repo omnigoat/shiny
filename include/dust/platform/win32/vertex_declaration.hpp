@@ -14,7 +14,7 @@ namespace dust
 	{
 		typedef std::vector<vertex_stream_t> streams_t;
 
-		static auto get(streams_t const&) -> vertex_declaration_t const*;
+		friend auto get_vertex_declaration(streams_t const&) -> vertex_declaration_t const*;
 
 		auto streams() const -> streams_t const&;
 		auto stride() const -> uint;

@@ -5,7 +5,6 @@ struct ps_input_t
 	float4 texcoord : Texcoord;
 };
 
-
 struct node_item_t
 {
 	uint child;
@@ -17,6 +16,7 @@ struct node_t
 	node_item_t items[8];
 };
 
+// node pool
 StructuredBuffer<node_t> nodes;
 
 // brick pool

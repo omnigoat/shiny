@@ -140,11 +140,13 @@ int main()
 	auto ctx = dust::create_context(dust_runtime, window, dust::primary_adapter);
 	
 	// shaders
-	auto vs = dust::create_vertex_shader(ctx);
+	auto f = atma::filesystem::file_t("../shaders/vs_basic.hlsl");
+	auto fm = f.read_into_memory();
+	auto vs = dust::create_vertex_shader(ctx, fm, false);
 	auto ps = dust::create_pixel_shader(ctx);
 
 	// vertex declaration
-	auto vd = dust::vertex_declaration_t::get({
+	auto vd = dust::get_vertex_declaration({
 		{dust::vertex_stream_semantic_t::position, 0, dust::element_format_t::f32x4},
 		{dust::vertex_stream_semantic_t::color, 0, dust::element_format_t::f32x4}
 	});

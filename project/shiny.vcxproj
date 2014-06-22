@@ -182,6 +182,7 @@
     <ClCompile Include="..\source\dust\platform\win32\index_buffer.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\output.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\pixel_shader.cpp" />
+    <ClCompile Include="..\source\dust\platform\win32\resource.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\runtime.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\shader_resource2d.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\texture2d.cpp" />
@@ -253,6 +254,7 @@
     <ClInclude Include="..\include\dust\vertex_declaration.hpp" />
     <ClInclude Include="..\include\dust\vertex_shader.hpp" />
     <ClInclude Include="..\include\dust\vertex_stream.hpp" />
+    <ClInclude Include="..\include\shelf\file.hpp" />
     <ClInclude Include="..\vendor\zlib\deflate.h" />
     <ClInclude Include="..\vendor\zlib\inffast.h" />
     <ClInclude Include="..\vendor\zlib\inftrees.h" />
