@@ -93,3 +93,8 @@ auto texture3d_t::d3d_resource() const -> platform::d3d_resource_ptr
 {
 	return d3d_texture_;
 }
+
+auto texture3d_t::d3d_srv() const -> platform::d3d_shader_resource_view_ptr const&
+{
+	return d3d_srv_;
+}

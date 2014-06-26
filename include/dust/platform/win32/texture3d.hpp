@@ -24,6 +24,7 @@ namespace dust
 		auto d3d_texture() const -> platform::d3d_texture3d_ptr const&;
 		auto d3d_texture() -> platform::d3d_texture3d_ptr&;
 		auto d3d_resource() const -> platform::d3d_resource_ptr override;
+		auto d3d_srv() const -> platform::d3d_shader_resource_view_ptr const& override;
 
 	private:
 		texture3d_t(context_ptr const&, texture_usage_t, element_format_t, uint width, uint height, uint depth, uint mips);
@@ -34,6 +35,7 @@ namespace dust
 		uint width_, height_, depth_;
 
 		platform::d3d_texture3d_ptr d3d_texture_;
+		platform::d3d_shader_resource_view_ptr d3d_srv_;
 	};
 
 

@@ -25,7 +25,9 @@ pixel_shader_t::pixel_shader_t(context_ptr const& ctx, void const* data, size_t 
 		platform::d3d_blob_ptr errors;
 		ATMA_ENSURE_IS(S_OK, D3DCompile(data, data_length, nullptr, nullptr, nullptr, entrypoint.bytes_begin(), "ps_4_0", 0, 0, d3d_blob_.assign(), errors.assign()));
 		if (errors.get())
-			auto errs = (char*)errors->GetBufferPointer();
+		{
+			std::cout << (char*)errors->GetBufferPointer() << std::endl;
+		}
 	}
 
 

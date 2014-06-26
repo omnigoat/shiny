@@ -65,7 +65,7 @@ buffer_t::buffer_t(context_ptr const& ctx, buffer_type_t type, buffer_usage_t us
 		case buffer_usage_t::long_lived_shadowed:
 		case buffer_usage_t::dynamic_shadowed:
 		{
-			shadow_buffer_.resize(size_);
+			shadow_buffer_.resize((uint)size_);
 			if (data)
 				memcpy(&shadow_buffer_[0], data, data_size);
 			break;
@@ -137,4 +137,9 @@ auto buffer_t::upload_shadow_buffer() -> void
 auto buffer_t::d3d_resource() const -> platform::d3d_resource_ptr
 {
 	return d3d_buffer_;
+}
+
+auto buffer_t::d3d_srv() const -> platform::d3d_shader_resource_view_ptr const&
+{
+	return d3d_srv_;
 }

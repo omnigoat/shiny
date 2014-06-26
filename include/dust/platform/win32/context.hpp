@@ -41,7 +41,8 @@ namespace dust {
 		auto signal_upload_shader_resource(view_type_t, shader_resource2d_ptr const&) -> void;
 		auto signal_compute_shader_dispatch(uint x, uint y, uint z) -> void;
 
-		auto signal_cs_upload_generic_buffer(uint index, generic_buffer_ptr const&) -> void;
+		//auto signal_ps_upload_texture(uint index, resource_ptr const&) -> void;
+		auto signal_ps_upload_shader_resource(uint index, resource_ptr const&) -> void;
 
 		auto signal_map(resource_ptr const&, uint32 subresource, map_type_t, map_callback_t const&) -> void;
 
@@ -56,8 +57,8 @@ namespace dust {
 		auto create_d3d_texture3d(platform::d3d_texture3d_ptr&, resource_usage_flags_t, element_format_t, uint mips, uint width, uint height, uint depth) -> void;
 		auto create_d3d_shader_resource_view(platform::d3d_shader_resource_view_ptr&, resource_ptr const&, view_type_t) -> void;
 
-		auto d3d_device() const -> platform::d3d_device_ptr { return d3d_device_; }
-		auto d3d_immediate_context() const -> platform::d3d_context_ptr { return d3d_immediate_context_; }
+		auto d3d_device() const -> platform::d3d_device_ptr const& { return d3d_device_; }
+		auto d3d_immediate_context() const -> platform::d3d_context_ptr const& { return d3d_immediate_context_; }
 
 	private:
 		context_t(runtime_t&, fooey::window_ptr const&, uint32 adapter);

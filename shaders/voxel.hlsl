@@ -1,7 +1,6 @@
 struct vs_input_t
 {
 	float4 position : Position;
-	float4 texcoord : Texcoord;
 };
 
 struct ps_input_t
@@ -18,12 +17,14 @@ ps_input_t vs_main(in vs_input_t input)
 {
 	ps_input_t output;
 	output.position = input.position;
-	output.texcoord = float4(0.5f - input.texcoord.xy, 0.5f, 0.f);
+	output.texcoord = float4(0.5f - input.position.xy, 0.5f, 0.f);
 	return output;
 }
 
 
-
+//
+// Pixel Shader
+//
 struct node_item_t
 {
 	uint child;
@@ -36,13 +37,11 @@ struct node_t
 };
 
 // node pool
-StructuredBuffer<node_t> nodes;
+StructuredBuffer<node_t> nodes : register(t0);
+texture3D bricks : register(t1);
 
-// brick pool
-texture3D bricks;
 SamplerState brick_sampler
 {
-	
 	Filter = MIN_MAG_MIP_POINT;
 	AddressU = Clamp;
 	AddressV = Clamp;
@@ -277,7 +276,8 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 	return color;
 }
 
-float4 main(ps_input_t input) : SV_Target
+float4 ps_main(ps_input_t input) : SV_Target
 {
-	return brick_path(input.position.xyz, normalize(input.texcoord).xyz, 0.00001f);
+	//return brick_path(input.position.xyz, normalize(input.texcoord).xyz, 0.00001f);
+	return float4(1.f, 0.f, 0.f, 1.f);
 }

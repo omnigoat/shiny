@@ -329,6 +329,7 @@ auto context_t::signal_draw(vertex_declaration_t const* vd, vertex_buffer_ptr co
 		d3d_immediate_context_->VSSetShader(vs->d3d_vs().get(), nullptr, 0);
 		d3d_immediate_context_->PSSetShader(ps->d3d_ps().get(), nullptr, 0);
 		d3d_immediate_context_->IASetInputLayout(IL->second.get());
+		d3d_immediate_context_->IASetIndexBuffer(nullptr, DXGI_FORMAT_UNKNOWN, 0);
 		d3d_immediate_context_->IASetVertexBuffers(0, 1, &vbs, &stride, &offset);
 		d3d_immediate_context_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		d3d_immediate_context_->Draw(vb->vertex_count(), 0);
@@ -527,10 +528,20 @@ auto context_t::signal_map(resource_ptr const& rs, uint32 subresource, map_type_
 	});
 }
 
+#if 0
 auto context_t::signal_cs_upload_generic_buffer(uint index, generic_buffer_ptr const& buf) -> void
 {
 	engine_.signal([&, index, buf] {
 		d3d_immediate_context_->CSSetShaderResources(index, 1, &buf->d3d_shader_resource_view().get());
+	});
+}
+#endif
+
+auto context_t::signal_ps_upload_shader_resource(uint index, resource_ptr const& resource) -> void
+{
+	ATMA_ASSERT(resource);
+	engine_.signal([&, index, resource] {
+		d3d_immediate_context_->PSSetShaderResources(index, 1, &resource->d3d_srv().get());
 	});
 }
 

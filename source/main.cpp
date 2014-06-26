@@ -31,100 +31,18 @@
 
 #include <../vendor/DirectXTex/DirectXTex.h>
 
-#include <zlib.h>
 
 
-
-#define LOAD_VOXELS 0
-#define RENDER_VOXELS 0
-#define RENDER_CUBE 1
+#define LOAD_VOXELS 1
+#define RENDER_VOXELS 1
+#define RENDER_CUBE 0
 #define CS_TEST 0
 
 
+extern void voxels_init(dust::context_ptr const& ctx);
+extern void voxels_render(dust::context_ptr const& ctx);
 
 
-
-template <size_t AccumulateSize, size_t ReadSize, typename FN>
-auto zl_for_each_chunk(void const* begin, void const* end, FN const& fn) -> int
-{
-	auto strm = z_stream();
-	strm.zfree = Z_NULL;
-	strm.opaque = Z_NULL;
-	strm.avail_in = 0;
-	strm.next_in = Z_NULL;
-	int ret = inflateInit(&strm);
-	ATMA_ENSURE_IS(Z_OK, ret);
-
-	uint8 acc[AccumulateSize];
-	uint8 out[ReadSize];
-
-	size_t accoff = 0;
-	Bytef const* cur = reinterpret_cast<Bytef const*>(begin);
-	do
-	{
-		strm.avail_in = ReadSize;
-		strm.next_in = const_cast<Bytef*>(cur);
-		cur += ReadSize;
-
-		do
-		{
-			strm.avail_out = ReadSize;
-			strm.next_out = out;
-			auto ret = inflate(&strm, Z_NO_FLUSH);
-			switch (ret) {
-				case Z_NEED_DICT:
-					ret = Z_DATA_ERROR;
-				case Z_DATA_ERROR:
-				case Z_MEM_ERROR:
-					goto zread_fail;
-				case Z_FINISH:
-				case Z_STREAM_END:
-					goto zread_done;
-				default:
-					break;
-			}
-
-			size_t have = ReadSize - strm.avail_out;
-
-			// pass data to loader
-			size_t outoff = 0;
-			if (have + accoff > AccumulateSize)
-			{
-				if (accoff)
-				{
-					outoff = AccumulateSize - accoff;
-					memcpy(acc + accoff, out, outoff);
-					fn(acc);
-					accoff = 0;
-				}
-				for (; outoff + AccumulateSize <= have; outoff += AccumulateSize)
-					fn(out + outoff);
-			}
-
-			if (outoff < have)
-			{
-				auto dhave = have - outoff;
-				memcpy(acc + accoff, out+outoff, dhave);
-				accoff += dhave;
-				if (accoff >= AccumulateSize)
-				{
-					fn(acc);
-					accoff = 0;
-				}
-			}
-
-		} while (strm.avail_out == 0);
-
-	} while (ret != Z_STREAM_END);
-
-zread_done:
-	inflateEnd(&strm);
-	return 0;
-
-zread_fail:
-	inflateEnd(&strm);
-	return ret;
-}
 
 
 
@@ -220,38 +138,7 @@ int main()
 
 	// loading voxels?
 #if LOAD_VOXELS
-	auto tx3 = dust::create_texture3d(ctx, dust::texture_usage_t::streaming, dust::element_format_t::f16x4, 128);
-	auto nodebuf = dust::buffer_ptr();
-	
-	{
-		// open file, read everything into memory
-		// todo: memory-mapped files
-		
-		// inflate 16kb at a time, and call our function for each brick
-		ctx->signal_map(tx3, 0, dust::map_type_t::write_discard, [&](dust::mapped_subresource_t& sr)
-		{
-			auto f = atma::filesystem::file_t{"../data/dragon.oct"};
-			auto m = atma::unique_memory_t(f.size());
-			f.read(m.begin(), f.size());
-
-			auto i = (char const*)m.begin();
-			i += 4; // skip check
-			int node_count = *((int const*)i);
-			i += 12;
-
-			auto nodes = atma::unique_memory_t(64 * node_count);
-			
-			// create node buffer
-			nodebuf = dust::create_generic_buffer(ctx, dust::buffer_usage_t::immutable, dust::element_format_t::u32x2, node_count, nodes.begin(), node_count);
-
-			i += 64 * node_count;
-
-			uint const bricksize = 8*8*8*sizeof(float)* 4;
-			zl_for_each_chunk<bricksize, 16 * 1024>(i, m.end(), [&ctx, &sr, &bricksize](void const* buf) {
-				memcpy(sr.data, buf, bricksize);
-			});
-		});
-	}
+	voxels_init(ctx);
 #endif
 
 	
@@ -317,6 +204,10 @@ int main()
 		camera.set_aspect(window->height() / (float)window->width());
 		auto scene = dust::scene_t(ctx, camera);
 		ctx->signal_clear();
+
+#if RENDER_VOXELS
+		voxels_render(ctx);
+#endif
 
 #if RENDER_CUBE
 		world_matrix = math::rotation_y(t * 0.002f);

@@ -20,6 +20,7 @@ namespace dust
 
 		auto d3d_buffer() const -> platform::d3d_buffer_ptr const& { return d3d_buffer_; }
 		auto d3d_resource() const -> platform::d3d_resource_ptr override;
+		auto d3d_srv() const -> platform::d3d_shader_resource_view_ptr const& override;
 
 	protected:
 		buffer_t(context_ptr const&, buffer_type_t, buffer_usage_t, uint element_size, uint element_count, void const* data, uint data_element_count);
@@ -35,5 +36,6 @@ namespace dust
 		data_t shadow_buffer_;
 
 		platform::d3d_buffer_ptr d3d_buffer_;
+		platform::d3d_shader_resource_view_ptr d3d_srv_;
 	};
 }
