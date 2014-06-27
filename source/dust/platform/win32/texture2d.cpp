@@ -8,9 +8,8 @@ using namespace dust;
 using dust::texture2d_t;
 
 
-//======================================================================
-// create_texture2d
-//======================================================================
+
+
 auto dust::create_texture2d(context_ptr const& context, resource_usage_flags_t flags, element_format_t format, uint width, uint height) -> texture2d_ptr
 {
 	return texture2d_ptr(new texture2d_t(context, flags, format, 0, width, height));
@@ -22,39 +21,37 @@ auto dust::create_texture2d(context_ptr const& context, element_format_t format,
 }
 
 
-//======================================================================
-// texture2d
-//======================================================================
+
+
 texture2d_t::texture2d_t(context_ptr const& ctx, resource_usage_flags_t usage_flags, element_format_t format, uint width, uint height, uint mips)
 : resource_t(ctx, usage_flags), format_(format), width_(width), height_(height), mips_(mips)
 {
 	auto const& device = context()->d3d_device();
+
+	auto d3dusage = D3D11_USAGE();
+	auto d3dbind = D3D11_BIND_SHADER_RESOURCE;
+	auto d3dcpu = D3D11_CPU_ACCESS_FLAG();
+	auto d3dfmt = platform::dxgi_format_of(format);
 
 	auto const miplevels =
 		(usage_flags & resource_usage_t::render_target) ? 1 :
 		(usage_flags & resource_usage_t::depth_stencil) ? 1 :
 		mips_;
 
-	auto bind_flags = D3D11_BIND_FLAG();
 	if (usage_flags & resource_usage_t::render_target)
-		(uint&)bind_flags |= D3D11_BIND_RENDER_TARGET;
+		(uint&)d3dbind |= D3D11_BIND_RENDER_TARGET;
 	if (usage_flags & resource_usage_t::depth_stencil)
-		(uint&)bind_flags |= D3D11_BIND_DEPTH_STENCIL;
+		(uint&)d3dbind |= D3D11_BIND_DEPTH_STENCIL;
 	if (usage_flags & resource_usage_t::shader_resource)
-		(uint&)bind_flags |= D3D11_BIND_SHADER_RESOURCE;
+		(uint&)d3dbind |= D3D11_BIND_SHADER_RESOURCE;
 	if (usage_flags & resource_usage_t::unordered_access)
-		(uint&)bind_flags |= D3D11_BIND_UNORDERED_ACCESS;
+		(uint&)d3dbind |= D3D11_BIND_UNORDERED_ACCESS;
 
 	D3D11_TEXTURE2D_DESC texdesc{
 		width_, height_, miplevels, 1,
-		platform::dxgi_format_of(format), {1, 0}, D3D11_USAGE_DEFAULT, bind_flags,
-		0, 0};
+		d3dfmt, {1, 0}, d3dusage, d3dbind, d3dcpu, 0};
 
 	ATMA_ENSURE_IS(S_OK, device->CreateTexture2D(&texdesc, nullptr, d3d_texture_.assign()));
-
-//auto desc = D3D11_SHADER_RESOURCE_VIEW_DESC{};
-	//desc.Format = platform::dxgi_format_of(format);
-	//desc.Texture2D = {0, -1};
 
 	ATMA_ENSURE_IS(S_OK, device->CreateShaderResourceView(d3d_texture_.get(), nullptr, d3d_srv_.assign()));
 }

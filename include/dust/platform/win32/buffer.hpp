@@ -14,9 +14,10 @@ namespace dust
 	{
 		typedef std::vector<char, atma::aligned_allocator_t<char, 4>> data_t;
 
-		auto is_shadowing() const -> bool { return !shadow_buffer_.empty(); }
+		auto type() const -> buffer_type_t { return type_; }
 		auto usage() const -> buffer_usage_t { return usage_; }
 		auto size() const -> size_t { return size_; }
+		auto is_shadowing() const -> bool { return !shadow_buffer_.empty(); }
 
 		auto d3d_buffer() const -> platform::d3d_buffer_ptr const& { return d3d_buffer_; }
 		auto d3d_resource() const -> platform::d3d_resource_ptr override;

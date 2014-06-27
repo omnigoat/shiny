@@ -279,5 +279,8 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 float4 ps_main(ps_input_t input) : SV_Target
 {
 	//return brick_path(input.position.xyz, normalize(input.texcoord).xyz, 0.00001f);
-	return float4(1.f, 0.f, 0.f, 1.f);
+	//return float4(1.f, 0.f, 0.f, 1.f);
+	return float4(nodes[0].items[0].child, nodes[0].items[1].child, nodes[0].items[2].child / 1099.f, 1.f);
+	//return float4(nodes[0].items[3].child, nodes[0].items[4].child, nodes[0].items[5].child, 1.f);
+	//return float4(nodes[0].items[6].child, nodes[0].items[7].child, nodes[0].items[5].child, 1.f);
 }

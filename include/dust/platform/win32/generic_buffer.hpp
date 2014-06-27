@@ -13,12 +13,8 @@ namespace dust
 
 		auto element_count() const -> uint { return element_count_; }
 
-		auto d3d_shader_resource_view() const -> platform::d3d_shader_resource_view_ptr const& { return d3d_srv_; }
-
 	private:
 		uint element_count_;
-
-		platform::d3d_shader_resource_view_ptr d3d_srv_;
 	};
 
 	inline auto create_generic_buffer(

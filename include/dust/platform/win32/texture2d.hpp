@@ -23,7 +23,6 @@ namespace dust
 
 		auto d3d_texture() const -> platform::d3d_texture2d_ptr const&;
 		auto d3d_texture() -> platform::d3d_texture2d_ptr&;
-
 		auto d3d_resource() const -> platform::d3d_resource_ptr override;
 		auto d3d_srv() const -> platform::d3d_shader_resource_view_ptr const& override;
 

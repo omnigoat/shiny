@@ -23,9 +23,11 @@ auto dust::create_texture3d(context_ptr const& context, texture_usage_t usage, e
 
 
 
-texture3d_t::texture3d_t(context_ptr const& context, texture_usage_t usage, element_format_t format, uint width, uint height, uint depth, uint mips)
-: resource_t(context, usage), format_(format), mips_(mips), width_(width), height_(height), depth_(depth)
+texture3d_t::texture3d_t(context_ptr const& ctx, texture_usage_t usage, element_format_t format, uint width, uint height, uint depth, uint mips)
+: resource_t(ctx, usage), format_(format), mips_(mips), width_(width), height_(height), depth_(depth)
 {
+	auto const& device = context()->d3d_device();
+
 	auto d3dusage = D3D11_USAGE();
 	auto d3dbind = D3D11_BIND_SHADER_RESOURCE;
 	auto d3dcpu = D3D11_CPU_ACCESS_FLAG();
@@ -49,9 +51,13 @@ texture3d_t::texture3d_t(context_ptr const& context, texture_usage_t usage, elem
 			break;
 	}
 
-	auto desc = D3D11_TEXTURE3D_DESC{width, height, depth, 1, d3dfmt, d3dusage, d3dbind, d3dcpu, 0};
+	auto desc = D3D11_TEXTURE3D_DESC{
+		width_, height_, depth_, 1,
+		d3dfmt, d3dusage, d3dbind, d3dcpu, 0};
 
-	ATMA_ENSURE_IS(S_OK, this->context()->d3d_device()->CreateTexture3D(&desc, nullptr, d3d_texture_.assign()));
+	ATMA_ENSURE_IS(S_OK, device->CreateTexture3D(&desc, nullptr, d3d_texture_.assign()));
+
+	ATMA_ENSURE_IS(S_OK, device->CreateShaderResourceView(d3d_texture_.get(), nullptr, d3d_srv_.assign()));
 }
 
 auto texture3d_t::format() const -> element_format_t

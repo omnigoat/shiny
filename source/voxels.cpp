@@ -153,16 +153,19 @@ void voxels_init(dust::context_ptr const& ctx)
 			auto f = atma::filesystem::file_t{"../data/dragon.oct"};
 			auto m = atma::unique_memory_t(f.size());
 			f.read(m.begin(), f.size());
+			f.close();
 
 			auto i = (char const*)m.begin();
 			i += 4; // skip check
 			int node_count = *((int const*)i);
-			i += 12;
+			i += 4;
+			i += 4; // brick-count
+			i += 4; // zero
 
-			auto nodes = atma::unique_memory_t(64 * node_count);
+			//auto nodes = atma::unique_memory_t(64 * node_count);
 
 			// create node buffer
-			nodebuf = dust::create_generic_buffer(ctx, dust::buffer_usage_t::immutable, dust::element_format_t::u32x2, node_count, nodes.begin(), node_count);
+			nodebuf = dust::create_generic_buffer(ctx, dust::buffer_usage_t::immutable, dust::element_format_t::u32x2, node_count, i, node_count);
 
 			i += 64 * node_count;
 
@@ -182,5 +185,4 @@ void voxels_render(dust::context_ptr const& ctx)
 	ctx->signal_ps_upload_shader_resource(1, blockpool);
 	
 	ctx->signal_draw(vd, vb, vs, ps);
-
 }
