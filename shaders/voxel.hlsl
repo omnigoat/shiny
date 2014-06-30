@@ -97,7 +97,7 @@ uint find_brick(inout float4 box, float3 pos, float size)
 	{
 		volume *= 0.5f;
 		child = oct_child(box, pos);
-		uint chindex = nodes.Load(index).items[child].child;
+		uint chindex = nodes[index].items[child].child;
 		if (chindex == 0)
 			break;
 
@@ -142,7 +142,7 @@ bool enter(in float3 position, in float3 normal, out float3 result)
 			;
 	
 	
-	float4 box = float4(.5f + -vdelta, .5f + -vdelta, .5f + -vdelta, .5f + vdelta);
+	float4 box = float4(0, 0, 0, 1.f + vdelta);
 	if (inside(box, near_min * normal + position)) {
 		result = near_min * normal + position;
 		return true;
@@ -253,7 +253,7 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 			float3 brick_far = (far - box.xyz) / box.w;
 			brick_ray(brick_id, brick_near, brick_far, colour, rem);
 		}
-		else rem = 0; // box.w / float(B_SIZE);
+		else rem = 0;
 
 		float3 tmp = hit + step*1.010;
 		if (!inside(float4(.5f, .5f, .5f, .5f), tmp))break;
@@ -276,11 +276,50 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 	return color;
 }
 
+uint find_child(inout float4 box, float3 pos, float size)
+{
+	uint child = 0;
+	uint index = 0;
+	uint brick_size = 0;
+	float volume = 1.f / brick_sizef;
+	uint tmp = 0;
+	uint count = 0 ;
+	while (count < 5 && volume > size)
+	{
+		volume *= 0.5f;
+		child = oct_child(box, pos);
+		uint chindex = nodes[index].items[child].child;
+		if (chindex == 0)
+			break;
+
+		index = chindex;
+		count++;
+	}
+
+	return count;
+}
+
 float4 ps_main(ps_input_t input) : SV_Target
 {
-	//return brick_path(input.position.xyz, normalize(input.texcoord).xyz, 0.00001f);
-	//return float4(1.f, 0.f, 0.f, 1.f);
-	return float4(nodes[0].items[0].child, nodes[0].items[1].child, nodes[0].items[2].child / 1099.f, 1.f);
-	//return float4(nodes[0].items[3].child, nodes[0].items[4].child, nodes[0].items[5].child, 1.f);
-	//return float4(nodes[0].items[6].child, nodes[0].items[7].child, nodes[0].items[5].child, 1.f);
+#if 0
+	float4 box = {0, 0, 0, 1.f};
+	float3 position = {0, 0, 0};
+
+	float4 colors[5] = {
+		float4(1, 0, 0, 1),
+		float4(0, 1, 0, 1),
+		float4(0, 0, 1, 1),
+		float4(1, 0, 1, 1),
+		float4(1, 1, 0, 1)
+	};
+
+	uint depth = find_child(box, position, 0.00000001f);
+
+	return colors[depth];
+#endif
+	
+	float2 n = 1.f - 2.f * normalize(input.texcoord).xy;
+	
+
+	return brick_path(float3(n, -2.f), float3(0.f, 0.f, 1.f), 0.00001f);
 }

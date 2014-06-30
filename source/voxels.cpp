@@ -140,8 +140,7 @@ void voxels_init(dust::context_ptr const& ctx)
 	auto fm = f.read_into_memory();
 	vs = dust::create_vertex_shader(ctx, fm, false, "vs_main");
 	ps = dust::create_pixel_shader(ctx, fm, false, "ps_main");
-
-
+	
 	blockpool = dust::create_texture3d(ctx, dust::texture_usage_t::streaming, dust::element_format_t::f16x4, 128);
 	{
 		// open file, read everything into memory
@@ -162,10 +161,8 @@ void voxels_init(dust::context_ptr const& ctx)
 			i += 4; // brick-count
 			i += 4; // zero
 
-			//auto nodes = atma::unique_memory_t(64 * node_count);
-
 			// create node buffer
-			nodebuf = dust::create_generic_buffer(ctx, dust::buffer_usage_t::immutable, dust::element_format_t::u32x2, node_count, i, node_count);
+			nodebuf = dust::create_generic_buffer(ctx, dust::buffer_usage_t::immutable, 64, node_count, i, node_count);
 
 			i += 64 * node_count;
 

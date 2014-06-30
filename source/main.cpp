@@ -56,7 +56,7 @@ int main()
 	// initialise dust
 	auto dust_runtime = dust::runtime_t();
 	auto ctx = dust::create_context(dust_runtime, window, dust::primary_adapter);
-	
+
 	// shaders
 	auto f = atma::filesystem::file_t("../shaders/vs_basic.hlsl");
 	auto fm = f.read_into_memory();

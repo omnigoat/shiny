@@ -19,15 +19,16 @@ namespace
 		UINT mode_count = 0;
 		ATMA_ENSURE_IS(S_OK, dxgi_output->GetDisplayModeList(format, 0, &mode_count, nullptr));
 
-		auto modes = std::unique_ptr<DXGI_MODE_DESC[]>(new DXGI_MODE_DESC[mode_count]);
-		ATMA_ENSURE_IS(S_OK, dxgi_output->GetDisplayModeList(format, 0, &mode_count, modes.get()));
+		//auto modes = std::unique_ptr<DXGI_MODE_DESC[]>(new DXGI_MODE_DESC[mode_count]);
+		auto modes = std::vector<DXGI_MODE_DESC>(mode_count);
+		ATMA_ENSURE_IS(S_OK, dxgi_output->GetDisplayModeList(format, 0, &mode_count, &modes[0]));
 
 		// convert dxgi format to dust's format
-		for (auto i = modes.get(); i != modes.get() + mode_count; ++i)
+		for (auto const& x : modes)
 		{
 			dest.push_back({
-				i->Width, i->Height,
-				i->RefreshRate.Numerator, i->RefreshRate.Denominator,
+				x.Width, x.Height,
+				x.RefreshRate.Numerator, x.RefreshRate.Denominator,
 				element_format_t::un8x4
 			});
 		}
@@ -48,7 +49,7 @@ runtime_t::runtime_t()
 	// get all the adapters
 	{
 		dxgi_adapter_ptr adapter;
-		uint32 i = 0;
+		UINT i = 0;
 		while (dxgi_factory->EnumAdapters1(i++, adapter.assign()) != DXGI_ERROR_NOT_FOUND)
 			dxgi_adapters.push_back(adapter);
 	}
@@ -58,8 +59,8 @@ runtime_t::runtime_t()
 		for (auto& x : dxgi_adapters)
 		{
 			dxgi_output_ptr output;
-			uint32 i = 0;
-			while (x->EnumOutputs(i++, output.assign()) != DXGI_ERROR_NOT_FOUND) {
+			UINT i = 0;
+			while (x->EnumOutputs(i++, output.assign()) == S_OK) { //DXGI_ERROR_NOT_FOUND) {
 				dxgi_outputs_mapping[x].push_back(output);
 				enumerate_backbuffers(dxgi_backbuffer_formats[output], output);
 			}
