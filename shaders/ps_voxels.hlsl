@@ -1,25 +1,8 @@
-struct vs_input_t
-{
-	float4 position : Position;
-};
-
 struct ps_input_t
 {
 	float4 position : SV_Position;
 	float4 texcoord : Texcoord;
 };
-
-
-//
-// Vertex Shader
-//
-ps_input_t vs_main(in vs_input_t input)
-{
-	ps_input_t output;
-	output.position = input.position;
-	output.texcoord = float4(0.5f - input.position.xy, 0.5f, 0.f);
-	return output;
-}
 
 
 //
@@ -47,42 +30,65 @@ SamplerState brick_sampler
 	AddressV = Clamp;
 };
 
+const float3 axis_lookup[] = {
+	float3(-1.f, -1.f, -1.f),
+	float3(-1.f, -1.f,  1.f),
+	float3(-1.f,  1.f, -1.f),
+	float3(-1.f,  1.f,  1.f),
+	float3( 1.f, -1.f, -1.f),
+	float3( 1.f, -1.f,  1.f),
+	float3( 1.f,  1.f, -1.f),
+	float3( 1.f,  1.f,  1.f),
+};
+
+
+//
+//  axis-aligned bounding-box
+//  ---------------------------
+//     yay shader-model 5!
+//
+class aabb_t
+{
+	float3 center() { return data.xyz; }
+	float3 min() { return data.xyz + axis_lookup[0] * radius(); }
+	float3 max() { return data.xyz + axis_lookup[7] * radius(); }
+
+	float width() { return data.w; }
+	float radius() { return data.w * .5f; }
+
+
+	uint child_index(in float3 pos)
+	{
+		uint child = 0;
+		child += (bool)(data.x < pos.x);
+		child += (bool)(data.y < pos.y) * 2;
+		child += (bool)(data.z < pos.z) * 4;
+		return child;
+	}
+
+	aabb_t child_aabb(int index)
+	{
+		aabb_t r = {data.xyz + axis_lookup[index] * data.w * .25f, data.w * .5f};
+		return r;
+	}
+
+	aabb_t child_aabb(in float3 pos)
+	{
+		uint index = child_index(pos);
+		aabb_t r = {data.xyz + axis_lookup[index] * data.w * .25f, data.w * .5f};
+		return r;
+	}
+
+	float4 data;
+};
+
+
+
+static const aabb_t box = {0.f, 0.f, 0.f, 1.f};
 
 static const uint brick_size = 8;
 static const uint brick_count = 48;
 static const float brick_sizef = 8.f;
-
-uint oct_child(inout float4 box, float3 pos)
-{
-	uint child = 0;
-	box.w *= 0.5f;
-
-	if (box.x < pos.x) {
-		child += 1;
-		box.x += box.w;
-	}
-	else {
-		box.x -= box.w;
-	}
-
-	if (box.y < pos.y) {
-		child += 2;
-		box.y += box.w;
-	}
-	else {
-		box.y -= box.w;
-	}
-
-	if (box.z < pos.z) {
-		child += 4;
-		box.z += box.w;
-	}
-	else {
-		box.z -= box.w;
-	}
-
-	return child;
-}
 
 
 uint find_brick(inout float4 box, float3 pos, float size)
@@ -95,8 +101,9 @@ uint find_brick(inout float4 box, float3 pos, float size)
 
 	while (volume > size)
 	{
+		break;
 		volume *= 0.5f;
-		child = oct_child(box, pos);
+		//child = oct_child(box, pos);
 		uint chindex = nodes[index].items[child].child;
 		if (chindex == 0)
 			break;
@@ -121,6 +128,55 @@ bool inside(float4 box, float3 position)
 		&& (position.z >= box.z - box.w - vdelta && position.z < box.z + box.w + vdelta)
 		;
 }
+
+/*
+bool
+intersection(box b, ray r)
+{
+	double tx1 = (b.min.x - r.x0.x)*r.n_inv.x;
+	double tx2 = (b.max.x - r.x0.x)*r.n_inv.x;
+
+	double tmin = min(tx1, tx2);
+	double tmax = max(tx1, tx2);
+
+	double ty1 = (b.min.y - r.x0.y)*r.n_inv.y;
+	double ty2 = (b.max.y - r.x0.y)*r.n_inv.y;
+
+	tmin = max(tmin, min(ty1, ty2));
+	tmax = min(tmax, max(ty1, ty2));
+
+	return tmax >= tmin;
+}
+*/
+bool intersection(in aabb_t box, in float3 position, in float3 dir, out float3 enter, out float3 exit)
+{
+	float3 inv_dir = float3(1.f / dir.x, 1.f / dir.y, 1.f / dir.z);
+
+	float tx1 = (box.min().x - position.x) * inv_dir.x;
+	float tx2 = (box.center().x + box.radius() - position.x) * inv_dir.x;
+	float tx_min = min(tx1, tx2);
+	float tx_max = max(tx1, tx2);
+
+	float ty1 = (box.min().y - position.y) * inv_dir.y;
+	float ty2 = (box.center().y + box.radius() - position.y) * inv_dir.y;
+	float ty_min = min(ty1, ty2);
+	float ty_max = max(ty1, ty2);
+
+	float tz1 = (box.min().z - position.z) * inv_dir.z;
+	float tz2 = (box.center().z + box.radius() - position.z) * inv_dir.z;
+	float tz_min = min(tz1, tz2);
+	float tz_max = max(tz1, tz2);
+
+	float tmin = max(tx_max, max(ty_max, tz_max));
+	float tmax = min(tx_min, min(ty_min, tz_min));
+
+	enter = position + dir * tmin;
+	exit  = position + dir * tmax;
+
+	return tmin < tmax && 0.f < tmax;
+}
+
+
 
 bool enter(in float3 position, in float3 normal, out float3 result)
 {
@@ -226,39 +282,47 @@ void brick_ray(uint brick_id, float3 near, float3 far, inout float4 color, inout
 
 float4 brick_path(float3 position, float3 normal, float ratio)
 {
-	float4 box = float4(0, 0, 0, 1);
+	aabb_t jbox = {0, 0, 0, 1.f};
+	float4 box = float4(0.f, 0.f, 0.f, 1.f);
 	float size = 0.00000001f;
 	float distance = 0.f;
+	float3 hit_enter, hit_exit;
 
-	float3 hit;
-	if (inside(box, position))
-		hit = position;
-	else if (!enter(position, normal, hit))
+	if (false) //inside(box, position))
+	{
+		hit_enter = position;
+		return float4(1, 0, 0, 0);
+	}
+	else if (!intersection(jbox, position, normal, hit_enter, hit_exit))
+	{
 		discard;
+	}
 
-	float len = length(hit - position);
+	return float4(hit_enter, 1);
+
+	float len = length(hit_enter - position);
 	distance += len;
 
 	float4 colour = float4(0.0, 0.0, 0.0, 0.0);
-	uint brick_id = find_brick(box, hit, size);
+		uint brick_id = find_brick(box, hit_enter, size);
 	float rem = 0.0;
 	for (int i = 0; i < 50 && colour.w < 1.f; ++i)
 	{
-		float3 far = escape(box, hit, normal);
-		len = length(far - hit);
+		float3 far = escape(box, hit_enter, normal);
+			len = length(far - hit_enter);
 		float3 step = normal * len;
 		if (brick_id != 0)
 		{
-			float3 brick_near = (hit - box.xyz) / box.w;
+			float3 brick_near = (hit_enter - box.xyz) / box.w;
 			float3 brick_far = (far - box.xyz) / box.w;
 			brick_ray(brick_id, brick_near, brick_far, colour, rem);
 		}
 		else rem = 0;
 
-		float3 tmp = hit + step*1.010;
+		float3 tmp = hit_enter + step*1.010;
 		if (!inside(float4(.5f, .5f, .5f, .5f), tmp))break;
 		brick_id = find_brick(box, tmp, size);
-		hit = tmp;
+		hit_enter = tmp;
 	}
 	float3 n = normalize(colour.xyz);
 
@@ -276,6 +340,7 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 	return color;
 }
 
+#if 0
 uint find_child(inout float4 box, float3 pos, float size)
 {
 	uint child = 0;
@@ -298,6 +363,7 @@ uint find_child(inout float4 box, float3 pos, float size)
 
 	return count;
 }
+#endif
 
 float4 ps_main(ps_input_t input) : SV_Target
 {
@@ -318,8 +384,7 @@ float4 ps_main(ps_input_t input) : SV_Target
 	return colors[depth];
 #endif
 	
-	float2 n = 1.f - 2.f * normalize(input.texcoord).xy;
+	float2 n = 0.5f - normalize(input.texcoord).xy;
 	
-
-	return brick_path(float3(n, -2.f), float3(0.f, 0.f, 1.f), 0.00001f);
+	return brick_path(float3(0.f, 0.f, -2.f), float3(0.f, 0.f, 1.f), 0.00001f);
 }

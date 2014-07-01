@@ -23,7 +23,7 @@ vertex_shader_t::vertex_shader_t(context_ptr const& ctx, void const* data, size_
 	else
 	{
 		platform::d3d_blob_ptr errors;
-		ATMA_ENSURE_IS(S_OK, D3DCompile(data, data_length, nullptr, nullptr, nullptr, entrypoint.bytes_begin(), "vs_4_0", 0, 0, d3d_blob_.assign(), errors.assign()));
+		ATMA_ENSURE_IS(S_OK, D3DCompile(data, data_length, nullptr, nullptr, nullptr, entrypoint.bytes_begin(), "vs_4_0", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, d3d_blob_.assign(), errors.assign()));
 		if (errors)
 		{
 			auto errs = (char*)errors->GetBufferPointer();

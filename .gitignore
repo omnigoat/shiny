@@ -10,3 +10,4 @@ data/
 *.lib
 *.inc
 *.ipch
+*.cso

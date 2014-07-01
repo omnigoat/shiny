@@ -136,10 +136,18 @@ void voxels_init(dust::context_ptr const& ctx)
 
 	vb = dust::create_vertex_buffer(ctx, dust::buffer_usage_t::immutable, vd, 8, vbd);
 	
-	auto f = atma::filesystem::file_t("../shaders/voxel.hlsl");
-	auto fm = f.read_into_memory();
-	vs = dust::create_vertex_shader(ctx, fm, false, "vs_main");
-	ps = dust::create_pixel_shader(ctx, fm, false, "ps_main");
+	{
+		auto f = atma::filesystem::file_t("../shaders/vs_voxels.cso");
+		auto fm = f.read_into_memory();
+		vs = dust::create_vertex_shader(ctx, fm, true, "vs_main");
+	}
+
+	{
+		auto f = atma::filesystem::file_t("../shaders/ps_voxels.cso");
+		auto fm = f.read_into_memory();
+		ps = dust::create_pixel_shader(ctx, fm, true, "ps_main");
+	}
+	
 	
 	blockpool = dust::create_texture3d(ctx, dust::texture_usage_t::streaming, dust::element_format_t::f16x4, 128);
 	{
