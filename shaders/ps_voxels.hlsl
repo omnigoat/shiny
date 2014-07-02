@@ -77,23 +77,32 @@ class aabb_t
 		return child;
 	}
 
+#if 0
 	aabb_t child_aabb(int index)
 	{
-		aabb_t r = {data.xyz + axis_lookup[index] * data.w * .25f, data.w * .5f};
-		return r;
+		
 	}
+#endif
 
-	aabb_t child_aabb(in float3 pos)
-	{
-		uint index = child_index(pos);
-		aabb_t r = {data.xyz + axis_lookup[index] * data.w * .25f, data.w * .5f};
-		return r;
-	}
+	
 
 	float4 data;
 };
 
 
+aabb_t child_aabb(in aabb_t box, float3 pos)
+{
+	//uint index = child_index(pos);
+	uint index = 0;
+	aabb_t r ={box.data.xyz + axis_lookup[index] * box.data.w * .25f, box.data.w * .5f};
+	return r;
+}
+
+aabb_t child_aabb(in aabb_t box, uint index)
+{
+	aabb_t r ={box.data.xyz + axis_lookup[index] * box.data.w * .25f, box.data.w * .5f};
+	return r;
+}
 
 static const aabb_t box = {0.f, 0.f, 0.f, 1.f};
 
@@ -102,27 +111,23 @@ static const uint brick_count = 48;
 static const float brick_sizef = 8.f;
 
 
-uint find_brick(inout float4 box, float3 pos, float size)
+uint find_brick(inout aabb_t box, float3 pos, float size)
 {
-	uint child = 0;
-	uint index = 0;
-	uint brick_size = 0;
-	float volume = 1.f / brick_sizef;
-	uint tmp = 0;
+	uint node_index = 0;
+	uint aabb_child = 0;
 
-	while (volume > size)
+	for (float volume = 1.f / brick_sizef; volume > size; volume *= 0.5f)
 	{
-		break;
-		volume *= 0.5f;
-		//child = oct_child(box, pos);
-		uint chindex = nodes[index].items[child].child;
-		if (chindex == 0)
+		aabb_child = box.child_index(pos);
+		uint child_index = nodes[node_index].items[aabb_child].child;
+		if (child_index == 0)
 			break;
 
-		index = chindex;
+		node_index = child_index;
+		box = child_aabb(box, aabb_child);
 	}
 
-	return nodes[index].items[child].brick;
+	return nodes[node_index].items[aabb_child].brick;
 }
 
 
@@ -258,6 +263,30 @@ float3 brick_origin(uint brick_id)
 	return brick_pos / float(brick_count);
 }
 
+uint find_child(inout aabb_t box, float3 pos, float size)
+{
+	uint child = 0;
+	uint index = 0;
+	uint brick_size = 0;
+	float volume = 1.f / brick_sizef;
+	uint tmp = 0;
+	uint count = 0;
+	while (count < 5 && volume > size)
+	{
+		volume *= 0.5f;
+		child = box.child_index(pos);
+		uint chindex = nodes[index].items[child].child;
+		if (chindex == 0)
+			break;
+
+		box = child_aabb(box, pos);
+		index = chindex;
+		count++;
+	}
+
+	return count;
+}
+
 
 void brick_ray(uint brick_id, float3 near, float3 far, inout float4 color, inout float rem)
 {
@@ -292,34 +321,60 @@ void brick_ray(uint brick_id, float3 near, float3 far, inout float4 color, inout
 
 float4 brick_path(float3 position, float3 normal, float ratio)
 {
-	aabb_t jbox = {0, 0, 0, 1.f};
-	float4 box = float4(0.f, 0.f, 0.f, 1.f);
+	aabb_t box = {0, 0, 0, 1.f};
 	float size = 0.00000001f;
 	float distance = 0.f;
 	float3 hit_enter, hit_exit;
 
-	if (jbox.contains(position)) //false) //inside(box, position))
+	if (box.contains(position)) //false) //inside(box, position))
 	{
 		hit_enter = position;
-		return float4(1, 0, 0, 0);
 	}
-	else if (!intersection(jbox, position, normal, hit_enter, hit_exit))
+	else if (!intersection(box, position, normal, hit_enter, hit_exit))
 	{
 		discard;
 	}
 
-	return float4(hit_enter + hit_exit, 1);
+	//uint ch = find_child(jbox, hit_enter, 0.00001);
+	//return float4((float3)ch, 1.f);
 
 	float len = length(hit_enter - position);
 	distance += len;
 
 	float4 colour = float4(0.0, 0.0, 0.0, 0.0);
-		uint brick_id = find_brick(box, hit_enter, size);
+	
+	uint brick_id = find_brick(box, hit_enter, size);
+
+	float4 color = {0.f, 0.f, 0.f, 0.f};
+	for (int i = 0; i < 50 && colour.w < 1.f; ++i)
+	{
+		float brick_internal_length = length(hit_exit - hit_enter);
+		float3 step = normal * brick_internal_length;
+
+		if (brick_id != 0)
+		{
+			// our 3d-texture is addressed in [0,0,0] -> [1,1,1]
+			float3 brick_near = (hit_enter - box.min()) / box.width();
+			float3 brick_far = (hit_exit - box.min()) / box.width();
+			brick_accumulate(brick_id, brick_near, brick_far, color, rem);
+		}
+
+		float3 tmp = hit_enter + step;
+		if (box.contains(tmp))
+			break;
+
+		brick_id = find_brick(box, tmp, size);
+		hit_enter = tmp;
+	}
+
+	return bricks.Load(brick_id);
+
+#if 0
 	float rem = 0.0;
 	for (int i = 0; i < 50 && colour.w < 1.f; ++i)
 	{
 		float3 far = escape(box, hit_enter, normal);
-			len = length(far - hit_enter);
+		len = length(far - hit_enter);
 		float3 step = normal * len;
 		if (brick_id != 0)
 		{
@@ -348,32 +403,10 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 	color += float4(i * lpwr, 0);
 	
 	return color;
-}
-
-#if 0
-uint find_child(inout float4 box, float3 pos, float size)
-{
-	uint child = 0;
-	uint index = 0;
-	uint brick_size = 0;
-	float volume = 1.f / brick_sizef;
-	uint tmp = 0;
-	uint count = 0 ;
-	while (count < 5 && volume > size)
-	{
-		volume *= 0.5f;
-		child = oct_child(box, pos);
-		uint chindex = nodes[index].items[child].child;
-		if (chindex == 0)
-			break;
-
-		index = chindex;
-		count++;
-	}
-
-	return count;
-}
 #endif
+}
+
+
 
 float4 ps_main(ps_input_t input) : SV_Target
 {
