@@ -6,7 +6,7 @@ struct vs_input_t
 struct ps_input_t
 {
 	float4 position : SV_Position;
-	float4 texcoord : Texcoord;
+	float3 texcoord : Texcoord;
 };
 
 //
@@ -16,6 +16,6 @@ ps_input_t vs_main(in vs_input_t input)
 {
 	ps_input_t output;
 	output.position = input.position;
-	output.texcoord = float4(0.5f - input.position.xy, 0.5f, 0.f);
+	output.texcoord = float3(input.position.xy, 1.f);
 	return output;
 }

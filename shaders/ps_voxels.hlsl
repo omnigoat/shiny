@@ -1,7 +1,7 @@
 struct ps_input_t
 {
 	float4 position : SV_Position;
-	float4 texcoord : Texcoord;
+	float3 texcoord : Texcoord;
 };
 
 
@@ -30,7 +30,11 @@ SamplerState brick_sampler
 	AddressV = Clamp;
 };
 
-const float3 axis_lookup[] = {
+
+// volume delta, because floating-point
+static const float vdelta = 0.0000001f;
+
+static const float3 axis_lookup[] = {
 	float3(-1.f, -1.f, -1.f),
 	float3(-1.f, -1.f,  1.f),
 	float3(-1.f,  1.f, -1.f),
@@ -56,6 +60,13 @@ class aabb_t
 	float width() { return data.w; }
 	float radius() { return data.w * .5f; }
 
+	bool contains(in float3 pos)
+	{
+		return (pos.x >= data.x - radius() - vdelta && pos.x < data.x + radius() + vdelta)
+			&& (pos.y >= data.y - radius() - vdelta && pos.y < data.y + radius() + vdelta)
+			&& (pos.z >= data.z - radius() - vdelta && pos.z < data.z + radius() + vdelta)
+			;
+	}
 
 	uint child_index(in float3 pos)
 	{
@@ -118,8 +129,7 @@ uint find_brick(inout float4 box, float3 pos, float size)
 
 
 
-// volume delta, because floating-point
-static const float vdelta = 0.0000001f;
+
 
 bool inside(float4 box, float3 position)
 {
@@ -167,8 +177,8 @@ bool intersection(in aabb_t box, in float3 position, in float3 dir, out float3 e
 	float tz_min = min(tz1, tz2);
 	float tz_max = max(tz1, tz2);
 
-	float tmin = max(tx_max, max(ty_max, tz_max));
-	float tmax = min(tx_min, min(ty_min, tz_min));
+	float tmin = max(tx_min, max(ty_min, tz_min));
+	float tmax = min(tx_max, min(ty_max, tz_max));
 
 	enter = position + dir * tmin;
 	exit  = position + dir * tmax;
@@ -288,7 +298,7 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 	float distance = 0.f;
 	float3 hit_enter, hit_exit;
 
-	if (false) //inside(box, position))
+	if (jbox.contains(position)) //false) //inside(box, position))
 	{
 		hit_enter = position;
 		return float4(1, 0, 0, 0);
@@ -298,7 +308,7 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 		discard;
 	}
 
-	return float4(hit_enter, 1);
+	return float4(hit_enter + hit_exit, 1);
 
 	float len = length(hit_enter - position);
 	distance += len;
@@ -384,7 +394,7 @@ float4 ps_main(ps_input_t input) : SV_Target
 	return colors[depth];
 #endif
 	
-	float2 n = 0.5f - normalize(input.texcoord).xy;
+	//float2 n = normalize(input.texcoord);
 	
-	return brick_path(float3(0.f, 0.f, -2.f), float3(0.f, 0.f, 1.f), 0.00001f);
+	return brick_path(float3(0.f, 0.f, -2.f), normalize(input.texcoord), 0.00001f);
 }
