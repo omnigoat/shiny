@@ -36,12 +36,12 @@ static const float vdelta = 0.0000001f;
 
 static const float3 axis_lookup[] = {
 	float3(-1.f, -1.f, -1.f),
-	float3(-1.f, -1.f,  1.f),
-	float3(-1.f,  1.f, -1.f),
-	float3(-1.f,  1.f,  1.f),
 	float3( 1.f, -1.f, -1.f),
-	float3( 1.f, -1.f,  1.f),
+	float3(-1.f,  1.f, -1.f),
 	float3( 1.f,  1.f, -1.f),
+	float3(-1.f, -1.f,  1.f),
+	float3( 1.f, -1.f,  1.f),
+	float3(-1.f,  1.f,  1.f),
 	float3( 1.f,  1.f,  1.f),
 };
 
@@ -116,6 +116,7 @@ uint find_brick(in aabb_t box, float3 pos, float size, out aabb_t leaf_box)
 	uint node_index = 0;
 	uint aabb_child = 0;
 	uint result_brick = 0;
+	leaf_box = box;
 
 	for (float volume = 1.f / brick_sizef; volume > size; volume *= 0.5f)
 	{
@@ -124,8 +125,8 @@ uint find_brick(in aabb_t box, float3 pos, float size, out aabb_t leaf_box)
 		if (child_index == 0)
 			break;
 
-		result_brick = nodes[node_index].items[aabb_child].brick;
 		node_index = child_index;
+		result_brick = nodes[node_index].items[aabb_child].brick;
 		leaf_box = child_aabb(box, aabb_child);
 	}
 
@@ -321,6 +322,43 @@ void brick_ray(uint brick_id, float3 near, float3 far, inout float4 color, inout
 	color = result;
 }
 
+void brick_accumulate(inout float4 color, uint brick_id, float3 near, float3 far)
+{
+	float inv_size = 1.f / brick_size;
+	float inv_count = 1.f / brick_count;
+	float half_size = inv_size * 0.5f;
+
+	// translate begin and end positions to the centres of the voxels
+	near = near * (inv_size * (brick_size - 1)) + half_size;
+	far = far * (inv_size * (brick_size - 1)) + half_size;
+
+	float len = length(far - near);
+	float3 brick_pos = brick_origin(brick_id);
+	float rem = 0.f;
+	
+	float4 result = color;
+
+	if (len < 0.1f)
+		return;
+
+	float steps = 1.f / (len * brick_size);
+
+	float pos;
+	for (pos = steps * rem; pos < 1.f; pos += steps)
+	{
+		float3 sample_loc = lerp(near, far, pos) * inv_count;
+		float4 voxel = bricks.SampleLevel(brick_sampler, sample_loc + brick_pos, 0);
+		result.xyz += ((1.f - result.a) * (1.f - result.a) * voxel.xyz) / (1.f - result.xyz * voxel.xyz);
+		result.w = result.w + (1.f - result.w) * voxel.w;
+		if (result.w > 1.f)
+			break;
+	}
+
+	// don't bother with rem
+	//rem = (pos - 1.f) * (len * brick_size);
+	color = result;
+}
+
 float4 brick_path(float3 position, float3 normal, float ratio)
 {
 	aabb_t box = {0, 0, 0, 1.f};
@@ -340,15 +378,8 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 		discard;
 	}
 
-	//uint ch = find_child(jbox, hit_enter, 0.00001);
-	//return float4((float3)ch, 1.f);
-
 	float len = length(hit_enter - position);
 	distance += len;
-
-	float4 colour = float4(0.0, 0.0, 0.0, 0.0);
-	
-	
 
 	uint reps = 0;
 	float4 color = {0.f, 0.f, 0.f, 0.f};
@@ -365,9 +396,9 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 		if (brick_id != 0)
 		{
 			// our 3d-texture is addressed in [0,0,0] -> [1,1,1]
-			float3 brick_enter = (hit_enter - box.min()) / box.width();
-			float3 brick_exit = (hit_exit - box.min()) / box.width();
-			brick_accumulate(brick_id, brick_enter, brick_exit, color, rem);
+			float3 brick_enter = (leaf_enter - box.min()) / box.width();
+			float3 brick_exit = (leaf_exit - box.min()) / box.width();
+			brick_accumulate(color, brick_id, brick_enter, brick_exit);
 		}
 
 		hit_enter = leaf_exit + normal * 0.0000001f;
@@ -375,7 +406,7 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 			break;
 
 		++reps;
-	} while (reps < 50 && colour.w < 1.f);
+	} while (reps < 50 && color.w < 1.f);
 
 #if 0
 	for (int i = 0; ; ++i)
@@ -392,7 +423,7 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 		}
 
 		float3 tmp = hit_enter + step;
-		if (box.contains(tmp))
+		if (!box.contains(tmp))
 			break;
 
 		brick_id = find_brick(box, tmp, size);
@@ -400,7 +431,7 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 	}
 #endif
 
-	return float4(0.f, 0.f, 0.f, 1.f); //bricks.Load(brick_id);
+	return color;
 
 #if 0
 	float rem = 0.0;

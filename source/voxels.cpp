@@ -149,7 +149,7 @@ void voxels_init(dust::context_ptr const& ctx)
 	}
 	
 	
-	blockpool = dust::create_texture3d(ctx, dust::texture_usage_t::streaming, dust::element_format_t::f16x4, 128);
+	blockpool = dust::create_texture3d(ctx, dust::texture_usage_t::streaming, dust::element_format_t::f16x4, 8 * 48);
 	{
 		// open file, read everything into memory
 		// todo: memory-mapped files
@@ -174,7 +174,7 @@ void voxels_init(dust::context_ptr const& ctx)
 
 			i += 64 * node_count;
 
-			uint const bricksize = 8*8*8*sizeof(float)* 4;
+			uint const bricksize = 8*8*8*sizeof(float)*4;
 			zl_for_each_chunk<bricksize, 16 * 1024>(i, m.end(), [&ctx, &sr, &bricksize](void const* buf) {
 				memcpy(sr.data, buf, bricksize);
 			});
