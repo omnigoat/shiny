@@ -111,10 +111,11 @@ static const uint brick_count = 48;
 static const float brick_sizef = 8.f;
 
 
-uint find_brick(inout aabb_t box, float3 pos, float size)
+uint find_brick(in aabb_t box, float3 pos, float size, out aabb_t leaf_box)
 {
 	uint node_index = 0;
 	uint aabb_child = 0;
+	uint result_brick = 0;
 
 	for (float volume = 1.f / brick_sizef; volume > size; volume *= 0.5f)
 	{
@@ -123,11 +124,12 @@ uint find_brick(inout aabb_t box, float3 pos, float size)
 		if (child_index == 0)
 			break;
 
+		result_brick = nodes[node_index].items[aabb_child].brick;
 		node_index = child_index;
-		box = child_aabb(box, aabb_child);
+		leaf_box = child_aabb(box, aabb_child);
 	}
 
-	return nodes[node_index].items[aabb_child].brick;
+	return result_brick;
 }
 
 
@@ -322,10 +324,13 @@ void brick_ray(uint brick_id, float3 near, float3 far, inout float4 color, inout
 float4 brick_path(float3 position, float3 normal, float ratio)
 {
 	aabb_t box = {0, 0, 0, 1.f};
+
 	float size = 0.00000001f;
 	float distance = 0.f;
 	float3 hit_enter, hit_exit;
 
+
+	aabb_t leaf_box;
 	if (box.contains(position)) //false) //inside(box, position))
 	{
 		hit_enter = position;
@@ -343,10 +348,37 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 
 	float4 colour = float4(0.0, 0.0, 0.0, 0.0);
 	
-	uint brick_id = find_brick(box, hit_enter, size);
+	
 
+	uint reps = 0;
 	float4 color = {0.f, 0.f, 0.f, 0.f};
-	for (int i = 0; i < 50 && colour.w < 1.f; ++i)
+	float rem = 0.f;
+	do
+	{
+		aabb_t leaf_box;
+		float3 leaf_enter;
+		float3 leaf_exit;
+
+		uint brick_id = find_brick(box, hit_enter, size, leaf_box);
+		intersection(leaf_box, position, normal, leaf_enter, leaf_exit);
+
+		if (brick_id != 0)
+		{
+			// our 3d-texture is addressed in [0,0,0] -> [1,1,1]
+			float3 brick_enter = (hit_enter - box.min()) / box.width();
+			float3 brick_exit = (hit_exit - box.min()) / box.width();
+			brick_accumulate(brick_id, brick_enter, brick_exit, color, rem);
+		}
+
+		hit_enter = leaf_exit + normal * 0.0000001f;
+		if (!box.contains(hit_enter))
+			break;
+
+		++reps;
+	} while (reps < 50 && colour.w < 1.f);
+
+#if 0
+	for (int i = 0; ; ++i)
 	{
 		float brick_internal_length = length(hit_exit - hit_enter);
 		float3 step = normal * brick_internal_length;
@@ -366,8 +398,9 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 		brick_id = find_brick(box, tmp, size);
 		hit_enter = tmp;
 	}
+#endif
 
-	return bricks.Load(brick_id);
+	return float4(0.f, 0.f, 0.f, 1.f); //bricks.Load(brick_id);
 
 #if 0
 	float rem = 0.0;
