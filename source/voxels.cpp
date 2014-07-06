@@ -41,7 +41,7 @@ auto ps = dust::pixel_shader_ptr();
 // buffers/textures
 auto nodebuf = dust::generic_buffer_ptr();
 auto blockpool = dust::texture3d_ptr();
-
+static FILE* fout;
 
 template <size_t AccumulateSize, size_t ReadSize, typename FN>
 auto zl_for_each_chunk(void const* begin, void const* end, FN const& fn) -> int
@@ -58,17 +58,18 @@ auto zl_for_each_chunk(void const* begin, void const* end, FN const& fn) -> int
 	uint8 out[ReadSize];
 
 	size_t accoff = 0;
-	Bytef const* cur = reinterpret_cast<Bytef const*>(begin);
+
+	strm.avail_in = (uInt)((char const*)end - (char const*)begin);
+	strm.next_in = const_cast<Bytef*>((Bytef const*)begin);
+
 	do
 	{
-		strm.avail_in = ReadSize;
-		strm.next_in = const_cast<Bytef*>(cur);
-		cur += ReadSize;
-
+		
 		do
 		{
 			strm.avail_out = ReadSize;
 			strm.next_out = out;
+			
 			auto ret = inflate(&strm, Z_NO_FLUSH);
 			switch (ret) {
 				case Z_NEED_DICT:
@@ -103,7 +104,7 @@ auto zl_for_each_chunk(void const* begin, void const* end, FN const& fn) -> int
 			if (outoff < have)
 			{
 				auto dhave = have - outoff;
-				memcpy(acc + accoff, out+outoff, dhave);
+				memcpy(acc + accoff, out + outoff, dhave);
 				accoff += dhave;
 				if (accoff >= AccumulateSize)
 				{
@@ -126,7 +127,77 @@ zread_fail:
 }
 
 
+class Float16Compressor
+{
+	union Bits
+	{
+		float f;
+		int32_t si;
+		uint32_t ui;
+	};
 
+	static int const shift = 13;
+	static int const shiftSign = 16;
+
+	static int32_t const infN = 0x7F800000; // flt32 infinity
+	static int32_t const maxN = 0x477FE000; // max flt16 normal as a flt32
+	static int32_t const minN = 0x38800000; // min flt16 normal as a flt32
+	static int32_t const signN = 0x80000000; // flt32 sign bit
+
+	static int32_t const infC = infN >> shift;
+	static int32_t const nanN = (infC + 1) << shift; // minimum flt16 nan as a flt32
+	static int32_t const maxC = maxN >> shift;
+	static int32_t const minC = minN >> shift;
+	static int32_t const signC = signN >> shiftSign; // flt16 sign bit
+
+	static int32_t const mulN = 0x52000000; // (1 << 23) / minN
+	static int32_t const mulC = 0x33800000; // minN / (1 << (23 - shift))
+
+	static int32_t const subC = 0x003FF; // max flt32 subnormal down shifted
+	static int32_t const norC = 0x00400; // min flt32 normal down shifted
+
+	static int32_t const maxD = infC - maxC - 1;
+	static int32_t const minD = minC - subC - 1;
+
+public:
+
+	static uint16 compress(float value)
+	{
+		Bits v, s;
+		v.f = value;
+		uint32_t sign = v.si & signN;
+		v.si ^= sign;
+		sign >>= shiftSign; // logical shift
+		s.si = mulN;
+		s.si = (int32_t)(s.f * v.f); // correct subnormals
+		v.si ^= (s.si ^ v.si) & -(minN > v.si);
+		v.si ^= (infN ^ v.si) & -((infN > v.si) & (v.si > maxN));
+		v.si ^= (nanN ^ v.si) & -((nanN > v.si) & (v.si > infN));
+		v.ui >>= shift; // logical shift
+		v.si ^= ((v.si - maxD) ^ v.si) & -(v.si > maxC);
+		v.si ^= ((v.si - minD) ^ v.si) & -(v.si > subC);
+		return v.ui | sign;
+	}
+
+	static float decompress(uint16 value)
+	{
+		Bits v;
+		v.ui = value;
+		int32_t sign = v.si & signC;
+		v.si ^= sign;
+		sign <<= shiftSign;
+		v.si ^= ((v.si , minD) ^ v.si) & -(v.si > subC);
+		v.si ^= ((v.si , maxD) ^ v.si) & -(v.si > maxC);
+		Bits s;
+		s.si = mulC;
+		s.f *= v.si;
+		int32_t mask = -(norC > v.si);
+		v.si <<= shift;
+		v.si ^= (s.si ^ v.si) & mask;
+		v.si |= sign;
+		return v.f;
+	}
+};
 
 void voxels_init(dust::context_ptr const& ctx)
 {
@@ -139,17 +210,24 @@ void voxels_init(dust::context_ptr const& ctx)
 	{
 		auto f = atma::filesystem::file_t("../shaders/vs_voxels.cso");
 		auto fm = f.read_into_memory();
-		vs = dust::create_vertex_shader(ctx, fm, true, "vs_main");
+		vs = dust::create_vertex_shader(ctx, fm, true);
 	}
 
 	{
 		auto f = atma::filesystem::file_t("../shaders/ps_voxels.cso");
 		auto fm = f.read_into_memory();
-		ps = dust::create_pixel_shader(ctx, fm, true, "ps_main");
+		ps = dust::create_pixel_shader(ctx, fm, true);
 	}
 	
 	
-	blockpool = dust::create_texture3d(ctx, dust::texture_usage_t::streaming, dust::element_format_t::f16x4, 8 * 48);
+	//D3DXFloat32To16Array();
+
+	static uint const brick_edge_voxels = 8;
+	static uint const brick_size = brick_edge_voxels*brick_edge_voxels*brick_edge_voxels*sizeof(float)*4;
+	static uint const brick_count = 30;
+	//static uint const box_size = brick_edge_voxels*brick_size;
+
+	blockpool = dust::create_texture3d(ctx, dust::texture_usage_t::streaming, dust::element_format_t::f32x4, brick_edge_voxels * brick_count);
 	{
 		// open file, read everything into memory
 		// todo: memory-mapped files
@@ -157,7 +235,7 @@ void voxels_init(dust::context_ptr const& ctx)
 		// inflate 16kb at a time, and call our function for each brick
 		ctx->signal_map(blockpool, 0, dust::map_type_t::write_discard, [&](dust::mapped_subresource_t& sr)
 		{
-			auto f = atma::filesystem::file_t{"../data/dragon.oct"};
+			auto f = atma::filesystem::file_t{"../data/bunny.oct"};
 			auto m = atma::unique_memory_t(f.size());
 			f.read(m.begin(), f.size());
 			f.close();
@@ -170,14 +248,62 @@ void voxels_init(dust::context_ptr const& ctx)
 			i += 4; // zero
 
 			// create node buffer
+			
+
+
 			nodebuf = dust::create_generic_buffer(ctx, dust::buffer_usage_t::immutable, 64, node_count, i, node_count);
 
 			i += 64 * node_count;
 
-			uint const bricksize = 8*8*8*sizeof(float)*4;
-			zl_for_each_chunk<bricksize, 16 * 1024>(i, m.end(), [&ctx, &sr, &bricksize](void const* buf) {
-				memcpy(sr.data, buf, bricksize);
+			struct float4
+			{
+				float x, y, z, w;
+			};
+
+			fout = fopen("verts.txt", "w+");
+
+			// 256kb chunks of data at a time
+			static uint const chunk_size = 256 * 1024;
+			auto cbuf = (char*)sr.data;
+			auto destbuf = reinterpret_cast<float4(*)[brick_edge_voxels][brick_edge_voxels]>(sr.data);
+
+			uint bricks = 0;
+			zl_for_each_chunk<brick_size, chunk_size>(i, m.end(), [&ctx, &destbuf, &bricks](void const* buf)
+			{
+				float4 const* srcbuf = reinterpret_cast<decltype(srcbuf)>(buf);
+
+				int doff = 0;
+				int boff[3];
+				int itmp = bricks % brick_count;
+				boff[0] = itmp;
+				itmp = (bricks - boff[0])/brick_count;
+				boff[1] = itmp % brick_count;
+				boff[2] = (itmp-boff[1]) / brick_count;
+
+				//F3MULS(boff, boff, brick_edge_voxels);
+				boff[0] = boff[0] * brick_edge_voxels;
+				boff[1] = boff[1] * brick_edge_voxels;
+				boff[2] = boff[2] * brick_edge_voxels;
+
+				for(int z = 0; z < brick_edge_voxels; z++)
+				{
+					for (int y = 0; y < brick_edge_voxels; y++)
+					{
+						float4 const* here = srcbuf + doff;
+
+						for (int x = 0; x < brick_edge_voxels; ++x)
+							if (here[x].x + here[x].y + here[x].z + here[x].w != 0.f)
+								fprintf(fout, "v: %f %f %f %f\n", here[x].x, here[x].y, here[x].z, here[x].w);
+
+						memcpy(&destbuf[boff[2]+z][boff[1]+y][boff[0]], here, sizeof(float4)*brick_edge_voxels);
+						doff += brick_edge_voxels;
+					}
+				}
+
+				++bricks;
 			});
+
+			fclose(fout);
 		});
 	}
 

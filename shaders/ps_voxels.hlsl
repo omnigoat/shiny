@@ -107,7 +107,7 @@ aabb_t child_aabb(in aabb_t box, uint index)
 static const aabb_t box = {0.f, 0.f, 0.f, 1.f};
 
 static const uint brick_size = 8;
-static const uint brick_count = 48;
+static const uint brick_count = 30;
 static const float brick_sizef = 8.f;
 
 
@@ -353,7 +353,7 @@ void brick_accumulate(inout float4 color, uint brick_id, float3 near, float3 far
 		if (result.w > 1.f)
 			break;
 	}
-
+	
 	// don't bother with rem
 	//rem = (pos - 1.f) * (len * brick_size);
 	color = result;
@@ -384,6 +384,7 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 	uint reps = 0;
 	float4 color = {0.f, 0.f, 0.f, 0.f};
 	float rem = 0.f;
+	
 	do
 	{
 		aabb_t leaf_box;
@@ -401,7 +402,7 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 			brick_accumulate(color, brick_id, brick_enter, brick_exit);
 		}
 
-		hit_enter = leaf_exit + normal * 0.0000001f;
+		hit_enter = leaf_exit + normal * 0.01f;
 		if (!box.contains(hit_enter))
 			break;
 
@@ -472,7 +473,7 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 
 
 
-float4 ps_main(ps_input_t input) : SV_Target
+float4 main(ps_input_t input) : SV_Target
 {
 #if 0
 	float4 box = {0, 0, 0, 1.f};

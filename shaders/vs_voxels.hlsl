@@ -12,7 +12,7 @@ struct ps_input_t
 //
 // Vertex Shader
 //
-ps_input_t vs_main(in vs_input_t input)
+ps_input_t main(in vs_input_t input)
 {
 	ps_input_t output;
 	output.position = input.position;
