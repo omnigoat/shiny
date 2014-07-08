@@ -248,24 +248,17 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 {
 	aabb_t box = {0, 0, 0, 1.f};
 
-	float size = 0.00000001f;
-	float distance = 0.f;
+	float size = 0.0000001f;
 	float3 hit_enter, hit_exit;
 
 
 	aabb_t leaf_box;
-	if (box.contains(position)) //false) //inside(box, position))
-	{
+	if (box.contains(position))
 		hit_enter = position;
-	}
 	else if (!intersection(box, position, normal, hit_enter, hit_exit))
-	{
 		discard;
-	}
 
 	float len = length(hit_enter - position);
-	distance += len;
-
 	uint reps = 0;
 	float4 color = {0.f, 0.f, 0.f, 0.f};
 	float rem = 0.f;
@@ -286,12 +279,15 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 			float3 brick_exit = (leaf_exit - box.min()) / box.width();
 			brick_accumulate(color, brick_id, brick_enter, brick_exit);
 		}
+
+		/*
 		float3 brick_enter = (leaf_enter - box.min()) / box.width();
 		float4 voxel = bricks.SampleLevel(brick_sampler, brick_enter, 0);
 		color += voxel;
+		*/
 
 		hit_enter = leaf_exit + normal * 0.01f;
-		//if (!box.contains(hit_enter))
+		if (!box.contains(hit_enter))
 			break;
 
 		++reps;
@@ -341,5 +337,5 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 
 float4 main(ps_input_t input) : SV_Target
 {
-	return brick_path(float3(0.f, 0.f, -2.f), normalize(input.texcoord), 0.00001f);
+	return brick_path(float3(0.f, 0.f, -1.4f), normalize(input.texcoord), 0.00001f);
 }
