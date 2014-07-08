@@ -30,10 +30,6 @@ using namespace dust;
 using dust::context_t;
 
 
-namespace
-{
-}
-
 //======================================================================
 // context_t
 //======================================================================
@@ -44,10 +40,9 @@ auto dust::create_context(runtime_t& runtime, fooey::window_ptr const& window, u
 context_t::context_t(runtime_t& runtime, fooey::window_ptr const& window, uint32 adapter)
 : runtime_(runtime), window_(window), current_display_mode_(), requested_display_mode_()
 {
-	std::tie(dxgi_adapter_, d3d_device_, d3d_immediate_context_) = platform::dxgi_and_d3d_at(runtime_, adapter);
+	std::tie(dxgi_adapter_, d3d_device_, d3d_immediate_context_) = runtime_.dxgid3d_for_adapter(adapter);
 	create_swapchain();
 
-	// SERIOUSLY, get window client width/height instead of full width height
 	setup_rendertarget(window->drawcontext_width(), window->drawcontext_height());
 
 	bind_events(window);
@@ -101,8 +96,8 @@ auto context_t::create_swapchain() -> void
 		DXGI_SWAP_EFFECT_DISCARD, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH
 	};
 
-	ATMA_ENSURE_IS(S_OK, runtime_.dxgi_factory->CreateSwapChain(d3d_device_.get(), &desc, dxgi_swap_chain_.assign()));
-	ATMA_ENSURE_IS(S_OK, runtime_.dxgi_factory->MakeWindowAssociation(window_->hwnd(), DXGI_MWA_NO_WINDOW_CHANGES));
+	ATMA_ENSURE_IS(S_OK, runtime_.dxgi_factory()->CreateSwapChain(d3d_device_.get(), &desc, dxgi_swap_chain_.assign()));
+	ATMA_ENSURE_IS(S_OK, runtime_.dxgi_factory()->MakeWindowAssociation(window_->hwnd(), DXGI_MWA_NO_WINDOW_CHANGES));
 
 
 	// fill our internal display-mode structures
@@ -212,7 +207,7 @@ auto context_t::signal_fullscreen_toggle(uint32 output_index) -> void
 		if (current_display_mode_ == &windowed_display_mode_)
 		{
 			// get output of our adapter
-			dxgi_output_ = platform::output_at(runtime_, dxgi_adapter_, output_index);
+			dxgi_output_ = runtime_.dxgi_output_of(dxgi_adapter_, output_index);
 			ATMA_ASSERT(dxgi_output_);
 
 			// find best-fitting fullscreen resolution
@@ -247,61 +242,6 @@ auto context_t::on_resize(fooey::events::resize_t& e) -> void
 	requested_windowed_display_mode_.height = e.height();
 
 	requested_display_mode_ = &requested_windowed_display_mode_;
-}
-
-auto context_t::create_d3d_buffer(platform::d3d_buffer_ptr& buffer, buffer_type_t buffer_type, buffer_usage_t buffer_usage, size_t data_size, void const* data) -> void
-{
-	D3D11_USAGE d3d_bu = (D3D11_USAGE)-1;
-	D3D11_CPU_ACCESS_FLAG d3d_ca = (D3D11_CPU_ACCESS_FLAG)-1;
-
-	switch (buffer_usage)
-	{
-		case buffer_usage_t::immutable:
-			d3d_bu = D3D11_USAGE_IMMUTABLE;
-			d3d_ca = (D3D11_CPU_ACCESS_FLAG)0;
-			break;
-
-		case buffer_usage_t::long_lived:
-			d3d_bu = D3D11_USAGE_DEFAULT;
-			d3d_ca = D3D11_CPU_ACCESS_WRITE;
-			break;
-
-		case buffer_usage_t::dynamic:
-			d3d_bu = D3D11_USAGE_DYNAMIC;
-			d3d_ca = D3D11_CPU_ACCESS_WRITE;
-	}
-
-	ATMA_ASSERT(d3d_bu != -1 && d3d_ca != -1);
-
-	D3D11_BUFFER_DESC buffer_desc{(UINT)data_size, d3d_bu, platform::d3dbind_of(buffer_type), d3d_ca, 0, 0};
-
-
-	if (data) {
-		// for vertex buffers, the pitch and slice-pitch mean nothing, so we'll just
-		// pass along stats to help with debugging (1xdata_size buffer created)
-		D3D11_SUBRESOURCE_DATA d3d_data{data, 1, (UINT)data_size};
-		ATMA_ENSURE_IS(S_OK, d3d_device_->CreateBuffer(&buffer_desc, &d3d_data, buffer.assign()));
-	}
-	else {
-		ATMA_ENSURE_IS(S_OK, d3d_device_->CreateBuffer(&buffer_desc, NULL, buffer.assign()));
-	}
-}
-
-auto context_t::signal_d3d_map(platform::d3d_resource_ptr const& buffer, D3D11_MAP map_type, uint32 subresource, std::function<void(D3D11_MAPPED_SUBRESOURCE*)> const& fn) -> void
-{
-	engine_.signal([&, buffer, map_type, subresource, fn] {
-		D3D11_MAPPED_SUBRESOURCE dmap;
-		ATMA_ENSURE_IS(S_OK, d3d_immediate_context_->Map(buffer.get(), subresource, map_type, 0, &dmap));
-		if (fn)
-			fn(&dmap);
-	});
-}
-
-auto context_t::signal_d3d_unmap(platform::d3d_resource_ptr const& buffer, uint32 subresource) -> void
-{
-	engine_.signal([&, buffer, subresource] {
-		d3d_immediate_context_->Unmap(buffer.get(), subresource);
-	});
 }
 
 auto context_t::signal_d3d_buffer_upload(platform::d3d_buffer_ptr const& buffer, void const* data, uint32 row_pitch, uint32 depth_pitch) -> void
@@ -391,7 +331,6 @@ auto context_t::signal_draw_scene(scene_t& scene) -> void
 	scene.execute();
 }
 
-
 auto context_t::signal_update_constant_buffer(constant_buffer_ptr const& cb, uint data_size, void* data) -> void
 {
 	signal_update_constant_buffer(cb, atma::shared_memory_t(data_size, data));
@@ -399,69 +338,12 @@ auto context_t::signal_update_constant_buffer(constant_buffer_ptr const& cb, uin
 
 auto context_t::signal_update_constant_buffer(constant_buffer_ptr const& cb, atma::shared_memory_t const& sm) -> void
 {
-	signal_d3d_map(cb->d3d_buffer(), D3D11_MAP_WRITE_DISCARD, 0, [sm](D3D11_MAPPED_SUBRESOURCE* subresource) {
-		memcpy(subresource->pData, sm.begin(), sm.size());
+	engine_.signal([&, cb, sm] {
+		D3D11_MAPPED_SUBRESOURCE sr;
+		d3d_immediate_context_->Map(cb->d3d_resource().get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &sr);
+		memcpy(sr.pData, sm.begin(), sm.size());
+		d3d_immediate_context_->Unmap(cb->d3d_resource().get(), 0);
 	});
-}
-
-namespace
-{
-	uint const miplevels_of_texture_usage[] = {
-		0, 1, 1
-	};
-
-	D3D11_BIND_FLAG bind_flags_of_texture_usage[] = {
-		(D3D11_BIND_FLAG)0, D3D11_BIND_RENDER_TARGET, D3D11_BIND_DEPTH_STENCIL
-	};
-}
-
-auto context_t::create_d3d_texture2d(platform::d3d_texture2d_ptr& texture, resource_usage_flags_t usage_flags, element_format_t format, uint mips, uint width, uint height) -> void
-{
-	auto const miplevels = 
-		(usage_flags & resource_usage_t::render_target) ? 1 :
-		(usage_flags & resource_usage_t::depth_stencil) ? 1 :
-		mips;
-
-	auto bind_flags = D3D11_BIND_FLAG();
-	if (usage_flags & resource_usage_t::render_target)
-		(uint&)bind_flags |= D3D11_BIND_RENDER_TARGET;
-	if (usage_flags & resource_usage_t::depth_stencil)
-		(uint&)bind_flags |= D3D11_BIND_DEPTH_STENCIL;
-	if (usage_flags & resource_usage_t::shader_resource)
-		(uint&)bind_flags |= D3D11_BIND_SHADER_RESOURCE;
-	if (usage_flags & resource_usage_t::unordered_access)
-		(uint&)bind_flags |= D3D11_BIND_UNORDERED_ACCESS;
-
-	D3D11_TEXTURE2D_DESC texdesc{
-		width, height, miplevels, 1, 
-		DXGI_FORMAT_R8G8B8A8_UNORM, {1, 0}, D3D11_USAGE_DEFAULT, bind_flags,
-		0, 0};
-
-	ATMA_ENSURE_IS(S_OK, d3d_device_->CreateTexture2D(&texdesc, nullptr, texture.assign()));
-}
-
-auto context_t::create_d3d_texture3d(platform::d3d_texture3d_ptr& texture, resource_usage_flags_t usage_flags, element_format_t format, uint mips, uint width, uint height, uint depth) -> void
-{
-	auto const miplevels =
-		(usage_flags & resource_usage_t::render_target) ? 1 :
-		(usage_flags & resource_usage_t::depth_stencil) ? 1 :
-		mips;
-
-	auto bind_flags = D3D11_BIND_FLAG();
-	if (usage_flags & resource_usage_t::render_target)
-		(uint&)bind_flags |= D3D11_BIND_RENDER_TARGET;
-	if (usage_flags & resource_usage_t::depth_stencil)
-		(uint&)bind_flags |= D3D11_BIND_DEPTH_STENCIL;
-	if (usage_flags & resource_usage_t::shader_resource)
-		(uint&)bind_flags |= D3D11_BIND_SHADER_RESOURCE;
-	if (usage_flags & resource_usage_t::unordered_access)
-		(uint&)bind_flags |= D3D11_BIND_UNORDERED_ACCESS;
-	
-	auto desc = D3D11_TEXTURE3D_DESC{
-		width, height, depth, mips,
-		DXGI_FORMAT_R8G8B8A8_UNORM, D3D11_USAGE_DYNAMIC, 0, 0, 0};
-	
-	ATMA_ENSURE_IS(S_OK, d3d_device_->CreateTexture3D(&desc, nullptr, texture.assign()));
 }
 
 auto context_t::signal_upload_compute_shader(compute_shader_ptr const& cs) -> void
@@ -471,24 +353,6 @@ auto context_t::signal_upload_compute_shader(compute_shader_ptr const& cs) -> vo
 	});
 }
 
-auto context_t::create_d3d_shader_resource_view(platform::d3d_shader_resource_view_ptr&, resource_ptr const& resource, view_type_t) -> void
-{
-	//D3D11_SHADER_RESOURCE_VIEW_DESC srvd;
-	auto srvd = D3D11_SHADER_RESOURCE_VIEW_DESC(); //{DXGI_FORMAT_R32_FLOAT, D3D11_RESOURCE_DIMENSION_TEXTURE2D, {0,1}};
-	srvd.Format = DXGI_FORMAT_R32_FLOAT;
-
-	if (resource.as<texture2d_t>())
-		srvd.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-	else if (resource.as<texture3d_t>())
-		srvd.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE3D;
-	
-	
-	srvd.Texture2D.MipLevels = -1;
-	srvd.Texture2D.MostDetailedMip = 0;
-
-
-	d3d_device_->CreateShaderResourceView(nullptr, nullptr, nullptr);
-}
 
 auto context_t::signal_upload_shader_resource(view_type_t view_type, shader_resource2d_ptr const& rs) -> void
 {

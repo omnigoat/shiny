@@ -224,10 +224,10 @@ void voxels_init(dust::context_ptr const& ctx)
 
 	static uint const brick_edge_voxels = 8;
 	static uint const brick_size = brick_edge_voxels*brick_edge_voxels*brick_edge_voxels*sizeof(float)*4;
-	static uint const brick_count = 30;
-	//static uint const box_size = brick_edge_voxels*brick_size;
+	static uint const brick_count = 40;
+	static uint const box_edge_size = brick_edge_voxels*brick_count;
 
-	blockpool = dust::create_texture3d(ctx, dust::texture_usage_t::streaming, dust::element_format_t::f32x4, brick_edge_voxels * brick_count);
+	blockpool = dust::create_texture3d(ctx, dust::texture_usage_t::streaming, dust::element_format_t::f32x4, box_edge_size);
 	{
 		// open file, read everything into memory
 		// todo: memory-mapped files
@@ -265,13 +265,32 @@ void voxels_init(dust::context_ptr const& ctx)
 			// 256kb chunks of data at a time
 			static uint const chunk_size = 256 * 1024;
 			auto cbuf = (char*)sr.data;
-			auto destbuf = reinterpret_cast<float4(*)[brick_edge_voxels][brick_edge_voxels]>(sr.data);
+			auto destbuf = reinterpret_cast<float4(*)[box_edge_size][box_edge_size]>(sr.data);
 
 			uint bricks = 0;
 			zl_for_each_chunk<brick_size, chunk_size>(i, m.end(), [&ctx, &destbuf, &bricks](void const* buf)
 			{
-				float4 const* srcbuf = reinterpret_cast<decltype(srcbuf)>(buf);
+				auto srcbuf = reinterpret_cast<float4 const*>(buf);
 
+				// 3d-position of block
+				int brick_x = brick_edge_voxels * (bricks % brick_count);
+				int brick_y = brick_edge_voxels * ((bricks / brick_count) % brick_count);
+				int brick_z = brick_edge_voxels * ((bricks / (brick_count * brick_count)) % brick_count);
+
+				size_t srcoff = 0;
+				for (int z = 0; z != brick_edge_voxels; ++z)
+					for (int y = 0; y != brick_edge_voxels; ++y)
+						for (int x = 0; x != brick_edge_voxels; ++x)
+						{
+							if (srcbuf[srcoff].x + srcbuf[srcoff].y + srcbuf[srcoff].z + srcbuf[srcoff].w != 0.f)
+								fprintf(fout, "b: %d, o: %d, v: %f %f %f %f\n", bricks, srcoff, srcbuf[srcoff].x, srcbuf[srcoff].y, srcbuf[srcoff].z, srcbuf[srcoff].w);
+							destbuf[brick_z + z][brick_y + y][brick_x + x] = srcbuf[srcoff++];
+						}
+
+				++bricks;
+			});
+
+#if 0
 				int doff = 0;
 				int boff[3];
 				int itmp = bricks % brick_count;
@@ -293,7 +312,7 @@ void voxels_init(dust::context_ptr const& ctx)
 
 						for (int x = 0; x < brick_edge_voxels; ++x)
 							if (here[x].x + here[x].y + here[x].z + here[x].w != 0.f)
-								fprintf(fout, "v: %f %f %f %f\n", here[x].x, here[x].y, here[x].z, here[x].w);
+								//fprintf(fout, "v: %f %f %f %f\n", here[x].x, here[x].y, here[x].z, here[x].w);
 
 						memcpy(&destbuf[boff[2]+z][boff[1]+y][boff[0]], here, sizeof(float4)*brick_edge_voxels);
 						doff += brick_edge_voxels;
@@ -302,6 +321,13 @@ void voxels_init(dust::context_ptr const& ctx)
 
 				++bricks;
 			});
+#endif
+
+#if 0
+			auto const edge = brick_edge_voxels * brick_count;
+			for (auto c = (float4*)destbuf; c != (float4*)destbuf + edge * edge * edge ; ++c)
+				fprintf(fout, "v: %f %f %f %f\n", c->x, c->y, c->z, c->w);
+#endif
 
 			fclose(fout);
 		});
