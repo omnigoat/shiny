@@ -109,12 +109,13 @@ static const aabb_t box = {0.f, 0.f, 0.f, 1.f};
 static const uint brick_size = 8;
 static const uint brick_count = 30;
 static const float brick_sizef = 8.f;
+static const float inv_brick_countf = 1.f / brick_count;
 
 bool intersection(in aabb_t box, in float3 position, in float3 dir, out float3 enter, out float3 exit)
 {
 	float3 inv_dir = float3(1.f / dir.x, 1.f / dir.y, 1.f / dir.z);
 
-		float tx1 = (box.min().x - position.x) * inv_dir.x;
+	float tx1 = (box.min().x - position.x) * inv_dir.x;
 	float tx2 = (box.center().x + box.radius() - position.x) * inv_dir.x;
 	float tx_min = min(tx1, tx2);
 	float tx_max = max(tx1, tx2);
@@ -140,21 +141,21 @@ bool intersection(in aabb_t box, in float3 position, in float3 dir, out float3 e
 
 uint brick_index(in aabb_t box, float3 pos, float size, out aabb_t leaf_box)
 {
-	uint node_index = 0;
-	uint aabb_child = 0;
 	uint result_brick = 0;
 	leaf_box = box;
 
+	uint node_index = 0;
 	for (float volume = 1.f / brick_sizef; volume > size; volume *= 0.5f)
 	{
-		aabb_child = box.child_index(pos);
-		uint child_index = nodes[node_index].items[aabb_child].child;
-		if (child_index == 0)
+		node_t n = nodes[node_index];
+		
+		uint aabb_child = leaf_box.child_index(pos);
+		node_index = n.items[aabb_child].child;
+		if (node_index == 0)
 			break;
 
-		node_index = child_index;
-		result_brick = nodes[node_index].items[aabb_child].brick;
-		leaf_box = child_aabb(box, aabb_child);
+		result_brick = n.items[aabb_child].brick;
+		leaf_box = child_aabb(leaf_box, aabb_child);
 	}
 
 	return result_brick;
@@ -162,15 +163,11 @@ uint brick_index(in aabb_t box, float3 pos, float size, out aabb_t leaf_box)
 
 float3 brick_origin(uint brick_id)
 {
-	float3 brick_pos;
-	uint brick_tmp;
-
-	brick_pos.x = float(brick_id % brick_count);
-	brick_tmp = (brick_id - uint(brick_pos.x)) / brick_count;
-	brick_pos.y = float(brick_tmp % brick_count);
-	brick_pos.z = float((brick_tmp - uint(brick_pos.y))/brick_count);
-
-	return brick_pos / float(brick_count);
+	return float3(
+		inv_brick_countf * (float)((brick_id % brick_count)),
+		inv_brick_countf * (float)((brick_id / brick_count) % brick_count),
+		inv_brick_countf * (float)((brick_id / (brick_count * brick_count)) % brick_count)
+	);
 }
 
 
