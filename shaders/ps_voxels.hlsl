@@ -77,14 +77,6 @@ class aabb_t
 		child += (bool)(data.z < pos.z) * 4;
 		return child;
 	}
-
-#if 0
-	aabb_t child_aabb(int index)
-	{
-		
-	}
-#endif
-
 	
 
 	float4 data;
@@ -260,7 +252,7 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 	float4 color = {0.f, 0.f, 0.f, 0.f};
 	float rem = 0.f;
 	
-	do
+	while (reps < 50 && color.w < 1.f)
 	{
 		aabb_t leaf_box;
 		float3 leaf_enter;
@@ -268,31 +260,35 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 
 		uint brick_id = brick_index(box, hit_enter, size, leaf_box);
 		intersection(leaf_box, position, normal, leaf_enter, leaf_exit);
+		float len = length(leaf_exit - leaf_enter);
 
 		if (brick_id != 0)
 		{
 			float rem = 0.f;
-			// our 3d-texture is addressed in [0,0,0] -> [1,1,1]
-			float3 brick_enter = (leaf_enter - box.min()) / box.width();
-			float3 brick_exit = (leaf_exit - box.min()) / box.width();
-			//brick_ray(color, brick_id, brick_enter, brick_exit);
+			float3 brick_enter = (hit_enter - box.min()) / box.width();
+			float3 brick_exit = (hit_exit - box.min()) / box.width();
 			brick_ray(brick_id, brick_enter, brick_exit, color, rem);
+			/*
+			float3 box_
+			float4 vx = bricks.SampleLevel(brick_sampler, float3(0.f, 0.f, 0.f), 0);
+			color += float4(1.f, 0.8f, 0.5f, vx.w + 0.5f);
+			*/
 		}
 
-		hit_enter = leaf_enter + length(leaf_exit - leaf_enter) * normal * 1.01f;
+		hit_enter = leaf_enter + len * normalize(normal) * 1.01f;
 		if (!box.contains(hit_enter))
 			break;
 
 		++reps;
-	} while (reps < 50 && color.w < 1.f);
+	} 
 
 	float3 n = normalize(color.xyz);
 
-	float3 lamb = float3(.4f, .4f, .4f);
-	float3 lpwr = float3(.3f, .3f, .3f);
+	float3 lamb = (0.4);
+	float3 lpwr = (0.3);
 	float3 ldir = float3(0, -1, 0);
 	// diffuse lighting
-	float i = dot(ldir, n);
+	float i  = dot(ldir, n);
 	color = float4(lamb+ i * lpwr, color.w);
 	// specular lighting
 	float3 h = normalize(ldir + normal);
@@ -300,47 +296,11 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 	color += float4(i * lpwr, 0);
 	
 	return color;
-
-#if 0
-	float rem = 0.0;
-	for (int i = 0; i < 50 && colour.w < 1.f; ++i)
-	{
-		float3 far = escape(box, hit_enter, normal);
-		len = length(far - hit_enter);
-		float3 step = normal * len;
-		if (brick_id != 0)
-		{
-			float3 brick_near = (hit_enter - box.xyz) / box.w;
-			float3 brick_far = (far - box.xyz) / box.w;
-			brick_ray(brick_id, brick_near, brick_far, colour, rem);
-		}
-		else rem = 0;
-
-		float3 tmp = hit_enter + step*1.010;
-		if (!inside(float4(.5f, .5f, .5f, .5f), tmp))break;
-		brick_id = brick_index(box, tmp, size);
-		hit_enter = tmp;
-	}
-	float3 n = normalize(colour.xyz);
-
-	float3 lamb = float3(.4f, .4f, .4f);
-	float3 lpwr = float3(.3f, .3f, .3f);
-	float3 ldir = float3(0, -1, 0);
-	// diffuse lighting
-	float i2  = dot(ldir, n);
-	float4 color = float4(lamb+ i * lpwr, colour.w);
-	// specular lighting
-	float3 h = normalize(ldir + normal);
-	i = clamp(pow(dot(n, h), 15), 0, 1);
-	color += float4(i * lpwr, 0);
-	
-	return color;
-#endif
 }
 
 
 
 float4 main(ps_input_t input) : SV_Target
 {
-	return brick_path(float3(0.f, 0.f, -1.5f), normalize(input.texcoord), 0.00001f);
+	return brick_path(float3(.3f, 0.2f, -1.5f), normalize(input.texcoord), 0.00001f);
 }

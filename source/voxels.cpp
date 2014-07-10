@@ -248,7 +248,20 @@ void voxels_init(dust::context_ptr const& ctx)
 			i += 4; // zero
 
 			// create node buffer
-			nodebuf = dust::create_generic_buffer(ctx, dust::buffer_usage_t::immutable, 64, node_count, i, node_count);
+			uint nodes_tiles[8][2] = {
+				{0, 0},
+				{0, 0},
+				{0, 1},
+				{0, 2},
+				{0, 0},
+				{0, 5},
+				{0, 4},
+				{0, 0},
+			};
+
+
+			//nodebuf = dust::create_generic_buffer(ctx, dust::buffer_usage_t::immutable, 64, 8, nodes_tiles, 8);
+			nodebuf = dust::create_generic_buffer(ctx, dust::buffer_usage_t::immutable, 8, 8 * node_count, i, 8 * node_count);
 
 			i += 64 * node_count;
 
