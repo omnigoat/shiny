@@ -25,9 +25,10 @@ texture3D bricks : register(t1);
 
 SamplerState brick_sampler
 {
-	Filter = MIN_MAG_MIP_POINT;
+	Filter = MIN_MAG_MIP_LINEAR;
 	AddressU = Clamp;
 	AddressV = Clamp;
+	AddressW = Clamp;
 };
 
 
@@ -150,12 +151,12 @@ uint brick_index(in aabb_t box, float3 pos, float size, out aabb_t leaf_box)
 		node_t n = nodes[node_index];
 		
 		uint aabb_child = leaf_box.child_index(pos);
+		result_brick = n.items[aabb_child].brick;
+		leaf_box = child_aabb(leaf_box, aabb_child); 
+
 		node_index = n.items[aabb_child].child;
 		if (node_index == 0)
 			break;
-
-		result_brick = n.items[aabb_child].brick;
-		leaf_box = child_aabb(leaf_box, aabb_child);
 	}
 
 	return result_brick;
@@ -170,40 +171,39 @@ float3 brick_origin(uint brick_id)
 	);
 }
 
-
-#if 0
-void brick_ray(uint brick_id, float3 near, float3 far, inout float4 color, inout float rem)
+void brick_ray(in uint brick_id, in float3 near, in float3 far, inout float4 colour, inout float remainder)
 {
-	float inv_size = 1.f / brick_size;
-	float inv_count = 1.f / brick_count;
-	float half_size = 0.5f * inv_size;
-	near = near * (inv_size * (brick_size - 1)) + half_size;
-	far = far * (inv_size * (brick_size - 1)) + half_size;
+	// float3 delta = far - near;
+	float iSize = 1.0 / float(brick_size);
+	float iCount = 1.0 / float(brick_count);
+	float hs = iSize * 0.5;
+	near = near * (iSize * (brick_size-1)) + float3(hs, hs, hs);
+	far = far * (iSize * (brick_size-1)) + float3(hs, hs, hs);
 	float len = length(far - near);
 	float3 brick_pos = brick_origin(brick_id);
-	float4 result = color;
+	float4 result = colour;
 
-	if (len < 0.1f)
-		return;
+	if (len < 0.1)return;
 
-	float steps = 1.f / (len * brick_size);
+	float steps = 1.0/(len / iSize);
 
 	float pos;
-	for (pos = steps * rem; pos < 1.f; pos += steps)
+	for (pos=steps*remainder; pos < 1.0; pos += steps)
 	{
-		float3 sample_loc = lerp(near, far, pos) * inv_count;
+		float3 sample_loc = lerp(near, far, pos)*iCount;
 		float4 voxel = bricks.SampleLevel(brick_sampler, sample_loc + brick_pos, 0);
-		result.xyz += ((1.f - result.a) * (1.f - result.a) * voxel.xyz) / (1.f - result.xyz * voxel.xyz);
-		result.w = result.w + (1.f - result.w) * voxel.w;
-		if (result.w > 1.f)
-			break;
+		result.xyz += ((1.0-result.w)*(1.0-result.w) * voxel.xyz)/(1.0 - result.xyz * voxel.xyz);
+		result.w = result.w + (1.0-result.w) * voxel.w;
+		// result.xyz = result.xyz + (1.0-result.w) * voxel.xyz;
+		// result.w = result.w + (1.0-result.w) * voxel.w;
+		if (result.w > 1.0)break;
 	}
-
-	rem = (pos - 1.f) * (len * brick_size);
-	color = result;
+	remainder = (pos - 1.0) /steps;
+	colour = result;
+	// TODO: interpolate between different resolutions
 }
-#endif
 
+#if 0
 void brick_accumulate(inout float4 color, uint brick_id, float3 near, float3 far)
 {
 	float inv_size = 1.f / brick_size;
@@ -240,6 +240,7 @@ void brick_accumulate(inout float4 color, uint brick_id, float3 near, float3 far
 	//rem = (pos - 1.f) * (len * brick_size);
 	color = result;
 }
+#endif
 
 float4 brick_path(float3 position, float3 normal, float ratio)
 {
@@ -247,7 +248,6 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 
 	float size = 0.0000001f;
 	float3 hit_enter, hit_exit;
-
 
 	aabb_t leaf_box;
 	if (box.contains(position))
@@ -271,26 +271,34 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 
 		if (brick_id != 0)
 		{
+			float rem = 0.f;
 			// our 3d-texture is addressed in [0,0,0] -> [1,1,1]
 			float3 brick_enter = (leaf_enter - box.min()) / box.width();
 			float3 brick_exit = (leaf_exit - box.min()) / box.width();
-			brick_accumulate(color, brick_id, brick_enter, brick_exit);
+			//brick_ray(color, brick_id, brick_enter, brick_exit);
+			brick_ray(brick_id, brick_enter, brick_exit, color, rem);
 		}
 
-		/*
-		float3 brick_enter = (leaf_enter - box.min()) / box.width();
-		float4 voxel = bricks.SampleLevel(brick_sampler, brick_enter, 0);
-		color += voxel;
-		*/
-
-		hit_enter = leaf_exit + normal * 0.01f;
+		hit_enter = leaf_enter + length(leaf_exit - leaf_enter) * normal * 1.01f;
 		if (!box.contains(hit_enter))
 			break;
 
 		++reps;
 	} while (reps < 50 && color.w < 1.f);
 
+	float3 n = normalize(color.xyz);
 
+	float3 lamb = float3(.4f, .4f, .4f);
+	float3 lpwr = float3(.3f, .3f, .3f);
+	float3 ldir = float3(0, -1, 0);
+	// diffuse lighting
+	float i = dot(ldir, n);
+	color = float4(lamb+ i * lpwr, color.w);
+	// specular lighting
+	float3 h = normalize(ldir + normal);
+	i = clamp(pow(dot(n, h), 15), 0, 1);
+	color += float4(i * lpwr, 0);
+	
 	return color;
 
 #if 0
@@ -334,5 +342,5 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 
 float4 main(ps_input_t input) : SV_Target
 {
-	return brick_path(float3(0.f, 0.f, -1.4f), normalize(input.texcoord), 0.00001f);
+	return brick_path(float3(0.f, 0.f, -1.5f), normalize(input.texcoord), 0.00001f);
 }

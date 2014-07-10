@@ -86,7 +86,7 @@ buffer_t::buffer_t(context_ptr const& ctx, buffer_type_t type, buffer_usage_t us
 			ATMA_ASSERT_MSG(size_ == data_size, "immutable buffer: you are allocating more than you're filling");
 			ATMA_ASSERT_MSG(d3d_ca == 0, "immutable buffer with cpu access? silly.");
 
-			auto d3d_data = D3D11_SUBRESOURCE_DATA{data, 1, (UINT)data_size};
+			auto d3d_data = D3D11_SUBRESOURCE_DATA{data, (UINT)data_size, 1};
 			ATMA_ENSURE_IS(S_OK, context()->d3d_device()->CreateBuffer(&buffer_desc, &d3d_data, d3d_buffer_.assign()));
 			break;
 		}
@@ -95,7 +95,7 @@ buffer_t::buffer_t(context_ptr const& ctx, buffer_type_t type, buffer_usage_t us
 		case buffer_usage_t::dynamic:
 		{
 			if (data) {
-				auto d3d_data = D3D11_SUBRESOURCE_DATA{data, 1, (UINT)data_size};
+				auto d3d_data = D3D11_SUBRESOURCE_DATA{data, (UINT)data_size, 1};
 				ATMA_ENSURE_IS(S_OK, context()->d3d_device()->CreateBuffer(&buffer_desc, &d3d_data, d3d_buffer_.assign()));
 			}
 			else {
@@ -109,7 +109,7 @@ buffer_t::buffer_t(context_ptr const& ctx, buffer_type_t type, buffer_usage_t us
 		case buffer_usage_t::dynamic_shadowed:
 		{
 			if (data) {
-				auto d3d_data = D3D11_SUBRESOURCE_DATA{&shadow_buffer_[0], 1, (UINT)data_size};
+				auto d3d_data = D3D11_SUBRESOURCE_DATA{&shadow_buffer_[0], (UINT)data_size, 1};
 				ATMA_ENSURE_IS(S_OK, context()->d3d_device()->CreateBuffer(&buffer_desc, &d3d_data, d3d_buffer_.assign()));
 			}
 			else {
