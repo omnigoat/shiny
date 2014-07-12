@@ -389,6 +389,7 @@ auto context_t::signal_map(resource_ptr const& rs, uint32 subresource, map_type_
 		ATMA_ENSURE_IS(S_OK, d3d_immediate_context_->Map(rs->d3d_resource().get(), subresource, d3dmap, 0, &sr));
 		mapped_subresource_t msr{sr.pData, sr.RowPitch, sr.DepthPitch};
 		fn(msr);
+		d3d_immediate_context_->Unmap(rs->d3d_resource().get(), subresource);
 	});
 }
 

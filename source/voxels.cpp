@@ -40,7 +40,7 @@ auto ps = dust::pixel_shader_ptr();
 
 // buffers/textures
 auto nodebuf = dust::generic_buffer_ptr();
-auto blockpool = dust::texture3d_ptr();
+auto bricktex = dust::texture3d_ptr();
 static FILE* fout;
 
 template <size_t AccumulateSize, size_t ReadSize, typename FN>
@@ -227,13 +227,13 @@ void voxels_init(dust::context_ptr const& ctx)
 	static uint const brick_count = 30;
 	static uint const box_edge_size = brick_edge_voxels*brick_count;
 
-	blockpool = dust::create_texture3d(ctx, dust::texture_usage_t::streaming, dust::element_format_t::f32x4, box_edge_size);
+	bricktex = dust::create_texture3d(ctx, dust::texture_usage_t::streaming, dust::element_format_t::f32x4, box_edge_size);
 	{
 		// open file, read everything into memory
 		// todo: memory-mapped files
 
 		// inflate 16kb at a time, and call our function for each brick
-		ctx->signal_map(blockpool, 0, dust::map_type_t::write_discard, [&](dust::mapped_subresource_t& sr)
+		ctx->signal_map(bricktex, 0, dust::map_type_t::write_discard, [&](dust::mapped_subresource_t& sr)
 		{
 			auto f = atma::filesystem::file_t{"../data/bunny.oct"};
 			auto m = atma::unique_memory_t(f.size());
@@ -250,18 +250,18 @@ void voxels_init(dust::context_ptr const& ctx)
 			// create node buffer
 			uint nodes_tiles[8][2] = {
 				{0, 0},
+				{0, 8}, //+--
+				{0, 16}, //-+-
 				{0, 0},
-				{0, 1},
-				{0, 2},
+				{0, 24}, //--+
+				{0, 63}, //+-+
 				{0, 0},
-				{0, 5},
-				{0, 4},
 				{0, 0},
 			};
 
 
-			//nodebuf = dust::create_generic_buffer(ctx, dust::buffer_usage_t::immutable, 64, 8, nodes_tiles, 8);
-			nodebuf = dust::create_generic_buffer(ctx, dust::buffer_usage_t::immutable, 8, 8 * node_count, i, 8 * node_count);
+			//nodebuf = dust::create_generic_buffer(ctx, dust::buffer_usage_t::immutable, 64, 1, nodes_tiles, 1);
+			nodebuf = dust::create_generic_buffer(ctx, dust::buffer_usage_t::immutable, 64, node_count, i, node_count);
 
 			i += 64 * node_count;
 
@@ -276,7 +276,29 @@ void voxels_init(dust::context_ptr const& ctx)
 			static uint const chunk_size = 256 * 1024;
 			auto cbuf = (char*)sr.data;
 			auto destbuf = reinterpret_cast<float4(&)[box_edge_size][box_edge_size][box_edge_size]>(*(float4*)sr.data);
+			
+#if 0
+			int bricks = 0;
+			while (bricks != brick_count * brick_count * brick_count)
+			{
+				// 3d-position of block
+				int brick_x = brick_edge_voxels * (bricks % brick_count);
+				int brick_y = brick_edge_voxels * ((bricks / brick_count) % brick_count);
+				int brick_z = brick_edge_voxels * ((bricks / (brick_count * brick_count)) % brick_count);
 
+				size_t srcoff = 0;
+				for (int z = 0; z != brick_edge_voxels; ++z)
+					for (int y = 0; y != brick_edge_voxels; ++y)
+						for (int x = 0; x != brick_edge_voxels; ++x)
+							destbuf[brick_z + z][brick_y + y][brick_x + x] =
+							//float4{1.f, .5f, 0.f, 1.f};
+							float4{brick_x / (float)box_edge_size, brick_y / (float)box_edge_size, brick_z / (float)box_edge_size, 1.f};
+
+				++bricks;
+			}
+#endif
+
+#if 1
 			uint bricks = 0;
 			zl_for_each_chunk<brick_size, chunk_size>(i, m.end(), [&ctx, &destbuf, &bricks](void const* buf)
 			{
@@ -302,6 +324,7 @@ void voxels_init(dust::context_ptr const& ctx)
 
 				++bricks;
 			});
+#endif
 
 			fclose(fout);
 		});
@@ -313,7 +336,7 @@ void voxels_init(dust::context_ptr const& ctx)
 void voxels_render(dust::context_ptr const& ctx)
 {
 	ctx->signal_ps_upload_shader_resource(0, nodebuf);
-	ctx->signal_ps_upload_shader_resource(1, blockpool);
+	ctx->signal_ps_upload_shader_resource(1, bricktex);
 	
 	ctx->signal_draw(vd, vb, vs, ps);
 }

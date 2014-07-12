@@ -100,8 +100,8 @@ aabb_t child_aabb(in aabb_t box, uint index)
 static const aabb_t box = {0.f, 0.f, 0.f, 1.f};
 
 static const uint brick_size = 8;
-static const uint brick_count = 30;
 static const float brick_sizef = 8.f;
+static const uint brick_count = 30;
 static const float inv_brick_countf = 1.f / brick_count;
 
 bool intersection(in aabb_t box, in float3 position, in float3 dir, out float3 enter, out float3 exit)
@@ -264,15 +264,18 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 
 		if (brick_id != 0)
 		{
+#if 1
 			float rem = 0.f;
 			float3 brick_enter = (hit_enter - box.min()) / box.width();
 			float3 brick_exit = (hit_exit - box.min()) / box.width();
 			brick_ray(brick_id, brick_enter, brick_exit, color, rem);
-			/*
-			float3 box_
+
+			//float4 vx = bricks.SampleLevel(brick_sampler, brick_enter, 0);
+			//color += vx;
+#else
 			float4 vx = bricks.SampleLevel(brick_sampler, float3(0.f, 0.f, 0.f), 0);
 			color += float4(1.f, 0.8f, 0.5f, vx.w + 0.5f);
-			*/
+#endif
 		}
 
 		hit_enter = leaf_enter + len * normalize(normal) * 1.01f;
@@ -282,6 +285,7 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 		++reps;
 	} 
 
+#if 1
 	float3 n = normalize(color.xyz);
 
 	float3 lamb = (0.4);
@@ -294,7 +298,8 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 	float3 h = normalize(ldir + normal);
 	i = clamp(pow(dot(n, h), 15), 0, 1);
 	color += float4(i * lpwr, 0);
-	
+#endif
+
 	return color;
 }
 
@@ -302,5 +307,5 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 
 float4 main(ps_input_t input) : SV_Target
 {
-	return brick_path(float3(.3f, 0.2f, -1.5f), normalize(input.texcoord), 0.00001f);
+	return brick_path(float3(.3f, 0.2f, -1.5f), normalize(float3(input.texcoord.xy, 1.f)), 0.00001f);
 }
