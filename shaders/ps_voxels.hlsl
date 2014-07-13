@@ -148,6 +148,7 @@ bool intersection(in aabb_t box, in float3 position, in float3 dir, out float3 e
 
 uint brick_index(in aabb_t box, float3 pos, float size, out aabb_t leaf_box)
 {
+#if 0
 	uint result_brick = 0;
 	leaf_box = box;
 
@@ -166,15 +167,56 @@ uint brick_index(in aabb_t box, float3 pos, float size, out aabb_t leaf_box)
 	}
 
 	return result_brick;
+#endif
+
+	uint child = 0;
+	uint index = 0;
+	uint tmp;
+	float volume = 1.0/float(brick_size);
+	leaf_box = box;
+
+	while (volume > size)
+	{
+		volume *= 0.5;
+		child = leaf_box.child_index(pos);
+		leaf_box = child_aabb(leaf_box, child);
+		//		nPool[NP_LRU+index].n[child].child = now;
+		tmp = nodes[index].items[child].child;
+		if (tmp==0)
+		{
+			//			nPool[NP_REQ+index].n[child].child = now;
+			break;
+		}
+		index = tmp;
+	}
+
+	return nodes[index].items[child].brick;
+
 }
 
 float3 brick_origin(uint brick_id)
 {
 	return float3(
-		inv_brick_countf * (float)((brick_id % brick_count)),
+		inv_brick_countf * (float)((brick_id) % brick_count),
 		inv_brick_countf * (float)((brick_id / brick_count) % brick_count),
 		inv_brick_countf * (float)((brick_id / (brick_count * brick_count)) % brick_count)
 	);
+}
+
+float3 escape(in float3 pos, in float3 normal, in float4 box)
+{
+	float3 far;
+	far.x = normal.x < 0 ? box.x - box.w * 0.5f : box.x + box.w * 0.5f;
+	far.y = normal.y < 0 ? box.y - box.w * 0.5f : box.y + box.w * 0.5f;
+	far.z = normal.z < 0 ? box.z - box.w * 0.5f : box.z + box.w * 0.5f;
+
+	if (normal.x == 0) normal.x += 0.00001;
+	if (normal.y == 0) normal.y += 0.00001;
+	if (normal.z == 0) normal.z += 0.00001;
+
+	float3 ratio = (far - pos)/normal;
+	float rmin = min(min(ratio.x, ratio.y), ratio.z);
+	return rmin * normal + pos;
 }
 
 void brick_ray(in uint brick_id, in float3 near, in float3 far, inout float4 colour, inout float remainder)
@@ -204,53 +246,14 @@ void brick_ray(in uint brick_id, in float3 near, in float3 far, inout float4 col
 		// result.w = result.w + (1.0-result.w) * voxel.w;
 		if (result.w > 1.0)break;
 	}
-	remainder = (pos - 1.0) /steps;
+	remainder = (pos - 1.0) / steps;
 	colour = result;
 	// TODO: interpolate between different resolutions
 }
 
-#if 0
-void brick_accumulate(inout float4 color, uint brick_id, float3 near, float3 far)
-{
-	float inv_size = 1.f / brick_size;
-	float inv_count = 1.f / brick_count;
-	float half_size = inv_size * 0.5f;
-
-	// translate begin and end positions to the centres of the voxels
-	near = near * (inv_size * (brick_size - 1)) + half_size;
-	far = far * (inv_size * (brick_size - 1)) + half_size;
-
-	float len = length(far - near);
-	float3 brick_pos = brick_origin(brick_id);
-	float rem = 0.f;
-	
-	float4 result = color;
-
-	if (len < 0.1f)
-		return;
-
-	float steps = 1.f / (len * brick_size);
-
-	float pos;
-	for (pos = steps * rem; pos < 1.f; pos += steps)
-	{
-		float3 sample_loc = lerp(near, far, pos) * inv_count;
-		float4 voxel = bricks.SampleLevel(brick_sampler, sample_loc + brick_pos, 0);
-		result.xyz += ((1.f - result.a) * (1.f - result.a) * voxel.xyz) / (1.f - result.xyz * voxel.xyz);
-		result.w = result.w + (1.f - result.w) * voxel.w;
-		if (result.w > 1.f)
-			break;
-	}
-	
-	// don't bother with rem
-	//rem = (pos - 1.f) * (len * brick_size);
-	color = result;
-}
-#endif
-
 float4 brick_path(float3 position, float3 normal, float ratio)
 {
-	aabb_t box = {0, 0, 0, 1.f};
+	aabb_t box ={-vdelta, -vdelta, -vdelta, 1.f + vdelta};
 
 	float size = 0.0000001f;
 	float3 hit_enter, hit_exit;
@@ -259,15 +262,14 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 	if (box.contains(position))
 		hit_enter = position;
 	else if (!intersection(box, position, normal, hit_enter, hit_exit))
-		//discard;
-		return float4(0.4f, 0.3f, 0.4f, 1.f);
+		discard;
 
 	float len = length(hit_enter - position);
 	uint reps = 0;
 	float4 color = {0.f, 0.f, 0.f, 0.f};
 	float rem = 0.f;
 	
-	while (reps < 50 && color.w < 1.f)
+	while (reps != 50 && color.w < 1.f && box.contains(hit_enter))
 	{
 		aabb_t leaf_box;
 		float3 leaf_enter;
@@ -275,28 +277,21 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 
 		uint brick_id = brick_index(box, hit_enter, size, leaf_box);
 		intersection(leaf_box, position, normal, leaf_enter, leaf_exit);
-		float len = length(leaf_exit - leaf_enter);
+		//float3 leaf_exit = escape(hit_enter, normal, leaf_box.data);
+		float len = length(leaf_exit - hit_enter);
 
 		if (brick_id != 0)
 		{
-#if 1
-			float rem = 0.f;
-			float3 brick_enter = (hit_enter - box.min()) / box.width();
-			float3 brick_exit = (hit_exit - box.min()) / box.width();
+			float3 brick_enter = (hit_enter - leaf_box.min()) / leaf_box.width();
+			float3 brick_exit = (leaf_exit - leaf_box.min()) / leaf_box.width();
 			brick_ray(brick_id, brick_enter, brick_exit, color, rem);
-
-			//float4 vx = bricks.SampleLevel(brick_sampler, brick_enter, 0);
-			//color += vx;
-#else
-			float4 vx = bricks.SampleLevel(brick_sampler, float3(0.f, 0.f, 0.f), 0);
-			color += float4(1.f, 0.8f, 0.5f, vx.w + 0.5f);
-#endif
+		}
+		else
+		{
+			rem = 0.f;
 		}
 
-		hit_enter = leaf_enter + len * normalize(normal) * 1.01f;
-		if (!box.contains(hit_enter))
-			break;
-
+		hit_enter = hit_enter + len * normal * 1.01f;
 		++reps;
 	} 
 

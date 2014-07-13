@@ -217,7 +217,9 @@ int main()
 	window->key_state.on_key_up(fooey::key_t::S, [&] { S = false; });
 	window->key_state.on_key_up(fooey::key_t::D, [&] { D = false; });
 
-
+	//std::chrono::duration<std::chrono::milliseconds> elapsed;
+	std::chrono::time_point<std::chrono::high_resolution_clock> start = std::chrono::high_resolution_clock::now();
+	int frames = 0;
 	while (running)
 	{
 		t += 0.1f;
@@ -281,6 +283,14 @@ int main()
 
 		ctx->signal_block();
 		ctx->signal_present();
+		++frames;
+
+		if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start).count() > 1000)
+		{
+			std::cout << "FPS: " << frames << std::endl;
+			start = std::chrono::high_resolution_clock::now();
+			frames = 0;
+		}
 	}
 	ctx->signal_block();
 
