@@ -9,6 +9,7 @@ cbuffer buf_scene : register(b0)
 cbuffer buf_voxel : register(b2)
 {
 	float4 position;
+	float x, y;
 }
 
 struct ps_input_t
@@ -324,7 +325,7 @@ float4 main(ps_input_t input) : SV_Target
 	//float4 pj_position = mul(inverse_vp, float4(0.f, 0.f, 0.f, 1.f));
 	//float3 position = pj_position.xyz / pj_position.w;
 
-	float3 dir = normalize(0.f - position);
+	float3 dir ={sin(x) * cos(y), sin(y), cos(x) * cos(y)};
 	float guessup = float3(0.f, 1.f, 0.f);
 	float3 right = cross(dir, float3(0.f, 1.f, 0.f));
 	float3 up = cross(right, dir);

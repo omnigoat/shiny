@@ -106,8 +106,14 @@ int main()
 	atma::math::matrix4f world_matrix;
 	auto cb = dust::create_constant_buffer(ctx, sizeof(world_matrix), &world_matrix);
 
-	atma::math::vector4f position;
-	auto vcb = dust::create_constant_buffer(ctx, sizeof(float) * 4, &position);
+	struct voxel_cb
+	{
+		math::vector4f position;
+		float x, y;
+	};
+
+	auto vcbd = voxel_cb();
+	auto vcb = dust::create_constant_buffer(ctx, sizeof(voxel_cb), &vcbd);
 
 	// camera
 	auto camera = dust::camera_t(
@@ -160,6 +166,13 @@ int main()
 	float x = 0.f;
 	float y = 0.f;
 
+	atma::math::vector4f position ={0.f, 0.f, -2.f, 1.f};
+	math::vector4f walk_direction;
+	math::vector4f strafe_direction;
+	math::vector4f rotation;
+	float walk_speed = 0.002f;
+
+
 	bool mouse_down = false;
 	int ox = 0, oy = 0;
 	window->on({
@@ -172,10 +185,10 @@ int main()
 			if (mouse_down)
 			{
 				auto dx = e.x() - ox;
-				x += dx * 0.01f;
+				x -= dx * 0.01f;
 
 				auto dy = e.y() - oy;
-				y += dy * 0.01f;
+				y -= dy * 0.01f;
 			}
 
 			ox = e.x();
@@ -193,6 +206,18 @@ int main()
 		}}
 	});
 
+	bool W = false, A = false, S = false, D = false;
+	window->key_state.on_key(fooey::key_t::W, [&] { W = true; });
+	window->key_state.on_key(fooey::key_t::A, [&] { A = true; });
+	window->key_state.on_key(fooey::key_t::S, [&] { S = true; });
+	window->key_state.on_key(fooey::key_t::D, [&] { D = true; });
+
+	window->key_state.on_key_up(fooey::key_t::W, [&] { W = false; });
+	window->key_state.on_key_up(fooey::key_t::A, [&] { A = false; });
+	window->key_state.on_key_up(fooey::key_t::S, [&] { S = false; });
+	window->key_state.on_key_up(fooey::key_t::D, [&] { D = false; });
+
+
 	while (running)
 	{
 		t += 0.1f;
@@ -202,13 +227,26 @@ int main()
 		else if (y < -atma::math::pi_over_two + 0.1f)
 			y = -atma::math::pi_over_two + 0.1f;
 
+		if (W) position += walk_direction * walk_speed;
+		if (A) position -= strafe_direction * walk_speed;
+		if (S) position -= walk_direction * walk_speed;
+		if (D) position += strafe_direction * walk_speed;
+
+		walk_direction = math::point4f(sin(x) * cos(y), sin(y), cos(x) * cos(y));
+		strafe_direction = math::cross_product(walk_direction, math::vector4f(0.f, 1.f, 0.f, 0.f));
+
+		vcbd.position = position;
+		vcbd.x = x;
+		vcbd.y = y;
+		ctx->signal_update_constant_buffer(vcb, sizeof(vcbd), &vcbd);
+		ctx->signal_constant_buffer_upload(2, vcb);
+
+
 		camera.move_to(math::point4f(sin(x) * cos(y) * 2.f, sin(y) * 2.f, cos(x) * cos(y) * 2.f));
 		camera.look_at(math::point4f());
 
-		position = math::point4f(sin(x) * cos(y) * 2.f, sin(y) * 2.f, cos(x) * cos(y) * 2.f);
-		ctx->signal_update_constant_buffer(vcb, sizeof(float)*4, &position);
-		ctx->signal_constant_buffer_upload(2, vcb);
-
+		
+		
 		camera.set_aspect(window->height() / (float)window->width());
 		auto scene = dust::scene_t(ctx, camera);
 
