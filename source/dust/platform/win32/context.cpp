@@ -323,6 +323,7 @@ auto context_t::signal_constant_buffer_upload(uint index, constant_buffer_cptr c
 {
 	engine_.signal([&, index, buf] {
 		d3d_immediate_context_->VSSetConstantBuffers(index, 1, &buf->d3d_buffer().get());
+		d3d_immediate_context_->PSSetConstantBuffers(index, 1, &buf->d3d_buffer().get());
 	});
 }
 

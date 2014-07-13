@@ -1,7 +1,20 @@
+cbuffer buf_scene : register(b0)
+{
+	matrix view;
+	matrix proj;
+	matrix inverse_vp;
+	float time;
+};
+
+cbuffer buf_voxel : register(b2)
+{
+	float4 position;
+}
+
 struct ps_input_t
 {
-	float4 position : SV_Position;
-	float3 texcoord : Texcoord;
+	float4 blah : SV_Position;
+	float3 pixel_delta : PixelDelta;
 };
 
 
@@ -245,7 +258,8 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 	if (box.contains(position))
 		hit_enter = position;
 	else if (!intersection(box, position, normal, hit_enter, hit_exit))
-		discard;
+		//discard;
+		return float4(0.4f, 0.3f, 0.4f, 1.f);
 
 	float len = length(hit_enter - position);
 	uint reps = 0;
@@ -303,9 +317,22 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 	return color;
 }
 
-
+static const float pi = 3.14159265f;
 
 float4 main(ps_input_t input) : SV_Target
 {
-	return brick_path(float3(.3f, 0.2f, -1.5f), normalize(float3(input.texcoord.xy, 1.f)), 0.00001f);
+	//float4 pj_position = mul(inverse_vp, float4(0.f, 0.f, 0.f, 1.f));
+	//float3 position = pj_position.xyz / pj_position.w;
+
+	float3 dir = normalize(0.f - position);
+	float guessup = float3(0.f, 1.f, 0.f);
+	float3 right = cross(dir, float3(0.f, 1.f, 0.f));
+	float3 up = cross(right, dir);
+
+	float yd = acos(position.y);
+	
+	float3 p = dir + up * input.pixel_delta.y + right * input.pixel_delta.x;
+
+
+	return brick_path(position.xyz, p, 0.00001f);
 }

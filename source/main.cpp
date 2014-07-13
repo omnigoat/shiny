@@ -106,12 +106,16 @@ int main()
 	atma::math::matrix4f world_matrix;
 	auto cb = dust::create_constant_buffer(ctx, sizeof(world_matrix), &world_matrix);
 
+	atma::math::vector4f position;
+	auto vcb = dust::create_constant_buffer(ctx, sizeof(float) * 4, &position);
+
 	// camera
 	auto camera = dust::camera_t(
 		math::look_at(math::point4f(0.f, 0.f, 2.f), math::point4f(0.f, 0.1f, 0.f), math::vector4f(0.f, 1.f, 0.f, 0.f)),
 		math::perspective_fov(math::pi_over_two, (float)window->width() / window->height(), 0.03434f, 120.f)
 	);
 
+	
 	// compute shader?
 #if CS_TEST
 	auto cs = dust::compute_shader_ptr();
@@ -201,11 +205,22 @@ int main()
 		camera.move_to(math::point4f(sin(x) * cos(y) * 2.f, sin(y) * 2.f, cos(x) * cos(y) * 2.f));
 		camera.look_at(math::point4f());
 
+		position = math::point4f(sin(x) * cos(y) * 2.f, sin(y) * 2.f, cos(x) * cos(y) * 2.f);
+		ctx->signal_update_constant_buffer(vcb, sizeof(float)*4, &position);
+		ctx->signal_constant_buffer_upload(2, vcb);
+
 		camera.set_aspect(window->height() / (float)window->width());
 		auto scene = dust::scene_t(ctx, camera);
+
+		// do this just to upload the camera :P
+		ctx->signal_draw_scene(scene);
+
 		ctx->signal_clear();
 
 #if RENDER_VOXELS
+		//ctx->signal_constant_buffer_upload(0, camera.)
+		ctx->signal_update_constant_buffer(cb, sizeof(world_matrix), &world_matrix);
+		ctx->signal_constant_buffer_upload(1, cb);
 		voxels_render(ctx);
 #endif
 

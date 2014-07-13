@@ -1,3 +1,11 @@
+cbuffer buf_scene : register(b0)
+{
+	matrix view;
+	matrix proj;
+	matrix inverse_vp;
+	float time;
+};
+
 struct vs_input_t
 {
 	float4 position : Position;
@@ -5,8 +13,8 @@ struct vs_input_t
 
 struct ps_input_t
 {
-	float4 position : SV_Position;
-	float3 texcoord : Texcoord;
+	float4 actual_position : SV_Position;
+	float3 pixel_delta : PixelDelta;
 };
 
 //
@@ -15,7 +23,9 @@ struct ps_input_t
 ps_input_t main(in vs_input_t input)
 {
 	ps_input_t output;
-	output.position = input.position;
-	output.texcoord = float3(input.position.xy, 1.f);
+
+	output.actual_position = input.position;
+
+	output.pixel_delta = float3(input.position.xy * 0.5f, 0.5f);
 	return output;
 }

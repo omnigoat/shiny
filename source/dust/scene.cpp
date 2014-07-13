@@ -23,10 +23,16 @@ scene_t::scene_t(context_ptr const& context, camera_t const& camera)
 	{
 		atma::math::matrix4f view;
 		atma::math::matrix4f proj;
+		atma::math::matrix4f inv_viewproj;
 		float time;
 	};
 
-	auto sd = scene_data_t{camera.view(), camera.projection(), 0.f};
+	auto sd = scene_data_t{
+		camera.view(),
+		camera.projection(),
+		(camera.projection() * camera.view()).inverted(),
+		0.f
+	};
 
 	scene_buffer_ = dust::create_constant_buffer(context_, sd);
 
