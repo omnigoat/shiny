@@ -37,7 +37,7 @@ scene_t::scene_t(context_ptr const& context, camera_t const& camera)
 	scene_buffer_ = dust::create_constant_buffer(context_, sd);
 
 	queue_.push([&] {
-		context_->signal_constant_buffer_upload(0, scene_buffer_);
+		context_->signal_cs_upload_constant_buffer(0, scene_buffer_);
 	});
 }
 
@@ -48,12 +48,12 @@ auto scene_t::execute() -> void
 		s();
 }
 
-auto scene_t::signal_constant_buffer_upload(uint index, constant_buffer_cptr const& buf) -> void
+auto scene_t::signal_cs_upload_constant_buffer(uint index, constant_buffer_cptr const& buf) -> void
 {
 	ATMA_ASSERT_MSG(index > 0, "constant-buffer[0] is reserved for the scene");
 
 	queue_.push([&, index, buf] {
-		context_->signal_constant_buffer_upload(index, buf);
+		context_->signal_cs_upload_constant_buffer(index, buf);
 	});
 }
 
@@ -64,12 +64,12 @@ auto scene_t::signal_draw(index_buffer_ptr const& ib, vertex_declaration_t const
 	});
 }
 
-auto scene_t::signal_update_constant_buffer(constant_buffer_ptr& cb, uint data_size, void* data) -> void
+auto scene_t::signal_res_update(constant_buffer_ptr& cb, uint data_size, void* data) -> void
 {
 	auto sm = atma::shared_memory_t(data_size, data);
 
 	queue_.push([&, cb, sm] {
-		context_->signal_update_constant_buffer(cb, sm);
+		context_->signal_res_update(cb, sm);
 	});
 }
 

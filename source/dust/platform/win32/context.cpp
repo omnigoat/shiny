@@ -33,11 +33,11 @@ using dust::context_t;
 //======================================================================
 // context_t
 //======================================================================
-auto dust::create_context(runtime_t& runtime, fooey::window_ptr const& window, uint32 adapter) -> dust::context_ptr {
+auto dust::create_context(runtime_t& runtime, fooey::window_ptr const& window, uint adapter) -> dust::context_ptr {
 	return context_ptr(new context_t(runtime, window, adapter));
 }
 
-context_t::context_t(runtime_t& runtime, fooey::window_ptr const& window, uint32 adapter)
+context_t::context_t(runtime_t& runtime, fooey::window_ptr const& window, uint adapter)
 : runtime_(runtime), window_(window), current_display_mode_(), requested_display_mode_()
 {
 	std::tie(dxgi_adapter_, d3d_device_, d3d_immediate_context_) = runtime_.dxgid3d_for_adapter(adapter);
@@ -107,7 +107,7 @@ auto context_t::create_swapchain() -> void
 	current_display_mode_ = &windowed_display_mode_;
 }
 
-auto context_t::setup_rendertarget(uint32 width, uint32 height) -> void
+auto context_t::setup_rendertarget(uint width, uint height) -> void
 {
 	// create render-target
 	atma::com_ptr<ID3D11Texture2D> backbuffer;
@@ -197,7 +197,7 @@ auto context_t::signal_block() -> void
 	engine_.signal_block();
 }
 
-auto context_t::signal_fullscreen_toggle(uint32 output_index) -> void
+auto context_t::signal_fullscreen_toggle(uint output_index) -> void
 {
 	engine_.signal([&, output_index]
 	{
@@ -244,7 +244,7 @@ auto context_t::on_resize(fooey::events::resize_t& e) -> void
 	requested_display_mode_ = &requested_windowed_display_mode_;
 }
 
-auto context_t::signal_d3d_buffer_upload(platform::d3d_buffer_ptr const& buffer, void const* data, uint32 row_pitch, uint32 depth_pitch) -> void
+auto context_t::signal_d3d_buffer_upload(platform::d3d_buffer_ptr const& buffer, void const* data, uint row_pitch, uint depth_pitch) -> void
 {
 	engine_.signal([&, buffer, data, row_pitch, depth_pitch] {
 		d3d_immediate_context_->UpdateSubresource(buffer.get(), 0, nullptr, data, row_pitch, depth_pitch);
@@ -319,7 +319,7 @@ auto context_t::signal_clear() -> void
 	});
 }
 
-auto context_t::signal_constant_buffer_upload(uint index, constant_buffer_cptr const& buf) -> void
+auto context_t::signal_cs_upload_constant_buffer(uint index, constant_buffer_cptr const& buf) -> void
 {
 	engine_.signal([&, index, buf] {
 		d3d_immediate_context_->VSSetConstantBuffers(index, 1, &buf->d3d_buffer().get());
@@ -332,12 +332,12 @@ auto context_t::signal_draw_scene(scene_t& scene) -> void
 	scene.execute();
 }
 
-auto context_t::signal_update_constant_buffer(constant_buffer_ptr const& cb, uint data_size, void* data) -> void
+auto context_t::signal_res_update(constant_buffer_ptr const& cb, uint data_size, void* data) -> void
 {
-	signal_update_constant_buffer(cb, atma::shared_memory_t(data_size, data));
+	signal_res_update(cb, atma::shared_memory_t(data_size, data));
 }
 
-auto context_t::signal_update_constant_buffer(constant_buffer_ptr const& cb, atma::shared_memory_t const& sm) -> void
+auto context_t::signal_res_update(constant_buffer_ptr const& cb, atma::shared_memory_t const& sm) -> void
 {
 	engine_.signal([&, cb, sm] {
 		D3D11_MAPPED_SUBRESOURCE sr;
@@ -347,7 +347,7 @@ auto context_t::signal_update_constant_buffer(constant_buffer_ptr const& cb, atm
 	});
 }
 
-auto context_t::signal_upload_compute_shader(compute_shader_ptr const& cs) -> void
+auto context_t::signal_cs_set(compute_shader_ptr const& cs) -> void
 {
 	engine_.signal([&, cs] {
 		d3d_immediate_context_->CSSetShader(cs->d3d_cs().get(), nullptr, 0);
@@ -355,7 +355,7 @@ auto context_t::signal_upload_compute_shader(compute_shader_ptr const& cs) -> vo
 }
 
 
-auto context_t::signal_upload_shader_resource(view_type_t view_type, shader_resource2d_ptr const& rs) -> void
+auto context_t::signal_cs_upload_shader_resource(view_type_t view_type, shader_resource2d_ptr const& rs) -> void
 {
 	if (view_type == view_type_t::read_only) {
 		engine_.signal([&, rs] {
@@ -369,14 +369,14 @@ auto context_t::signal_upload_shader_resource(view_type_t view_type, shader_reso
 	}
 }
 
-auto context_t::signal_compute_shader_dispatch(uint x, uint y, uint z) -> void
+auto context_t::signal_cs_dispatch(uint x, uint y, uint z) -> void
 {
 	engine_.signal([&, x, y, z]{
 		d3d_immediate_context_->Dispatch(x, y, z);
 	});
 }
 
-auto context_t::signal_map(resource_ptr const& rs, uint32 subresource, map_type_t maptype, map_callback_t const& fn) -> void
+auto context_t::signal_res_map(resource_ptr const& rs, uint subresource, map_type_t maptype, map_callback_t const& fn) -> void
 {
 	auto d3dmap = 
 		maptype == map_type_t::read ? D3D11_MAP_READ :
@@ -426,8 +426,23 @@ auto context_t::create_d3d_input_layout(vertex_shader_ptr const& vs, vertex_decl
 	}
 
 	platform::d3d_input_layout_ptr result;
-	ATMA_ENSURE_IS(S_OK, d3d_device_->CreateInputLayout(&d3d_elements[0], (uint32)d3d_elements.size(),
+	ATMA_ENSURE_IS(S_OK, d3d_device_->CreateInputLayout(&d3d_elements[0], (uint)d3d_elements.size(),
 		vs->d3d_blob()->GetBufferPointer(), vs->d3d_blob()->GetBufferSize(), result.assign()));
 
 	return result;
 }
+
+auto context_t::signal_vs_upload_constant_buffer(uint index, constant_buffer_cptr const& cb) -> void
+{
+	engine_.signal([&, index, cb] {
+		d3d_immediate_context_->VSSetConstantBuffers(index, 1, &cb->d3d_buffer().get());
+	});
+}
+
+auto context_t::signal_ps_upload_constant_buffer(uint index, constant_buffer_cptr const& cb) -> void
+{
+	engine_.signal([&, index, cb] {
+		d3d_immediate_context_->PSSetConstantBuffers(index, 1, &cb->d3d_buffer().get());
+	});
+}
+

@@ -115,7 +115,7 @@ static const aabb_t box = {0.f, 0.f, 0.f, 1.f};
 
 static const uint brick_size = 8;
 static const float brick_sizef = 8.f;
-static const uint brick_count = 30;
+static const uint brick_count = 48;
 static const float inv_brick_countf = 1.f / brick_count;
 
 bool intersection(in aabb_t box, in float3 position, in float3 dir, out float3 enter, out float3 exit)
@@ -148,12 +148,11 @@ bool intersection(in aabb_t box, in float3 position, in float3 dir, out float3 e
 
 uint brick_index(in aabb_t box, float3 pos, float size, out aabb_t leaf_box)
 {
-#if 0
 	uint result_brick = 0;
 	leaf_box = box;
 
 	uint node_index = 0;
-	for (float volume = 1.f / brick_sizef; volume > size; volume *= 0.5f)
+	for (float volume = 1.f; volume > size; volume *= 0.5f)
 	{
 		node_t n = nodes[node_index];
 		
@@ -167,31 +166,6 @@ uint brick_index(in aabb_t box, float3 pos, float size, out aabb_t leaf_box)
 	}
 
 	return result_brick;
-#endif
-
-	uint child = 0;
-	uint index = 0;
-	uint tmp;
-	float volume = 1.0/float(brick_size);
-	leaf_box = box;
-
-	while (volume > size)
-	{
-		volume *= 0.5;
-		child = leaf_box.child_index(pos);
-		leaf_box = child_aabb(leaf_box, child);
-		//		nPool[NP_LRU+index].n[child].child = now;
-		tmp = nodes[index].items[child].child;
-		if (tmp==0)
-		{
-			//			nPool[NP_REQ+index].n[child].child = now;
-			break;
-		}
-		index = tmp;
-	}
-
-	return nodes[index].items[child].brick;
-
 }
 
 float3 brick_origin(uint brick_id)
@@ -255,7 +229,7 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 {
 	aabb_t box ={-vdelta, -vdelta, -vdelta, 1.f + vdelta};
 
-	float size = 0.0000001f;
+	float size = 0.005f; //* length(0.f - position);
 	float3 hit_enter, hit_exit;
 
 	aabb_t leaf_box;
@@ -277,12 +251,11 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 
 		uint brick_id = brick_index(box, hit_enter, size, leaf_box);
 		intersection(leaf_box, position, normal, leaf_enter, leaf_exit);
-		//float3 leaf_exit = escape(hit_enter, normal, leaf_box.data);
 		float len = length(leaf_exit - hit_enter);
 
 		if (brick_id != 0)
 		{
-			float3 brick_enter = (hit_enter - leaf_box.min()) / leaf_box.width();
+			float3 brick_enter = (leaf_enter - leaf_box.min()) / leaf_box.width();
 			float3 brick_exit = (leaf_exit - leaf_box.min()) / leaf_box.width();
 			brick_ray(brick_id, brick_enter, brick_exit, color, rem);
 		}

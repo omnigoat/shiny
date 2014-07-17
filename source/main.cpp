@@ -155,7 +155,7 @@ int main()
 
 	bool running = true;
 
-	window->key_state.on_key(fooey::key_t::Alt + fooey::key_t::Enter, [ctx]{
+	window->key_state.on_key(fooey::key_t::F, [ctx]{
 		ctx->signal_fullscreen_toggle(1);
 	});
 
@@ -240,8 +240,8 @@ int main()
 		vcbd.position = position;
 		vcbd.x = x;
 		vcbd.y = y;
-		ctx->signal_update_constant_buffer(vcb, sizeof(vcbd), &vcbd);
-		ctx->signal_constant_buffer_upload(2, vcb);
+		ctx->signal_res_update(vcb, sizeof(vcbd), &vcbd);
+		ctx->signal_cs_upload_constant_buffer(2, vcb);
 
 
 		camera.move_to(math::point4f(sin(x) * cos(y) * 2.f, sin(y) * 2.f, cos(x) * cos(y) * 2.f));
@@ -258,26 +258,27 @@ int main()
 		ctx->signal_clear();
 
 #if RENDER_VOXELS
-		//ctx->signal_constant_buffer_upload(0, camera.)
-		ctx->signal_update_constant_buffer(cb, sizeof(world_matrix), &world_matrix);
-		ctx->signal_constant_buffer_upload(1, cb);
+		//ctx->signal_cs_upload_constant_buffer(0, camera.)
+		ctx->signal_res_update(cb, sizeof(world_matrix), &world_matrix);
+		ctx->signal_vs_upload_constant_buffer(1, cb);
+		ctx->signal_ps_upload_constant_buffer(1, cb);
 		voxels_render(ctx);
 #endif
 
 #if RENDER_CUBE
 		world_matrix = math::rotation_y(t * 0.002f);
-		scene.signal_update_constant_buffer(cb, sizeof(world_matrix), &world_matrix);
-		scene.signal_constant_buffer_upload(1, cb);
+		scene.signal_res_update(cb, sizeof(world_matrix), &world_matrix);
+		scene.signal_cs_upload_constant_buffer(1, cb);
 		scene.signal_draw(ib, vd, vb, vs, ps);
 		ctx->signal_draw_scene(scene);
 #endif
 
 #if CS_TEST
-		ctx->signal_upload_shader_resource(dust::view_type_t::read_only, sr);
-		ctx->signal_upload_shader_resource(dust::view_type_t::read_write, ur);
+		ctx->signal_cs_upload_shader_resource(dust::view_type_t::read_only, sr);
+		ctx->signal_cs_upload_shader_resource(dust::view_type_t::read_write, ur);
 		ctx->signal_cs_upload_generic_buffer(1, gb);
-		ctx->signal_upload_compute_shader(cs);
-		ctx->signal_compute_shader_dispatch(4, 4, 1);
+		ctx->signal_cs_set(cs);
+		ctx->signal_cs_dispatch(4, 4, 1);
 #endif
 
 
