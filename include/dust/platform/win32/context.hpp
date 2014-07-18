@@ -44,15 +44,18 @@ namespace dust {
 		// vertex-stage
 		auto signal_vs_upload_constant_buffer(uint index, constant_buffer_cptr const&) -> void;
 		
+
 		// pixel-stage
-		auto signal_ps_upload_shader_resource(uint index, resource_ptr const&) -> void;
-		auto signal_ps_upload_constant_buffer(uint index, constant_buffer_cptr const&) -> void;
+		auto signal_fs_upload_shader_resource(uint index, resource_ptr const&) -> void;
+		auto signal_fs_upload_constant_buffer(uint index, constant_buffer_cptr const&) -> void;
+
 
 		// compute-stage
 		auto signal_cs_set(compute_shader_ptr const&) -> void;
 		auto signal_cs_upload_constant_buffer(uint index, constant_buffer_cptr const&) -> void;
 		auto signal_cs_upload_shader_resource(view_type_t, shader_resource2d_ptr const&) -> void;
 		auto signal_cs_dispatch(uint x, uint y, uint z) -> void;
+
 
 		// d3d-specific
 		auto signal_d3d_buffer_upload(platform::d3d_buffer_ptr const&, void const* data, uint row_pitch, uint depth_pitch) -> void;

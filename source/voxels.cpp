@@ -222,7 +222,7 @@ void voxels_init(dust::context_ptr const& ctx)
 	
 	static uint const brick_edge_voxels = 8;
 	static uint const brick_size = brick_edge_voxels*brick_edge_voxels*brick_edge_voxels*sizeof(float)*4;
-	static uint const brick_count = 48;
+	static uint const brick_count = 30;
 	static uint const box_edge_size = brick_edge_voxels*brick_count;
 
 	bricktex = dust::create_texture3d(ctx, dust::texture_usage_t::streaming, dust::element_format_t::f32x4, box_edge_size);
@@ -233,7 +233,7 @@ void voxels_init(dust::context_ptr const& ctx)
 		// inflate 16kb at a time, and call our function for each brick
 		ctx->signal_res_map(bricktex, 0, dust::map_type_t::write_discard, [&](dust::mapped_subresource_t& sr)
 		{
-			auto f = atma::filesystem::file_t{"../data/dragon.oct"};
+			auto f = atma::filesystem::file_t{"../data/bunny.oct"};
 			auto m = atma::unique_memory_t(f.size());
 			f.read(m.begin(), f.size());
 			f.close();
@@ -292,8 +292,8 @@ void voxels_init(dust::context_ptr const& ctx)
 
 void voxels_render(dust::context_ptr const& ctx)
 {
-	ctx->signal_ps_upload_shader_resource(0, nodebuf);
-	ctx->signal_ps_upload_shader_resource(1, bricktex);
+	ctx->signal_fs_upload_shader_resource(0, nodebuf);
+	ctx->signal_fs_upload_shader_resource(1, bricktex);
 	
 	ctx->signal_draw(vd, vb, vs, ps);
 

@@ -261,7 +261,7 @@ int main()
 		//ctx->signal_cs_upload_constant_buffer(0, camera.)
 		ctx->signal_res_update(cb, sizeof(world_matrix), &world_matrix);
 		ctx->signal_vs_upload_constant_buffer(1, cb);
-		ctx->signal_ps_upload_constant_buffer(1, cb);
+		ctx->signal_fs_upload_constant_buffer(1, cb);
 		voxels_render(ctx);
 #endif
 

@@ -115,7 +115,7 @@ static const aabb_t box = {0.f, 0.f, 0.f, 1.f};
 
 static const uint brick_size = 8;
 static const float brick_sizef = 8.f;
-static const uint brick_count = 48;
+static const uint brick_count = 30;
 static const float inv_brick_countf = 1.f / brick_count;
 
 bool intersection(in aabb_t box, in float3 position, in float3 dir, out float3 enter, out float3 exit)

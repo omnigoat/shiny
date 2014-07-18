@@ -403,7 +403,7 @@ auto context_t::signal_cs_upload_generic_buffer(uint index, generic_buffer_ptr c
 }
 #endif
 
-auto context_t::signal_ps_upload_shader_resource(uint index, resource_ptr const& resource) -> void
+auto context_t::signal_fs_upload_shader_resource(uint index, resource_ptr const& resource) -> void
 {
 	ATMA_ASSERT(resource);
 	engine_.signal([&, index, resource] {
@@ -439,7 +439,7 @@ auto context_t::signal_vs_upload_constant_buffer(uint index, constant_buffer_cpt
 	});
 }
 
-auto context_t::signal_ps_upload_constant_buffer(uint index, constant_buffer_cptr const& cb) -> void
+auto context_t::signal_fs_upload_constant_buffer(uint index, constant_buffer_cptr const& cb) -> void
 {
 	engine_.signal([&, index, cb] {
 		d3d_immediate_context_->PSSetConstantBuffers(index, 1, &cb->d3d_buffer().get());
