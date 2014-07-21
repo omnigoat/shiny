@@ -17,6 +17,7 @@
 #include <dust/texture3d.hpp>
 #include <dust/shader_resource2d.hpp>
 #include <dust/generic_buffer.hpp>
+#include <dust/vertex_buffer.hpp>
 
 #include <fooey/events/resize.hpp>
 #include <fooey/keys.hpp>
@@ -446,3 +447,14 @@ auto context_t::signal_fs_upload_constant_buffer(uint index, constant_buffer_cpt
 	});
 }
 
+auto context_t::signal_draw(shared_state_t const& ss, vertex_stage_state_t const& vs, fragment_stage_state_t const& fs) -> void
+{
+	engine_.signal([&, ss, vs, fs] {
+		//for (auto const& x : ss.shader_resources())
+		UINT stride = vs.vertex_declaration->stride();
+		d3d_immediate_context_->IASetVertexBuffers(0, 1, &vs.vertex_buffer->d3d_buffer().get(), &stride, 0);
+		d3d_immediate_context_->VSSetShader(vs.vertex_shader->d3d_vs().get(), nullptr, 0);
+
+		d3d_immediate_context_->PSSetShader(fs.fragment_shader->d3d_ps().get(), nullptr, 0);
+	});
+}

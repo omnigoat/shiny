@@ -2,7 +2,6 @@
 
 #include <dust/context.hpp>
 
-
 using namespace dust;
 using dust::vertex_shader_t;
 

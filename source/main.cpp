@@ -20,6 +20,7 @@
 #include <fooey/events/resize.hpp>
 #include <fooey/events/mouse.hpp>
 #include <fooey/event_handler.hpp>
+#include <fooey/keys.hpp>
 
 #include <atma/math/vector4f.hpp>
 #include <atma/math/matrix4f.hpp>
@@ -155,11 +156,11 @@ int main()
 
 	bool running = true;
 
-	window->key_state.on_key(fooey::key_t::F, [ctx]{
+	window->key_state.on_key_down(fooey::key_t::Alt + fooey::key_t::Enter, [ctx]{
 		ctx->signal_fullscreen_toggle(1);
 	});
 
-	window->key_state.on_key(fooey::key_t::Esc, [&running]{
+	window->key_state.on_key_down(fooey::key_t::Esc, [&running]{
 		running = false;
 	});
 
@@ -207,10 +208,10 @@ int main()
 	});
 
 	bool W = false, A = false, S = false, D = false;
-	window->key_state.on_key(fooey::key_t::W, [&] { W = true; });
-	window->key_state.on_key(fooey::key_t::A, [&] { A = true; });
-	window->key_state.on_key(fooey::key_t::S, [&] { S = true; });
-	window->key_state.on_key(fooey::key_t::D, [&] { D = true; });
+	window->key_state.on_key_down(fooey::key_t::W, [&] { W = true; });
+	window->key_state.on_key_down(fooey::key_t::A, [&] { A = true; });
+	window->key_state.on_key_down(fooey::key_t::S, [&] { S = true; });
+	window->key_state.on_key_down(fooey::key_t::D, [&] { D = true; });
 
 	window->key_state.on_key_up(fooey::key_t::W, [&] { W = false; });
 	window->key_state.on_key_up(fooey::key_t::A, [&] { A = false; });

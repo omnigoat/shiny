@@ -4,6 +4,9 @@
 #include <dust/element_format.hpp>
 #include <dust/adapter.hpp>
 #include <dust/output.hpp>
+#include <dust/vertex_buffer.hpp>
+#include <dust/pixel_shader.hpp>
+#include <dust/vertex_shader.hpp>
 
 #include <dust/platform/win32/d3d_fwd.hpp>
 
@@ -21,6 +24,44 @@
 namespace dust {
 //======================================================================
 	
+	struct shared_state_t
+	{
+		typedef std::vector<resource_ptr> shader_resources_t;
+
+		shared_state_t(shader_resources_t const& shader_resources)
+		: shader_resources_(shader_resources)
+		{
+		}
+
+		auto shader_resources() const -> shader_resources_t const&
+		{
+			return shader_resources_;
+		}
+
+	private:
+		shader_resources_t shader_resources_;
+	};
+
+	struct vertex_stage_state_t
+	{
+		vertex_stage_state_t(vertex_declaration_t const* vd, vertex_shader_ptr const& vs, vertex_buffer_ptr const& vb)
+		: vertex_declaration(vd), vertex_shader(vs), vertex_buffer(vb)
+		{
+		}
+
+
+		vertex_declaration_t const* vertex_declaration;
+		vertex_shader_cptr vertex_shader;
+		vertex_buffer_cptr vertex_buffer;
+	};
+
+
+	struct fragment_stage_state_t
+	{
+		pixel_shader_cptr fragment_shader;
+		resources_t shader_resources;
+	};
+
 	struct context_t : atma::ref_counted
 	{
 		using map_callback_t = std::function<void(mapped_subresource_t&)>;
@@ -35,6 +76,9 @@ namespace dust {
 		auto signal_draw(index_buffer_ptr const&, vertex_declaration_t const*, vertex_buffer_ptr const&, vertex_shader_ptr const&, pixel_shader_ptr const&) -> void;
 		auto signal_draw_scene(scene_t&) -> void;
 		
+		auto signal_draw(shared_state_t const&, vertex_stage_state_t const&, fragment_stage_state_t const&) -> void;
+
+
 		// resources
 		auto signal_res_map(resource_ptr const&, uint subresource, map_type_t, map_callback_t const&) -> void;
 		auto signal_res_update(constant_buffer_ptr const&, uint data_size, void*) -> void;

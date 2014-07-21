@@ -303,9 +303,7 @@ void voxels_render(dust::context_ptr const& ctx)
 			{{dust::constant_buffer_index::user, vcb}}
 		},
 
-		dust::vertex_stage_state_t{
-			vd, vs, vb
-		},
+		dust::vertex_stage_state_t{vd, vs, vb},
 
 		dust::fragment_stage_state_t{
 			ps,

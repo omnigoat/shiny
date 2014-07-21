@@ -2,6 +2,8 @@
 //======================================================================
 #include <atma/types.hpp>
 #include <atma/intrusive_ptr.hpp>
+
+#include <vector>
 //======================================================================
 namespace dust {
 	
@@ -18,15 +20,18 @@ namespace dust {
 
 	struct vertex_shader_t;
 	typedef atma::intrusive_ptr<vertex_shader_t> vertex_shader_ptr;
+	typedef atma::intrusive_ptr<vertex_shader_t const> vertex_shader_cptr;
 
 	struct pixel_shader_t;
 	typedef atma::intrusive_ptr<pixel_shader_t> pixel_shader_ptr;
+	typedef atma::intrusive_ptr<pixel_shader_t const> pixel_shader_cptr;
 
 	struct vertex_stream_t;
 	struct vertex_declaration_t;
 
 	struct vertex_buffer_t;
 	typedef atma::intrusive_ptr<vertex_buffer_t> vertex_buffer_ptr;
+	typedef atma::intrusive_ptr<vertex_buffer_t const> vertex_buffer_cptr;
 
 	struct constant_buffer_t;
 	typedef atma::intrusive_ptr<constant_buffer_t> constant_buffer_ptr;
@@ -55,6 +60,7 @@ namespace dust {
 
 	struct resource_t;
 	typedef atma::intrusive_ptr<resource_t> resource_ptr;
+	typedef std::vector<resource_ptr> resources_t;
 
 	struct generic_buffer_t;
 	typedef atma::intrusive_ptr<generic_buffer_t> generic_buffer_ptr;
