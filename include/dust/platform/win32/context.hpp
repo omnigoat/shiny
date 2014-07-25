@@ -5,7 +5,7 @@
 #include <dust/adapter.hpp>
 #include <dust/output.hpp>
 #include <dust/vertex_buffer.hpp>
-#include <dust/pixel_shader.hpp>
+#include <dust/fragment_shader.hpp>
 #include <dust/vertex_shader.hpp>
 
 #include <dust/platform/win32/d3d_fwd.hpp>

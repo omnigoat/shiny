@@ -7,7 +7,7 @@
 #include <dust/vertex_declaration.hpp>
 #include <dust/vertex_buffer.hpp>
 #include <dust/vertex_shader.hpp>
-#include <dust/pixel_shader.hpp>
+#include <dust/fragment_shader.hpp>
 #include <dust/runtime.hpp>
 #include <dust/constant_buffer.hpp>
 #include <dust/index_buffer.hpp>

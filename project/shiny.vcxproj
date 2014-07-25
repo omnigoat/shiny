@@ -234,12 +234,12 @@
     <ClInclude Include="..\include\dust\index_buffer.hpp" />
     <ClInclude Include="..\include\dust\lock.hpp" />
     <ClInclude Include="..\include\dust\output.hpp" />
-    <ClInclude Include="..\include\dust\pixel_shader.hpp" />
+    <ClInclude Include="..\include\dust\fragment_shader.hpp" />
     <ClInclude Include="..\include\dust\platform\win32\adapter.hpp" />
     <ClInclude Include="..\include\dust\platform\win32\constant_buffer.hpp" />
     <ClInclude Include="..\include\dust\platform\win32\context.hpp" />
     <ClInclude Include="..\include\dust\platform\win32\index_buffer.hpp" />
-    <ClInclude Include="..\include\dust\platform\win32\pixel_shader.hpp" />
+    <ClInclude Include="..\include\dust\platform\win32\fragment_shader.hpp" />
     <ClInclude Include="..\include\dust\platform\win32\runtime.hpp" />
     <ClInclude Include="..\include\dust\platform\win32\texture2d.hpp" />
     <ClInclude Include="..\include\dust\platform\win32\vertex_buffer.hpp" />

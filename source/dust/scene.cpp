@@ -7,7 +7,7 @@
 #include <dust/vertex_buffer.hpp>
 #include <dust/index_buffer.hpp>
 #include <dust/vertex_shader.hpp>
-#include <dust/pixel_shader.hpp>
+#include <dust/fragment_shader.hpp>
 
 #include <atma/shared_memory.hpp>
 

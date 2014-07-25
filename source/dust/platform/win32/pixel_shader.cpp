@@ -1,4 +1,4 @@
-#include <dust/pixel_shader.hpp>
+#include <dust/fragment_shader.hpp>
 
 #include <dust/context.hpp>
 

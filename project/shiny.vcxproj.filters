@@ -199,12 +199,6 @@
     <ClInclude Include="..\include\dust\platform\win32\vertex_shader.hpp">
       <Filter>include\dust\platform\win32</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\dust\platform\win32\pixel_shader.hpp">
-      <Filter>include\dust\platform\win32</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\dust\pixel_shader.hpp">
-      <Filter>include\dust</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\dust\dust_fwd.hpp">
       <Filter>include\dust</Filter>
     </ClInclude>
@@ -303,6 +297,12 @@
     </ClInclude>
     <ClInclude Include="..\include\shelf\file.hpp">
       <Filter>include\shelf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\dust\platform\win32\fragment_shader.hpp">
+      <Filter>include\dust\platform\win32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\dust\fragment_shader.hpp">
+      <Filter>include\dust</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
