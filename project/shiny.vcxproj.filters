@@ -62,9 +62,6 @@
     <ClCompile Include="..\source\dust\platform\win32\vertex_shader.cpp">
       <Filter>source\dust\platform\win32</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\dust\platform\win32\pixel_shader.cpp">
-      <Filter>source\dust\platform\win32</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\dust\platform\win32\constant_buffer.cpp">
       <Filter>source\dust\platform\win32</Filter>
     </ClCompile>
@@ -150,6 +147,9 @@
       <Filter>source\dust</Filter>
     </ClCompile>
     <ClCompile Include="..\source\dust\platform\win32\resource.cpp">
+      <Filter>source\dust\platform\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\dust\platform\win32\fragment_shader.cpp">
       <Filter>source\dust\platform\win32</Filter>
     </ClCompile>
   </ItemGroup>

@@ -4,15 +4,15 @@
 
 
 using namespace dust;
-using dust::pixel_shader_t;
+using dust::fragment_shader_t;
 
 
-auto dust::create_pixel_shader(context_ptr const& context, atma::unique_memory_t const& memory, bool precompiled, atma::string const& entrypoint) -> pixel_shader_ptr
+auto dust::create_fragment_shader(context_ptr const& context, atma::unique_memory_t const& memory, bool precompiled, atma::string const& entrypoint) -> fragment_shader_ptr
 {
-	return pixel_shader_ptr(new pixel_shader_t(context, memory.begin(), memory.size(), precompiled, entrypoint));
+	return fragment_shader_ptr(new fragment_shader_t(context, memory.begin(), memory.size(), precompiled, entrypoint));
 }
 
-pixel_shader_t::pixel_shader_t(context_ptr const& ctx, void const* data, size_t data_length, bool precompiled, atma::string const& entrypoint)
+fragment_shader_t::fragment_shader_t(context_ptr const& ctx, void const* data, size_t data_length, bool precompiled, atma::string const& entrypoint)
 : context_(ctx)
 {
 	if (precompiled)

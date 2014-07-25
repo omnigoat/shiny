@@ -20,7 +20,7 @@ namespace dust { namespace platform {
 	typedef atma::com_ptr<ID3D11Buffer> d3d_buffer_ptr;
 	typedef atma::com_ptr<ID3D11InputLayout> d3d_input_layout_ptr;
 	typedef atma::com_ptr<ID3D11VertexShader> d3d_vertex_shader_ptr;
-	typedef atma::com_ptr<ID3D11PixelShader> d3d_pixel_shader_ptr;
+	typedef atma::com_ptr<ID3D11PixelShader> d3d_fragment_shader_ptr;
 	typedef atma::com_ptr<ID3D11ComputeShader> d3d_compute_shader_ptr;
 	typedef atma::com_ptr<ID3DBlob> d3d_blob_ptr;
 	typedef atma::com_ptr<ID3D11RenderTargetView> d3d_render_target_view_ptr;

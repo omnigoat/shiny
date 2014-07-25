@@ -58,7 +58,7 @@ namespace dust {
 
 	struct fragment_stage_state_t
 	{
-		pixel_shader_cptr fragment_shader;
+		fragment_shader_cptr fragment_shader;
 		resources_t shader_resources;
 	};
 
@@ -72,8 +72,8 @@ namespace dust {
 		auto signal_fullscreen_toggle(uint output_index = primary_output) -> void;
 		auto signal_present() -> void;
 		auto signal_clear() -> void;
-		auto signal_draw(vertex_declaration_t const*, vertex_buffer_ptr const&, vertex_shader_ptr const&, pixel_shader_ptr const&) -> void;
-		auto signal_draw(index_buffer_ptr const&, vertex_declaration_t const*, vertex_buffer_ptr const&, vertex_shader_ptr const&, pixel_shader_ptr const&) -> void;
+		auto signal_draw(vertex_declaration_t const*, vertex_buffer_ptr const&, vertex_shader_ptr const&, fragment_shader_ptr const&) -> void;
+		auto signal_draw(index_buffer_ptr const&, vertex_declaration_t const*, vertex_buffer_ptr const&, vertex_shader_ptr const&, fragment_shader_ptr const&) -> void;
 		auto signal_draw_scene(scene_t&) -> void;
 		
 		auto signal_draw(shared_state_t const&, vertex_stage_state_t const&, fragment_stage_state_t const&) -> void;

@@ -65,7 +65,7 @@ int main()
 
 	auto f2 = atma::filesystem::file_t("../shaders/ps_basic.hlsl");
 	auto fm2 = f2.read_into_memory();
-	auto ps = dust::create_pixel_shader(ctx, fm2, false);
+	auto ps = dust::create_fragment_shader(ctx, fm2, false);
 
 	// vertex declaration
 	auto vd = dust::get_vertex_declaration({

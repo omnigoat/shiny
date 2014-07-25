@@ -252,7 +252,7 @@ auto context_t::signal_d3d_buffer_upload(platform::d3d_buffer_ptr const& buffer,
 	});
 }
 
-auto context_t::signal_draw(vertex_declaration_t const* vd, vertex_buffer_ptr const& vb, vertex_shader_ptr const& vs, pixel_shader_ptr const& ps) -> void
+auto context_t::signal_draw(vertex_declaration_t const* vd, vertex_buffer_ptr const& vb, vertex_shader_ptr const& vs, fragment_shader_ptr const& ps) -> void
 {
 	engine_.signal([&, vd, vb, vs, ps]{
 		UINT stride = vd->stride();
@@ -277,7 +277,7 @@ auto context_t::signal_draw(vertex_declaration_t const* vd, vertex_buffer_ptr co
 	});
 }
 
-auto context_t::signal_draw(index_buffer_ptr const& ib, vertex_declaration_t const* vd, vertex_buffer_ptr const& vb, vertex_shader_ptr const& vs, pixel_shader_ptr const& ps) -> void
+auto context_t::signal_draw(index_buffer_ptr const& ib, vertex_declaration_t const* vd, vertex_buffer_ptr const& vb, vertex_shader_ptr const& vs, fragment_shader_ptr const& ps) -> void
 {
 	engine_.signal([&, ib, vd, vb, vs, ps]{
 		UINT stride = vd->stride();

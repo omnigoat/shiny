@@ -22,9 +22,9 @@ namespace dust {
 	typedef atma::intrusive_ptr<vertex_shader_t> vertex_shader_ptr;
 	typedef atma::intrusive_ptr<vertex_shader_t const> vertex_shader_cptr;
 
-	struct pixel_shader_t;
-	typedef atma::intrusive_ptr<pixel_shader_t> pixel_shader_ptr;
-	typedef atma::intrusive_ptr<pixel_shader_t const> pixel_shader_cptr;
+	struct fragment_shader_t;
+	typedef atma::intrusive_ptr<fragment_shader_t> fragment_shader_ptr;
+	typedef atma::intrusive_ptr<fragment_shader_t const> fragment_shader_cptr;
 
 	struct vertex_stream_t;
 	struct vertex_declaration_t;

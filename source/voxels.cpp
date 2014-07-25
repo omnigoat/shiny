@@ -36,7 +36,7 @@ auto vb = dust::vertex_buffer_ptr();
 
 // shaders
 auto vs = dust::vertex_shader_ptr();
-auto ps = dust::pixel_shader_ptr();
+auto ps = dust::fragment_shader_ptr();
 
 // buffers/textures
 auto nodebuf = dust::generic_buffer_ptr();
@@ -216,7 +216,7 @@ void voxels_init(dust::context_ptr const& ctx)
 	{
 		auto f = atma::filesystem::file_t("../shaders/ps_voxels.cso");
 		auto fm = f.read_into_memory();
-		ps = dust::create_pixel_shader(ctx, fm, true);
+		ps = dust::create_fragment_shader(ctx, fm, true);
 	}
 	
 	

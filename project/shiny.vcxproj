@@ -182,7 +182,7 @@
     <ClCompile Include="..\source\dust\platform\win32\generic_buffer.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\index_buffer.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\output.cpp" />
-    <ClCompile Include="..\source\dust\platform\win32\pixel_shader.cpp" />
+    <ClCompile Include="..\source\dust\platform\win32\fragment_shader.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\resource.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\runtime.cpp" />
     <ClCompile Include="..\source\dust\platform\win32\shader_resource2d.cpp" />

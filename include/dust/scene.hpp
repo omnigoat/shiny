@@ -15,7 +15,7 @@ namespace dust {
 		auto signal_res_update(constant_buffer_ptr&, uint data_size, void*) -> void;
 		auto signal_cs_upload_constant_buffer(uint index, constant_buffer_cptr const&) -> void;
 
-		auto signal_draw(index_buffer_ptr const&, vertex_declaration_t const*, vertex_buffer_ptr const&, vertex_shader_ptr const&, pixel_shader_ptr const&) -> void;
+		auto signal_draw(index_buffer_ptr const&, vertex_declaration_t const*, vertex_buffer_ptr const&, vertex_shader_ptr const&, fragment_shader_ptr const&) -> void;
 
 	private:
 		auto execute() -> void;
