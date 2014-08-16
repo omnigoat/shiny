@@ -1,4 +1,4 @@
-#include <dust/fragment_shader.hpp>
+#include <dust/platform/win32/fragment_shader.hpp>
 
 #include <dust/context.hpp>
 
