@@ -7,6 +7,7 @@
 #include <dust/vertex_buffer.hpp>
 #include <dust/fragment_shader.hpp>
 #include <dust/vertex_shader.hpp>
+#include <dust/constant_buffer.hpp>
 
 #include <dust/platform/win32/d3d_fwd.hpp>
 
@@ -23,44 +24,47 @@
 //======================================================================
 namespace dust {
 //======================================================================
-	
+
+	namespace constant_buffer_index
+	{
+		uint const user = 3;
+	}
+
 	struct shared_state_t
 	{
-		typedef std::vector<resource_ptr> shader_resources_t;
+		typedef std::vector<std::pair<uint, resource_ptr>> shader_resources_t;
 
-		shared_state_t(shader_resources_t const& shader_resources)
-		: shader_resources_(shader_resources)
-		{
-		}
-
-		auto shader_resources() const -> shader_resources_t const&
-		{
-			return shader_resources_;
-		}
-
-	private:
-		shader_resources_t shader_resources_;
+		bound_resources_t shader_resources;
 	};
 
 	struct vertex_stage_state_t
 	{
-		vertex_stage_state_t(vertex_declaration_t const* vd, vertex_shader_ptr const& vs, vertex_buffer_ptr const& vb)
-		: vertex_declaration(vd), vertex_shader(vs), vertex_buffer(vb)
-		{
-		}
-
-
 		vertex_declaration_t const* vertex_declaration;
 		vertex_shader_cptr vertex_shader;
 		vertex_buffer_cptr vertex_buffer;
 	};
 
-
 	struct fragment_stage_state_t
 	{
+		fragment_stage_state_t(fragment_shader_ptr const& fs, bound_constant_buffers_t const& bcb, bound_resources_t const& bs)
+			: fragment_shader(fs), constant_buffers(bcb), shader_resources(bs)
+		{}
+
+		fragment_stage_state_t(fragment_shader_ptr const& fs, bound_constant_buffers_t const& bcb)
+			: fragment_shader(fs), constant_buffers(bcb)
+		{}
+
+		fragment_stage_state_t(fragment_shader_ptr const& fs)
+			: fragment_shader(fs)
+		{}
+
 		fragment_shader_cptr fragment_shader;
-		resources_t shader_resources;
+		bound_constant_buffers_t constant_buffers;
+		bound_resources_t shader_resources;
 	};
+
+
+
 
 	struct context_t : atma::ref_counted
 	{

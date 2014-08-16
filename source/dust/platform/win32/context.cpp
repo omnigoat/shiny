@@ -264,6 +264,7 @@ auto context_t::signal_draw(vertex_declaration_t const* vd, vertex_buffer_ptr co
 		auto ILkey = std::make_tuple(vs, vd);
 		auto IL = cached_input_layouts_.find(ILkey);
 		if (IL == cached_input_layouts_.end()) {
+			
 			IL = cached_input_layouts_.insert(std::make_pair(ILkey, create_d3d_input_layout(vs, vd))).first;
 		}
 
@@ -449,11 +450,13 @@ auto context_t::signal_fs_upload_constant_buffer(uint index, constant_buffer_cpt
 
 auto context_t::signal_draw(shared_state_t const& ss, vertex_stage_state_t const& vs, fragment_stage_state_t const& fs) -> void
 {
-	engine_.signal([&, ss, vs, fs] {
-		//for (auto const& x : ss.shader_resources())
+	engine_.signal([&, ss, vs, fs]
+	{
+		// vertex-shader
+		d3d_immediate_context_->VSSetShader(vs.vertex_shader->d3d_vs().get(), nullptr, 0);
+
 		UINT stride = vs.vertex_declaration->stride();
 		d3d_immediate_context_->IASetVertexBuffers(0, 1, &vs.vertex_buffer->d3d_buffer().get(), &stride, 0);
-		d3d_immediate_context_->VSSetShader(vs.vertex_shader->d3d_vs().get(), nullptr, 0);
 
 		d3d_immediate_context_->PSSetShader(fs.fragment_shader->d3d_ps().get(), nullptr, 0);
 	});

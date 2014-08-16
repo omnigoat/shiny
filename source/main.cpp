@@ -40,9 +40,9 @@
 #define CS_TEST 0
 
 
-extern void voxels_init(dust::context_ptr const& ctx);
-extern void voxels_render(dust::context_ptr const& ctx);
-
+extern void voxels_init(dust::context_ptr const&);
+extern void voxels_update(dust::context_ptr const&, atma::math::vector4f const&, float, float);
+extern void voxels_render(dust::context_ptr const&);
 
 
 
@@ -106,15 +106,6 @@ int main()
 	static float t = 0.f;
 	atma::math::matrix4f world_matrix;
 	auto cb = dust::create_constant_buffer(ctx, sizeof(world_matrix), &world_matrix);
-
-	struct voxel_cb
-	{
-		math::vector4f position;
-		float x, y;
-	};
-
-	auto vcbd = voxel_cb();
-	auto vcb = dust::create_constant_buffer(ctx, sizeof(voxel_cb), &vcbd);
 
 	// camera
 	auto camera = dust::camera_t(
@@ -238,18 +229,14 @@ int main()
 		walk_direction = math::point4f(sin(x) * cos(y), sin(y), cos(x) * cos(y));
 		strafe_direction = math::cross_product(walk_direction, math::vector4f(0.f, 1.f, 0.f, 0.f));
 
-		vcbd.position = position;
-		vcbd.x = x;
-		vcbd.y = y;
-		ctx->signal_res_update(vcb, sizeof(vcbd), &vcbd);
-		ctx->signal_cs_upload_constant_buffer(2, vcb);
 
+#if RENDER_VOXELS
+		voxels_update(ctx, position, x, y);
+#endif
 
 		camera.move_to(math::point4f(sin(x) * cos(y) * 2.f, sin(y) * 2.f, cos(x) * cos(y) * 2.f));
 		camera.look_at(math::point4f());
 
-		
-		
 		camera.set_aspect(window->height() / (float)window->width());
 		auto scene = dust::scene_t(ctx, camera);
 

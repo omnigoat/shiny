@@ -177,22 +177,6 @@ float3 brick_origin(uint brick_id)
 	);
 }
 
-float3 escape(in float3 pos, in float3 normal, in float4 box)
-{
-	float3 far;
-	far.x = normal.x < 0 ? box.x - box.w * 0.5f : box.x + box.w * 0.5f;
-	far.y = normal.y < 0 ? box.y - box.w * 0.5f : box.y + box.w * 0.5f;
-	far.z = normal.z < 0 ? box.z - box.w * 0.5f : box.z + box.w * 0.5f;
-
-	if (normal.x == 0) normal.x += 0.00001;
-	if (normal.y == 0) normal.y += 0.00001;
-	if (normal.z == 0) normal.z += 0.00001;
-
-	float3 ratio = (far - pos)/normal;
-	float rmin = min(min(ratio.x, ratio.y), ratio.z);
-	return rmin * normal + pos;
-}
-
 void brick_ray(in uint brick_id, in float3 near, in float3 far, inout float4 colour, inout float remainder)
 {
 	// float3 delta = far - near;

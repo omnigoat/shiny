@@ -36,6 +36,7 @@ namespace dust {
 	struct constant_buffer_t;
 	typedef atma::intrusive_ptr<constant_buffer_t> constant_buffer_ptr;
 	typedef atma::intrusive_ptr<constant_buffer_t const> constant_buffer_cptr;
+	typedef std::vector<std::pair<uint, constant_buffer_cptr>> bound_constant_buffers_t;
 
 	struct index_buffer_t;
 	typedef atma::intrusive_ptr<index_buffer_t> index_buffer_ptr;
@@ -60,7 +61,7 @@ namespace dust {
 
 	struct resource_t;
 	typedef atma::intrusive_ptr<resource_t> resource_ptr;
-	typedef std::vector<resource_ptr> resources_t;
+	typedef std::vector<std::pair<uint, resource_ptr>> bound_resources_t;
 
 	struct generic_buffer_t;
 	typedef atma::intrusive_ptr<generic_buffer_t> generic_buffer_ptr;

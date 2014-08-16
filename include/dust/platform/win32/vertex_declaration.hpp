@@ -15,6 +15,7 @@ namespace dust
 		typedef std::vector<vertex_stream_t> streams_t;
 
 		friend auto get_vertex_declaration(streams_t const&) -> vertex_declaration_t const*;
+		friend struct context_t;
 
 		auto streams() const -> streams_t const&;
 		auto stride() const -> uint;
@@ -26,9 +27,12 @@ namespace dust
 
 	private:
 		vertex_declaration_t(streams_t const&);
-		
+
+	private:
 		streams_t streams_;
 		uint stride_;
+
+		void* platform_impl_;
 
 		static std::map<streams_t, std::unique_ptr<vertex_declaration_t>> cache_;
 	};

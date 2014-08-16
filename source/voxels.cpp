@@ -13,9 +13,12 @@
 #include <dust/shader_resource2d.hpp>
 #include <dust/texture3d.hpp>
 #include <dust/platform/win32/generic_buffer.hpp>
+#include <dust/constant_buffer.hpp>
 
 #include <atma/filesystem/file.hpp>
 #include <atma/unique_memory.hpp>
+#include <atma/algorithm.hpp>
+
 
 #include <zlib.h>
 
@@ -37,6 +40,15 @@ auto vb = dust::vertex_buffer_ptr();
 // shaders
 auto vs = dust::vertex_shader_ptr();
 auto ps = dust::fragment_shader_ptr();
+
+struct voxel_cb
+{
+	atma::math::vector4f position;
+	float x, y;
+};
+
+auto vcbd = voxel_cb();
+auto vcb = dust::constant_buffer_ptr();
 
 // buffers/textures
 auto nodebuf = dust::generic_buffer_ptr();
@@ -218,8 +230,9 @@ void voxels_init(dust::context_ptr const& ctx)
 		auto fm = f.read_into_memory();
 		ps = dust::create_fragment_shader(ctx, fm, true);
 	}
-	
-	
+
+	vcb = dust::create_constant_buffer(ctx, sizeof(voxel_cb), &vcbd);
+
 	static uint const brick_edge_voxels = 8;
 	static uint const brick_size = brick_edge_voxels*brick_edge_voxels*brick_edge_voxels*sizeof(float)*4;
 	static uint const brick_count = 30;
@@ -290,15 +303,27 @@ void voxels_init(dust::context_ptr const& ctx)
 	ctx->signal_block();
 }
 
+void voxels_update(dust::context_ptr const& ctx, atma::math::vector4f const& camera_position, float yaw, float pitch)
+{
+	vcbd.position = camera_position;
+	vcbd.x = yaw;
+	vcbd.y = pitch;
+
+	ctx->signal_res_update(vcb, sizeof(vcbd), &vcbd);
+	ctx->signal_cs_upload_constant_buffer(2, vcb);
+}
+
 void voxels_render(dust::context_ptr const& ctx)
 {
+#if 0
 	ctx->signal_fs_upload_shader_resource(0, nodebuf);
 	ctx->signal_fs_upload_shader_resource(1, bricktex);
-	
+
+
 	ctx->signal_draw(vd, vb, vs, ps);
 
-#if 0
-	ctx->signal_draw_ex(
+#else
+	ctx->signal_draw(
 		dust::shared_state_t{
 			{{dust::constant_buffer_index::user, vcb}}
 		},
@@ -307,7 +332,8 @@ void voxels_render(dust::context_ptr const& ctx)
 
 		dust::fragment_stage_state_t{
 			ps,
-			{{dust::constant_buffer_index::user, vcb}}
+			{{dust::constant_buffer_index::user, vcb}},
+			{{0, nodebuf}, {1, bricktex}}
 		});
 #endif
 }
