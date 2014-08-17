@@ -12,12 +12,9 @@ namespace dust
 {
 	struct vertex_declaration_t
 	{
-		typedef std::vector<vertex_stream_t> streams_t;
+		friend struct runtime_t;
 
-		friend auto get_vertex_declaration(streams_t const&) -> vertex_declaration_t const*;
-		friend struct context_t;
-
-		auto streams() const -> streams_t const&;
+		auto streams() const -> vertex_streams_t const&;
 		auto stride() const -> uint;
 
 		// non-default-constructable, non-copyable/movable
@@ -26,14 +23,12 @@ namespace dust
 		vertex_declaration_t(vertex_declaration_t&&) = delete;
 
 	private:
-		vertex_declaration_t(streams_t const&);
+		vertex_declaration_t(vertex_streams_t const&);
 
 	private:
-		streams_t streams_;
+		vertex_streams_t streams_;
 		uint stride_;
 
-		void* platform_impl_;
-
-		static std::map<streams_t, std::unique_ptr<vertex_declaration_t>> cache_;
+		platform::d3d_input_layout_ptr d3d_layout_;
 	};
 }

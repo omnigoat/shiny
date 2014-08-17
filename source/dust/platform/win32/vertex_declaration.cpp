@@ -5,12 +5,11 @@
 
 using namespace dust;
 using dust::vertex_stream_t;
+using dust::vertex_streams_t;
 using dust::vertex_declaration_t;
 
 
-std::map<vertex_declaration_t::streams_t, std::unique_ptr<vertex_declaration_t>> cache_;
-
-auto dust::get_vertex_declaration(vertex_declaration_t::streams_t const& streams) -> vertex_declaration_t const*
+auto dust::get_vertex_declaration(vertex_streams_t const& streams) -> vertex_declaration_t const*
 {
 	auto i = cache_.find(streams);
 	if (i == cache_.end()) {
@@ -28,7 +27,7 @@ vertex_declaration_t::vertex_declaration_t(streams_t const& streams)
 		stride_ += x.size();
 }
 
-auto vertex_declaration_t::streams() const -> streams_t const&
+auto vertex_declaration_t::streams() const -> vertex_streams_t const&
 {
 	return streams_;
 }

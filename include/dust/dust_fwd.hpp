@@ -27,6 +27,7 @@ namespace dust {
 	typedef atma::intrusive_ptr<fragment_shader_t const> fragment_shader_cptr;
 
 	struct vertex_stream_t;
+	typedef std::vector<vertex_stream_t> vertex_streams_t;
 	struct vertex_declaration_t;
 
 	struct vertex_buffer_t;

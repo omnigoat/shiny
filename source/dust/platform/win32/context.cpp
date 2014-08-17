@@ -261,6 +261,10 @@ auto context_t::signal_draw(vertex_declaration_t const* vd, vertex_buffer_ptr co
 		auto vbs = vb->d3d_buffer().get();
 
 		// input-layout
+		//ID3D11InputLayout
+		platform::d3d_input_layout_ptr layout;
+		if (vd->platform_impl_ == nullptr)
+			vd->platform_impl_ = create_d3d_input_layout(vs, vd);
 		auto ILkey = std::make_tuple(vs, vd);
 		auto IL = cached_input_layouts_.find(ILkey);
 		if (IL == cached_input_layouts_.end()) {
@@ -268,13 +272,15 @@ auto context_t::signal_draw(vertex_declaration_t const* vd, vertex_buffer_ptr co
 			IL = cached_input_layouts_.insert(std::make_pair(ILkey, create_d3d_input_layout(vs, vd))).first;
 		}
 
-		d3d_immediate_context_->VSSetShader(vs->d3d_vs().get(), nullptr, 0);
-		d3d_immediate_context_->PSSetShader(ps->d3d_ps().get(), nullptr, 0);
 		d3d_immediate_context_->IASetInputLayout(IL->second.get());
 		d3d_immediate_context_->IASetIndexBuffer(nullptr, DXGI_FORMAT_UNKNOWN, 0);
 		d3d_immediate_context_->IASetVertexBuffers(0, 1, &vbs, &stride, &offset);
 		d3d_immediate_context_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+		d3d_immediate_context_->VSSetShader(vs->d3d_vs().get(), nullptr, 0);
 		d3d_immediate_context_->Draw(vb->vertex_count(), 0);
+
+		d3d_immediate_context_->PSSetShader(ps->d3d_ps().get(), nullptr, 0);
 	});
 }
 

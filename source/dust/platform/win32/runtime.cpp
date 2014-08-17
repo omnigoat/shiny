@@ -115,4 +115,13 @@ auto runtime_t::dxgi_output_of(platform::dxgi_adapter_ptr const& adapter, uint o
 	return i->second[output_index];
 }
 
+auto runtime_t::vertex_declaration_of(dust::vertex_streams_t const& streams) -> vertex_declaration_t const*
+{
+	auto i = vertex_declaration_cache_.find(streams);
+	if (i == vertex_declaration_cache_.end()) {
+		auto p = std::unique_ptr<vertex_declaration_t>(new vertex_declaration_t(streams));
+		i = vertex_declaration_cache_.insert(std::make_pair(streams, std::move(p))).first;
+	}
 
+	return i->second.get();
+}

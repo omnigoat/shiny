@@ -4,6 +4,7 @@
 #include <dust/platform/win32/d3d_fwd.hpp>
 #include <dust/element_format.hpp>
 #include <dust/output.hpp>
+#include <dust/vertex_declaration.hpp>
 
 #include <fooey/fooey_fwd.hpp>
 
@@ -32,6 +33,7 @@ namespace dust
 		// generic functions
 		auto output_for_window(fooey::window_ptr const&) -> output_ptr;
 		auto output_of(adapter_ptr const&, uint output_index) -> output_ptr;
+		auto vertex_declaration_of(vertex_streams_t const&) -> vertex_declaration_t const*;
 
 		// dxgi/d3d specific
 		auto dxgid3d_for_adapter(uint adapter_index) -> std::tuple<platform::dxgi_adapter_ptr, platform::d3d_device_ptr, platform::d3d_context_ptr>;
@@ -61,6 +63,9 @@ namespace dust
 		dxgi_backbuffer_formats_t dxgi_backbuffer_formats_;
 
 		std::map<platform::dxgi_adapter_ptr, platform::d3d_device_ptr> d3d_devices_;
+
+
+		std::map<vertex_streams_t, std::unique_ptr<vertex_declaration_t>> vertex_declaration_cache_;
 	};
 }
 

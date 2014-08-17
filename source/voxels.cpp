@@ -220,13 +220,13 @@ void voxels_init(dust::context_ptr const& ctx)
 	vb = dust::create_vertex_buffer(ctx, dust::buffer_usage_t::immutable, vd, 8, vbd);
 	
 	{
-		auto f = atma::filesystem::file_t("../shaders/vs_voxels.cso");
+		auto f = atma::filesystem::file_t("../../shaders/vs_voxels.cso");
 		auto fm = f.read_into_memory();
 		vs = dust::create_vertex_shader(ctx, fm, true);
 	}
 
 	{
-		auto f = atma::filesystem::file_t("../shaders/ps_voxels.cso");
+		auto f = atma::filesystem::file_t("../../shaders/ps_voxels.cso");
 		auto fm = f.read_into_memory();
 		ps = dust::create_fragment_shader(ctx, fm, true);
 	}
@@ -246,7 +246,7 @@ void voxels_init(dust::context_ptr const& ctx)
 		// inflate 16kb at a time, and call our function for each brick
 		ctx->signal_res_map(bricktex, 0, dust::map_type_t::write_discard, [&](dust::mapped_subresource_t& sr)
 		{
-			auto f = atma::filesystem::file_t{"../data/bunny.oct"};
+			auto f = atma::filesystem::file_t{"../../data/bunny.oct"};
 			auto m = atma::unique_memory_t(f.size());
 			f.read(m.begin(), f.size());
 			f.close();

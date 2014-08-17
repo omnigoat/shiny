@@ -59,11 +59,11 @@ int main()
 	auto ctx = dust::create_context(dust_runtime, window, dust::primary_adapter);
 
 	// shaders
-	auto f = atma::filesystem::file_t("../shaders/vs_basic.hlsl");
+	auto f = atma::filesystem::file_t("../../shaders/vs_basic.hlsl");
 	auto fm = f.read_into_memory();
 	auto vs = dust::create_vertex_shader(ctx, fm, false);
 
-	auto f2 = atma::filesystem::file_t("../shaders/ps_basic.hlsl");
+	auto f2 = atma::filesystem::file_t("../../shaders/ps_basic.hlsl");
 	auto fm2 = f2.read_into_memory();
 	auto ps = dust::create_fragment_shader(ctx, fm2, false);
 
