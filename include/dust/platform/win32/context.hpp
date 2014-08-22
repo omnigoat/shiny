@@ -5,6 +5,7 @@
 #include <dust/adapter.hpp>
 #include <dust/output.hpp>
 #include <dust/vertex_buffer.hpp>
+#include <dust/index_buffer.hpp>
 #include <dust/fragment_shader.hpp>
 #include <dust/vertex_shader.hpp>
 #include <dust/constant_buffer.hpp>
@@ -39,9 +40,20 @@ namespace dust {
 
 	struct vertex_stage_state_t
 	{
-		vertex_declaration_t const* vertex_declaration;
+		vertex_stage_state_t(vertex_shader_cptr const& vs, vertex_buffer_cptr const& vb, uint offset, uint count)
+			: vertex_shader(vs), vertex_buffer(vb), offset(offset), count(count)
+		{}
+
+		vertex_stage_state_t(vertex_shader_cptr const& vs, vertex_buffer_cptr const& vb, index_buffer_cptr const& ib, uint offset, uint count)
+			: vertex_shader(vs), vertex_buffer(vb), index_buffer(ib), offset(offset), count(count)
+		{}
+
+
 		vertex_shader_cptr vertex_shader;
 		vertex_buffer_cptr vertex_buffer;
+		index_buffer_cptr index_buffer;
+
+		uint offset, count;
 	};
 
 	struct fragment_stage_state_t
@@ -71,6 +83,9 @@ namespace dust {
 		using map_callback_t = std::function<void(mapped_subresource_t&)>;
 
 		~context_t();
+
+		auto runtime() -> runtime_t& { return runtime_; }
+		auto runtime() const -> runtime_t const& { return runtime_; }
 
 		auto signal_block() -> void;
 		auto signal_fullscreen_toggle(uint output_index = primary_output) -> void;

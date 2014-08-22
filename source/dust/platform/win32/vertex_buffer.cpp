@@ -12,7 +12,7 @@ using dust::vertex_buffer_t;
 
 vertex_buffer_t::vertex_buffer_t(context_ptr const& context, buffer_usage_t usage, vertex_declaration_t const* vd, uint vertex_count, void* data, uint data_vertcount)
 : buffer_t(context, buffer_type_t::vertex_buffer, usage, vd->stride(), vertex_count, data, data_vertcount),
-  vertex_count_(vertex_count)
+  vertex_declaration_(vd), vertex_count_(vertex_count)
 {
 }
 

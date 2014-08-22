@@ -58,20 +58,20 @@ int main()
 	auto dust_runtime = dust::runtime_t();
 	auto ctx = dust::create_context(dust_runtime, window, dust::primary_adapter);
 
+	// vertex declaration
+	auto vd = dust_runtime.vertex_declaration_of({
+			{dust::vertex_stream_semantic_t::position, 0, dust::element_format_t::f32x4},
+			{dust::vertex_stream_semantic_t::color, 0, dust::element_format_t::f32x4}
+	});
+
 	// shaders
 	auto f = atma::filesystem::file_t("../../shaders/vs_basic.hlsl");
 	auto fm = f.read_into_memory();
-	auto vs = dust::create_vertex_shader(ctx, fm, false);
+	auto vs = dust::create_vertex_shader(ctx, vd, fm, false);
 
 	auto f2 = atma::filesystem::file_t("../../shaders/ps_basic.hlsl");
 	auto fm2 = f2.read_into_memory();
 	auto ps = dust::create_fragment_shader(ctx, fm2, false);
-
-	// vertex declaration
-	auto vd = dust::get_vertex_declaration({
-		{dust::vertex_stream_semantic_t::position, 0, dust::element_format_t::f32x4},
-		{dust::vertex_stream_semantic_t::color, 0, dust::element_format_t::f32x4}
-	});
 
 	// vertex-buffer
 	float vbd[] = {

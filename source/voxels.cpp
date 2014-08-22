@@ -213,7 +213,7 @@ public:
 
 void voxels_init(dust::context_ptr const& ctx)
 {
-	vd = dust::get_vertex_declaration({
+	vd = ctx->runtime().vertex_declaration_of({
 		{dust::vertex_stream_semantic_t::position, 0, dust::element_format_t::f32x4}
 	});
 
@@ -222,7 +222,7 @@ void voxels_init(dust::context_ptr const& ctx)
 	{
 		auto f = atma::filesystem::file_t("../../shaders/vs_voxels.cso");
 		auto fm = f.read_into_memory();
-		vs = dust::create_vertex_shader(ctx, fm, true);
+		vs = dust::create_vertex_shader(ctx, vd, fm, true);
 	}
 
 	{
@@ -328,7 +328,7 @@ void voxels_render(dust::context_ptr const& ctx)
 			{{dust::constant_buffer_index::user, vcb}}
 		},
 
-		dust::vertex_stage_state_t{vd, vs, vb},
+		dust::vertex_stage_state_t{vs, vb, 0, 0},
 
 		dust::fragment_stage_state_t{
 			ps,

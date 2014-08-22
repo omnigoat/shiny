@@ -8,7 +8,7 @@ using dust::vertex_stream_t;
 using dust::vertex_streams_t;
 using dust::vertex_declaration_t;
 
-
+#if 0
 auto dust::get_vertex_declaration(vertex_streams_t const& streams) -> vertex_declaration_t const*
 {
 	auto i = cache_.find(streams);
@@ -19,9 +19,10 @@ auto dust::get_vertex_declaration(vertex_streams_t const& streams) -> vertex_dec
 	
 	return i->second.get();
 }
+#endif
 
-vertex_declaration_t::vertex_declaration_t(streams_t const& streams)
-: streams_(streams), stride_(), platform_impl_()
+vertex_declaration_t::vertex_declaration_t(vertex_streams_t const& streams)
+: streams_(streams), stride_()
 {
 	for (auto const& x : streams_)
 		stride_ += x.size();

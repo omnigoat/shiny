@@ -2,11 +2,6 @@
 //======================================================================
 #include <dust/dust_fwd.hpp>
 #include <dust/vertex_stream.hpp>
-
-#include <vector>
-#include <map>
-#include <memory>
-#include <initializer_list>
 //======================================================================
 namespace dust
 {
@@ -28,7 +23,5 @@ namespace dust
 	private:
 		vertex_streams_t streams_;
 		uint stride_;
-
-		platform::d3d_input_layout_ptr d3d_layout_;
 	};
 }

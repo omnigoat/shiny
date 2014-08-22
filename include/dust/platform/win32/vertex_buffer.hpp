@@ -9,9 +9,11 @@ namespace dust
 		vertex_buffer_t(context_ptr const&, buffer_usage_t, vertex_declaration_t const*, uint vertex_count, void* data, uint data_vertcount);
 		~vertex_buffer_t();
 
+		auto vertex_declaration() const -> vertex_declaration_t const* { return vertex_declaration_; }
 		auto vertex_count() const -> uint { return vertex_count_; }
 
 	private:
+		vertex_declaration_t const* vertex_declaration_;
 		uint vertex_count_;
 	};
 
