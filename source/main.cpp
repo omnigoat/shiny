@@ -26,6 +26,8 @@
 #include <atma/math/matrix4f.hpp>
 #include <atma/filesystem/file.hpp>
 #include <atma/unique_memory.hpp>
+#include <atma/xtm/tuple.hpp>
+#include <atma/algorithm.hpp>
 
 #include <iostream>
 
@@ -46,9 +48,13 @@ extern void voxels_render(dust::context_ptr const&);
 
 
 
-
 int main()
 {
+	auto s = atma::string("lulz");
+
+
+	return 0;
+
 	// setup gui
 	auto renderer = fooey::system_renderer();
 	auto window = fooey::window("Excitement.", 480, 360);
@@ -60,8 +66,8 @@ int main()
 
 	// vertex declaration
 	auto vd = dust_runtime.vertex_declaration_of({
-			{dust::vertex_stream_semantic_t::position, 0, dust::element_format_t::f32x4},
-			{dust::vertex_stream_semantic_t::color, 0, dust::element_format_t::f32x4}
+		{dust::vertex_stream_semantic_t::position, 0, dust::element_format_t::f32x4},
+		{dust::vertex_stream_semantic_t::color, 0, dust::element_format_t::f32x4}
 	});
 
 	// shaders

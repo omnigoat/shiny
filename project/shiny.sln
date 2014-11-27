@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.30501.0
+VisualStudioVersion = 12.0.30723.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "atma", "..\..\atma\project\atma.vcxproj", "{3301E1FA-9F23-43C6-A5E1-183204867D44}"
 EndProject
@@ -15,6 +15,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DirectXTex", "..\vendor\DirectXTex\DirectXTex_Desktop_2013.vcxproj", "{371B9FA9-4C90-4AC6-A123-ACED756D6C77}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "shoxelizer", "shoxelizer\shoxelizer.vcxproj", "{F1645233-021F-48A6-8BE7-8BBB552230BE}"
+	ProjectSection(ProjectDependencies) = postProject
+		{82B83F8F-A8CF-4720-9ABD-F08682C1C325} = {82B83F8F-A8CF-4720-9ABD-F08682C1C325}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "shiny", "shiny\shiny.vcxproj", "{8E03B685-D9CE-45BF-8597-E7EF57E62B8D}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -48,7 +51,6 @@ Global
 		{3301E1FA-9F23-43C6-A5E1-183204867D44}.Debug|Win32.ActiveCfg = Debug|Win32
 		{3301E1FA-9F23-43C6-A5E1-183204867D44}.Debug|Win32.Build.0 = Debug|Win32
 		{3301E1FA-9F23-43C6-A5E1-183204867D44}.Debug|x64.ActiveCfg = Debug|x64
-		{3301E1FA-9F23-43C6-A5E1-183204867D44}.Debug|x64.Build.0 = Debug|x64
 		{3301E1FA-9F23-43C6-A5E1-183204867D44}.Profile|ARM.ActiveCfg = Release|Win32
 		{3301E1FA-9F23-43C6-A5E1-183204867D44}.Profile|Mixed Platforms.ActiveCfg = Release|Win32
 		{3301E1FA-9F23-43C6-A5E1-183204867D44}.Profile|Mixed Platforms.Build.0 = Release|Win32
@@ -149,7 +151,8 @@ Global
 		{F1645233-021F-48A6-8BE7-8BBB552230BE}.Debug|Mixed Platforms.Build.0 = Debug|Win32
 		{F1645233-021F-48A6-8BE7-8BBB552230BE}.Debug|Win32.ActiveCfg = Debug|Win32
 		{F1645233-021F-48A6-8BE7-8BBB552230BE}.Debug|Win32.Build.0 = Debug|Win32
-		{F1645233-021F-48A6-8BE7-8BBB552230BE}.Debug|x64.ActiveCfg = Debug|Win32
+		{F1645233-021F-48A6-8BE7-8BBB552230BE}.Debug|x64.ActiveCfg = Debug|x64
+		{F1645233-021F-48A6-8BE7-8BBB552230BE}.Debug|x64.Build.0 = Debug|x64
 		{F1645233-021F-48A6-8BE7-8BBB552230BE}.Profile|ARM.ActiveCfg = Release|Win32
 		{F1645233-021F-48A6-8BE7-8BBB552230BE}.Profile|Mixed Platforms.ActiveCfg = Release|Win32
 		{F1645233-021F-48A6-8BE7-8BBB552230BE}.Profile|Mixed Platforms.Build.0 = Release|Win32
@@ -161,7 +164,8 @@ Global
 		{F1645233-021F-48A6-8BE7-8BBB552230BE}.Release|Mixed Platforms.Build.0 = Release|Win32
 		{F1645233-021F-48A6-8BE7-8BBB552230BE}.Release|Win32.ActiveCfg = Release|Win32
 		{F1645233-021F-48A6-8BE7-8BBB552230BE}.Release|Win32.Build.0 = Release|Win32
-		{F1645233-021F-48A6-8BE7-8BBB552230BE}.Release|x64.ActiveCfg = Release|Win32
+		{F1645233-021F-48A6-8BE7-8BBB552230BE}.Release|x64.ActiveCfg = Release|x64
+		{F1645233-021F-48A6-8BE7-8BBB552230BE}.Release|x64.Build.0 = Release|x64
 		{F1645233-021F-48A6-8BE7-8BBB552230BE}.ReleaseWithoutAsm|ARM.ActiveCfg = Release|Win32
 		{F1645233-021F-48A6-8BE7-8BBB552230BE}.ReleaseWithoutAsm|Mixed Platforms.ActiveCfg = Release|Win32
 		{F1645233-021F-48A6-8BE7-8BBB552230BE}.ReleaseWithoutAsm|Mixed Platforms.Build.0 = Release|Win32
@@ -174,7 +178,6 @@ Global
 		{8E03B685-D9CE-45BF-8597-E7EF57E62B8D}.Debug|Win32.ActiveCfg = Debug|Win32
 		{8E03B685-D9CE-45BF-8597-E7EF57E62B8D}.Debug|Win32.Build.0 = Debug|Win32
 		{8E03B685-D9CE-45BF-8597-E7EF57E62B8D}.Debug|x64.ActiveCfg = Debug|x64
-		{8E03B685-D9CE-45BF-8597-E7EF57E62B8D}.Debug|x64.Build.0 = Debug|x64
 		{8E03B685-D9CE-45BF-8597-E7EF57E62B8D}.Profile|ARM.ActiveCfg = Release|Win32
 		{8E03B685-D9CE-45BF-8597-E7EF57E62B8D}.Profile|Mixed Platforms.ActiveCfg = Release|Win32
 		{8E03B685-D9CE-45BF-8597-E7EF57E62B8D}.Profile|Mixed Platforms.Build.0 = Release|Win32
@@ -188,7 +191,6 @@ Global
 		{8E03B685-D9CE-45BF-8597-E7EF57E62B8D}.Release|Win32.ActiveCfg = Release|Win32
 		{8E03B685-D9CE-45BF-8597-E7EF57E62B8D}.Release|Win32.Build.0 = Release|Win32
 		{8E03B685-D9CE-45BF-8597-E7EF57E62B8D}.Release|x64.ActiveCfg = Release|x64
-		{8E03B685-D9CE-45BF-8597-E7EF57E62B8D}.Release|x64.Build.0 = Release|x64
 		{8E03B685-D9CE-45BF-8597-E7EF57E62B8D}.ReleaseWithoutAsm|ARM.ActiveCfg = Release|Win32
 		{8E03B685-D9CE-45BF-8597-E7EF57E62B8D}.ReleaseWithoutAsm|Mixed Platforms.ActiveCfg = Release|Win32
 		{8E03B685-D9CE-45BF-8597-E7EF57E62B8D}.ReleaseWithoutAsm|Mixed Platforms.Build.0 = Release|Win32

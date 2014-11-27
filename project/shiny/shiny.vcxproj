@@ -89,7 +89,7 @@
     <ClCompile>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>Level2</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>ZLIB_WINAPI ;ATMA_MATH_USE_SSE;WIN32;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
@@ -269,6 +269,13 @@
     <ProjectReference Include="..\..\..\fooey\project\fooey.vcxproj">
       <Project>{82b83f8f-a8cf-4720-9abd-f08682c1c325}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="..\..\shaders\cs_test.hlsl" />
+    <FxCompile Include="..\..\shaders\ps_basic.hlsl" />
+    <FxCompile Include="..\..\shaders\ps_voxels.hlsl" />
+    <FxCompile Include="..\..\shaders\vs_basic.hlsl" />
+    <FxCompile Include="..\..\shaders\vs_voxels.hlsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
