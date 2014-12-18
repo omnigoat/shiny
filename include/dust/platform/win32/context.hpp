@@ -103,7 +103,6 @@ namespace dust {
 		auto signal_res_update(constant_buffer_ptr const&, uint data_size, void*) -> void;
 		auto signal_res_update(constant_buffer_ptr const&, atma::shared_memory_t const&) -> void;
 
-
 		// vertex-stage
 		auto signal_vs_upload_constant_buffer(uint index, constant_buffer_cptr const&) -> void;
 		

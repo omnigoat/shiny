@@ -157,7 +157,6 @@ namespace shelf
 
 namespace math = atma::math;
 
-
 #include <array>
 
 template <typename T>
@@ -190,6 +189,10 @@ private:
 struct triangle_t
 {
 	math::vector4f v0, v1, v2;
+
+	auto edge0() const -> math::vector4f { return v1 - v0; }
+	auto edge1() const -> math::vector4f { return v2 - v1; }
+	auto edge2() const -> math::vector4f { return v0 - v2; }
 };
 
 struct box_t
@@ -237,22 +240,21 @@ auto intersect_aabb_triangle(math::vector4f const& aabb, triangle_t const& tri) 
 	float box_min = 0.f, box_max = 0.f;
 	float tri_min = 0.f, tri_max = 0.f;
 	
-	math::vector4f const tri_edges[3] ={
-		tri.v1 - tri.v0,
-		tri.v2 - tri.v0,
-		tri.v2 - tri.v1,
+	math::vector4f const tri_edges[3] = {
+		tri.edge0(),
+		tri.edge1(),
+		tri.edge2()
 	};
 
-
 	math::vector4f const box_verts[] = {
-			{aabb.x - aabb.w, aabb.y - aabb.w, aabb.z - aabb.w, 1.f},
-			{aabb.x + aabb.w, aabb.y - aabb.w, aabb.z - aabb.w, 1.f},
-			{aabb.x - aabb.w, aabb.y + aabb.w, aabb.z - aabb.w, 1.f},
-			{aabb.x + aabb.w, aabb.y + aabb.w, aabb.z - aabb.w, 1.f},
-			{aabb.x - aabb.w, aabb.y - aabb.w, aabb.z + aabb.w, 1.f},
-			{aabb.x + aabb.w, aabb.y - aabb.w, aabb.z + aabb.w, 1.f},
-			{aabb.x - aabb.w, aabb.y + aabb.w, aabb.z + aabb.w, 1.f},
-			{aabb.x + aabb.w, aabb.y + aabb.w, aabb.z + aabb.w, 1.f},
+		{aabb.x - aabb.w, aabb.y - aabb.w, aabb.z - aabb.w, 1.f},
+		{aabb.x + aabb.w, aabb.y - aabb.w, aabb.z - aabb.w, 1.f},
+		{aabb.x - aabb.w, aabb.y + aabb.w, aabb.z - aabb.w, 1.f},
+		{aabb.x + aabb.w, aabb.y + aabb.w, aabb.z - aabb.w, 1.f},
+		{aabb.x - aabb.w, aabb.y - aabb.w, aabb.z + aabb.w, 1.f},
+		{aabb.x + aabb.w, aabb.y - aabb.w, aabb.z + aabb.w, 1.f},
+		{aabb.x - aabb.w, aabb.y + aabb.w, aabb.z + aabb.w, 1.f},
+		{aabb.x + aabb.w, aabb.y + aabb.w, aabb.z + aabb.w, 1.f},
 	};
 
 	math::vector4f const box_normals[3] = {
@@ -261,21 +263,6 @@ auto intersect_aabb_triangle(math::vector4f const& aabb, triangle_t const& tri) 
 		math::vector4f{0.f, 0.f, 1.f, 1.f},
 	};
 
-#if 0
-	auto tribox_min = math::point4f(
-		std::min(std::min(tri.v0.x, tri.v1.x), tri.v2.x),
-		std::min(std::min(tri.v0.y, tri.v1.y), tri.v2.y),
-		std::min(std::min(tri.v0.z, tri.v1.z), tri.v2.z));
-
-	auto tribox_max = math::point4f(
-		std::max(std::max(tri.v0.x, tri.v1.x), tri.v2.x),
-		std::max(std::max(tri.v0.y, tri.v1.y), tri.v2.y),
-		std::max(std::max(tri.v0.z, tri.v1.z), tri.v2.z));
-
-	// if minimum bounding box didn't overlap, definitely not overlapping
-	if (!intersect_aabb_box(aabb, box_t::from_minmax(tribox_min, tribox_max)))
-		return false;
-#endif
 
 	// test box normals
 	{
@@ -291,8 +278,6 @@ auto intersect_aabb_triangle(math::vector4f const& aabb, triangle_t const& tri) 
 	{
 		auto tri_normal = math::cross_product(tri.v1 - tri.v0, tri.v2 - tri.v0);
 		auto tri_offset = math::dot_product(tri_normal, tri.v0);
-
-		
 
 		project(tri_normal, box_verts, 8, box_min, box_max);
 
@@ -542,6 +527,18 @@ auto octree_t::node_t::oct_subbound(math::vector4f const& bounds, uint idx) -> m
 
 int main()
 {
+	auto numbers = std::vector<int>{1, 2, 3, 4};
+	auto is_even = [](int x) { return x % 2 == 0; };
+	auto filtered = atma::filter(is_even, numbers);
+	auto numbers2 = std::vector<int>(filtered.begin(), filtered.end());
+	auto plus_1 = [](int x) { return x + 1; };
+	auto mapped = atma::map(plus_1, filtered);
+	auto numbers3 = std::vector<int>(mapped.begin(), mapped.end());
+
+	//auto b = atma::xtm::curry(&is_even);
+	//auto t = b(2);
+	//auto t2 = atma::xtm::bind(&is_even, arg1)(2);
+
 #if 0
 	auto oct = octree_t<int>();
 
