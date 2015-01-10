@@ -70,15 +70,15 @@ namespace dust {
 
 	struct fragment_stage_state_t
 	{
-		fragment_stage_state_t(fragment_shader_ptr const& fs, bound_constant_buffers_t const& bcb, bound_resources_t const& bs)
+		fragment_stage_state_t(fragment_shader_cptr const& fs, bound_constant_buffers_t const& bcb, bound_resources_t const& bs)
 			: fragment_shader(fs), constant_buffers(bcb), shader_resources(bs)
 		{}
 
-		fragment_stage_state_t(fragment_shader_ptr const& fs, bound_constant_buffers_t const& bcb)
+		fragment_stage_state_t(fragment_shader_cptr const& fs, bound_constant_buffers_t const& bcb)
 			: fragment_shader(fs), constant_buffers(bcb)
 		{}
 
-		fragment_stage_state_t(fragment_shader_ptr const& fs)
+		fragment_stage_state_t(fragment_shader_cptr const& fs)
 			: fragment_shader(fs)
 		{}
 
