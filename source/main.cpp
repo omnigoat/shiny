@@ -50,11 +50,6 @@ extern void voxels_render(dust::context_ptr const&);
 
 int main()
 {
-	auto s = atma::string("lulz");
-
-
-	return 0;
-
 	// setup gui
 	auto renderer = fooey::system_renderer();
 	auto window = fooey::window("Excitement.", 480, 360);

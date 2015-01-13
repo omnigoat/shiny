@@ -261,20 +261,8 @@ auto context_t::signal_draw(vertex_declaration_t const* vd, vertex_buffer_ptr co
 
 		auto vbs = vb->d3d_buffer().get();
 
-#if 0
-		// input-layout
-		//ID3D11InputLayout
-		platform::d3d_input_layout_ptr layout;
-		if (vd->platform_impl_ == nullptr)
-			vd->platform_impl_ = create_d3d_input_layout(vs, vd);
-		auto ILkey = std::make_tuple(vs, vd);
-		auto IL = cached_input_layouts_.find(ILkey);
-		if (IL == cached_input_layouts_.end()) {
-			
-			IL = cached_input_layouts_.insert(std::make_pair(ILkey, create_d3d_input_layout(vs, vd))).first;
-		}
-
-		d3d_immediate_context_->IASetInputLayout(IL->second.get());
+#if 1
+		d3d_immediate_context_->IASetInputLayout(vs->d3d_input_layout().get());
 		d3d_immediate_context_->IASetIndexBuffer(nullptr, DXGI_FORMAT_UNKNOWN, 0);
 		d3d_immediate_context_->IASetVertexBuffers(0, 1, &vbs, &stride, &offset);
 		d3d_immediate_context_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -457,30 +445,37 @@ auto context_t::signal_fs_upload_constant_buffer(uint index, constant_buffer_cpt
 	});
 }
 
-auto context_t::signal_draw(shared_state_t const& ss, vertex_stage_state_t const& vs, fragment_stage_state_t const& fs) -> void
+auto context_t::signal_draw(shared_state_t const& ss, vertex_stage_state_t const& vss, fragment_stage_state_t const& fss) -> void
 {
-	engine_.signal([&, ss, vs, fs]
+	engine_.signal([&, ss, vss, fss]
 	{
-		// input assembler
-		ATMA_ASSERT(vs.vertex_shader->vertex_declaration() == vs.vertex_buffer->vertex_declaration());
+		auto const& vs = vss.vertex_shader;
+		auto const& vb = vss.vertex_buffer;
+		auto const* vd = vb->vertex_declaration();
 
-		UINT offset = 0, stride = vs.vertex_shader->vertex_declaration()->stride();
-		d3d_immediate_context_->IASetInputLayout(vs.vertex_shader->d3d_input_layout().get());
+		auto const& fs = fss.fragment_shader;
+
+		// input assembler
+		ATMA_ASSERT(vs->vertex_declaration() == vss.vertex_buffer->vertex_declaration());
+
+		UINT offset = 0, stride = vd->stride();
+		d3d_immediate_context_->IASetInputLayout(vs->d3d_input_layout().get());
 		d3d_immediate_context_->IASetIndexBuffer(nullptr, DXGI_FORMAT_UNKNOWN, 0);
-		d3d_immediate_context_->IASetVertexBuffers(0, 1, &vs.vertex_buffer->d3d_buffer().get(), &stride, &offset);
+		d3d_immediate_context_->IASetVertexBuffers(0, 1, &vb->d3d_buffer().get(), &stride, &offset);
 		d3d_immediate_context_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 		// vertex-shader
-		d3d_immediate_context_->VSSetShader(vs.vertex_shader->d3d_vs().get(), nullptr, 0);
-		for (auto const& x : ss.shader_resources)
-			d3d_immediate_context_->VSSetShaderResources(x.first, 1, &x.second->d3d_srv().get());
+		d3d_immediate_context_->VSSetShader(vs->d3d_vs().get(), nullptr, 0);
+		for (auto const& x : ss.shader_resources) d3d_immediate_context_->VSSetShaderResources(x.first, 1, &x.second->d3d_srv().get());
+		//for (auto const& x : vss.shader_resources) d3d_immediate_context_->VSSetShaderResources(x.first, 1, &x.second->d3d_srv().get());
 
 		// fragment-shader
-		d3d_immediate_context_->PSSetShader(fs.fragment_shader->d3d_ps().get(), nullptr, 0);
-		for (auto const& x : ss.shader_resources)
-			d3d_immediate_context_->PSSetShaderResources(x.first, 1, &x.second->d3d_srv().get());
+		d3d_immediate_context_->PSSetShader(fs->d3d_ps().get(), nullptr, 0);
+		for (auto const& x : ss.shader_resources) d3d_immediate_context_->PSSetShaderResources(x.first, 1, &x.second->d3d_srv().get());
+		for (auto const& x : fss.shader_resources) d3d_immediate_context_->PSSetShaderResources(x.first, 1, &x.second->d3d_srv().get());
 
-		auto vertex_count = (vs.count == 0) ? vs.vertex_buffer->vertex_count() : vs.count;
-		d3d_immediate_context_->Draw(vertex_count, vs.offset);
+		auto vertex_count = (vss.count == 0) ? vb->vertex_count() : vss.count;
+		d3d_immediate_context_->Draw(vertex_count, vss.offset);
 	});
+
 }
