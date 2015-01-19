@@ -1,15 +1,11 @@
 #include <dust/vertex_declaration.hpp>
 
-#include <dust/vertex_shader.hpp>
-
 
 using namespace dust;
 using dust::vertex_stream_t;
 using dust::vertex_declaration_t;
 
-//======================================================================
-// vertex_stream_t
-//======================================================================
+
 vertex_stream_t::vertex_stream_t(vertex_stream_semantic_t semantic, uint index, element_format_t element_format)
 : semantic_(semantic), index_(index), element_format_(element_format)
 {

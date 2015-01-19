@@ -3,8 +3,14 @@
 #include <atma/math/vector4f.hpp>
 #include <atma/algorithm.hpp>
 #include <atma/enable_if.hpp>
+#include <atma/math/intersection.hpp>
 
 #include <filesystem>
+
+
+
+
+
 
 
 namespace shelf
@@ -186,15 +192,8 @@ private:
 	
 };
 
-struct triangle_t
-{
-	math::vector4f v0, v1, v2;
 
-	auto edge0() const -> math::vector4f { return v1 - v0; }
-	auto edge1() const -> math::vector4f { return v2 - v1; }
-	auto edge2() const -> math::vector4f { return v0 - v2; }
-};
-
+#if 0
 struct box_t
 {
 	math::vector4f origin;
@@ -202,9 +201,7 @@ struct box_t
 
 	static auto from_minmax(math::vector4f const& min, math::vector4f const& max) -> box_t
 	{
-		return box_t{
-			(min + max) / 2.f,
-			(max - min) / 2.f};
+		return box_t{(min + max) / 2.f, (max - min) / 2.f};
 	}
 };
 
@@ -219,190 +216,7 @@ auto intersect_aabb_box(math::vector4f const& aabb, box_t const& box) -> bool
 		aabb.z - aabb.w > box.origin.z + box.half_extents.z)
 		;
 }
-
-
-auto project(math::vector4f const& axis, math::vector4f const* points, size_t point_count, float& min, float& max) -> void
-{
-	min = FLT_MAX;
-	max = -FLT_MAX;
-
-	for (auto p = points; p != points + point_count; ++p)
-	{
-		float v = math::dot_product(axis, *p);
-		if (v < min) min = v;
-		if (v > max) max = v;
-	}
-}
-
-
-auto intersect_aabb_triangle(math::vector4f const& aabb, triangle_t const& tri) -> bool
-{
-	float box_min = 0.f, box_max = 0.f;
-	float tri_min = 0.f, tri_max = 0.f;
-	
-	math::vector4f const tri_edges[3] = {
-		tri.edge0(),
-		tri.edge1(),
-		tri.edge2()
-	};
-
-	math::vector4f const box_verts[] = {
-		{aabb.x - aabb.w, aabb.y - aabb.w, aabb.z - aabb.w, 1.f},
-		{aabb.x + aabb.w, aabb.y - aabb.w, aabb.z - aabb.w, 1.f},
-		{aabb.x - aabb.w, aabb.y + aabb.w, aabb.z - aabb.w, 1.f},
-		{aabb.x + aabb.w, aabb.y + aabb.w, aabb.z - aabb.w, 1.f},
-		{aabb.x - aabb.w, aabb.y - aabb.w, aabb.z + aabb.w, 1.f},
-		{aabb.x + aabb.w, aabb.y - aabb.w, aabb.z + aabb.w, 1.f},
-		{aabb.x - aabb.w, aabb.y + aabb.w, aabb.z + aabb.w, 1.f},
-		{aabb.x + aabb.w, aabb.y + aabb.w, aabb.z + aabb.w, 1.f},
-	};
-
-	math::vector4f const box_normals[3] = {
-		math::vector4f{1.f, 0.f, 0.f, 1.f},
-		math::vector4f{0.f, 1.f, 0.f, 1.f},
-		math::vector4f{0.f, 0.f, 1.f, 1.f},
-	};
-
-
-	// test box normals
-	{
-		for (int i = 0; i != 3; ++i)
-		{
-			project(box_normals[i], &tri.v0, 3, tri_min, tri_max);
-			if (tri_max < aabb.components[i] - aabb.w || tri_min > aabb.components[i] + aabb.w)
-				return false;
-		}
-	}
-
-	// test the triangle normal
-	{
-		auto tri_normal = math::cross_product(tri.v1 - tri.v0, tri.v2 - tri.v0);
-		auto tri_offset = math::dot_product(tri_normal, tri.v0);
-
-		project(tri_normal, box_verts, 8, box_min, box_max);
-
-		if (box_max < tri_offset || box_min > tri_offset)
-			return false;
-	}
-
-
-	// test nine-edges
-	for (int i = 0; i != 3; ++i)
-	{
-		for (int j = 0; j != 3; ++j)
-		{
-			auto axis = math::cross_product(tri_edges[i], box_normals[j]);
-			project(axis, box_verts, 8, box_min, box_max);
-			project(axis, &tri.v0, 3, tri_min, tri_max);
-			if (box_max <= tri_min || box_min >= tri_max)
-				return false;
-		}
-	}
-
-
-	return true;
-}
-
-
-
-
-
-#if 0
-
-
-
-bool IsIntersecting(IAABox box, ITriangle triangle)
-{
-	double triangleMin, triangleMax;
-	double boxMin, boxMax;
-
-	// Test the box normals (x-, y- and z-axes)
-	var boxNormals = new IVector[] {
-		new Vector(1,0,0),
-			new Vector(0,1,0),
-			new Vector(0,0,1)
-	};
-	for (int i = 0; i < 3; i++)
-	{
-		IVector n = boxNormals[i];
-		Project(triangle.Vertices, boxNormals[i], out triangleMin, out triangleMax);
-		if (triangleMax < box.Start.Coords[i] || triangleMin > box.End.Coords[i])
-			return false; // No intersection possible.
-	}
-
-	// Test the triangle normal
-	double triangleOffset = triangle.Normal.Dot(triangle.A);
-	Project(box.Vertices, triangle.Normal, out boxMin, out boxMax);
-	if (boxMax < triangleOffset || boxMin > triangleOffset)
-		return false; // No intersection possible.
-
-	// Test the nine edge cross-products
-	IVector[] triangleEdges = new IVector[] {
-		triangle.A.Minus(triangle.B),
-			triangle.B.Minus(triangle.C),
-			triangle.C.Minus(triangle.A)
-	};
-	for (int i = 0; i < 3; i++)
-		for (int j = 0; j < 3; j++)
-		{
-		// The box normals are the same as it's edge tangents
-		IVector axis = triangleEdges[i].Cross(boxNormals[j]);
-		Project(box.Vertices, axis, out boxMin, out boxMax);
-		Project(triangle.Vertices, axis, out triangleMin, out triangleMax);
-		if (boxMax <= triangleMin || boxMin >= triangleMax)
-			return false; // No intersection possible
-		}
-
-	// No separating axis found.
-	return true;
-}
-
-void Project(IEnumerable<IVector> points, IVector axis,
-	out double min, out double max)
-{
-	double min = double.PositiveInfinity;
-	double max = double.NegativeInfinity;
-	foreach (var p in points)
-	{
-		double val = axis.Dot(p);
-		if (val < min) min = val;
-		if (val > max) max = val;
-	}
-}
-
-interface IVector
-{
-	double X { get; }
-	double Y { get; }
-	double Z { get; }
-	double[] Coords { get; }
-	double Dot(IVector other);
-	IVector Minus(IVector other);
-	IVector Cross(IVector other);
-}
-
-interface IShape
-{
-	IEnumerable<IVector> Vertices { get; }
-}
-
-interface IAABox : IShape
-{
-	IVector Start { get; }
-	IVector End { get; }
-}
-
-interface ITriangle : IShape {
-	IVector Normal { get; }
-	IVector A { get; }
-	IVector B { get; }
-	IVector C { get; }
-}
-
-
 #endif
-
-
 
 
 
