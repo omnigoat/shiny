@@ -523,10 +523,94 @@ auto octree_t::node_t::oct_subbound(math::vector4f const& bounds, uint idx) -> m
 #endif
 
 
+#if 0
+template <typename FN>
+struct base;
 
+template <typename R, typename... Args>
+struct base<R(Args...)>
+{
+	virtual auto operator ()(Args&&... args) -> R = 0;
+};
+
+template <typename FN>
+struct member_function;
+
+template <typename R, typename Args...>
+struct member_function : base<R(Args...)>
+{
+	auto operator ()(Args&&... args) -> R override
+	{
+	}
+
+private:
+	R(*fn_)(Args...);
+};
+
+#endif
+
+
+
+template <typename R, typename... Args>
+auto mfn_dispatch(void* fn, void*, Args&&... args) -> R
+{
+	R (*fn2)(Args...) = fn;
+	return (*fn2)(std::forward<Args>(args)...);
+}
+
+
+template <typename FN>
+struct fna;
+
+template <typename R, typename... Args>
+struct fna<R (Args...)> 
+{
+	static auto apply(R (*fn)(Args...), Args&&... args) -> R
+	{
+		return (*fn)(std::forward<Args>(args)...);
+	}
+};
+
+template <typename FN>
+struct function_t
+{
+	//template <typename R, typename C, typename... Args>
+	//function_t(R (C::*fn)(Args...), C* c = nullptr)
+	//	: instance_{c}, fn_{fn}
+	//{}
+
+	template <typename R, typename... Args>
+	function_t(R (*fn)(Args...))
+		: instance_{}
+		, dispatch_{&mfn_dispatch<R, Args...>}
+	{}
+
+	template <typename... Args>
+	auto operator ()(Args&&... args) -> typename atma::xtm::function_traits<std::decay_t<FN>>::result_type
+	{
+		return fn_()
+	}
+
+private:
+	void* instance_;
+	void* fn_;
+	FN* dispatch_;
+};
+
+
+
+struct dragon_t
+{
+	int age() { return 4; }
+};
+
+int four() { return 4; }
 
 int main()
 {
+	auto f = function_t<int()>{&four};
+	//auto f2 = function_t<int()>{};
+
 	auto numbers = std::vector<int>{1, 2, 3, 4};
 	auto is_even = [](int x) { return x % 2 == 0; };
 	auto filtered = atma::filter(is_even, numbers);
