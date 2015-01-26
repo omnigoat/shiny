@@ -108,11 +108,7 @@ int main()
 	atma::math::matrix4f world_matrix;
 	auto cb = dust::create_constant_buffer(ctx, sizeof(world_matrix), &world_matrix);
 
-	// camera
-	auto camera = dust::camera_t(
-		math::look_at(math::point4f(0.f, 0.f, 2.f), math::point4f(0.f, 0.1f, 0.f), math::vector4f(0.f, 1.f, 0.f, 0.f)),
-		math::perspective_fov(math::pi_over_two, (float)window->width() / window->height(), 0.03434f, 120.f)
-	);
+	
 
 	
 	// compute shader?
@@ -234,11 +230,16 @@ int main()
 #if RENDER_VOXELS
 		voxels_update(ctx, position, x, y);
 #endif
+		
+		// camera
+		auto camera = dust::camera_t(
+			math::look_at(math::point4f(sin(x) * cos(y) * 2.f, sin(y) * 2.f, cos(x) * cos(y) * 2.f), math::point4f(0.f, 0.1f, 0.f), math::vector4f(0.f, 1.f, 0.f, 0.f)),
+			math::perspective_fov(math::pi_over_two, (float)window->height() / window->width(), 0.03434f, 120.f));
 
-		camera.move_to(math::point4f(sin(x) * cos(y) * 2.f, sin(y) * 2.f, cos(x) * cos(y) * 2.f));
-		camera.look_at(math::point4f());
+		//camera.move_to();
+		//camera.look_at(math::point4f());
 
-		camera.set_aspect(window->height() / (float)window->width());
+		//camera.set_aspect(window->height() / (float)window->width());
 		auto scene = dust::scene_t(ctx, camera);
 
 		// do this just to upload the camera :P
@@ -276,8 +277,9 @@ int main()
 		++frames;
 
 		if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start).count() > 1000)
-		{
-			std::cout << "FPS: " << frames << std::endl;
+		{	
+			std::cout << "apparently, width: " << window->width() << ", height: " << window->height() << std::endl;
+			//std::cout << "FPS: " << frames << std::endl;
 			start = std::chrono::high_resolution_clock::now();
 			frames = 0;
 		}

@@ -3,6 +3,7 @@
 #include <atma/math/vector4f.hpp>
 #include <atma/algorithm.hpp>
 #include <atma/enable_if.hpp>
+#include <atma/xtm/bind.hpp>
 
 #include <filesystem>
 
@@ -521,6 +522,136 @@ auto octree_t::node_t::oct_subbound(math::vector4f const& bounds, uint idx) -> m
 }
 
 #endif
+template<typename testType>
+struct is_function_pointer
+{
+	static const bool value =
+		std::is_pointer<testType>::value ?
+		std::is_function<typename std::remove_pointer<testType>::type>::value :
+		false;
+};
+
+int plus2(int x) { return x + 2; }
+
+auto const plus2fn = std::make_tuple(&plus2);
+
+template <typename F>
+struct function_t
+{
+	function_t(F fn) : fn_(fn) {}
+
+	template <typename... Curried>
+	auto operator ()(Curried... curried)
+	-> typename std::enable_if<atma::xtm::variadic_size<Curried...>::value == atma::xtm::function_traits<F>::arity, int>::type
+	{
+		return fn_(std::forward<Curried>(curried)...);
+	}
+
+	template <typename... Curried>
+	auto operator ()(Curried... curried)
+	-> typename std::enable_if<std::tuple_size<std::tuple<Curried...>>::value != atma::xtm::function_traits<F>::arity,
+		function_t<decltype(atma::xtm::curry(fn_, std::forward<Curried>(curried)...))>>::type
+	{
+		return {atma::xtm::curry(fn_, std::forward<Curried>(curried)...)};
+	}
+
+	auto fn() const -> F { return fn_; }
+
+private:
+	F fn_;
+};
+
+template <typename R, typename... Args>
+auto functionize(R(&fn)(Args...)) -> function_t<R(*)(Args...)>
+{
+	return {&fn};
+}
+
+template <typename F, typename G, typename X>
+inline auto point(F f, G g, X x) -> typename atma::xtm::function_traits<F>::result_type
+{
+	return f(g(std::forward<X>(x)));
+}
+
+template <typename F, typename G>
+struct curried_function_traits
+{
+	using result_type = typename atma::xtm::function_traits<F>::result_type;
+
+	//using signature = typename atma::xtm::function_traits<F>::result_type(*)(typename atma::xtm::function_traits<G>::template arg<0>::type);
+
+	using sg = typename atma::xtm::function_traits<F>::result_type(*)(function_t<F>, function_t<G>, typename atma::xtm::function_traits<G>::template arg<0>::type);
+};
+
+
+
+namespace atma { namespace xtm {
+
+	template <typename F>
+	struct function_traits<function_t<F>>
+		: function_traits<F>
+	{};
+	
+#if 0
+	template <typename F, typename Bindings>
+	struct function_traits<bind_t<F, Bindings>>
+	{
+		using result_type = typename function_traits<F>::result_type;
+		
+		enum { arity = function_traits<F>::arity - tuple_nonplaceholder_size_t<Bindings>::value };
+
+		template <size_t i>
+		struct arg {
+			typedef typename function_traits<F>::template arg<i + tuple_nonplaceholder_size_t<Bindings>::value>::type type;
+		};
+	};
+#endif
+}}
+
+
+#if 1
+template <typename F, typename G>
+inline auto operator * (function_t<F> f, function_t<G> g)
+-> function_t<
+	atma::xtm::bind_t<
+		typename curried_function_traits<F, G>::sg,
+		std::tuple<function_t<F>, function_t<G>, atma::xtm::placeholder_t<0>>
+	>>
+{
+	static_assert(atma::xtm::function_traits<F>::arity == 1, "can not compose functions of arity greater than 1");
+	static_assert(atma::xtm::function_traits<G>::arity == 1, "can not compose functions of arity greater than 1");
+
+	auto fnptr = &point<
+		function_t<F>,
+		function_t<G>,
+		typename atma::xtm::function_traits<G>::template arg<0>::type>;
+
+	return {atma::xtm::curry(std::forward<decltype(fnptr)>(fnptr), std::forward<function_t<F>>(f), std::forward<function_t<G>>(g))};
+}
+#endif
+
+
+int mul(int x, int y) { return x * y; }
+int add(int x, int y) { return x + y; }
+
+int mul2(int x) { return x * 2; }
+int add4(int x) { return x + 4; }
+
+struct giraffe
+{
+	int add(int x, int y) { return x + y; }
+};
+
+template <typename, typename, typename> struct Y;
+
+template <size_t... A, size_t... B, typename Tuple>
+struct Y<atma::xtm::idxs_t<A...>, atma::xtm::idxs_t<B...>, Tuple>
+{ using type = std::tuple<typename std::tuple_element<A, typename std::tuple_element<B, Tuple>::type>::type...>; };
+
+
+
+
+
 
 
 #if 0
@@ -554,9 +685,12 @@ private:
 template <typename R, typename... Args>
 auto mfn_dispatch(void* fn, void*, Args&&... args) -> R
 {
-	R (*fn2)(Args...) = fn;
+	R(*fn2)(Args...) = fn;
 	return (*fn2)(std::forward<Args>(args)...);
 }
+
+
+
 
 
 template <typename FN>
@@ -572,7 +706,7 @@ struct fna<R (Args...)>
 };
 
 template <typename FN>
-struct function_t
+struct fn_t
 {
 	//template <typename R, typename C, typename... Args>
 	//function_t(R (C::*fn)(Args...), C* c = nullptr)
@@ -580,7 +714,7 @@ struct function_t
 	//{}
 
 	template <typename R, typename... Args>
-	function_t(R (*fn)(Args...))
+	fn_t(R(*fn)(Args...))
 		: instance_{}
 		, dispatch_{&mfn_dispatch<R, Args...>}
 	{}
@@ -608,25 +742,43 @@ int four() { return 4; }
 
 int main()
 {
-	auto f = function_t<int()>{&four};
+	auto f = fn_t<int()>{&four};
 	//auto f2 = function_t<int()>{};
 
-	auto numbers = std::vector<int>{1, 2, 3, 4};
+	auto numbers = std::vector<int>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+	auto gt_2 =   [](int x) { return x > 2; };
+
 	auto is_even = [](int x) { return x % 2 == 0; };
+	auto is_odd = [](int x) { return x % 2 != 0; };
 	auto filtered = atma::filter(is_even, numbers);
 	auto numbers2 = std::vector<int>(filtered.begin(), filtered.end());
 	auto plus_1 = [](int x) { return x + 1; };
 	auto mapped = atma::map(plus_1, filtered);
 	auto numbers3 = std::vector<int>(mapped.begin(), mapped.end());
 
-	//auto b = atma::xtm::curry(&is_even);
-	//auto t = b(2);
-	//auto t2 = atma::xtm::bind(&is_even, arg1)(2);
+	//auto fn_add = function_t<int (*)(int, int)>{&add};
+	auto fn_add = functionize(add);
+	auto fn_mul2 = functionize(mul2);
+	auto am = fn_mul2 * fn_add(4) * fn_add(1);
+	auto r = am(3);
 
-#if 0
-	auto oct = octree_t<int>();
+	auto thing = atma::filter(is_even) <<= atma::map(plus_1) <<= atma::filter(is_odd) <<= numbers;
+	auto thing2 = std::vector<int>(thing.begin(), thing.end());
 
-	for (float i = 0.f; i < 8.f; ++i)
-		oct.root_.insert(math::point4f(0.2f + i * 0.001f, 0.3f  * 0.001f, 0.4f * 0.001f), (int)i);
-#endif
+	using T1 = std::tuple<int, char, double, float>;
+	using T2 = std::tuple<long, short, uint>;
+
+	auto tt = atma::xtm::tuple_push_back(T2(), int(4));
+	auto tt2 = atma::xtm::tuple_cat(T2(), T1());
+
+	{
+		int f = 5;
+		auto args = atma::xtm::bind_arguments(std::make_tuple(arg2, arg1), std::forward_as_tuple(f,4));
+		//auto bngs = atma::xtm::bind(&add, f, arg1)(4, 8);
+		giraffe g;
+		auto cngs = atma::xtm::call_fn_bound_tuple(&giraffe::add, std::make_tuple(&g, arg2, arg1), std::make_tuple(2, 3));
+	}
+
+	using T3 = Y<atma::xtm::idxs_t<0, 1, 2>, atma::xtm::idxs_t<0, 0, 1>, std::tuple<T1, T2>>::type;
+	auto t3i = T3();
 }

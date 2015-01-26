@@ -242,6 +242,7 @@ void voxels_init(dust::context_ptr const& ctx)
 	{
 		// open file, read everything into memory
 		// todo: memory-mapped files
+		dust::texture3d_ptr blam;
 
 		// inflate 16kb at a time, and call our function for each brick
 		ctx->signal_res_map(bricktex, 0, dust::map_type_t::write_discard, [&](dust::mapped_subresource_t& sr)
