@@ -683,12 +683,25 @@ private:
 
 
 template <typename R, typename... Args>
-auto mfn_dispatch(void* fn, void*, Args&&... args) -> R
+auto fnptr_dispatch(void* fn, void*, Args... args) -> R
 {
-	R(*fn2)(Args...) = fn;
+	auto fn2 = reinterpret_cast<R(*)(Args...)>(fn);
 	return (*fn2)(std::forward<Args>(args)...);
 }
 
+template <typename R, typename C, typename... Args>
+auto memfnptr_dispatch(void* fn, void* instance, Args... args) -> R
+{
+	// stored instance pointer was nullptr, so assume the user passed
+	// the instance of the class as the first argument
+	if (instance == nullptr)
+		return memfnptr_dispatch<R, C, Args...>(fn, std::forward<Args>(args)...);
+
+	auto clazz = reinterpret_cast<C*>(instance);
+	auto fn2 = reinterpret_cast<R(C::*)(Args...)>(fn);
+
+	return (clazz->*fn2)(std::forward<Args>(args)...);
+}
 
 
 
@@ -706,6 +719,19 @@ struct fna<R (Args...)>
 };
 
 template <typename FN>
+struct dispatch_tx;
+
+template <typename R, typename... Args>
+struct dispatch_tx<R(Args...)>
+{
+	typedef R (*type)(void*, void*, Args...);
+};
+
+template <typename FN>
+using dispatch_t = typename dispatch_tx<FN>::type;
+
+
+template <typename FN>
 struct fn_t
 {
 	//template <typename R, typename C, typename... Args>
@@ -716,33 +742,44 @@ struct fn_t
 	template <typename R, typename... Args>
 	fn_t(R(*fn)(Args...))
 		: instance_{}
-		, dispatch_{&mfn_dispatch<R, Args...>}
+		, fn_{fn}
+		, dispatch_{&fnptr_dispatch<R, Args...>}
+	{}
+
+	template <typename R, typename C, typename... Args>
+	fn_t(R(C::*fn)(Args...))
+		: instance_{}
+		, fn_{fn}
+		, dispatch_{&memfnptr_dispatch<R, C, Args...>}
 	{}
 
 	template <typename... Args>
 	auto operator ()(Args&&... args) -> typename atma::xtm::function_traits<std::decay_t<FN>>::result_type
 	{
-		return fn_()
+		return (*dispatch_)(fn_, instance_, std::forward<Args>(args)...);
 	}
 
 private:
-	void* instance_;
-	void* fn_;
-	FN* dispatch_;
+	char buf_[sizeof(intptr_t) * 2];
+	dispatch_t<FN> dispatch_;
 };
 
 
 
 struct dragon_t
 {
-	int age() { return 4; }
+	int plus(int a, int b) { return a + b; }
 };
 
-int four() { return 4; }
+int four(int) { return 4; }
+
+int plus(int a, int b) { return a + b; }
 
 int main()
 {
-	auto f = fn_t<int()>{&four};
+	auto f = fn_t<int(int)>{&four};
+	auto f2 = fn_t<int(int, int)>{&dragon_t::plus};
+	f(4);
 	//auto f2 = function_t<int()>{};
 
 	auto numbers = std::vector<int>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
@@ -772,6 +809,7 @@ int main()
 	auto tt2 = atma::xtm::tuple_cat(T2(), T1());
 
 	{
+		//auto mf = functionize(&plus);
 		int f = 5;
 		auto args = atma::xtm::bind_arguments(std::make_tuple(arg2, arg1), std::forward_as_tuple(f,4));
 		//auto bngs = atma::xtm::bind(&add, f, arg1)(4, 8);
