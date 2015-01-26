@@ -111,6 +111,9 @@ auto context_t::create_swapchain() -> void
 
 auto context_t::setup_rendertarget(uint width, uint height) -> void
 {
+	// remove reference to old render-target
+	d3d_immediate_context_->OMSetRenderTargets(0, nullptr, nullptr);
+
 	// create render-target
 	atma::com_ptr<ID3D11Texture2D> backbuffer;
 	ATMA_ENSURE_IS(S_OK, dxgi_swap_chain_->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)backbuffer.assign()));
@@ -146,14 +149,22 @@ auto context_t::update_display_mode() -> void
 	// transition to fullscreen
 	if (current_display_mode_ == &windowed_display_mode_ && requested_display_mode_ == &requested_fullscreen_display_mode_)
 	{
+		// 1. call ResizeTarget, which resizes our win32 target, generating a 'resize' event.
+		//    NOTE: not a 'resize-dc' event.
 		DXGI_MODE_DESC mode;
 		push_display_format(mode, *requested_display_mode_);
 		dxgi_swap_chain_->ResizeTarget(&mode);
-
+		
+		// 2. recreates the back-buffers, since ResizeTarget has dealt with the front-buffers.
+		// 3. our dxgi render-target-view is now invalid, so retrieve the new one and give it to d3d
 		recreate_backbuffer();
 		setup_rendertarget(requested_display_mode_->width, requested_display_mode_->height);
-		dxgi_swap_chain_->SetFullscreenState(true, dxgi_output_.get());
 
+		// 4. *now* switch to fullscreen - this doesn't change any of the buffers, see. it simply
+		//    changes to mode as far as I know.
+		dxgi_swap_chain_->SetFullscreenState(true, dxgi_output_.get());
+		
+		// 5. finally, simply get the display-mode information
 		DXGI_SWAP_CHAIN_DESC swap_chain_desc;
 		dxgi_swap_chain_->GetDesc(&swap_chain_desc);
 		pull_display_format(fullscreen_display_mode_, swap_chain_desc);
