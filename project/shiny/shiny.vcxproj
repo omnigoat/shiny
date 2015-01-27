@@ -196,6 +196,7 @@
     <ClCompile Include="..\..\source\dust\scene.cpp" />
     <ClCompile Include="..\..\source\dust\vertex_stream.cpp" />
     <ClCompile Include="..\..\source\main.cpp" />
+    <ClCompile Include="..\..\source\shiny\function.cpp" />
     <ClCompile Include="..\..\source\voxels.cpp" />
     <ClCompile Include="..\..\vendor\zlib\adler32.c" />
     <ClCompile Include="..\..\vendor\zlib\compress.c" />

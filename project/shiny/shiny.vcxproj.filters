@@ -39,6 +39,9 @@
     <Filter Include="include\shelf">
       <UniqueIdentifier>{82679630-1638-4ba9-ab13-c504af59b576}</UniqueIdentifier>
     </Filter>
+    <Filter Include="source\shiny">
+      <UniqueIdentifier>{14079420-de18-4597-80fe-c99aa0f42f3f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\source\main.cpp">
@@ -151,6 +154,9 @@
     </ClCompile>
     <ClCompile Include="..\..\source\dust\platform\win32\fragment_shader.cpp">
       <Filter>source\dust\platform\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\shiny\function.cpp">
+      <Filter>source\shiny</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

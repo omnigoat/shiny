@@ -464,120 +464,6 @@ struct Y<atma::xtm::idxs_t<A...>, atma::xtm::idxs_t<B...>, Tuple>
 
 
 
-
-
-#if 0
-template <typename FN>
-struct base;
-
-template <typename R, typename... Args>
-struct base<R(Args...)>
-{
-	virtual auto operator ()(Args&&... args) -> R = 0;
-};
-
-template <typename FN>
-struct member_function;
-
-template <typename R, typename Args...>
-struct member_function : base<R(Args...)>
-{
-	auto operator ()(Args&&... args) -> R override
-	{
-	}
-
-private:
-	R(*fn_)(Args...);
-};
-
-#endif
-
-
-
-template <typename R, typename... Args>
-auto fnptr_dispatch(void* fn, void*, Args... args) -> R
-{
-	auto fn2 = reinterpret_cast<R(*)(Args...)>(fn);
-	return (*fn2)(std::forward<Args>(args)...);
-}
-
-template <typename R, typename C, typename... Args>
-auto memfnptr_dispatch(void* fn, void* instance, Args... args) -> R
-{
-	// stored instance pointer was nullptr, so assume the user passed
-	// the instance of the class as the first argument
-	if (instance == nullptr)
-		return memfnptr_dispatch<R, C, Args...>(fn, std::forward<Args>(args)...);
-
-	auto clazz = reinterpret_cast<C*>(instance);
-	auto fn2 = reinterpret_cast<R(C::*)(Args...)>(fn);
-
-	return (clazz->*fn2)(std::forward<Args>(args)...);
-}
-
-
-
-
-template <typename FN>
-struct fna;
-
-template <typename R, typename... Args>
-struct fna<R (Args...)> 
-{
-	static auto apply(R (*fn)(Args...), Args&&... args) -> R
-	{
-		return (*fn)(std::forward<Args>(args)...);
-	}
-};
-
-template <typename FN>
-struct dispatch_tx;
-
-template <typename R, typename... Args>
-struct dispatch_tx<R(Args...)>
-{
-	typedef R (*type)(void*, void*, Args...);
-};
-
-template <typename FN>
-using dispatch_t = typename dispatch_tx<FN>::type;
-
-
-template <typename FN>
-struct fn_t
-{
-	//template <typename R, typename C, typename... Args>
-	//function_t(R (C::*fn)(Args...), C* c = nullptr)
-	//	: instance_{c}, fn_{fn}
-	//{}
-
-	template <typename R, typename... Args>
-	fn_t(R(*fn)(Args...))
-		: instance_{}
-		, fn_{fn}
-		, dispatch_{&fnptr_dispatch<R, Args...>}
-	{}
-
-	template <typename R, typename C, typename... Args>
-	fn_t(R(C::*fn)(Args...))
-		: instance_{}
-		, fn_{fn}
-		, dispatch_{&memfnptr_dispatch<R, C, Args...>}
-	{}
-
-	template <typename... Args>
-	auto operator ()(Args&&... args) -> typename atma::xtm::function_traits<std::decay_t<FN>>::result_type
-	{
-		return (*dispatch_)(fn_, instance_, std::forward<Args>(args)...);
-	}
-
-private:
-	char buf_[sizeof(intptr_t) * 2];
-	dispatch_t<FN> dispatch_;
-};
-
-
-
 int four(int) { return 4; }
 
 struct bb_y
@@ -884,10 +770,7 @@ int main()
 
 
 
-	auto f = fn_t<int(int)>{&four};
-	auto f2 = fn_t<int(int, int)>{&dragon_t::plus};
-	f(4);
-	//auto f2 = function_t<int()>{};
+
 
 	auto numbers = std::vector<int>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
 	auto gt_2 =   [](int x) { return x > 2; };
@@ -903,8 +786,8 @@ int main()
 	//auto fn_add = function_t<int (*)(int, int)>{&add};
 	auto fn_add = functionize(add);
 	auto fn_mul2 = functionize(mul2);
-	auto am = fn_mul2 * fn_add(4) * fn_add(1);
-	auto r = am(3);
+	//auto am = fn_mul2 * fn_add(4) * fn_add(1);
+	//auto r = am(3);
 
 	auto thing = atma::filter(is_even) <<= atma::map(plus_1) <<= atma::filter(is_odd) <<= numbers;
 	auto thing2 = std::vector<int>(thing.begin(), thing.end());

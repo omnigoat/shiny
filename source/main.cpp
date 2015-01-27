@@ -46,10 +46,12 @@ extern void voxels_init(dust::context_ptr const&);
 extern void voxels_update(dust::context_ptr const&, atma::math::vector4f const&, float, float);
 extern void voxels_render(dust::context_ptr const&);
 
-
+extern int function_main();
 
 int main()
 {
+	return function_main();
+
 	// setup gui
 	auto renderer = fooey::system_renderer();
 	auto window = fooey::window("Excitement.", 480, 360);

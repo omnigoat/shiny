@@ -150,11 +150,6 @@
     <ClCompile Include="..\..\source\shox\morton.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\fooey\project\fooey.vcxproj">
-      <Project>{82b83f8f-a8cf-4720-9abd-f08682c1c325}</Project>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="..\..\include\shox\morton.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

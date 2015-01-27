@@ -21,6 +21,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "shiny", "shiny\shiny.vcxpro
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "shox", "shox\shox.vcxproj", "{F1645233-021F-48A6-8BE7-8BBB552230BE}"
+	ProjectSection(ProjectDependencies) = postProject
+		{8E03B685-D9CE-45BF-8597-E7EF57E62B8D} = {8E03B685-D9CE-45BF-8597-E7EF57E62B8D}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
