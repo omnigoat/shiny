@@ -24,7 +24,8 @@ namespace detail
 		static bool const value = sizeof(T) <= fn_bufsize;
 	};
 
-
+	template <typename R, typename... Params>
+	using dispatch_fnptr_t = auto(*)(functor_buf_t&, Params...) -> R;
 
 
 
@@ -107,59 +108,67 @@ namespace detail
 		}
 	};
 
-	template <typename R, typename ParamsTuple>
+	template <typename R, typename ParamsTuple, typename ResultParamTuple>
 	struct functor_vtable_call_partial_t;
 
-	template <typename R, typename... Params>
-	struct functor_vtable_call_partial_t<R, std::tuple<Params...>>
+	template <typename R, typename... Params, typename... RParams>
+	struct functor_vtable_call_partial_t<R, std::tuple<Params...>, std::tuple<RParams...>>
 	{
-		auto (*call)(Params...) -> std::function<R(Params...)>;
+		//using call_fntype = auto(*)(dispatch_fnptr_t<R, Params..., RParams...>, functor_buf_t&, Params...) -> std::function<R(RParams...)>;
+
+		//call_fntype call;
+		auto call(dispatch_fnptr_t<R, Params..., RParams...> dispatch, functor_buf_t& buf, Params... params) -> std::function<R(RParams...)>
+		{
+			return atma::xtm::curry(dispatch, buf, params...);
+		}
 	};
 
 
-	template <size_t S, typename R, typename ParamsTuple>
+	template <size_t, size_t, typename R, typename ParamsTuple>
 	struct functor_vtable_call_t;
 
-	// proper call
-	template <typename R, typename... Params>
-	struct functor_vtable_call_t<sizeof...(Params), R, std::tuple<Params...>>
-		: functor_vtable_call_t<(sizeof...(Params)) - 1, R, std::tuple<Params...>>
+	// full-call
+	template <size_t S, typename R, typename... Params>
+	struct functor_vtable_call_t<S, S, R, std::tuple<Params...>>
+		: functor_vtable_call_t<S, S - 1, R, std::tuple<Params...>>
 	{
-		auto (*call)(Params...) -> R;
+		//using call_fntype     = auto(*)(dispatch_fnptr_t<R, Params...>, Params...) -> R;
+		auto call(dispatch_fnptr_t<R, Params...> dispatch, functor_buf_t& buf, Params... params) -> R
+		{
+			return dispatch(buf, std::forward<Params>(params)...);
+		}
+		//call_fntype call;
 	};
 
 	// partial call
-	template <size_t S, typename R, typename... Params>
-	struct functor_vtable_call_t<S, R, std::tuple<Params...>>
-		: functor_vtable_call_t<S - 1, R, std::tuple<Params...>>
-		, functor_vtable_call_partial_t<R, atma::xtm::tuple_select_t<atma::xtm::idxs_list_t<S - 1>, std::tuple<Params...>>>
+	template <size_t PS, size_t S, typename R, typename... Params>
+	struct functor_vtable_call_t<PS, S, R, std::tuple<Params...>>
+		: functor_vtable_call_t<PS, S - 1, R, std::tuple<Params...>>
+		, functor_vtable_call_partial_t<R,
+			atma::xtm::tuple_select_t<atma::xtm::idxs_list_t<S>, std::tuple<Params...>>,
+			atma::xtm::tuple_select_t<atma::xtm::idxs_range_t<PS - S, PS>, std::tuple<Params...>>>
 	{
 	};
 
 	// terminate
-	template <typename R, typename... Params>
-	struct functor_vtable_call_t<0, R, std::tuple<Params...>>
-	{
-	};
+	template <size_t PS, typename R, typename... Params>
+	struct functor_vtable_call_t<PS, 0, R, std::tuple<Params...>>
+	{};
 
 	template <typename R, typename... Params>
 	struct functor_vtable_t
-		: functor_vtable_call_t<sizeof...(Params), R, std::tuple<Params...>>
+		: functor_vtable_call_t<sizeof...(Params), sizeof...(Params), R, std::tuple<Params...>>
 	{
-		using move_fntype = void(*)(detail::functor_buf_t&, detail::functor_buf_t&&);
-		using destruct_fntype = void(*)(detail::functor_buf_t&);
+		using move_fntype     = auto(*)(detail::functor_buf_t&, detail::functor_buf_t&&) -> void;
+		using destruct_fntype = auto(*)(detail::functor_buf_t&) -> void;
 
 		functor_vtable_t(move_fntype move, destruct_fntype destruct)
 			: move(move)
 			, destruct(destruct)
 		{}
 
-		//functor_vtable_t
-		//R (*const call)(Params...);
-		move_fntype move;
+		move_fntype     move;
 		destruct_fntype destruct;
-		//void(*const move)(detail::functor_buf_t&, detail::functor_buf_t&&);
-		//void(*const destruct)(detail::functor_buf_t&);
 	};
 
 	template <typename R, typename... Params>
@@ -180,6 +189,13 @@ namespace detail
 		{
 			if (vtable_)
 				vtable_->destruct(buf_);
+		}
+
+		template <typename... Args>
+		auto call(dispatch_fnptr_t<R, Params...> fn, Args&&... args) -> 
+		decltype(vtable_->functor_vtable_call_t<sizeof...(Params), sizeof...(Args), R, std::tuple<Params...>>::call(fn, buf_, std::forward<Args>(args)...))
+		{
+			return vtable_->functor_vtable_call_t<sizeof...(Params), sizeof...(Args), R, std::tuple<Params...>>::call(fn, buf_, std::forward<Args>(args)...);
 		}
 
 		auto move_into(functor_wrapper_t& rhs) -> void
@@ -232,17 +248,19 @@ template <typename> struct fn_t;
 template <typename R, typename... Params>
 struct fn_t<R(Params...)>
 {
+	using dispatch_fntype = auto (*)(detail::functor_buf_t&, Params...) -> R;
+
+
 	template <typename FN>
 	fn_t(FN&& fn)
-		: dispatch_()
 	{
 		functor_init(detail::functorize(std::forward<FN>(fn)));
 	}
 
 	template <typename... Args>
-	auto operator ()(Args&&... args) -> R
+	auto operator ()(Args&&... args) -> decltype(wrapper_.call(dispatch_, std::forward<Args>(args)...))
 	{
-		return dispatch_(wrapper_.buf_, std::forward<Args>(args)...);
+		return wrapper_.call(dispatch_, std::forward<Args>(args)...);
 	}
 
 	auto swap(fn_t& rhs) -> void
@@ -262,9 +280,7 @@ private:
 	}
 
 private:
-	R (*dispatch_)(detail::functor_buf_t&, Params...);
-	//detail::functor_vtable_t* vtable_;
-	//detail::functor_buf_t buf_;
+	detail::dispatch_fnptr_t<R, Params...> dispatch_;
 	detail::functor_wrapper_t<R, Params...> wrapper_;
 };
 
@@ -272,7 +288,7 @@ private:
 
 
 
-int plus(int a, int b) { return a + b; }
+int plus(int a, float b) { return a + (int)b; }
 
 struct dragon_t
 {
@@ -282,9 +298,9 @@ struct dragon_t
 
 int function_main()
 {
-	auto f = fn_t<int(int, int)>{&plus};
-	auto r = f(3, 4);
-
+	auto f = fn_t<int(int, float)>{&plus};
+	auto r = f(3);
+	auto r2 = r(4.f);
 
 	auto d = dragon_t();
 
@@ -296,6 +312,7 @@ int function_main()
 	std::function<int(int, int)> sf = atma::xtm::curry(&dragon_t::plus, &d);
 	//auto r2 = sf(4, 5);
 
+#if 0
 	auto f2 = fn_t<int(int, int)>{atma::xtm::curry(&dragon_t::plus, &d)};
 	auto r2 = f2(4, 5);
 
@@ -306,5 +323,7 @@ int function_main()
 	auto r4 = f4(4);
 
 	return sizeof(atma::xtm::curry(&dragon_t::plus3, &d));
+#endif
+	return 0;
 }
 
