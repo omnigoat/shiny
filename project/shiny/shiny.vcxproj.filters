@@ -15,20 +15,11 @@
     <Filter Include="include\dust">
       <UniqueIdentifier>{0765283e-e4b3-488e-9908-c8c02ee3dec1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="source\dust">
-      <UniqueIdentifier>{37b2a706-0ef2-40d5-a9ab-1b21d9a2e0c6}</UniqueIdentifier>
-    </Filter>
     <Filter Include="include\dust\platform">
       <UniqueIdentifier>{4328ccf7-da32-4577-8d54-d83deb61c71f}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\dust\platform\win32">
       <UniqueIdentifier>{d04ba51c-92e4-49af-9871-fa6333127067}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="source\dust\platform">
-      <UniqueIdentifier>{12a41398-3e52-463b-9511-7b7d7694b954}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="source\dust\platform\win32">
-      <UniqueIdentifier>{37dcddbd-688b-4d43-b54b-6a7f2c8fc705}</UniqueIdentifier>
     </Filter>
     <Filter Include="vendor">
       <UniqueIdentifier>{41b55faa-94eb-4ff9-9c11-b03b9b3cf483}</UniqueIdentifier>
@@ -42,55 +33,64 @@
     <Filter Include="source\shiny">
       <UniqueIdentifier>{14079420-de18-4597-80fe-c99aa0f42f3f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="source\shiny\dust">
+      <UniqueIdentifier>{37b2a706-0ef2-40d5-a9ab-1b21d9a2e0c6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\shiny\dust\platform">
+      <UniqueIdentifier>{12a41398-3e52-463b-9511-7b7d7694b954}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\shiny\dust\platform\win32">
+      <UniqueIdentifier>{37dcddbd-688b-4d43-b54b-6a7f2c8fc705}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\source\main.cpp">
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\dust\platform\win32\runtime.cpp">
-      <Filter>source\dust\platform\win32</Filter>
+      <Filter>source\shiny\dust\platform\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\dust\platform\win32\output.cpp">
-      <Filter>source\dust\platform\win32</Filter>
+      <Filter>source\shiny\dust\platform\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\dust\platform\win32\context.cpp">
-      <Filter>source\dust\platform\win32</Filter>
+      <Filter>source\shiny\dust\platform\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\dust\platform\win32\vertex_buffer.cpp">
-      <Filter>source\dust\platform\win32</Filter>
+      <Filter>source\shiny\dust\platform\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\dust\platform\win32\vertex_declaration.cpp">
-      <Filter>source\dust\platform\win32</Filter>
+      <Filter>source\shiny\dust\platform\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\dust\platform\win32\vertex_shader.cpp">
-      <Filter>source\dust\platform\win32</Filter>
+      <Filter>source\shiny\dust\platform\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\dust\platform\win32\constant_buffer.cpp">
-      <Filter>source\dust\platform\win32</Filter>
+      <Filter>source\shiny\dust\platform\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\dust\platform\win32\index_buffer.cpp">
-      <Filter>source\dust\platform\win32</Filter>
+      <Filter>source\shiny\dust\platform\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\dust\camera.cpp">
-      <Filter>source\dust</Filter>
+      <Filter>source\shiny\dust</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\dust\scene.cpp">
-      <Filter>source\dust</Filter>
+      <Filter>source\shiny\dust</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\dust\platform\win32\texture2d.cpp">
-      <Filter>source\dust\platform\win32</Filter>
+      <Filter>source\shiny\dust\platform\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\dust\platform\win32\texture3d.cpp">
-      <Filter>source\dust\platform\win32</Filter>
+      <Filter>source\shiny\dust\platform\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\dust\platform\win32\compute_shader.cpp">
-      <Filter>source\dust\platform\win32</Filter>
+      <Filter>source\shiny\dust\platform\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\dust\platform\win32\buffer.cpp">
-      <Filter>source\dust\platform\win32</Filter>
+      <Filter>source\shiny\dust\platform\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\dust\platform\win32\shader_resource2d.cpp">
-      <Filter>source\dust\platform\win32</Filter>
+      <Filter>source\shiny\dust\platform\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\vendor\zlib\adler32.c">
       <Filter>vendor\zlib</Filter>
@@ -138,22 +138,22 @@
       <Filter>vendor\zlib</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\dust\platform\win32\generic_buffer.cpp">
-      <Filter>source\dust\platform\win32</Filter>
+      <Filter>source\shiny\dust\platform\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\voxels.cpp">
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\dust\element_format.cpp">
-      <Filter>source\dust</Filter>
+      <Filter>source\shiny\dust</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\dust\vertex_stream.cpp">
-      <Filter>source\dust</Filter>
+      <Filter>source\shiny\dust</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\dust\platform\win32\resource.cpp">
-      <Filter>source\dust\platform\win32</Filter>
+      <Filter>source\shiny\dust\platform\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\dust\platform\win32\fragment_shader.cpp">
-      <Filter>source\dust\platform\win32</Filter>
+      <Filter>source\shiny\dust\platform\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\shiny\function.cpp">
       <Filter>source\shiny</Filter>

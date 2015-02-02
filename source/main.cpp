@@ -32,7 +32,7 @@
 #include <iostream>
 
 
-#include <../vendor/DirectXTex/DirectXTex.h>
+//#include <../vendor/DirectXTex/DirectXTex.h>
 
 
 
