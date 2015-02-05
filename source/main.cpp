@@ -26,7 +26,7 @@
 #include <atma/math/matrix4f.hpp>
 #include <atma/filesystem/file.hpp>
 #include <atma/unique_memory.hpp>
-#include <atma/xtm/tuple.hpp>
+#include <atma/tuple.hpp>
 #include <atma/algorithm.hpp>
 
 #include <iostream>

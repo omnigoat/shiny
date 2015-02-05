@@ -1,4 +1,4 @@
-#include <atma/xtm/bind.hpp>
+#include <atma/bind.hpp>
 #include <atma/assert.hpp>
 
 #include <memory>
@@ -752,7 +752,7 @@ namespace detail
 	{
 		auto call(dispatch_fnptr_t<R, Params..., RParams...> dispatch, functor_buf_t& buf, Params... args) -> std::function<R(RParams...)>
 		{
-			return atma::xtm::curry(dispatch, buf, args...);
+			return atma::curry(dispatch, buf, args...);
 		}
 	};
 
@@ -772,8 +772,8 @@ namespace detail
 	struct functor_vtable_call_t<PS, S, R, std::tuple<Params...>>
 		: functor_vtable_call_t<PS, S - 1, R, std::tuple<Params...>>
 		, functor_vtable_call_partial_t<R,
-			atma::xtm::tuple_select_t<atma::xtm::idxs_list_t<S>, std::tuple<Params...>>,
-			atma::xtm::tuple_select_t<atma::xtm::idxs_range_t<PS - S, PS>, std::tuple<Params...>>>
+			atma::tuple_select_t<atma::idxs_list_t<S>, std::tuple<Params...>>,
+			atma::tuple_select_t<atma::idxs_range_t<PS - S, PS>, std::tuple<Params...>>>
 	{
 	};
 
@@ -933,6 +933,13 @@ struct dragon_t
 
 int function_main()
 {
+	auto b = atma::curry(&dragon_t::plus);
+
+	using tt = atma::function_traits<int(int, float)>::arg_type<0>;
+	
+	bool bbb = atma::function_traits<int(int, float)>::is_memfnptr;
+	bool bbb2 = atma::function_traits<int(dragon_t::*)(int, float)>::is_memfnptr;
+
 #if 0
 	auto f = fn_t<int(int const&, float)>{&plus};
 	int i = 3;
@@ -950,8 +957,8 @@ int function_main()
 	auto stdfn = std::function<uint64(uint64, uint64)>(&plus);
 	auto atmafn = fn_t<uint64(uint64, uint64)>(&plus);
 #else
-	auto stdfn = std::function<uint64(uint64, uint64)>(atma::xtm::curry(&dragon_t::plus, &d));
-	auto atmafn = func::function<uint64(uint64, uint64)>(atma::xtm::curry(&dragon_t::plus, &d));
+	auto stdfn = std::function<uint64(uint64, uint64)>(atma::curry(&dragon_t::plus, &d));
+	auto atmafn = func::function<uint64(uint64, uint64)>(atma::curry(&dragon_t::plus, &d));
 #endif
 
 #if 0
