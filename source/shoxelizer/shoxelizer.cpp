@@ -781,11 +781,12 @@ struct zip_range_iterator_t
 	using value_type = std::tuple<typename std::remove_reference<Ranges>::type::value_type...>;
 
 	zip_range_iterator_t(range_tuple_type const& ranges)
-		: iters_{tuple_apply<std::begin>(ranges)} // atma::tuple_select<atma::idxs_list_t<sizeof...(Ranges)>>(ranges).begin()...}
+		: iters_{atma::tuple_apply(&std::begin, ranges)} // atma::tuple_select<atma::idxs_list_t<sizeof...(Ranges)>>(ranges).begin()...}
 	{}
 
 private:
 	std::tuple<typename zip_internal_range_iterator_t<Ranges>::type...> iters_;
+	std::tuple<typename zip_internal_range_iterator_t<Ranges>::type...> ends_;
 };
 
 template <typename... Ranges>
