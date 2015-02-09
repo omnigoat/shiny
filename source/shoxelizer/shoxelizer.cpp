@@ -740,79 +740,34 @@ struct dragon_t
 
 int plus(int a, int b) { return a + b; }
 
-#if 0
-template <typename C>
-using zip_internal_range_iterator_t = std::conditional_t<std::is_const<C>::value, typename C::const_iterator, typename C::iterator>;
-#else
-template <typename C>
-struct zip_internal_range_iterator_t
+template <typename C, typename FN>
+auto for_each_tuple(C&& container, FN&& fn) -> void
 {
-	using C2 = std::remove_reference_t<C>;
-
-	using type = std::conditional_t<std::is_const<C2>::value, typename C2::const_iterator, typename C2::iterator>;
-};
-#endif
-
-template <typename...> struct zip_range_t;
-template <typename...> struct zip_range_iterator_t;
-
-namespace detail
-{
-	template <typename FN, typename Tuple, size_t... idxs>
-	auto tuple_apply_impl(FN&& fn, Tuple&& tuple)
-		-> decltype(std::make_tuple(fn(atma::tuple_select<idxs>(tuple)...)))
+	for (auto&& x : container)
 	{
-		return std::make_tuple(fn(atma::tuple_select<idxs>(tuple)...));
+		atma::call_fn_tuple(std::forward<FN>(fn), std::forward<decltype(x)>(x));
 	}
 }
-
-template <typename FN, typename Tuple>
-auto tuple_apply(Tuple&& tuple)
--> decltype(detail::tuple_apply_impl<FN>(std::forward<Tuple>(tuple), atma::idxs_list_t<std::tuple_size<Tuple>::value>()))
-{
-	return detail::tuple_apply_impl<FN>(std::forward<Tuple>(tuple), atma::idxs_list_t<std::tuple_size<Tuple>::value>());
-}
-
-template <typename... Ranges>
-struct zip_range_iterator_t
-{
-	using range_tuple_type = std::tuple<Ranges...>;
-
-	using value_type = std::tuple<typename std::remove_reference<Ranges>::type::value_type...>;
-
-	zip_range_iterator_t(range_tuple_type const& ranges)
-		: iters_{atma::tuple_apply(&std::begin, ranges)} // atma::tuple_select<atma::idxs_list_t<sizeof...(Ranges)>>(ranges).begin()...}
-	{}
-
-private:
-	std::tuple<typename zip_internal_range_iterator_t<Ranges>::type...> iters_;
-	std::tuple<typename zip_internal_range_iterator_t<Ranges>::type...> ends_;
-};
-
-template <typename... Ranges>
-struct zip_range_t
-{
-	zip_range_t(Ranges... ranges)
-		: ranges_{ranges...}
-	{}
-
-	auto begin() -> zip_range_iterator_t<Ranges...>
-	{
-		return {ranges_};
-	}
-
-private:
-	std::tuple<Ranges...> ranges_;
-	
-};
-
 
 int main()
 {
-	auto nn = std::vector<int>{1, 2, 3, 4, 5};
-	auto zr = zip_range_t<std::vector<int>&>{nn};
+	auto nn = std::vector<int>{1, 2, 3, 4};
+	auto nn2 = std::vector<int>{10, 20, 30, 40, 50, 60};
+	auto zr = atma::zip(nn, nn2);
 
 	auto zi = zr.begin();
+	auto ze = zr.end();
+	++zi;
+	auto zeq = zi == ze;
+
+	for_each_tuple(zr, [](int x, int y) {
+		std::cout << (x + y) << std::endl;
+	});
+
+	for (auto const& x : zr)
+	{
+		std::cout << std::get<0>(x)  << " : " << std::get<1>(x) << std::endl;
+	}
 
 	event_t<int(int, int), null_combiner_t> e;
 
