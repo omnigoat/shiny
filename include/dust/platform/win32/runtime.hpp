@@ -36,6 +36,7 @@ namespace dust
 		auto output_for_window(fooey::window_ptr const&) -> output_ptr;
 		auto output_of(adapter_ptr const&, uint output_index) -> output_ptr;
 		auto vertex_declaration_of(vertex_streams_t const&) -> vertex_declaration_t const*;
+		auto geometry_declaration_of(geometry_streams_t const&) -> geometry_declaration_t const*;
 
 		// dxgi/d3d specific
 		auto dxgid3d_for_adapter(uint adapter_index) -> std::tuple<platform::dxgi_adapter_ptr, platform::d3d_device_ptr, platform::d3d_context_ptr>;

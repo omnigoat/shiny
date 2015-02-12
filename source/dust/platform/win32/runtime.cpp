@@ -125,3 +125,14 @@ auto runtime_t::vertex_declaration_of(dust::vertex_streams_t const& streams) -> 
 
 	return i->second.get();
 }
+
+auto runtime_t::geometry_declaration_of(dust::geometry_streams_t const& streams) -> geometry_declaration_t const*
+{
+	auto i = geometry_declaration_cache_.find(streams);
+	if (i == geometry_declaration_cache_.end()) {
+		auto p = std::unique_ptr<geometry_declaration_t>(new geometry_declaration_t(streams));
+		i = geometry_declaration_cache_.insert(std::make_pair(streams, std::move(p))).first;
+	}
+
+	return i->second.get();
+}
