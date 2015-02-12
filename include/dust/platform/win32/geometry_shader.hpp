@@ -8,16 +8,7 @@
 //======================================================================
 namespace dust
 {
-	struct geometry_stream_element_t
-	{
-		char const* tag;
-		char start, count;
-	};
-
-	struct geometry_stream_t
-	{
-		std::vector<geometry_stream_element_t> elements;
-	};
+	
 
 
 

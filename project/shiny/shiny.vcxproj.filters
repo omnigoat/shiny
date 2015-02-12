@@ -59,9 +59,6 @@
     <ClCompile Include="..\..\source\dust\platform\win32\vertex_buffer.cpp">
       <Filter>source\shiny\dust\platform\win32</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\dust\platform\win32\vertex_declaration.cpp">
-      <Filter>source\shiny\dust\platform\win32</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\source\dust\platform\win32\vertex_shader.cpp">
       <Filter>source\shiny\dust\platform\win32</Filter>
     </ClCompile>
@@ -157,6 +154,9 @@
     </ClCompile>
     <ClCompile Include="..\..\source\shiny\function.cpp">
       <Filter>source\shiny</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\dust\vertex_declaration.cpp">
+      <Filter>source\shiny\dust</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -309,6 +309,9 @@
     </ClInclude>
     <ClInclude Include="..\..\include\dust\platform\win32\geometry_shader.hpp">
       <Filter>include\dust\platform\win32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\dust\geometry_declaration.hpp">
+      <Filter>include\dust</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -26,6 +26,10 @@ namespace dust {
 	typedef atma::intrusive_ptr<fragment_shader_t> fragment_shader_ptr;
 	typedef atma::intrusive_ptr<fragment_shader_t const> fragment_shader_cptr;
 
+	struct geometry_stream_t;
+	using  geometry_streams_t = std::vector<geometry_stream_t>;
+	struct geometry_declaration_t;
+
 	struct vertex_stream_t;
 	typedef std::vector<vertex_stream_t> vertex_streams_t;
 	struct vertex_declaration_t;

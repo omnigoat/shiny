@@ -2,9 +2,11 @@
 //======================================================================
 #include <dust/platform/win32/dxgi_fwd.hpp>
 #include <dust/platform/win32/d3d_fwd.hpp>
+
 #include <dust/element_format.hpp>
 #include <dust/output.hpp>
 #include <dust/vertex_declaration.hpp>
+#include <dust/geometry_declaration.hpp>
 
 #include <fooey/fooey_fwd.hpp>
 
@@ -65,6 +67,7 @@ namespace dust
 		std::map<platform::dxgi_adapter_ptr, platform::d3d_device_ptr> d3d_devices_;
 
 
+		std::map<geometry_streams_t, std::unique_ptr<geometry_declaration_t>> geometry_declaration_cache_;
 		std::map<vertex_streams_t, std::unique_ptr<vertex_declaration_t>> vertex_declaration_cache_;
 	};
 }
