@@ -22,6 +22,9 @@ namespace dust
 			return lhs.index < rhs.index;
 	}
 
+
+
+
 	struct geometry_declaration_t
 	{
 		geometry_declaration_t() = delete;

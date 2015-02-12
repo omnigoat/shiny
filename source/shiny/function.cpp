@@ -958,14 +958,14 @@ int function_main()
 	auto atmafn = fn_t<uint64(uint64, uint64)>(&plus);
 #else
 	auto stdfn = std::function<uint64(uint64, uint64)>(atma::curry(&dragon_t::plus, &d));
-	auto atmafn = func::function<uint64(uint64, uint64)>(atma::curry(&dragon_t::plus, &d));
+	auto atmafn = fn_t<uint64(uint64, uint64)>(atma::curry(&dragon_t::plus, &d));
 #endif
 
-#if 0
+#if 1
 	{
 		auto s = clock.now();
 		uint64 result = 0;
-		for (uint64 i = 0; i != 10000000; ++i)
+		for (uint64 i = 0u; i != 100000000u; ++i)
 			result += atmafn(i, i + 1);
 
 		auto s2 = clock.now();
@@ -977,7 +977,7 @@ int function_main()
 	{
 		auto s = clock.now();
 		uint64 result = 0;
-		for (uint64 i = 0; i != 10000000; ++i)
+		for (uint64 i = 0; i != 100000000; ++i)
 			result += stdfn(i, i + 1);
 
 		auto s2 = clock.now();
