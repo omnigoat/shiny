@@ -1,7 +1,26 @@
 #pragma once
 //======================================================================
-#include <atma/config/platform.hpp>
+#include <dust/dust_fwd.hpp>
+#include <dust/vertex_stream.hpp>
+//======================================================================
+namespace dust
+{
+	struct vertex_declaration_t
+	{
+		vertex_declaration_t() = delete;
+		vertex_declaration_t(vertex_declaration_t const*) = delete;
+		vertex_declaration_t(vertex_declaration_t&&) = delete;
 
-#ifdef ATMA_PLATFORM_WIN32
-#	include <dust/platform/win32/vertex_declaration.hpp>
-#endif
+		auto streams() const -> vertex_streams_t const&;
+		auto stride() const -> uint;
+
+	private:
+		vertex_declaration_t(vertex_streams_t const&);
+
+	private:
+		vertex_streams_t streams_;
+		uint stride_;
+
+		friend struct runtime_t;
+	};
+}
