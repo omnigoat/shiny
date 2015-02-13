@@ -219,20 +219,7 @@ auto intersect_aabb_box(math::vector4f const& aabb, box_t const& box) -> bool
 
 
 
-
-
-template <typename... Args>
-using variadic_size = std::tuple_size<std::tuple<Args...>>;
-
-
-
-
-
-
-
-
-
-#if 0
+#if 1
 
 struct octree_t::node_t
 {
@@ -335,94 +322,8 @@ auto octree_t::node_t::oct_subbound(math::vector4f const& bounds, uint idx) -> m
 }
 
 #endif
-template<typename testType>
-struct is_function_pointer
-{
-	static const bool value =
-		std::is_pointer<testType>::value ?
-		std::is_function<typename std::remove_pointer<testType>::type>::value :
-		false;
-};
 
-int plus2(int x) { return x + 2; }
-
-auto const plus2fn = std::make_tuple(&plus2);
-
-template <typename F>
-struct function_t
-{
-	function_t(F fn) : fn_(fn) {}
-
-	template <typename... Curried>
-	auto operator ()(Curried... curried)
-	-> typename std::enable_if<variadic_size<Curried...>::value == atma::function_traits<F>::arity, int>::type
-	{
-		return fn_(std::forward<Curried>(curried)...);
-	}
-
-	template <typename... Curried>
-	auto operator ()(Curried... curried)
-	-> typename std::enable_if<std::tuple_size<std::tuple<Curried...>>::value != atma::function_traits<F>::arity,
-		function_t<decltype(atma::curry(fn_, std::forward<Curried>(curried)...))>>::type
-	{
-		return {atma::curry(fn_, std::forward<Curried>(curried)...)};
-	}
-
-	auto fn() const -> F { return fn_; }
-
-private:
-	F fn_;
-};
-
-template <typename R, typename... Args>
-auto functionize(R(&fn)(Args...)) -> function_t<R(*)(Args...)>
-{
-	return {&fn};
-}
-
-template <typename F, typename G, typename X>
-inline auto point(F f, G g, X x) -> typename atma::function_traits<F>::result_type
-{
-	return f(g(std::forward<X>(x)));
-}
-
-template <typename F, typename G>
-struct curried_function_traits
-{
-	using result_type = typename atma::function_traits<F>::result_type;
-
-	//using signature = typename atma::function_traits<F>::result_type(*)(typename atma::function_traits<G>::template arg<0>::type);
-
-	using sg = typename atma::function_traits<F>::result_type(*)(function_t<F>, function_t<G>, typename atma::function_traits<G>::template arg<0>::type);
-};
-
-
-
-namespace atma {
-
-	template <typename F>
-	struct function_traits<function_t<F>>
-		: function_traits<F>
-	{};
-	
 #if 0
-	template <typename F, typename Bindings>
-	struct function_traits<bind_t<F, Bindings>>
-	{
-		using result_type = typename function_traits<F>::result_type;
-		
-		enum { arity = function_traits<F>::arity - tuple_nonplaceholder_size_t<Bindings>::value };
-
-		template <size_t i>
-		struct arg {
-			typedef typename function_traits<F>::template arg<i + tuple_nonplaceholder_size_t<Bindings>::value>::type type;
-		};
-	};
-#endif
-}
-
-
-#if 1
 template <typename F, typename G>
 inline auto operator * (function_t<F> f, function_t<G> g)
 -> function_t<
@@ -442,6 +343,16 @@ inline auto operator * (function_t<F> f, function_t<G> g)
 	return {atma::curry(std::forward<decltype(fnptr)>(fnptr), std::forward<function_t<F>>(f), std::forward<function_t<G>>(g))};
 }
 #endif
+
+
+#include <dust/runtime.hpp>
+#include <dust/device.hpp>
+
+
+auto go(dust::runtime_t& runtime) -> void
+{
+	
+}
 
 
 
