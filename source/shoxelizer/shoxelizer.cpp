@@ -162,6 +162,7 @@ namespace shelf
 
 namespace math = atma::math;
 
+#include <atma/unique_memory.hpp>
 #include <array>
 
 template <typename T>
@@ -173,11 +174,26 @@ struct default_octree_subdivider_t
 	}
 };
 
+struct octree_preallocate_tag
+{
+	uint levels;
+};
+
 struct octree_t
 {
 	octree_t() {}
 
+#if 0
+	octree_t(octree_preallocate_tag t)
+	{
+		while (t.levels-- != 0)
+		{
+			
+		}
+	};
+
 	//auto add_triangle(T const&, math::vector4f const&, math::vector4f const&, math::vector4f const&) -> void;
+#endif
 
 	auto insert_point(math::vector4f const&) -> bool;
 	struct node_t;
@@ -225,51 +241,41 @@ struct octree_t::node_t
 {
 	node_t()
 		: bounds(0.f, 0.f, 0.f, 0.5f)
-		, children_()
-		, datas_()
 	{
 	}
 
 	node_t(math::vector4f const& bounds)
 		: bounds(bounds)
-		, children_()
-		, datas_()
 	{
 	}
 
 	atma::math::vector4f bounds;
-	triangle_t data;
+	atma::math::triangle_t data;
 
 	auto inbounds(math::vector4f const& point) -> bool;
-	auto insert(math::vector4f const& point, T const& data) -> bool;
+	auto insert(math::triangle_t const&) -> bool;
 
 private:
-	auto imem_allocate() -> void
-	{
-		children_ = (node_t*)new char[8 * sizeof(node_t)];
-	}
-
-	auto imem_deallocate() -> void;
-
+	auto child_ref(uint idx) -> node_t& { return reinterpret_cast<node_t*>(buf_.begin())[idx]; }
 
 	auto oct_split() -> void
 	{
-		children_ = (node_t*)new char[8 * sizeof(node_t)];
+		auto newbuf = atma::unique_memory_t{8 * sizeof(node_t)};
+		std::swap(buf_, newbuf);
 
 		for (auto i = 0u; i != 8u; ++i)
-			new (children_ + i) node_t( oct_subbound(bounds, i) );
+			new (&child_ref(i)) node_t{oct_subbound(bounds, i)};
 
-		for (auto i = 0u; i != 8u; ++i)
-			insert(dloc_[i], data_[i]);
+		for (auto const& x : data_)
+			insert(x);
 	}
 
 	auto oct_subbound(math::vector4f const&, uint) -> math::vector4f;
 
 private:
-	node_t* children_;
+	atma::unique_memory_t buf_;
 
-	std::array<T, 8> data_;
-	std::array<math::vector4f, 8> dloc_;
+	std::vector<math::triangle_t> data_;
 
 	uint datas_;
 };
@@ -277,8 +283,7 @@ private:
 
 auto octree_t::node_t::insert(triangle_t const& tri) -> bool
 {
-	
-	if (!inbounds(point))
+	if (!atma::math::intersect_aabb_triangle(tri))
 	{
 		return false;
 	}
@@ -346,14 +351,16 @@ inline auto operator * (function_t<F> f, function_t<G> g)
 
 
 #include <dust/runtime.hpp>
-#include <dust/device.hpp>
+#include <dust/context.hpp>
 
-
-auto go(dust::runtime_t& runtime) -> void
+auto go(dust::runtime_t& runtime, dust::context_ptr const& ctx) -> void
 {
-	
-}
+	auto gd = runtime.geometry_declaration_of({
+		{"position", 0, 0, 4}
+	});
 
+
+}
 
 
 int main()
