@@ -281,7 +281,7 @@ private:
 };
 
 
-auto octree_t::node_t::insert(triangle_t const& tri) -> bool
+auto octree_t::node_t::insert(math::triangle_t const& tri) -> bool
 {
 	if (!atma::math::intersect_aabb_triangle(tri))
 	{

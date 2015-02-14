@@ -494,6 +494,6 @@ auto context_t::signal_draw(shared_state_t const& ss, vertex_stage_state_t const
 auto context_t::signal_gs_set(geometry_shader_ptr const& gs) -> void
 {
 	engine_.signal([&, gs]{
-		d3d_immediate_context_->GSSetShader(gs.get(), nullptr, 0);
+		d3d_immediate_context_->GSSetShader(gs->d3d_gs().get(), nullptr, 0);
 	});
 }
