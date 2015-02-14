@@ -18,6 +18,10 @@ namespace dust {
 	struct context_t;
 	typedef atma::intrusive_ptr<context_t> context_ptr;
 
+	struct geometry_shader_t;
+	using  geometry_shader_ptr = atma::intrusive_ptr<geometry_shader_t>;
+	using  geometry_shader_cptr = atma::intrusive_ptr<geometry_shader_t const>;
+
 	struct vertex_shader_t;
 	typedef atma::intrusive_ptr<vertex_shader_t> vertex_shader_ptr;
 	typedef atma::intrusive_ptr<vertex_shader_t const> vertex_shader_cptr;

@@ -488,5 +488,12 @@ auto context_t::signal_draw(shared_state_t const& ss, vertex_stage_state_t const
 		auto vertex_count = (vss.count == 0) ? vb->vertex_count() : vss.count;
 		d3d_immediate_context_->Draw(vertex_count, vss.offset);
 	});
+}
 
+
+auto context_t::signal_gs_set(geometry_shader_ptr const& gs) -> void
+{
+	engine_.signal([&, gs]{
+		d3d_immediate_context_->GSSetShader(gs.get(), nullptr, 0);
+	});
 }

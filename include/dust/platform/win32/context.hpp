@@ -4,11 +4,12 @@
 #include <dust/element_format.hpp>
 #include <dust/adapter.hpp>
 #include <dust/output.hpp>
+#include <dust/constant_buffer.hpp>
 #include <dust/vertex_buffer.hpp>
 #include <dust/index_buffer.hpp>
-#include <dust/fragment_shader.hpp>
+#include <dust/geometry_shader.hpp>
 #include <dust/vertex_shader.hpp>
-#include <dust/constant_buffer.hpp>
+#include <dust/fragment_shader.hpp>
 
 #include <dust/platform/win32/d3d_fwd.hpp>
 
@@ -118,7 +119,7 @@ namespace dust {
 
 		// geometry-stage
 		auto signal_gs_upload_constant_buffer(uint index, constant_buffer_cptr const&) -> void;
-		//auto signal_gs_upload_program()
+		auto signal_gs_set(geometry_shader_ptr const&) -> void;
 
 
 		// vertex-stage
@@ -191,8 +192,6 @@ namespace dust {
 
 		// cache for vertex-layouts
 		std::map<std::tuple<vertex_shader_ptr, vertex_declaration_t const*>, platform::d3d_input_layout_ptr> cached_input_layouts_;
-
-
 
 		friend auto create_context(runtime_t&, fooey::window_ptr const&, uint adapter) -> context_ptr;
 	};
