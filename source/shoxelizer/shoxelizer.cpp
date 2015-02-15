@@ -240,16 +240,13 @@ auto intersect_aabb_box(math::vector4f const& aabb, box_t const& box) -> bool
 struct octree_t::node_t
 {
 	node_t()
-		: bounds(0.f, 0.f, 0.f, 0.5f)
-	{
-	}
+	{}
 
-	node_t(math::vector4f const& bounds)
-		: bounds(bounds)
-	{
-	}
+	node_t(math::aabb_t const& aabb)
+		: aabb(aabb)
+	{}
 
-	atma::math::vector4f bounds;
+	atma::math::aabb_t aabb;
 	atma::math::triangle_t data;
 
 	auto inbounds(math::vector4f const& point) -> bool;
@@ -258,72 +255,58 @@ struct octree_t::node_t
 private:
 	auto child_ref(uint idx) -> node_t& { return reinterpret_cast<node_t*>(buf_.begin())[idx]; }
 
+#if 0
 	auto oct_split() -> void
 	{
+		auto k1 = std::make_unique<int>(4);
+		auto k2 = std::make_unique<int>(5);
+		std::swap(k1, k2);
+
 		auto newbuf = atma::unique_memory_t{8 * sizeof(node_t)};
 		std::swap(buf_, newbuf);
 
 		for (auto i = 0u; i != 8u; ++i)
-			new (&child_ref(i)) node_t{oct_subbound(bounds, i)};
+			new (&child_ref(i)) node_t{aabb.octant(i)};
 
 		for (auto const& x : data_)
 			insert(x);
 	}
+#endif
 
-	auto oct_subbound(math::vector4f const&, uint) -> math::vector4f;
+	auto is_leaf() const -> bool { return !buf_; }
+
+	template <typename FN>
+	auto imem_for_each(FN&& fn) -> void
+	{
+		for (auto i = reinterpret_cast<node_t*>(buf_.begin()); i != reinterpret_cast<node_t*>(buf_.end()); ++i)
+			fn(*i);
+	}
 
 private:
 	atma::unique_memory_t buf_;
 
 	std::vector<math::triangle_t> data_;
-
-	uint datas_;
 };
 
 
 auto octree_t::node_t::insert(math::triangle_t const& tri) -> bool
 {
-	if (!atma::math::intersect_aabb_triangle(tri))
+	if (!atma::math::intersect_aabb_triangle(aabb, tri))
 	{
 		return false;
 	}
 
-	// we are a full leaf node
-	if (!children_ && datas_ == 8)
-	{
-		oct_split();
-	}
-
-	if (children_)
-	{
-		return std::any_of(children_, children_ + 8, [&point, &data](node_t& node) {
-			return node.insert(point, data);
+	if (!buf_.empty())
+		imem_for_each([&tri](node_t& x) {
+			x.insert(tri);
 		});
-	}
-
-	data_[datas_] = data;
-	dloc_[datas_] = point;
-	++datas_;
 
 	return true;
 }
 
 auto octree_t::node_t::inbounds(math::vector4f const& point) -> bool
 {
-	return
-		point.x < bounds.x + bounds.w && point.x > bounds.x - bounds.w &&
-		point.y < bounds.y + bounds.w && point.y > bounds.y - bounds.w &&
-		point.z < bounds.z + bounds.w && point.z > bounds.z - bounds.w
-		;
-}
-
-auto octree_t::node_t::oct_subbound(math::vector4f const& bounds, uint idx) -> math::vector4f
-{
-	return math::vector4f(
-		(0.5f - ((idx & 1)     ) * 1.f) * bounds.w + bounds.x,
-		(0.5f - ((idx & 2) >> 1) * 1.f) * bounds.w + bounds.y,
-		(0.5f - ((idx & 4) >> 2) * 1.f) * bounds.w + bounds.z,
-		bounds.w * 0.5f);
+	return aabb.inside(point);
 }
 
 #endif
@@ -355,11 +338,6 @@ inline auto operator * (function_t<F> f, function_t<G> g)
 
 auto go(dust::runtime_t& runtime, dust::context_ptr const& ctx) -> void
 {
-	auto gd = runtime.geometry_declaration_of({
-		{"position", 0, 0, 4}
-	});
-
-
 }
 
 
