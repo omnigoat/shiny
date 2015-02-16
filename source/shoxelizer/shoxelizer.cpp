@@ -233,12 +233,12 @@ private:
 			return;
 
 		ATMA_ASSERT(buf_.empty());
-		auto newbuf = atma::unique_memory_t {8 * sizeof(node_t)};
+		auto newbuf = atma::typed_unique_memory_t<node_t>{8};
 		std::swap(buf_, newbuf);
 
 		auto subtag = octree_allocate_tag{tag.levels - 1};
 		for (auto i = 0u; i != 8u; ++i)
-			new (&child_ref(i)) node_t {subtag, aabc.octant(i)};
+			new (&child_ref(i)) node_t {subtag, aabc.octant_of(i)};
 	}
 
 #if 0
@@ -261,7 +261,7 @@ private:
 	}
 
 private:
-	atma::unique_memory_t buf_;
+	atma::typed_unique_memory_t<node_t> buf_;
 
 	std::vector<math::triangle_t> data_;
 };
@@ -313,7 +313,13 @@ auto go() -> void
 		math::point4f(0.4f, 0.2f, 0.15f),
 		math::point4f(0.23f, 0.56f, 0.44f)};
 
+	auto tri2 = math::triangle_t {
+		math::point4f(0.6f, 0.6f, 0.6f),
+		math::point4f(0.6f, 0.2f, 0.1f),
+		math::point4f(0.1f, 0.4f, 0.6f)};
+
 	auto r = oct.insert(tri);
+	auto r2 = oct.insert(tri2);
 }
 
 
