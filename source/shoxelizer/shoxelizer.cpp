@@ -162,8 +162,11 @@ namespace shelf
 
 namespace math = atma::math;
 
+
+#include <atma/math/aabc.hpp>
 #include <atma/unique_memory.hpp>
 #include <array>
+
 
 template <typename T>
 struct default_octree_subdivider_t
@@ -174,8 +177,9 @@ struct default_octree_subdivider_t
 	}
 };
 
-struct octree_preallocate_tag
+struct octree_allocate_tag
 {
+	explicit octree_allocate_tag(uint levels) : levels(levels) {}
 	uint levels;
 };
 
@@ -183,23 +187,15 @@ struct octree_t
 {
 	octree_t() {}
 
-#if 0
-	octree_t(octree_preallocate_tag t)
-	{
-		while (t.levels-- != 0)
-		{
-			
-		}
-	};
+	octree_t(octree_allocate_tag t);
 
-	//auto add_triangle(T const&, math::vector4f const&, math::vector4f const&, math::vector4f const&) -> void;
-#endif
+	auto insert(math::triangle_t const&) -> bool;
 
 	auto insert_point(math::vector4f const&) -> bool;
 	struct node_t;
-	//node_t root_;
 
 private:
+	node_t* root_;
 
 private:
 
@@ -207,46 +203,22 @@ private:
 	
 };
 
-
-#if 0
-struct box_t
-{
-	math::vector4f origin;
-	math::vector4f half_extents;
-
-	static auto from_minmax(math::vector4f const& min, math::vector4f const& max) -> box_t
-	{
-		return box_t{(min + max) / 2.f, (max - min) / 2.f};
-	}
-};
-
-auto intersect_aabb_box(math::vector4f const& aabb, box_t const& box) -> bool
-{
-	return !(
-		aabb.x + aabb.w < box.origin.x - box.half_extents.x ||
-		aabb.x - aabb.w > box.origin.x + box.half_extents.x ||
-		aabb.y + aabb.w < box.origin.y - box.half_extents.y ||
-		aabb.y - aabb.w > box.origin.y + box.half_extents.y ||
-		aabb.z + aabb.w < box.origin.z - box.half_extents.z ||
-		aabb.z - aabb.w > box.origin.z + box.half_extents.z)
-		;
-}
-#endif
-
-
-
-#if 1
-
 struct octree_t::node_t
 {
 	node_t()
 	{}
 
-	node_t(math::aabb_t const& aabb)
-		: aabb(aabb)
+	node_t(math::aabc_t const& aabc)
+		: aabc(aabc)
 	{}
 
-	atma::math::aabb_t aabb;
+	node_t(octree_allocate_tag tag, math::aabc_t const& aabc)
+		: aabc(aabc)
+	{
+		imem_allocate(tag);
+	}
+
+	atma::math::aabc_t aabc;
 	atma::math::triangle_t data;
 
 	auto inbounds(math::vector4f const& point) -> bool;
@@ -255,25 +227,31 @@ struct octree_t::node_t
 private:
 	auto child_ref(uint idx) -> node_t& { return reinterpret_cast<node_t*>(buf_.begin())[idx]; }
 
+	auto imem_allocate(octree_allocate_tag tag) -> void
+	{
+		if (tag.levels == 0)
+			return;
+
+		ATMA_ASSERT(buf_.empty());
+		auto newbuf = atma::unique_memory_t {8 * sizeof(node_t)};
+		std::swap(buf_, newbuf);
+
+		auto subtag = octree_allocate_tag{tag.levels - 1};
+		for (auto i = 0u; i != 8u; ++i)
+			new (&child_ref(i)) node_t {subtag, aabc.octant(i)};
+	}
+
 #if 0
 	auto oct_split() -> void
 	{
-		auto k1 = std::make_unique<int>(4);
-		auto k2 = std::make_unique<int>(5);
-		std::swap(k1, k2);
-
-		auto newbuf = atma::unique_memory_t{8 * sizeof(node_t)};
-		std::swap(buf_, newbuf);
-
-		for (auto i = 0u; i != 8u; ++i)
-			new (&child_ref(i)) node_t{aabb.octant(i)};
+		imem_allocate(octree_allocate_tag{1});
 
 		for (auto const& x : data_)
 			insert(x);
 	}
 #endif
 
-	auto is_leaf() const -> bool { return !buf_; }
+	auto is_leaf() const -> bool { return buf_.empty(); }
 
 	template <typename FN>
 	auto imem_for_each(FN&& fn) -> void
@@ -289,12 +267,25 @@ private:
 };
 
 
+
+
+octree_t::octree_t(octree_allocate_tag t)
+	: root_( new node_t{t, math::aabc_t{}} )
+{};
+
+auto octree_t::insert(math::triangle_t const& tri) -> bool
+{
+	return root_->insert(tri);
+}
+
 auto octree_t::node_t::insert(math::triangle_t const& tri) -> bool
 {
-	if (!atma::math::intersect_aabb_triangle(aabb, tri))
+	if (!atma::math::intersect_aabc_triangle(aabc, tri))
 	{
 		return false;
 	}
+
+	data_.push_back(tri);
 
 	if (!buf_.empty())
 		imem_for_each([&tri](node_t& x) {
@@ -306,42 +297,29 @@ auto octree_t::node_t::insert(math::triangle_t const& tri) -> bool
 
 auto octree_t::node_t::inbounds(math::vector4f const& point) -> bool
 {
-	return aabb.inside(point);
+	return aabc.inside(point);
 }
-
-#endif
-
-#if 0
-template <typename F, typename G>
-inline auto operator * (function_t<F> f, function_t<G> g)
--> function_t<
-	atma::bind_t<
-		typename curried_function_traits<F, G>::sg,
-		std::tuple<function_t<F>, function_t<G>, atma::placeholder_t<0>>
-	>>
-{
-	static_assert(atma::function_traits<F>::arity == 1, "can not compose functions of arity greater than 1");
-	static_assert(atma::function_traits<G>::arity == 1, "can not compose functions of arity greater than 1");
-
-	auto fnptr = &point<
-		function_t<F>,
-		function_t<G>,
-		typename atma::function_traits<G>::template arg<0>::type>;
-
-	return {atma::curry(std::forward<decltype(fnptr)>(fnptr), std::forward<function_t<F>>(f), std::forward<function_t<G>>(g))};
-}
-#endif
 
 
 #include <dust/runtime.hpp>
 #include <dust/context.hpp>
 
-auto go(dust::runtime_t& runtime, dust::context_ptr const& ctx) -> void
+auto go() -> void
 {
+	auto oct = octree_t{octree_allocate_tag{4}};
+
+	auto tri = math::triangle_t{
+		math::point4f(0.1f, 0.1f, 0.1f),
+		math::point4f(0.4f, 0.2f, 0.15f),
+		math::point4f(0.23f, 0.56f, 0.44f)};
+
+	auto r = oct.insert(tri);
 }
 
 
 int main()
 {
+	
 
+	go();
 }
