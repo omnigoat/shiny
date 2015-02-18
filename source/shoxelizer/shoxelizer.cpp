@@ -5,7 +5,8 @@
 #include <atma/enable_if.hpp>
 #include <atma/math/intersection.hpp>
 #include <atma/bind.hpp>
-
+#include <atma/math/vector4i.hpp>
+#include <atma/filesystem/file.hpp>
 
 #include <filesystem>
 
@@ -158,6 +159,24 @@ namespace shelf
 			// something??
 		});
 	}
+
+	template <typename FN>
+	auto for_each_line(atma::filesystem::file_t& file, size_t maxsize, FN&& fn) -> void
+	{
+		auto buf = atma::typed_unique_memory_t<char>(maxsize);
+
+		size_t i = 0;
+		while (i != maxsize) {
+			auto pos = i++;
+			file.read(buf.begin() + pos, 1);
+			if (buf[pos] == '\n')
+				break;
+		}
+
+		fn(buf.begin(), i);
+	}
+
+
 }
 
 namespace math = atma::math;
@@ -166,6 +185,15 @@ namespace math = atma::math;
 #include <atma/math/aabc.hpp>
 #include <atma/unique_memory.hpp>
 #include <array>
+
+
+struct giraffe_t
+{
+	atma::typed_unique_memory_t<giraffe_t> things;
+};
+
+
+
 
 
 template <typename T>
@@ -320,6 +348,39 @@ auto go() -> void
 
 	auto r = oct.insert(tri);
 	auto r2 = oct.insert(tri2);
+}
+
+
+struct obj_model_t
+{
+	obj_model_t(atma::filesystem::file_t&);
+
+private:
+	using verts_t = std::vector<math::vector4f>;
+	using faces_t = std::vector<math::vector4i>;
+
+	verts_t verts_;
+	faces_t faces_;
+};
+
+obj_model_t::obj_model_t(atma::filesystem::file_t& file)
+{
+	//namespace rgx = atma::regex;
+
+	shelf::for_each_line(file, 128, [](char const* str, size_t size) {
+		float x, y, z;
+		//rgx::parse(str, size) << rgx::str("v: ") << capture<float>(x) << 
+	});
+}
+
+auto objfile_reader() -> void
+{
+	
+}
+
+auto voxelize() -> void
+{
+	
 }
 
 
