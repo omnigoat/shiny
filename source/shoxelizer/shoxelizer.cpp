@@ -163,7 +163,8 @@ namespace shelf
 	template <typename FN>
 	auto for_each_line(atma::filesystem::file_t& file, size_t maxsize, FN&& fn) -> void
 	{
-		auto buf = atma::typed_unique_memory_t<char>(maxsize);
+#if 0
+		auto buf = atma::unique_memory_t(maxsize);
 
 		size_t i = 0;
 		while (i != maxsize) {
@@ -174,6 +175,7 @@ namespace shelf
 		}
 
 		fn(buf.begin(), i);
+#endif
 	}
 
 
@@ -185,15 +187,6 @@ namespace math = atma::math;
 #include <atma/math/aabc.hpp>
 #include <atma/unique_memory.hpp>
 #include <array>
-
-
-struct giraffe_t
-{
-	atma::typed_unique_memory_t<giraffe_t> things;
-};
-
-
-
 
 
 template <typename T>
@@ -261,7 +254,7 @@ private:
 			return;
 
 		ATMA_ASSERT(buf_.empty());
-		auto newbuf = atma::typed_unique_memory_t<node_t>{8};
+		auto newbuf = atma::unique_memory_t{8 * sizeof(node_t)};
 		std::swap(buf_, newbuf);
 
 		auto subtag = octree_allocate_tag{tag.levels - 1};
@@ -289,7 +282,7 @@ private:
 	}
 
 private:
-	atma::typed_unique_memory_t<node_t> buf_;
+	atma::unique_memory_t buf_;
 
 	std::vector<math::triangle_t> data_;
 };
@@ -313,6 +306,8 @@ auto octree_t::node_t::insert(math::triangle_t const& tri) -> bool
 		return false;
 	}
 
+	
+
 	data_.push_back(tri);
 
 	if (!buf_.empty())
@@ -331,6 +326,7 @@ auto octree_t::node_t::inbounds(math::vector4f const& point) -> bool
 
 #include <dust/runtime.hpp>
 #include <dust/context.hpp>
+#include <shelf/file.hpp>
 
 auto go() -> void
 {
@@ -386,7 +382,7 @@ auto voxelize() -> void
 
 int main()
 {
-	
+	auto f = shelf::file_t{};
 
 	go();
 }
