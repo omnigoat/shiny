@@ -11,6 +11,7 @@ namespace shelf
 		ok,
 		bof,
 		eof,
+		error,
 	};
 
 	struct read_result_t
@@ -58,14 +59,15 @@ namespace shelf
 	};
 
 	struct abstract_random_access_input_output_stream_t
-		: virtual abstract_random_access_input_stream_t
+		: virtual abstract_input_output_stream_t
+		, virtual abstract_random_access_input_stream_t
 		, virtual abstract_random_access_output_stream_t
 	{
 	};
 
 
 
-	enum class file_access_t
+	enum class file_access_t : uint
 	{
 		read,
 		write,
@@ -85,8 +87,8 @@ namespace shelf
 		auto move(int64) -> stream_status_t;
 		//auto read(void*, size_t) -> read_result_t;
 		//auto write(void const*, size_t) -> write_result_t;
-		auto read(void*, size_t) -> read_result_t override { return{stream_status_t::ok, 0}; }
-		auto write(void const*, size_t) -> write_result_t override { return {stream_status_t::ok, 0}; }
+		auto read(void*, size_t) -> read_result_t override;
+		auto write(void const*, size_t) -> write_result_t override;
 
 	private:
 		// input-stream
@@ -102,6 +104,8 @@ namespace shelf
 	private:
 		atma::string filename_;
 		file_access_t access_;
+
 		FILE* handle_;
+		size_t filesize_;
 	};
 }

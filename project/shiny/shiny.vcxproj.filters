@@ -42,6 +42,9 @@
     <Filter Include="source\shiny\dust\platform\win32">
       <UniqueIdentifier>{37dcddbd-688b-4d43-b54b-6a7f2c8fc705}</UniqueIdentifier>
     </Filter>
+    <Filter Include="source\shelf">
+      <UniqueIdentifier>{97a5e9b6-c71a-419f-a4b3-8468b7dca168}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\source\main.cpp">
@@ -160,6 +163,9 @@
     </ClCompile>
     <ClCompile Include="..\..\source\dust\platform\win32\geometry_shader.cpp">
       <Filter>source\shiny\dust\platform\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\shelf\file.cpp">
+      <Filter>source\shelf</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

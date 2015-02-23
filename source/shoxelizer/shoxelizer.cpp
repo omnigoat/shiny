@@ -163,19 +163,25 @@ namespace shelf
 	template <typename FN>
 	auto for_each_line(atma::filesystem::file_t& file, size_t maxsize, FN&& fn) -> void
 	{
-#if 0
-		auto buf = atma::unique_memory_t(maxsize);
+		auto buf = atma::unique_memory_t{maxsize};
+		auto filesize = file.size();
 
-		size_t i = 0;
-		while (i != maxsize) {
-			auto pos = i++;
-			file.read(buf.begin() + pos, 1);
-			if (buf[pos] == '\n')
-				break;
+		size_t ipos = 0;
+		while (ipos != filesize)
+		{
+			size_t opos = 0;
+			while (opos != maxsize && ipos != filesize)
+			{
+				file.read(buf.begin() + opos, 1);
+				if (buf.at<char>(opos) == '\n')
+					break;
+				++ipos;
+				++opos;
+			}
+
+			fn(reinterpret_cast<char*>(buf.begin()), opos + 1);
+			opos = 0;
 		}
-
-		fn(buf.begin(), i);
-#endif
 	}
 
 
@@ -227,14 +233,15 @@ private:
 struct octree_t::node_t
 {
 	node_t()
+		: view_(buf_)
 	{}
 
 	node_t(math::aabc_t const& aabc)
-		: aabc(aabc)
+		: aabc(aabc), view_(buf_)
 	{}
 
 	node_t(octree_allocate_tag tag, math::aabc_t const& aabc)
-		: aabc(aabc)
+		: aabc(aabc), view_(buf_)
 	{
 		imem_allocate(tag);
 	}
@@ -277,8 +284,10 @@ private:
 	template <typename FN>
 	auto imem_for_each(FN&& fn) -> void
 	{
-		for (auto i = reinterpret_cast<node_t*>(buf_.begin()); i != reinterpret_cast<node_t*>(buf_.end()); ++i)
+		for (auto i = buf_.begin<node_t>(); i != buf_.end<node_t>(); ++i)
 			fn(*i);
+		//for (auto& x : view_)
+		//	fn(x);
 	}
 
 private:
@@ -327,6 +336,8 @@ auto octree_t::node_t::inbounds(math::vector4f const& point) -> bool
 #include <dust/runtime.hpp>
 #include <dust/context.hpp>
 #include <shelf/file.hpp>
+#include <sstream>
+
 
 auto go() -> void
 {
@@ -363,8 +374,23 @@ obj_model_t::obj_model_t(atma::filesystem::file_t& file)
 {
 	//namespace rgx = atma::regex;
 
-	shelf::for_each_line(file, 128, [](char const* str, size_t size) {
-		float x, y, z;
+	shelf::for_each_line(file, 128, [&](char const* str, size_t size) {
+		int brekapoint = 4;
+		
+		switch (str[0])
+		{
+			case 'v': {
+				auto ss = std::istringstream{str + 2};
+				float x, y, z;
+				ss >> x >> y >> z;
+				verts_.push_back(math::point4f(x, y, z));
+			}
+
+			case 'f': {
+				
+			}
+		}
+		//float x, y, z;
 		//rgx::parse(str, size) << rgx::str("v: ") << capture<float>(x) << 
 	});
 }
@@ -382,7 +408,11 @@ auto voxelize() -> void
 
 int main()
 {
-	auto f = shelf::file_t{};
+	auto sf = shelf::file_t{};
+	
+
+	auto f = atma::filesystem::file_t{"../../data/dragon.obj"};
+	auto of = obj_model_t{f};
 
 	go();
 }
