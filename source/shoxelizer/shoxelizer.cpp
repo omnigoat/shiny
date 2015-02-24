@@ -292,6 +292,7 @@ private:
 
 private:
 	atma::unique_memory_t buf_;
+	atma::memory_view_t<atma::unique_memory_t, node_t> view_;
 
 	std::vector<math::triangle_t> data_;
 };
@@ -405,14 +406,48 @@ auto voxelize() -> void
 	
 }
 
+template <size_t Bufsize, typename FN>
+auto for_each_line(shelf::abstract_input_stream_t& stream, size_t maxsize, FN&& fn) -> void
+{
+	//auto buf = atma::unique_memory_t{Bufsize};
+	char buf[Bufsize];
+	atma::string line;
+
+	// read bytes into line until newline is found
+	auto rr = shelf::read_result_t{shelf::stream_status_t::ok, 0};
+	while (rr.status == shelf::stream_status_t::ok)
+	{
+		rr = stream.read(buf, Bufsize);
+		auto bufend = buf + rr.bytes_read;
+		auto bufp = buf;
+
+		while (bufp != bufend)
+		{
+			auto newline = std::find(bufp, bufend, '\n');
+			line.append(bufp, newline);
+			//for (auto p = bufp; p != newline; ++p)
+				//line.push_back(*p);
+
+			if (newline != bufend) {
+				fn(line.raw_begin(), line.raw_size());
+				line.clear();
+			}
+
+			bufp = (newline == bufend) ? bufend : newline + 1;
+		}
+	}
+}
+
 
 int main()
 {
-	auto sf = shelf::file_t{};
-	
+	auto sf = shelf::file_t{"../../data/dragon.obj"};
+	for_each_line<128>(sf, 0, [](char const* buf, size_t size) {
+		std::cout << std::string(buf, buf + size) << std::endl;
+	});
 
-	auto f = atma::filesystem::file_t{"../../data/dragon.obj"};
-	auto of = obj_model_t{f};
+	//auto f = atma::filesystem::file_t{"../../data/dragon.obj"};
+	//auto of = obj_model_t{f};
 
-	go();
+	//go();
 }
