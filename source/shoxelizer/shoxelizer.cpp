@@ -10,6 +10,10 @@
 
 #include <filesystem>
 
+#include <dust/runtime.hpp>
+#include <dust/context.hpp>
+#include <shelf/file.hpp>
+#include <sstream>
 
 
 
@@ -160,27 +164,34 @@ namespace shelf
 		});
 	}
 
-	template <typename FN>
-	auto for_each_line(atma::filesystem::file_t& file, size_t maxsize, FN&& fn) -> void
+
+
+	template <size_t Bufsize, typename FN>
+	auto for_each_line(abstract_input_stream_t& stream, size_t maxsize, FN&& fn) -> void
 	{
-		auto buf = atma::unique_memory_t{maxsize};
-		auto filesize = file.size();
+		char buf[Bufsize];
+		atma::string line;
 
-		size_t ipos = 0;
-		while (ipos != filesize)
+		// read bytes into line until newline is found
+		auto rr = shelf::read_result_t{shelf::stream_status_t::ok, 0};
+		while (rr.status == shelf::stream_status_t::ok)
 		{
-			size_t opos = 0;
-			while (opos != maxsize && ipos != filesize)
-			{
-				file.read(buf.begin() + opos, 1);
-				if (buf.at<char>(opos) == '\n')
-					break;
-				++ipos;
-				++opos;
-			}
+			rr = stream.read(buf, Bufsize);
+			auto bufend = buf + rr.bytes_read;
+			auto bufp = buf;
 
-			fn(reinterpret_cast<char*>(buf.begin()), opos + 1);
-			opos = 0;
+			while (bufp != bufend)
+			{
+				auto newline = std::find(bufp, bufend, '\n');
+				line.append(bufp, newline);
+
+				if (newline != bufend) {
+					fn(line.raw_begin(), line.raw_size());
+					line.clear();
+				}
+
+				bufp = (newline == bufend) ? bufend : newline + 1;
+			}
 		}
 	}
 
@@ -334,10 +345,6 @@ auto octree_t::node_t::inbounds(math::vector4f const& point) -> bool
 }
 
 
-#include <dust/runtime.hpp>
-#include <dust/context.hpp>
-#include <shelf/file.hpp>
-#include <sstream>
 
 
 auto go() -> void
@@ -361,7 +368,7 @@ auto go() -> void
 
 struct obj_model_t
 {
-	obj_model_t(atma::filesystem::file_t&);
+	obj_model_t(shelf::file_t&);
 
 private:
 	using verts_t = std::vector<math::vector4f>;
@@ -371,28 +378,28 @@ private:
 	faces_t faces_;
 };
 
-obj_model_t::obj_model_t(atma::filesystem::file_t& file)
+obj_model_t::obj_model_t(shelf::file_t& file)
 {
 	//namespace rgx = atma::regex;
 
-	shelf::for_each_line(file, 128, [&](char const* str, size_t size) {
-		int brekapoint = 4;
-		
+	shelf::for_each_line<256>(file, 128, [&](char const* str, size_t size)
+	{
 		switch (str[0])
 		{
 			case 'v': {
-				auto ss = std::istringstream{str + 2};
 				float x, y, z;
-				ss >> x >> y >> z;
+				sscanf(str, "v %f %f %f", &x, &y, &z);
 				verts_.push_back(math::point4f(x, y, z));
+				break;
 			}
 
 			case 'f': {
-				
+				int32 a, b, c;
+				sscanf(str, "f %d %d %d", &a, &b, &c);
+				faces_.push_back(math::vector4i{a, b, c, 0});
+				break;
 			}
 		}
-		//float x, y, z;
-		//rgx::parse(str, size) << rgx::str("v: ") << capture<float>(x) << 
 	});
 }
 
@@ -406,48 +413,10 @@ auto voxelize() -> void
 	
 }
 
-template <size_t Bufsize, typename FN>
-auto for_each_line(shelf::abstract_input_stream_t& stream, size_t maxsize, FN&& fn) -> void
-{
-	//auto buf = atma::unique_memory_t{Bufsize};
-	char buf[Bufsize];
-	atma::string line;
-
-	// read bytes into line until newline is found
-	auto rr = shelf::read_result_t{shelf::stream_status_t::ok, 0};
-	while (rr.status == shelf::stream_status_t::ok)
-	{
-		rr = stream.read(buf, Bufsize);
-		auto bufend = buf + rr.bytes_read;
-		auto bufp = buf;
-
-		while (bufp != bufend)
-		{
-			auto newline = std::find(bufp, bufend, '\n');
-			line.append(bufp, newline);
-			//for (auto p = bufp; p != newline; ++p)
-				//line.push_back(*p);
-
-			if (newline != bufend) {
-				fn(line.raw_begin(), line.raw_size());
-				line.clear();
-			}
-
-			bufp = (newline == bufend) ? bufend : newline + 1;
-		}
-	}
-}
-
 
 int main()
 {
 	auto sf = shelf::file_t{"../../data/dragon.obj"};
-	for_each_line<128>(sf, 0, [](char const* buf, size_t size) {
-		std::cout << std::string(buf, buf + size) << std::endl;
-	});
+	auto obj = obj_model_t{sf};
 
-	//auto f = atma::filesystem::file_t{"../../data/dragon.obj"};
-	//auto of = obj_model_t{f};
-
-	//go();
 }
