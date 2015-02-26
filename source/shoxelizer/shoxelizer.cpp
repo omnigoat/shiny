@@ -368,20 +368,33 @@ auto go() -> void
 
 struct obj_model_t
 {
-	obj_model_t(shelf::file_t&);
-
-private:
 	using verts_t = std::vector<math::vector4f>;
 	using faces_t = std::vector<math::vector4i>;
 
+	obj_model_t(shelf::file_t&);
+
+	auto vertices() const -> verts_t const& { return verts_; }
+	auto faces() const -> faces_t const& { return faces_; }
+
+private:
 	verts_t verts_;
 	faces_t faces_;
 };
 
+struct mesh_t
+{
+	using vertices_t = std::vector<math::vector4f>;
+	using indices_t = std::vector<math::vector4i>;
+
+	mesh_t();
+	mesh_t(size_t vertices, size_t indices);
+
+private:
+	
+};
+
 obj_model_t::obj_model_t(shelf::file_t& file)
 {
-	//namespace rgx = atma::regex;
-
 	shelf::for_each_line<256>(file, 128, [&](char const* str, size_t size)
 	{
 		switch (str[0])
@@ -403,20 +416,24 @@ obj_model_t::obj_model_t(shelf::file_t& file)
 	});
 }
 
-auto objfile_reader() -> void
-{
-	
-}
-
-auto voxelize() -> void
-{
-	
-}
-
 
 int main()
 {
+#if 0
 	auto sf = shelf::file_t{"../../data/dragon.obj"};
 	auto obj = obj_model_t{sf};
 
+	auto f2 = shelf::file_t{"../../data/dragon2.msh", shelf::file_access_t::write};
+
+	uint64 verts = obj.vertices().size();
+	uint64 faces = obj.faces().size();
+	f2.write(&verts, sizeof(uint64));
+	f2.write(&faces, sizeof(uint64));
+
+	f2.write(&obj.vertices()[0], sizeof(math::vector4f) * verts);
+	f2.write(&obj.faces()[0], sizeof(math::vector4i) * faces);
+#else
+	auto msh_file = shelf::file_t {"../../data/dragon2.msh"};
+	auto msh = msh_model_t{msh_file};
+#endif
 }
