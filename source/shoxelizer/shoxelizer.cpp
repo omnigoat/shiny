@@ -322,7 +322,7 @@ auto octree_t::insert(math::triangle_t const& tri) -> bool
 
 auto octree_t::node_t::insert(math::triangle_t const& tri) -> bool
 {
-	if (!atma::math::intersect_aabc_triangle(aabc, tri))
+	if (!atma::math::intersect_aabc_triangle2(aabc, tri))
 	{
 		return false;
 	}
@@ -419,6 +419,9 @@ obj_model_t::obj_model_t(shelf::file_t& file)
 
 int main()
 {
+	auto oct = octree_t{octree_allocate_tag{3}};
+	oct.insert(math::triangle_t{math::point4f(0.1f, 0.1f, 0.1f), math::point4f(0.6f, 0.2f, 0.3f), math::point4f(-0.10f, 0.2f, 0.44f)});
+
 #if 0
 	auto sf = shelf::file_t{"../../data/dragon.obj"};
 	auto obj = obj_model_t{sf};
@@ -432,7 +435,7 @@ int main()
 
 	f2.write(&obj.vertices()[0], sizeof(math::vector4f) * verts);
 	f2.write(&obj.faces()[0], sizeof(math::vector4i) * faces);
-#else
+#elif 0
 	auto msh_file = shelf::file_t {"../../data/dragon2.msh"};
 	auto msh = msh_model_t{msh_file};
 #endif
