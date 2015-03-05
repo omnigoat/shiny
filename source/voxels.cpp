@@ -1,19 +1,19 @@
-#include <dust/runtime.hpp>
-#include <dust/context.hpp>
-#include <dust/vertex_buffer.hpp>
-#include <dust/vertex_declaration.hpp>
-#include <dust/vertex_shader.hpp>
-#include <dust/fragment_shader.hpp>
-#include <dust/constant_buffer.hpp>
-#include <dust/index_buffer.hpp>
-#include <dust/camera.hpp>
-#include <dust/scene.hpp>
-#include <dust/texture2d.hpp>
-#include <dust/compute_shader.hpp>
-#include <dust/shader_resource2d.hpp>
-#include <dust/texture3d.hpp>
-#include <dust/platform/win32/generic_buffer.hpp>
-#include <dust/constant_buffer.hpp>
+#include <shiny/runtime.hpp>
+#include <shiny/context.hpp>
+#include <shiny/vertex_buffer.hpp>
+#include <shiny/vertex_declaration.hpp>
+#include <shiny/vertex_shader.hpp>
+#include <shiny/fragment_shader.hpp>
+#include <shiny/constant_buffer.hpp>
+#include <shiny/index_buffer.hpp>
+#include <shiny/camera.hpp>
+#include <shiny/scene.hpp>
+#include <shiny/texture2d.hpp>
+#include <shiny/compute_shader.hpp>
+#include <shiny/shader_resource2d.hpp>
+#include <shiny/texture3d.hpp>
+#include <shiny/platform/win32/generic_buffer.hpp>
+#include <shiny/constant_buffer.hpp>
 
 #include <atma/filesystem/file.hpp>
 #include <atma/unique_memory.hpp>
@@ -24,7 +24,7 @@
 
 
 // vertex declaration
-dust::vertex_declaration_t const* vd = nullptr;
+shiny::vertex_declaration_t const* vd = nullptr;
 
 // vertex-buffer
 float vbd[] = {
@@ -35,11 +35,11 @@ float vbd[] = {
 	-1.f, -1.f,  0.f, 1.f,
 	-1.f,  1.f,  0.f, 1.f,
 };
-auto vb = dust::vertex_buffer_ptr();
+auto vb = shiny::vertex_buffer_ptr();
 
 // shaders
-auto vs = dust::vertex_shader_ptr();
-auto ps = dust::fragment_shader_ptr();
+auto vs = shiny::vertex_shader_ptr();
+auto ps = shiny::fragment_shader_ptr();
 
 struct voxel_cb
 {
@@ -48,11 +48,11 @@ struct voxel_cb
 };
 
 auto vcbd = voxel_cb();
-auto vcb = dust::constant_buffer_ptr();
+auto vcb = shiny::constant_buffer_ptr();
 
 // buffers/textures
-auto nodebuf = dust::generic_buffer_ptr();
-auto bricktex = dust::texture3d_ptr();
+auto nodebuf = shiny::generic_buffer_ptr();
+auto bricktex = shiny::texture3d_ptr();
 static FILE* fout;
 
 template <size_t AccumulateSize, size_t ReadSize, typename FN>
@@ -211,41 +211,41 @@ public:
 	}
 };
 
-void voxels_init(dust::context_ptr const& ctx)
+void voxels_init(shiny::context_ptr const& ctx)
 {
 	vd = ctx->runtime().vertex_declaration_of({
-		{dust::vertex_stream_semantic_t::position, 0, dust::element_format_t::f32x4}
+		{shiny::vertex_stream_semantic_t::position, 0, shiny::element_format_t::f32x4}
 	});
 
-	vb = dust::create_vertex_buffer(ctx, dust::buffer_usage_t::immutable, vd, 8, vbd);
+	vb = shiny::create_vertex_buffer(ctx, shiny::buffer_usage_t::immutable, vd, 8, vbd);
 	
 	{
 		auto f = atma::filesystem::file_t("../../shaders/vs_voxels.cso");
 		auto fm = f.read_into_memory();
-		vs = dust::create_vertex_shader(ctx, vd, fm, true);
+		vs = shiny::create_vertex_shader(ctx, vd, fm, true);
 	}
 
 	{
 		auto f = atma::filesystem::file_t("../../shaders/ps_voxels.cso");
 		auto fm = f.read_into_memory();
-		ps = dust::create_fragment_shader(ctx, fm, true);
+		ps = shiny::create_fragment_shader(ctx, fm, true);
 	}
 
-	vcb = dust::create_constant_buffer(ctx, sizeof(voxel_cb), &vcbd);
+	vcb = shiny::create_constant_buffer(ctx, sizeof(voxel_cb), &vcbd);
 
 	static uint const brick_edge_voxels = 8;
 	static uint const brick_size = brick_edge_voxels*brick_edge_voxels*brick_edge_voxels*sizeof(float)*4;
 	static uint const brick_count = 30;
 	static uint const box_edge_size = brick_edge_voxels*brick_count;
 
-	bricktex = dust::create_texture3d(ctx, dust::texture_usage_t::streaming, dust::element_format_t::f32x4, box_edge_size);
+	bricktex = shiny::create_texture3d(ctx, shiny::texture_usage_t::streaming, shiny::element_format_t::f32x4, box_edge_size);
 	{
 		// open file, read everything into memory
 		// todo: memory-mapped files
-		dust::texture3d_ptr blam;
+		shiny::texture3d_ptr blam;
 
 		// inflate 16kb at a time, and call our function for each brick
-		ctx->signal_res_map(bricktex, 0, dust::map_type_t::write_discard, [&](dust::mapped_subresource_t& sr)
+		ctx->signal_res_map(bricktex, 0, shiny::map_type_t::write_discard, [&](shiny::mapped_subresource_t& sr)
 		{
 			auto f = atma::filesystem::file_t{"../../data/bunny.oct"};
 			auto m = atma::unique_memory_t(f.size());
@@ -261,8 +261,8 @@ void voxels_init(dust::context_ptr const& ctx)
 			i += 4; // zero
 
 
-			//nodebuf = dust::create_generic_buffer(ctx, dust::buffer_usage_t::immutable, 64, 1, nodes_tiles, 1);
-			nodebuf = dust::create_generic_buffer(ctx, dust::buffer_usage_t::immutable, 64, node_count, i, node_count);
+			//nodebuf = shiny::create_generic_buffer(ctx, shiny::buffer_usage_t::immutable, 64, 1, nodes_tiles, 1);
+			nodebuf = shiny::create_generic_buffer(ctx, shiny::buffer_usage_t::immutable, 64, node_count, i, node_count);
 
 			i += 64 * node_count;
 
@@ -304,7 +304,7 @@ void voxels_init(dust::context_ptr const& ctx)
 	ctx->signal_block();
 }
 
-void voxels_update(dust::context_ptr const& ctx, atma::math::vector4f const& camera_position, float yaw, float pitch)
+void voxels_update(shiny::context_ptr const& ctx, atma::math::vector4f const& camera_position, float yaw, float pitch)
 {
 	vcbd.position = camera_position;
 	vcbd.x = yaw;
@@ -314,7 +314,7 @@ void voxels_update(dust::context_ptr const& ctx, atma::math::vector4f const& cam
 	ctx->signal_cs_upload_constant_buffer(2, vcb);
 }
 
-void voxels_render(dust::context_ptr const& ctx)
+void voxels_render(shiny::context_ptr const& ctx)
 {
 #if 0
 	ctx->signal_fs_upload_shader_resource(0, nodebuf);
@@ -325,15 +325,15 @@ void voxels_render(dust::context_ptr const& ctx)
 
 #else
 	ctx->signal_draw(
-		dust::shared_state_t{
-			{{dust::constant_buffer_index::user, vcb}}
+		shiny::shared_state_t{
+			{{shiny::constant_buffer_index::user, vcb}}
 		},
 
-		dust::vertex_stage_state_t{vs, vb},
+		shiny::vertex_stage_state_t{vs, vb},
 
-		dust::fragment_stage_state_t{
+		shiny::fragment_stage_state_t{
 			ps,
-			{{dust::constant_buffer_index::user, vcb}},
+			{{shiny::constant_buffer_index::user, vcb}},
 			{{0, nodebuf}, {1, bricktex}}
 		});
 #endif

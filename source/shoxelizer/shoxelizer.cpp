@@ -1,18 +1,18 @@
-#include <dust/runtime.hpp>
-#include <dust/context.hpp>
-#include <dust/vertex_buffer.hpp>
-#include <dust/vertex_declaration.hpp>
-#include <dust/vertex_shader.hpp>
-#include <dust/fragment_shader.hpp>
-#include <dust/constant_buffer.hpp>
-#include <dust/index_buffer.hpp>
-#include <dust/camera.hpp>
-#include <dust/scene.hpp>
-#include <dust/texture2d.hpp>
-#include <dust/compute_shader.hpp>
-#include <dust/shader_resource2d.hpp>
-#include <dust/texture3d.hpp>
-#include <dust/platform/win32/generic_buffer.hpp>
+#include <shiny/runtime.hpp>
+#include <shiny/context.hpp>
+#include <shiny/vertex_buffer.hpp>
+#include <shiny/vertex_declaration.hpp>
+#include <shiny/vertex_shader.hpp>
+#include <shiny/fragment_shader.hpp>
+#include <shiny/constant_buffer.hpp>
+#include <shiny/index_buffer.hpp>
+#include <shiny/camera.hpp>
+#include <shiny/scene.hpp>
+#include <shiny/texture2d.hpp>
+#include <shiny/compute_shader.hpp>
+#include <shiny/shader_resource2d.hpp>
+#include <shiny/texture3d.hpp>
+#include <shiny/platform/win32/generic_buffer.hpp>
 #include <shelf/file.hpp>
 
 #include <fooey/widgets/window.hpp>
@@ -472,32 +472,32 @@ int main()
 	auto window = fooey::window("Excitement.", 480, 360);
 	renderer->add_window(window);
 
-	// initialise dust
-	auto dust_runtime = dust::runtime_t();
-	auto ctx = dust::create_context(dust_runtime, window, dust::primary_adapter);
+	// initialise shiny
+	auto dust_runtime = shiny::runtime_t();
+	auto ctx = shiny::create_context(dust_runtime, window, shiny::primary_adapter);
 
 	// vertex declaration
 	auto vd = dust_runtime.vertex_declaration_of({
-		{dust::vertex_stream_semantic_t::position, 0, dust::element_format_t::f32x4},
-		{dust::vertex_stream_semantic_t::color, 0, dust::element_format_t::f32x4}
+		{shiny::vertex_stream_semantic_t::position, 0, shiny::element_format_t::f32x4},
+		{shiny::vertex_stream_semantic_t::color, 0, shiny::element_format_t::f32x4}
 	});
 
 	// shaders
 	auto f = atma::filesystem::file_t("../../shaders/vs_debug.hlsl");
 	auto fm = f.read_into_memory();
-	auto vs = dust::create_vertex_shader(ctx, vd, fm, false);
+	auto vs = shiny::create_vertex_shader(ctx, vd, fm, false);
 
 	auto f2 = atma::filesystem::file_t("../../shaders/ps_debug.hlsl");
 	auto fm2 = f2.read_into_memory();
-	auto ps = dust::create_fragment_shader(ctx, fm2, false);
+	auto ps = shiny::create_fragment_shader(ctx, fm2, false);
 
 	auto vs_basic_file = atma::filesystem::file_t("../../shaders/vs_basic.hlsl");
 	auto vs_basic_mem = vs_basic_file.read_into_memory();
-	auto vs_basic = dust::create_vertex_shader(ctx, vd, vs_basic_mem, false);
+	auto vs_basic = shiny::create_vertex_shader(ctx, vd, vs_basic_mem, false);
 
 	auto ps_basic_file = atma::filesystem::file_t("../../shaders/ps_basic.hlsl");
 	auto ps_basic_mem = ps_basic_file.read_into_memory();
-	auto ps_basic = dust::create_fragment_shader(ctx, ps_basic_mem, false);
+	auto ps_basic = shiny::create_fragment_shader(ctx, ps_basic_mem, false);
 
 	// vertex-buffer
 	float vbd[] = {
@@ -510,7 +510,7 @@ int main()
 		-0.5f, -0.5f,  0.5f, 1.f,   1.f, 1.f, 1.f, 1.f,
 		-0.5f, -0.5f, -0.5f, 1.f,   1.f, 0.f, 0.f, 1.f,
 	};
-	auto vb = dust::create_vertex_buffer(ctx, dust::buffer_usage_t::immutable, vd, 8, vbd);
+	auto vb = shiny::create_vertex_buffer(ctx, shiny::buffer_usage_t::immutable, vd, 8, vbd);
 
 	// index-buffer
 	uint16 ibd[] = {
@@ -521,7 +521,7 @@ int main()
 		5, 1, 3, 3, 7, 5, // -z plane
 		6, 2, 0, 0, 4, 6, // +z plane
 	};
-	auto ib = dust::create_index_buffer(ctx, dust::buffer_usage_t::immutable, 16, 36, ibd);
+	auto ib = shiny::create_index_buffer(ctx, shiny::buffer_usage_t::immutable, 16, 36, ibd);
 
 
 
@@ -537,7 +537,7 @@ int main()
 	};
 	
 	auto cbd = cb_t{aml::matrix4f::identity(), aml::vector4f{1.f, 0.f, 0.f, 1.f}};
-	auto cb = dust::create_constant_buffer(ctx, sizeof(cb_t), &cbd);
+	auto cb = shiny::create_constant_buffer(ctx, sizeof(cb_t), &cbd);
 
 	bool running = true;
 
@@ -624,11 +624,11 @@ int main()
 		walk_direction = math::point4f(sin(x) * cos(y), sin(y), cos(x) * cos(y));
 		strafe_direction = math::cross_product(walk_direction, math::vector4f(0.f, 1.f, 0.f, 0.f));
 
-		auto camera = dust::camera_t(
+		auto camera = shiny::camera_t(
 			math::look_at(position, position + walk_direction, math::vector4f {0.f, 1.f, 0.f, 0.f}),
 			math::perspective_fov(math::pi_over_two, (float)window->height() / window->width(), 0.03434f, 120.f));
 
-		auto scene = dust::scene_t{ctx, camera, dust::rendertarget_clear_t{.2f, .2f, .2f}};
+		auto scene = shiny::scene_t{ctx, camera, shiny::rendertarget_clear_t{.2f, .2f, .2f}};
 		
 		int i = 0;
 		oct.root_->for_each(0, [&](int level, octree_t::node_t const* x)
@@ -639,15 +639,15 @@ int main()
 				return;
 			//++i;
 			// setup box
-			auto vb = dust::create_vertex_buffer(ctx, dust::buffer_usage_t::immutable, vd, 8, vbd);
-			auto ib = dust::create_index_buffer(ctx, dust::buffer_usage_t::immutable, 16, 36, ibd);
+			auto vb = shiny::create_vertex_buffer(ctx, shiny::buffer_usage_t::immutable, vd, 8, vbd);
+			auto ib = shiny::create_index_buffer(ctx, shiny::buffer_usage_t::immutable, 16, 36, ibd);
 
 			auto scale = aml::matrix4f::scale(x->aabc.diameter());
 			auto move = aml::matrix4f::translate(x->aabc.origin());
 			auto transform = move * scale;
 
 			auto cbd = cb_t{transform, aml::vector4f{1.f, 1.f - (level / 6.f), 0.f, .15f}};
-			auto cb = dust::create_constant_buffer(ctx, sizeof(cb_t), &cbd);
+			auto cb = shiny::create_constant_buffer(ctx, sizeof(cb_t), &cbd);
 			scene.signal_cs_upload_constant_buffer(1, cb);
 			scene.signal_draw(ib, vd, vb, vs, ps);
 		});
@@ -660,13 +660,13 @@ int main()
 			tri.v2.x, tri.v2.y, tri.v2.z, 1.f, 0.f,0.f,.3f,.2f,
 		};
 
-		auto tvb = dust::create_vertex_buffer(ctx, dust::buffer_usage_t::immutable, vd, 3, tvbd);
+		auto tvb = shiny::create_vertex_buffer(ctx, shiny::buffer_usage_t::immutable, vd, 3, tvbd);
 
 		// index-buffer
 		uint16 tibd[] = {
 			0, 1, 2
 		};
-		auto tib = dust::create_index_buffer(ctx, dust::buffer_usage_t::immutable, 16, 3, tibd);
+		auto tib = shiny::create_index_buffer(ctx, shiny::buffer_usage_t::immutable, 16, 3, tibd);
 
 		//scene.signal_res_update(cb, sizeof(cb_t), &cbd);
 		//ctx->signal_vs_upload_constant_buffer(1, cb);
@@ -676,7 +676,7 @@ int main()
 		
 
 		auto tcbd = cb_t{aml::matrix4f::identity(), aml::vector4f{0.f, 0.f, 1.f, 0.3f}};
-		auto tcb = dust::create_constant_buffer(ctx, sizeof(cb_t), &tcbd);
+		auto tcb = shiny::create_constant_buffer(ctx, sizeof(cb_t), &tcbd);
 		scene.signal_cs_upload_constant_buffer(1, tcb);
 		scene.signal_draw(tib, vd, tvb, vs_basic, ps_basic);
 

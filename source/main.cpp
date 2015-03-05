@@ -1,19 +1,19 @@
 #include <memory>
-#include <dust/runtime.hpp>
-#include <dust/context.hpp>
-#include <dust/vertex_buffer.hpp>
-#include <dust/vertex_declaration.hpp>
-#include <dust/vertex_shader.hpp>
-#include <dust/fragment_shader.hpp>
-#include <dust/constant_buffer.hpp>
-#include <dust/index_buffer.hpp>
-#include <dust/camera.hpp>
-#include <dust/scene.hpp>
-#include <dust/texture2d.hpp>
-#include <dust/compute_shader.hpp>
-#include <dust/shader_resource2d.hpp>
-#include <dust/texture3d.hpp>
-#include <dust/platform/win32/generic_buffer.hpp>
+#include <shiny/runtime.hpp>
+#include <shiny/context.hpp>
+#include <shiny/vertex_buffer.hpp>
+#include <shiny/vertex_declaration.hpp>
+#include <shiny/vertex_shader.hpp>
+#include <shiny/fragment_shader.hpp>
+#include <shiny/constant_buffer.hpp>
+#include <shiny/index_buffer.hpp>
+#include <shiny/camera.hpp>
+#include <shiny/scene.hpp>
+#include <shiny/texture2d.hpp>
+#include <shiny/compute_shader.hpp>
+#include <shiny/shader_resource2d.hpp>
+#include <shiny/texture3d.hpp>
+#include <shiny/platform/win32/generic_buffer.hpp>
 
 #include <fooey/widgets/window.hpp>
 #include <fooey/fooey.hpp>
@@ -42,9 +42,9 @@
 #define CS_TEST 0
 
 
-extern void voxels_init(dust::context_ptr const&);
-extern void voxels_update(dust::context_ptr const&, atma::math::vector4f const&, float, float);
-extern void voxels_render(dust::context_ptr const&);
+extern void voxels_init(shiny::context_ptr const&);
+extern void voxels_update(shiny::context_ptr const&, atma::math::vector4f const&, float, float);
+extern void voxels_render(shiny::context_ptr const&);
 
 extern int function_main();
 
@@ -57,24 +57,24 @@ int main()
 	auto window = fooey::window("Excitement.", 480, 360);
 	renderer->add_window(window);
 
-	// initialise dust
-	auto dust_runtime = dust::runtime_t();
-	auto ctx = dust::create_context(dust_runtime, window, dust::primary_adapter);
+	// initialise shiny
+	auto dust_runtime = shiny::runtime_t();
+	auto ctx = shiny::create_context(dust_runtime, window, shiny::primary_adapter);
 
 	// vertex declaration
 	auto vd = dust_runtime.vertex_declaration_of({
-		{dust::vertex_stream_semantic_t::position, 0, dust::element_format_t::f32x4},
-		{dust::vertex_stream_semantic_t::color, 0, dust::element_format_t::f32x4}
+		{shiny::vertex_stream_semantic_t::position, 0, shiny::element_format_t::f32x4},
+		{shiny::vertex_stream_semantic_t::color, 0, shiny::element_format_t::f32x4}
 	});
 
 	// shaders
 	auto f = atma::filesystem::file_t("../../shaders/vs_basic.hlsl");
 	auto fm = f.read_into_memory();
-	auto vs = dust::create_vertex_shader(ctx, vd, fm, false);
+	auto vs = shiny::create_vertex_shader(ctx, vd, fm, false);
 
 	auto f2 = atma::filesystem::file_t("../../shaders/ps_basic.hlsl");
 	auto fm2 = f2.read_into_memory();
-	auto ps = dust::create_fragment_shader(ctx, fm2, false);
+	auto ps = shiny::create_fragment_shader(ctx, fm2, false);
 
 	// vertex-buffer
 	float vbd[] = {
@@ -87,7 +87,7 @@ int main()
 		-0.5f, -0.5f,  0.5f, 1.f,   1.f, 1.f, 1.f, 1.f,
 		-0.5f, -0.5f, -0.5f, 1.f,   1.f, 0.f, 0.f, 1.f,
 	};
-	auto vb = dust::create_vertex_buffer(ctx, dust::buffer_usage_t::immutable, vd, 8, vbd);
+	auto vb = shiny::create_vertex_buffer(ctx, shiny::buffer_usage_t::immutable, vd, 8, vbd);
 
 	// index-buffer
 	uint16 ibd[] = {
@@ -98,7 +98,7 @@ int main()
 		5, 1, 3, 3, 7, 5, // -z plane
 		6, 2, 0, 0, 4, 6, // +z plane
 	};
-	auto ib = dust::create_index_buffer(ctx, dust::buffer_usage_t::immutable, 16, 36, ibd);
+	auto ib = shiny::create_index_buffer(ctx, shiny::buffer_usage_t::immutable, 16, 36, ibd);
 
 
 
@@ -108,14 +108,14 @@ int main()
 	// constant buffer
 	static float t = 0.f;
 	atma::math::matrix4f world_matrix;
-	auto cb = dust::create_constant_buffer(ctx, sizeof(world_matrix), &world_matrix);
+	auto cb = shiny::create_constant_buffer(ctx, sizeof(world_matrix), &world_matrix);
 
 	
 
 	
 	// compute shader?
 #if CS_TEST
-	auto cs = dust::compute_shader_ptr();
+	auto cs = shiny::compute_shader_ptr();
 	{
 		namespace afs = atma::filesystem;
 
@@ -123,16 +123,16 @@ int main()
 		auto m = atma::unique_memory_t(f.size());
 		f.read(m.begin(), f.size());
 
-		cs = dust::create_compute_shader(ctx, m.begin(), m.size());
+		cs = shiny::create_compute_shader(ctx, m.begin(), m.size());
 	}
 
 	// surfaces for compute shader test
-	auto sr = dust::create_shader_resource2d(ctx, dust::view_type_t::read_only, dust::element_format_t::un8x4, 128, 128);
-	auto ur = dust::create_shader_resource2d(ctx, dust::view_type_t::read_write, dust::element_format_t::un8x4, 128, 128);
+	auto sr = shiny::create_shader_resource2d(ctx, shiny::view_type_t::read_only, shiny::element_format_t::un8x4, 128, 128);
+	auto ur = shiny::create_shader_resource2d(ctx, shiny::view_type_t::read_write, shiny::element_format_t::un8x4, 128, 128);
 
 	// testing generic buffers too
 	float color[4] = {.0f, .4f, .4f, 1.f};
-	auto gb = dust::create_generic_buffer(ctx, dust::buffer_usage_t::immutable, dust::element_format_t::f32x4, 1, color, 1);
+	auto gb = shiny::create_generic_buffer(ctx, shiny::buffer_usage_t::immutable, shiny::element_format_t::f32x4, 1, color, 1);
 #endif
 
 
@@ -234,7 +234,7 @@ int main()
 #endif
 		
 		// camera
-		auto camera = dust::camera_t(
+		auto camera = shiny::camera_t(
 			math::look_at(math::point4f(sin(x) * cos(y) * 2.f, sin(y) * 2.f, cos(x) * cos(y) * 2.f), math::point4f(0.f, 0.1f, 0.f), math::vector4f(0.f, 1.f, 0.f, 0.f)),
 			math::perspective_fov(math::pi_over_two, (float)window->height() / window->width(), 0.03434f, 120.f));
 
@@ -242,7 +242,7 @@ int main()
 		//camera.look_at(math::point4f());
 
 		//camera.set_aspect(window->height() / (float)window->width());
-		auto scene = dust::scene_t(ctx, camera);
+		auto scene = shiny::scene_t(ctx, camera);
 
 		// do this just to upload the camera :P
 		ctx->signal_draw_scene(scene);
@@ -266,8 +266,8 @@ int main()
 #endif
 
 #if CS_TEST
-		ctx->signal_cs_upload_shader_resource(dust::view_type_t::read_only, sr);
-		ctx->signal_cs_upload_shader_resource(dust::view_type_t::read_write, ur);
+		ctx->signal_cs_upload_shader_resource(shiny::view_type_t::read_only, sr);
+		ctx->signal_cs_upload_shader_resource(shiny::view_type_t::read_write, ur);
 		ctx->signal_cs_upload_generic_buffer(1, gb);
 		ctx->signal_cs_set(cs);
 		ctx->signal_cs_dispatch(4, 4, 1);
