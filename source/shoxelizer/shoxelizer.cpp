@@ -254,7 +254,7 @@ struct octree_t
 	auto insert_point(math::vector4f const&) -> bool;
 	struct node_t;
 
-private:
+
 	node_t* root_;
 
 private:
@@ -279,11 +279,22 @@ struct octree_t::node_t
 		imem_allocate(tag);
 	}
 
+	using data_t = std::vector<math::triangle_t>;
+
 	atma::math::aabc_t aabc;
-	atma::math::triangle_t data;
+	
+	auto data() const -> data_t const& { return data_; }
 
 	auto inbounds(math::vector4f const& point) -> bool;
 	auto insert(math::triangle_t const&) -> bool;
+
+	template <typename FN>
+	auto for_each(int level, FN const& fn) -> void
+	{
+		fn(level, this);
+		for (auto i = buf_.begin<node_t>(); i != buf_.end<node_t>(); ++i)
+			i->for_each(level + 1, fn);
+	}
 
 private:
 	auto child_ref(uint idx) -> node_t& { return reinterpret_cast<node_t*>(buf_.begin())[idx]; }
@@ -319,15 +330,13 @@ private:
 	{
 		for (auto i = buf_.begin<node_t>(); i != buf_.end<node_t>(); ++i)
 			fn(*i);
-		//for (auto& x : view_)
-		//	fn(x);
 	}
 
 private:
 	atma::unique_memory_t buf_;
 	atma::memory_view_t<atma::unique_memory_t, node_t> view_;
 
-	std::vector<math::triangle_t> data_;
+	data_t data_;
 };
 
 
@@ -445,12 +454,11 @@ int main()
 
 	auto r = math::intersect_aabc_triangle2(math::aabc_t{0.125f, 0.125f, 0.375f, 0.25f}, tri);
 
-	auto oct = octree_t{octree_allocate_tag{3}};
+	auto oct = octree_t{octree_allocate_tag{6}};
 	oct.insert(tri);
 
 
-	// draw debug cubes
-		// setup gui
+	// setup gui
 	auto renderer = fooey::system_renderer();
 	auto window = fooey::window("Excitement.", 480, 360);
 	renderer->add_window(window);
@@ -466,11 +474,11 @@ int main()
 	});
 
 	// shaders
-	auto f = atma::filesystem::file_t("../../shaders/vs_basic.hlsl");
+	auto f = atma::filesystem::file_t("../../shaders/vs_debug.hlsl");
 	auto fm = f.read_into_memory();
 	auto vs = dust::create_vertex_shader(ctx, vd, fm, false);
 
-	auto f2 = atma::filesystem::file_t("../../shaders/ps_basic.hlsl");
+	auto f2 = atma::filesystem::file_t("../../shaders/ps_debug.hlsl");
 	auto fm2 = f2.read_into_memory();
 	auto ps = dust::create_fragment_shader(ctx, fm2, false);
 
@@ -505,8 +513,14 @@ int main()
 
 	// constant buffer
 	static float t = 0.f;
-	atma::math::matrix4f world_matrix;
-	auto cb = dust::create_constant_buffer(ctx, sizeof(world_matrix), &world_matrix);
+	struct cb_t
+	{
+		aml::matrix4f world_matrix;
+		aml::vector4f color;
+	};
+	
+	auto cbd = cb_t{aml::matrix4f::identity(), aml::vector4f{1.f, 0.f, 0.f, 1.f}};
+	auto cb = dust::create_constant_buffer(ctx, sizeof(cb_t), &cbd);
 
 	bool running = true;
 
@@ -526,7 +540,7 @@ int main()
 	auto strafe_direction = math::vector4f{1.f, 0.f, 0.f, 0.f};
 
 	math::vector4f rotation;
-	float walk_speed = 0.002f;
+	float walk_speed = 0.2f;
 
 
 	bool mouse_down = false;
@@ -541,7 +555,7 @@ int main()
 			if (mouse_down)
 			{
 				auto dx = e.x() - ox;
-				x -= dx * 0.01f;
+				x += dx * 0.01f;
 
 				auto dy = e.y() - oy;
 				y -= dy * 0.01f;
@@ -585,43 +599,56 @@ int main()
 		else if (y < -atma::math::pi_over_two + 0.1f)
 			y = -atma::math::pi_over_two + 0.1f;
 
-		walk_direction = math::vector4f{sin(x) * cos(y) * 2.f, sin(y) * 2.f, cos(x) * cos(y) * 2.f, 0.f};
 		if (W) position += walk_direction * walk_speed;
-		if (A) position -= strafe_direction * walk_speed;
+		if (A) position += strafe_direction * walk_speed;
 		if (S) position -= walk_direction * walk_speed;
-		if (D) position += strafe_direction * walk_speed;
+		if (D) position -= strafe_direction * walk_speed;
 
-		//walk_direction = math::point4f(sin(x) * cos(y), sin(y), cos(x) * cos(y));
-		//strafe_direction = math::cross_product(walk_direction, math::vector4f(0.f, 1.f, 0.f, 0.f));
+		walk_direction = math::point4f(sin(x) * cos(y), sin(y), cos(x) * cos(y));
+		strafe_direction = math::cross_product(walk_direction, math::vector4f(0.f, 1.f, 0.f, 0.f));
 
-		// camera
 		auto camera = dust::camera_t(
-			//math::look_at(math::point4f(sin(x) * cos(y) * 2.f, sin(y) * 2.f, cos(x) * cos(y) * 2.f), math::point4f(0.f, 0.1f, 0.f), math::vector4f(0.f, 1.f, 0.f, 0.f)),
 			math::look_at(position, position + walk_direction, math::vector4f {0.f, 1.f, 0.f, 0.f}),
 			math::perspective_fov(math::pi_over_two, (float)window->height() / window->width(), 0.03434f, 120.f));
 
 		auto scene = dust::scene_t{ctx, camera, dust::rendertarget_clear_t{.2f, .2f, .2f}};
 		
-		world_matrix = math::matrix4f::identity();
-		scene.signal_res_update(cb, sizeof(world_matrix), &world_matrix);
-		ctx->signal_vs_upload_constant_buffer(1, cb);
+		int i = 0;
+		oct.root_->for_each(0, [&](int level, octree_t::node_t const* x)
+		{
+			if (x->data().empty())
+				return;
+			//if (i > 1)
+				//return;
+			//++i;
+			// setup box
+			auto vb = dust::create_vertex_buffer(ctx, dust::buffer_usage_t::immutable, vd, 8, vbd);
+			auto ib = dust::create_index_buffer(ctx, dust::buffer_usage_t::immutable, 16, 36, ibd);
 
-		scene.signal_draw(ib, vd, vb, vs, ps);
+			auto scale = aml::matrix4f::scale(x->aabc.diameter() * std::powf(0.98f, level));
+			auto move = aml::matrix4f::translate(x->aabc.origin());
+			auto transform = move * scale;
+
+			auto cbd = cb_t{transform, aml::vector4f{1.f, 0.f, 0.f, .2f}};
+			auto cb = dust::create_constant_buffer(ctx, sizeof(cb_t), &cbd);
+			//ctx->signal_cs_upload_constant_buffer(1, cb);
+			scene.signal_cs_upload_constant_buffer(1, cb);
+			scene.signal_draw(ib, vd, vb, vs, ps);
+		});
+
+
+
+
+		//scene.signal_res_update(cb, sizeof(cb_t), &cbd);
+		//ctx->signal_vs_upload_constant_buffer(1, cb);
+		//ctx->signal_cs_upload_constant_buffer(1, cb);
+
+		//scene.signal_draw(ib, vd, vb, vs, ps);
 		ctx->signal_draw_scene(scene);
 		ctx->signal_block();
 		ctx->signal_present();
-
-#if 0
-		++frames;
-		if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start).count() > 1000)
-		{
-			std::cout << "apparently, width: " << window->width() << ", height: " << window->height() << std::endl;
-			//std::cout << "FPS: " << frames << std::endl;
-			start = std::chrono::high_resolution_clock::now();
-			frames = 0;
-		}
-#endif
 	}
+
 	ctx->signal_block();
 
 
