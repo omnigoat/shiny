@@ -11,3 +11,5 @@ data/
 *.inc
 *.ipch
 *.cso
+
+fxc.exe

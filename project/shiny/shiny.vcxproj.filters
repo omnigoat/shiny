@@ -33,17 +33,14 @@
     <Filter Include="source\shiny">
       <UniqueIdentifier>{14079420-de18-4597-80fe-c99aa0f42f3f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="source\shiny\shiny">
-      <UniqueIdentifier>{37b2a706-0ef2-40d5-a9ab-1b21d9a2e0c6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="source\shiny\shiny\platform">
-      <UniqueIdentifier>{12a41398-3e52-463b-9511-7b7d7694b954}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="source\shiny\shiny\platform\win32">
-      <UniqueIdentifier>{37dcddbd-688b-4d43-b54b-6a7f2c8fc705}</UniqueIdentifier>
-    </Filter>
     <Filter Include="source\shelf">
       <UniqueIdentifier>{97a5e9b6-c71a-419f-a4b3-8468b7dca168}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\shiny\platform">
+      <UniqueIdentifier>{12a41398-3e52-463b-9511-7b7d7694b954}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\shiny\platform\win32">
+      <UniqueIdentifier>{37dcddbd-688b-4d43-b54b-6a7f2c8fc705}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -51,46 +48,40 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\shiny\platform\win32\runtime.cpp">
-      <Filter>source\shiny\shiny\platform\win32</Filter>
+      <Filter>source\shiny\platform\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\shiny\platform\win32\output.cpp">
-      <Filter>source\shiny\shiny\platform\win32</Filter>
+      <Filter>source\shiny\platform\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\shiny\platform\win32\context.cpp">
-      <Filter>source\shiny\shiny\platform\win32</Filter>
+      <Filter>source\shiny\platform\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\shiny\platform\win32\vertex_buffer.cpp">
-      <Filter>source\shiny\shiny\platform\win32</Filter>
+      <Filter>source\shiny\platform\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\shiny\platform\win32\vertex_shader.cpp">
-      <Filter>source\shiny\shiny\platform\win32</Filter>
+      <Filter>source\shiny\platform\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\shiny\platform\win32\constant_buffer.cpp">
-      <Filter>source\shiny\shiny\platform\win32</Filter>
+      <Filter>source\shiny\platform\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\shiny\platform\win32\index_buffer.cpp">
-      <Filter>source\shiny\shiny\platform\win32</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\source\shiny\camera.cpp">
-      <Filter>source\shiny\shiny</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\source\shiny\scene.cpp">
-      <Filter>source\shiny\shiny</Filter>
+      <Filter>source\shiny\platform\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\shiny\platform\win32\texture2d.cpp">
-      <Filter>source\shiny\shiny\platform\win32</Filter>
+      <Filter>source\shiny\platform\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\shiny\platform\win32\texture3d.cpp">
-      <Filter>source\shiny\shiny\platform\win32</Filter>
+      <Filter>source\shiny\platform\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\shiny\platform\win32\compute_shader.cpp">
-      <Filter>source\shiny\shiny\platform\win32</Filter>
+      <Filter>source\shiny\platform\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\shiny\platform\win32\buffer.cpp">
-      <Filter>source\shiny\shiny\platform\win32</Filter>
+      <Filter>source\shiny\platform\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\shiny\platform\win32\shader_resource2d.cpp">
-      <Filter>source\shiny\shiny\platform\win32</Filter>
+      <Filter>source\shiny\platform\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\vendor\zlib\adler32.c">
       <Filter>vendor\zlib</Filter>
@@ -138,34 +129,40 @@
       <Filter>vendor\zlib</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\shiny\platform\win32\generic_buffer.cpp">
-      <Filter>source\shiny\shiny\platform\win32</Filter>
+      <Filter>source\shiny\platform\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\voxels.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\shiny\element_format.cpp">
-      <Filter>source\shiny\shiny</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\source\shiny\vertex_stream.cpp">
-      <Filter>source\shiny\shiny</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\source\shiny\platform\win32\resource.cpp">
-      <Filter>source\shiny\shiny\platform\win32</Filter>
+      <Filter>source\shiny\platform\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\shiny\platform\win32\fragment_shader.cpp">
-      <Filter>source\shiny\shiny\platform\win32</Filter>
+      <Filter>source\shiny\platform\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\shiny\function.cpp">
       <Filter>source\shiny</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\shiny\vertex_declaration.cpp">
-      <Filter>source\shiny\shiny</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\source\shiny\platform\win32\geometry_shader.cpp">
-      <Filter>source\shiny\shiny\platform\win32</Filter>
+      <Filter>source\shiny\platform\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\shelf\file.cpp">
       <Filter>source\shelf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\shiny\camera.cpp">
+      <Filter>source\shiny</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\shiny\element_format.cpp">
+      <Filter>source\shiny</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\shiny\scene.cpp">
+      <Filter>source\shiny</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\shiny\vertex_declaration.cpp">
+      <Filter>source\shiny</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\shiny\vertex_stream.cpp">
+      <Filter>source\shiny</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
