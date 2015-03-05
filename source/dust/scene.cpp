@@ -16,9 +16,16 @@ using namespace dust;
 using dust::scene_t;
 
 
-scene_t::scene_t(context_ptr const& context, camera_t const& camera)
+scene_t::scene_t(context_ptr const& context, camera_t const& camera, rendertarget_clear_t const& fc)
 	: context_(context)
 {
+	if (fc.clear())
+	{
+		queue_.push([&] {
+			context_->signal_clear(fc.color());
+		});
+	}
+
 	struct scene_data_t
 	{
 		atma::math::matrix4f view;

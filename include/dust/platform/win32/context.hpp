@@ -20,6 +20,7 @@
 #include <atma/intrusive_ptr.hpp>
 #include <atma/thread/engine.hpp>
 #include <atma/shared_memory.hpp>
+#include <atma/math/vector4f.hpp>
 
 #include <thread>
 #include <mutex>
@@ -103,7 +104,7 @@ namespace dust {
 		auto signal_block() -> void;
 		auto signal_fullscreen_toggle(uint output_index = primary_output) -> void;
 		auto signal_present() -> void;
-		auto signal_clear() -> void;
+		auto signal_clear(atma::math::vector4f const&) -> void;
 		auto signal_draw(vertex_declaration_t const*, vertex_buffer_ptr const&, vertex_shader_ptr const&, fragment_shader_ptr const&) -> void;
 		auto signal_draw(index_buffer_ptr const&, vertex_declaration_t const*, vertex_buffer_ptr const&, vertex_shader_ptr const&, fragment_shader_ptr const&) -> void;
 		auto signal_draw_scene(scene_t&) -> void;

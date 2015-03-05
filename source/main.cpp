@@ -247,7 +247,7 @@ int main()
 		// do this just to upload the camera :P
 		ctx->signal_draw_scene(scene);
 
-		ctx->signal_clear();
+		//ctx->signal_clear();
 
 #if RENDER_VOXELS
 		//ctx->signal_cs_upload_constant_buffer(0, camera.)

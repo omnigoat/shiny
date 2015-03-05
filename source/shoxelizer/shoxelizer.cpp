@@ -563,9 +563,7 @@ int main()
 	});
 
 	bool W = false, A = false, S = false, D = false;
-	window->key_state.on_key_down(fooey::key_t::W, [&] { 
-		W = true;
-		 });
+	window->key_state.on_key_down(fooey::key_t::W, [&] { W = true; });
 	window->key_state.on_key_down(fooey::key_t::A, [&] { A = true; });
 	window->key_state.on_key_down(fooey::key_t::S, [&] { S = true; });
 	window->key_state.on_key_down(fooey::key_t::D, [&] { D = true; });
@@ -587,6 +585,7 @@ int main()
 		else if (y < -atma::math::pi_over_two + 0.1f)
 			y = -atma::math::pi_over_two + 0.1f;
 
+		walk_direction = math::vector4f{sin(x) * cos(y) * 2.f, sin(y) * 2.f, cos(x) * cos(y) * 2.f, 0.f};
 		if (W) position += walk_direction * walk_speed;
 		if (A) position -= strafe_direction * walk_speed;
 		if (S) position -= walk_direction * walk_speed;
@@ -598,19 +597,14 @@ int main()
 		// camera
 		auto camera = dust::camera_t(
 			//math::look_at(math::point4f(sin(x) * cos(y) * 2.f, sin(y) * 2.f, cos(x) * cos(y) * 2.f), math::point4f(0.f, 0.1f, 0.f), math::vector4f(0.f, 1.f, 0.f, 0.f)),
-			math::look_at(position, position + walk_direction, math::vector4f{0.f, 1.f, 0.f, 0.f}),
+			math::look_at(position, position + walk_direction, math::vector4f {0.f, 1.f, 0.f, 0.f}),
 			math::perspective_fov(math::pi_over_two, (float)window->height() / window->width(), 0.03434f, 120.f));
 
-		auto scene = dust::scene_t(ctx, camera);
-
-		world_matrix = math::matrix4f{math::xmmd_identity_r0_ps, math::xmmd_identity_r1_ps, math::xmmd_identity_r2_ps, math::xmmd_identity_r3_ps};
+		auto scene = dust::scene_t{ctx, camera, dust::rendertarget_clear_t{.2f, .2f, .2f}};
+		
+		world_matrix = math::matrix4f::identity();
 		scene.signal_res_update(cb, sizeof(world_matrix), &world_matrix);
-		//scene.signal_cs_upload_constant_buffer(1, cb);
 		ctx->signal_vs_upload_constant_buffer(1, cb);
-
-		// do this just to upload the camera :P
-		//ctx->signal_draw_scene(scene);
-		ctx->signal_clear();
 
 		scene.signal_draw(ib, vd, vb, vs, ps);
 		ctx->signal_draw_scene(scene);

@@ -1,4 +1,4 @@
-#include <dust/context.hpp>
+#include <dust/platform/win32/context.hpp>
 
 #include <dust/platform/win32/dxgid3d_convert.hpp>
 #include <dust/platform/win32/d3d_fwd.hpp>
@@ -320,11 +320,11 @@ auto context_t::signal_present() -> void
 	});
 }
 
-auto context_t::signal_clear() -> void
+auto context_t::signal_clear(atma::math::vector4f const& color) -> void
 {
 	engine_.signal([&] {
-		float g[4] ={.2f, .2f, .2f, 1.f};
-		d3d_immediate_context_->ClearRenderTargetView(d3d_render_target_.get(), g);
+		float f4c[4] = {color.x, color.y, color.z, color.w};
+		d3d_immediate_context_->ClearRenderTargetView(d3d_render_target_.get(), f4c);
 		d3d_immediate_context_->ClearDepthStencilView(d3d_depth_stencil_.get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 	});
 }
