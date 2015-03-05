@@ -272,27 +272,6 @@ auto context_t::signal_draw(vertex_declaration_t const* vd, vertex_buffer_ptr co
 
 		auto vbs = vb->d3d_buffer().get();
 
-#if 1
-		d3d_immediate_context_->IASetInputLayout(vs->d3d_input_layout().get());
-		d3d_immediate_context_->IASetIndexBuffer(nullptr, DXGI_FORMAT_UNKNOWN, 0);
-		d3d_immediate_context_->IASetVertexBuffers(0, 1, &vbs, &stride, &offset);
-		d3d_immediate_context_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-		d3d_immediate_context_->VSSetShader(vs->d3d_vs().get(), nullptr, 0);
-		d3d_immediate_context_->PSSetShader(ps->d3d_ps().get(), nullptr, 0);
-
-		d3d_immediate_context_->Draw(vb->vertex_count(), 0);
-#endif
-	});
-}
-
-auto context_t::signal_draw(index_buffer_ptr const& ib, vertex_declaration_t const* vd, vertex_buffer_ptr const& vb, vertex_shader_ptr const& vs, fragment_shader_ptr const& ps) -> void
-{
-	engine_.signal([&, ib, vd, vb, vs, ps]{
-		UINT stride = vd->stride();
-		UINT offset = 0;
-
-		auto vbs = vb->d3d_buffer().get();
 
 		D3D11_BLEND_DESC blendStateDesc;
 		ZeroMemory(&blendStateDesc, sizeof(D3D11_BLEND_DESC));
@@ -325,13 +304,89 @@ auto context_t::signal_draw(index_buffer_ptr const& ib, vertex_declaration_t con
 
 		// Stencil operations if pixel is front-facing
 		depthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-		depthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
+		depthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_ZERO;
 		depthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
 		depthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
 
 		// Stencil operations if pixel is back-facing
 		depthStencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-		depthStencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
+		depthStencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_ZERO;
+		depthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+		depthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+		ID3D11DepthStencilState *m_DepthStencilState;
+		d3d_device_->CreateDepthStencilState(&depthStencilDesc, &m_DepthStencilState);
+		d3d_immediate_context_->OMSetDepthStencilState(m_DepthStencilState, 0);
+
+
+#if 1
+		d3d_immediate_context_->IASetInputLayout(vs->d3d_input_layout().get());
+		d3d_immediate_context_->IASetIndexBuffer(nullptr, DXGI_FORMAT_UNKNOWN, 0);
+		d3d_immediate_context_->IASetVertexBuffers(0, 1, &vbs, &stride, &offset);
+		d3d_immediate_context_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+		d3d_immediate_context_->VSSetShader(vs->d3d_vs().get(), nullptr, 0);
+		d3d_immediate_context_->PSSetShader(ps->d3d_ps().get(), nullptr, 0);
+
+		d3d_immediate_context_->Draw(vb->vertex_count(), 0);
+#endif
+	});
+}
+
+auto context_t::signal_draw(index_buffer_ptr const& ib, vertex_declaration_t const* vd, vertex_buffer_ptr const& vb, vertex_shader_ptr const& vs, fragment_shader_ptr const& ps) -> void
+{
+	engine_.signal([&, ib, vd, vb, vs, ps]{
+		UINT stride = vd->stride();
+		UINT offset = 0;
+
+		auto vbs = vb->d3d_buffer().get();
+
+		D3D11_RASTERIZER_DESC wfdesc;
+		ZeroMemory(&wfdesc, sizeof(D3D11_RASTERIZER_DESC));
+		wfdesc.FillMode = D3D11_FILL_SOLID;
+		wfdesc.CullMode = D3D11_CULL_NONE;
+		atma::com_ptr<ID3D11RasterizerState> WireFrame;
+		d3d_device_->CreateRasterizerState(&wfdesc, WireFrame.assign());
+		d3d_immediate_context_->RSSetState(WireFrame.get());
+
+		D3D11_BLEND_DESC blendStateDesc;
+		ZeroMemory(&blendStateDesc, sizeof(D3D11_BLEND_DESC));
+		blendStateDesc.AlphaToCoverageEnable = FALSE;
+		blendStateDesc.IndependentBlendEnable = FALSE;
+		blendStateDesc.RenderTarget[0].BlendEnable = TRUE;
+		blendStateDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+		blendStateDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+		blendStateDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+		blendStateDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ZERO;
+		blendStateDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+		blendStateDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+		blendStateDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+		auto blendState = atma::com_ptr<ID3D11BlendState>{};
+		if (FAILED(d3d_device_->CreateBlendState(&blendStateDesc, blendState.assign()))) {
+			printf("Failed To Create Blend State\n");
+		}
+		d3d_immediate_context_->OMSetBlendState(blendState.get(), NULL, 0xFFFFFF);
+
+
+
+		D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
+		depthStencilDesc.DepthEnable = TRUE;
+		depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+		depthStencilDesc.DepthFunc = D3D11_COMPARISON_ALWAYS;
+		depthStencilDesc.StencilEnable = FALSE;
+		depthStencilDesc.StencilReadMask = 0xFF;
+		depthStencilDesc.StencilWriteMask = 0xFF;
+
+		// Stencil operations if pixel is front-facing
+		depthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+		depthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_ZERO;
+		depthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+		depthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+		// Stencil operations if pixel is back-facing
+		depthStencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+		depthStencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_ZERO;
 		depthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
 		depthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
 

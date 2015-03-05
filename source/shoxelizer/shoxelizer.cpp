@@ -359,12 +359,17 @@ auto octree_t::node_t::insert(math::triangle_t const& tri) -> bool
 	}
 
 
-	data_.push_back(tri);
 
 	if (!buf_.empty())
+	{
 		imem_for_each([&tri](node_t& x) {
 			x.insert(tri);
 		});
+	}
+	//else
+	{
+		data_.push_back(tri);
+	}
 
 	return true;
 }
@@ -450,9 +455,9 @@ obj_model_t::obj_model_t(shelf::file_t& file)
 
 int main()
 {
-	auto tri = math::triangle_t {math::point4f(0.35f, 0.1f, 0.1f), math::point4f(0.85f, 0.2f, 0.3f), math::point4f(0.15f, 0.2f, 0.44f)};
+	auto tri = math::triangle_t {math::point4f(0.35f, 0.1f, -.2f), math::point4f(0.f, 0.3f, 0.0f), math::point4f(-.15f, -0.2f, 0.4f)};
 
-	auto r = math::intersect_aabc_triangle2(math::aabc_t{0.125f, 0.125f, 0.375f, 0.25f}, tri);
+	//auto r = math::intersect_aabc_triangle2(math::aabc_t{0.125f, 0.125f, 0.375f, 0.25f}, tri);
 
 	auto oct = octree_t{octree_allocate_tag{6}};
 	oct.insert(tri);
@@ -540,7 +545,7 @@ int main()
 	auto strafe_direction = math::vector4f{1.f, 0.f, 0.f, 0.f};
 
 	math::vector4f rotation;
-	float walk_speed = 0.2f;
+	float walk_speed = 0.02f;
 
 
 	bool mouse_down = false;
@@ -625,26 +630,46 @@ int main()
 			auto vb = dust::create_vertex_buffer(ctx, dust::buffer_usage_t::immutable, vd, 8, vbd);
 			auto ib = dust::create_index_buffer(ctx, dust::buffer_usage_t::immutable, 16, 36, ibd);
 
-			auto scale = aml::matrix4f::scale(x->aabc.diameter() * std::powf(0.98f, level));
+			auto scale = aml::matrix4f::scale(x->aabc.diameter());
 			auto move = aml::matrix4f::translate(x->aabc.origin());
 			auto transform = move * scale;
 
-			auto cbd = cb_t{transform, aml::vector4f{1.f, 0.f, 0.f, .2f}};
+			auto cbd = cb_t{transform, aml::vector4f{1.f, 0.f, 0.f, .15f}};
 			auto cb = dust::create_constant_buffer(ctx, sizeof(cb_t), &cbd);
-			//ctx->signal_cs_upload_constant_buffer(1, cb);
 			scene.signal_cs_upload_constant_buffer(1, cb);
 			scene.signal_draw(ib, vd, vb, vs, ps);
 		});
 
+		// triangle
+		// vertex-buffer
+		float tvbd[] = {
+			tri.v0.x, tri.v0.y, tri.v0.z, 1.f, 0.f,0.f,0.f,0.f,
+			tri.v1.x, tri.v1.y, tri.v1.z, 1.f, 0.f,0.f,0.f,0.f,
+			tri.v2.x, tri.v2.y, tri.v2.z, 1.f, 0.f,0.f,0.f,0.f,
+		};
 
+		auto tvb = dust::create_vertex_buffer(ctx, dust::buffer_usage_t::immutable, vd, 3, tvbd);
 
+		// index-buffer
+		uint16 tibd[] = {
+			0, 1, 2
+		};
+		auto tib = dust::create_index_buffer(ctx, dust::buffer_usage_t::immutable, 16, 3, tibd);
 
 		//scene.signal_res_update(cb, sizeof(cb_t), &cbd);
 		//ctx->signal_vs_upload_constant_buffer(1, cb);
 		//ctx->signal_cs_upload_constant_buffer(1, cb);
 
 		//scene.signal_draw(ib, vd, vb, vs, ps);
+		
+
+		auto tcbd = cb_t{aml::matrix4f::identity(), aml::vector4f{0.f, 0.f, 1.f, 0.3f}};
+		auto tcb = dust::create_constant_buffer(ctx, sizeof(cb_t), &tcbd);
+		scene.signal_cs_upload_constant_buffer(1, tcb);
+		scene.signal_draw(tib, vd, tvb, vs, ps);
+
 		ctx->signal_draw_scene(scene);
+
 		ctx->signal_block();
 		ctx->signal_present();
 	}
