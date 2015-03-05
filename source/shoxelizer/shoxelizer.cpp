@@ -366,7 +366,7 @@ auto octree_t::node_t::insert(math::triangle_t const& tri) -> bool
 			x.insert(tri);
 		});
 	}
-	//else
+	else
 	{
 		data_.push_back(tri);
 	}
@@ -455,7 +455,11 @@ obj_model_t::obj_model_t(shelf::file_t& file)
 
 int main()
 {
-	auto tri = math::triangle_t {math::point4f(0.35f, 0.1f, -.2f), math::point4f(0.f, 0.3f, 0.0f), math::point4f(-.15f, -0.2f, 0.4f)};
+	auto tri = math::triangle_t
+		{ math::point4f(0.35f, 0.f, 0.f)
+		, math::point4f(0.f, 0.3f, 0.0f)
+		, math::point4f(0.f, 0.f, 0.4f)
+		};
 
 	//auto r = math::intersect_aabc_triangle2(math::aabc_t{0.125f, 0.125f, 0.375f, 0.25f}, tri);
 
@@ -486,6 +490,14 @@ int main()
 	auto f2 = atma::filesystem::file_t("../../shaders/ps_debug.hlsl");
 	auto fm2 = f2.read_into_memory();
 	auto ps = dust::create_fragment_shader(ctx, fm2, false);
+
+	auto vs_basic_file = atma::filesystem::file_t("../../shaders/vs_basic.hlsl");
+	auto vs_basic_mem = vs_basic_file.read_into_memory();
+	auto vs_basic = dust::create_vertex_shader(ctx, vd, vs_basic_mem, false);
+
+	auto ps_basic_file = atma::filesystem::file_t("../../shaders/ps_basic.hlsl");
+	auto ps_basic_mem = ps_basic_file.read_into_memory();
+	auto ps_basic = dust::create_fragment_shader(ctx, ps_basic_mem, false);
 
 	// vertex-buffer
 	float vbd[] = {
@@ -623,8 +635,8 @@ int main()
 		{
 			if (x->data().empty())
 				return;
-			//if (i > 1)
-				//return;
+			if (level != 6)
+				return;
 			//++i;
 			// setup box
 			auto vb = dust::create_vertex_buffer(ctx, dust::buffer_usage_t::immutable, vd, 8, vbd);
@@ -634,7 +646,7 @@ int main()
 			auto move = aml::matrix4f::translate(x->aabc.origin());
 			auto transform = move * scale;
 
-			auto cbd = cb_t{transform, aml::vector4f{1.f, 0.f, 0.f, .15f}};
+			auto cbd = cb_t{transform, aml::vector4f{1.f, 1.f - (level / 6.f), 0.f, .15f}};
 			auto cb = dust::create_constant_buffer(ctx, sizeof(cb_t), &cbd);
 			scene.signal_cs_upload_constant_buffer(1, cb);
 			scene.signal_draw(ib, vd, vb, vs, ps);
@@ -643,9 +655,9 @@ int main()
 		// triangle
 		// vertex-buffer
 		float tvbd[] = {
-			tri.v0.x, tri.v0.y, tri.v0.z, 1.f, 0.f,0.f,0.f,0.f,
-			tri.v1.x, tri.v1.y, tri.v1.z, 1.f, 0.f,0.f,0.f,0.f,
-			tri.v2.x, tri.v2.y, tri.v2.z, 1.f, 0.f,0.f,0.f,0.f,
+			tri.v0.x, tri.v0.y, tri.v0.z, 1.f, .3f,0.f,0.f,.2f,
+			tri.v1.x, tri.v1.y, tri.v1.z, 1.f, 0.f,.3f,0.f,.2f,
+			tri.v2.x, tri.v2.y, tri.v2.z, 1.f, 0.f,0.f,.3f,.2f,
 		};
 
 		auto tvb = dust::create_vertex_buffer(ctx, dust::buffer_usage_t::immutable, vd, 3, tvbd);
@@ -666,7 +678,7 @@ int main()
 		auto tcbd = cb_t{aml::matrix4f::identity(), aml::vector4f{0.f, 0.f, 1.f, 0.3f}};
 		auto tcb = dust::create_constant_buffer(ctx, sizeof(cb_t), &tcbd);
 		scene.signal_cs_upload_constant_buffer(1, tcb);
-		scene.signal_draw(tib, vd, tvb, vs, ps);
+		scene.signal_draw(tib, vd, tvb, vs_basic, ps_basic);
 
 		ctx->signal_draw_scene(scene);
 
