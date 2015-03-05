@@ -473,11 +473,11 @@ int main()
 	renderer->add_window(window);
 
 	// initialise shiny
-	auto dust_runtime = shiny::runtime_t();
-	auto ctx = shiny::create_context(dust_runtime, window, shiny::primary_adapter);
+	auto shiny_runtime = shiny::runtime_t();
+	auto ctx = shiny::create_context(shiny_runtime, window, shiny::primary_adapter);
 
 	// vertex declaration
-	auto vd = dust_runtime.vertex_declaration_of({
+	auto vd = shiny_runtime.vertex_declaration_of({
 		{shiny::vertex_stream_semantic_t::position, 0, shiny::element_format_t::f32x4},
 		{shiny::vertex_stream_semantic_t::color, 0, shiny::element_format_t::f32x4}
 	});
