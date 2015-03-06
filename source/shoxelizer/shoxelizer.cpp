@@ -673,7 +673,7 @@ int main()
 		//ctx->signal_cs_upload_constant_buffer(1, cb);
 
 		//scene.signal_draw(ib, vd, vb, vs, ps);
-		
+		namespace SD = shiny::draw_dsl;
 
 		auto tcbd = cb_t{aml::matrix4f::identity(), aml::vector4f{0.f, 0.f, 1.f, 0.3f}};
 		auto tcb = shiny::create_constant_buffer(ctx, sizeof(cb_t), &tcbd);

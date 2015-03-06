@@ -1,17 +1,18 @@
 #pragma once
-//======================================================================
-#include <atma/com_ptr.hpp>
 
 #include <shiny/dust_fwd.hpp>
+
+#include <atma/com_ptr.hpp>
 
 #pragma warning(push,3)
 #include <d3d11.h>
 #include <d3dcompiler.h>
 #pragma warning(pop)
-//======================================================================
+
 #undef min
 #undef max
-//======================================================================
+
+
 namespace shiny { namespace platform {
 
 	typedef atma::com_ptr<ID3D11Resource> d3d_resource_ptr;
@@ -31,5 +32,6 @@ namespace shiny { namespace platform {
 	typedef atma::com_ptr<ID3D11ShaderResourceView> d3d_shader_resource_view_ptr;
 	typedef atma::com_ptr<ID3D11UnorderedAccessView> d3d_unordered_access_view_ptr;
 	typedef atma::com_ptr<ID3D11View> d3d_view_ptr;
+	typedef atma::com_ptr<ID3D11BlendState1> d3d_blend_state_ptr;
 
 } }
