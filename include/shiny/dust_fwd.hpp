@@ -76,6 +76,10 @@ namespace shiny {
 	struct generic_buffer_t;
 	typedef atma::intrusive_ptr<generic_buffer_t> generic_buffer_ptr;
 
+	struct blender_t;
+	using  blender_ptr  = atma::intrusive_ptr<blender_t>;
+	using  blender_cptr = atma::intrusive_ptr<blender_t const>;
+
 	struct mapped_subresource_t
 	{
 		void* data;

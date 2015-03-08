@@ -12,6 +12,7 @@
 #include <shiny/compute_shader.hpp>
 #include <shiny/shader_resource2d.hpp>
 #include <shiny/texture3d.hpp>
+#include <shiny/blend_state.hpp>
 #include <shiny/platform/win32/generic_buffer.hpp>
 #include <shelf/file.hpp>
 
@@ -366,7 +367,7 @@ auto octree_t::node_t::insert(math::triangle_t const& tri) -> bool
 			x.insert(tri);
 		});
 	}
-	else
+	//else
 	{
 		data_.push_back(tri);
 	}
@@ -379,26 +380,6 @@ auto octree_t::node_t::inbounds(math::vector4f const& point) -> bool
 	return aabc.inside(point);
 }
 
-
-
-
-auto go() -> void
-{
-	auto oct = octree_t{octree_allocate_tag{4}};
-
-	auto tri = math::triangle_t{
-		math::point4f(0.1f, 0.1f, 0.1f),
-		math::point4f(0.4f, 0.2f, 0.15f),
-		math::point4f(0.23f, 0.56f, 0.44f)};
-
-	auto tri2 = math::triangle_t {
-		math::point4f(0.6f, 0.6f, 0.6f),
-		math::point4f(0.6f, 0.2f, 0.1f),
-		math::point4f(0.1f, 0.4f, 0.6f)};
-
-	auto r = oct.insert(tri);
-	auto r2 = oct.insert(tri2);
-}
 
 
 struct obj_model_t
@@ -452,13 +433,103 @@ obj_model_t::obj_model_t(shelf::file_t& file)
 	});
 }
 
+struct cb_t
+{
+	aml::matrix4f world_matrix;
+	aml::vector4f color;
+};
+
+
+shiny::vertex_shader_ptr vs_basic, vs;
+shiny::fragment_shader_ptr ps_basic, ps;
+shiny::vertex_declaration_t const* vd;
+
+auto debug_draw_triangle(shiny::context_ptr const& ctx, math::triangle_t const& tri) -> void
+{
+	using namespace atma::math;
+
+	auto n = math::vector4f{math::cross_product(tri.v1 - tri.v0, tri.v2 - tri.v0).normalized()};
+
+
+#if 0
+	// triangle bounding-box
+	auto tmin2 = point4f(std::min(tri.v0.x, tri.v1.x), std::min(tri.v0.y, tri.v1.y), std::min(tri.v0.z, tri.v1.z));
+	auto tmin  = point4f(std::min(tri.v2.x, tmin2.x), std::min(tri.v2.y, tmin2.y), std::min(tri.v2.z, tmin2.z));
+	auto tmax2 = point4f(std::max(tri.v0.x, tri.v1.x), std::max(tri.v0.y, tri.v1.y), std::max(tri.v0.z, tri.v1.z));
+	auto tmax  = point4f(std::max(tri.v2.x, tmax2.x), std::max(tri.v2.y, tmax2.y), std::max(tri.v2.z, tmax2.z));
+#endif
+	//auto tmid  = vector4f{(tmax + tmin) / 2.f};
+	
+
+	// vertex-buffer
+	float tvbd[] = {
+		tri.v0.x, tri.v0.y, tri.v0.z, 1.f, 1.f, .6f, 0.f, .2f,
+		tri.v1.x, tri.v1.y, tri.v1.z, 1.f, 0.f, .6f, 0.f, .2f,
+		tri.v2.x, tri.v2.y, tri.v2.z, 1.f, 0.f, 0.f, .6f, .2f,
+	};
+
+	auto tvb = shiny::create_vertex_buffer(ctx, shiny::buffer_usage_t::immutable, vd, 3, tvbd);
+
+	uint16 tibd[] = {0, 1, 2};
+	auto tib = shiny::create_index_buffer(ctx, shiny::buffer_usage_t::immutable, 16, 3, tibd);
+
+	auto tcbd = cb_t{aml::matrix4f::identity(), aml::vector4f{1.f, 1.f, 1.f, 0.3f}};
+	auto tcb = shiny::create_constant_buffer(ctx, sizeof(cb_t), &tcbd);
+	
+	ctx->signal_cs_upload_constant_buffer(1, tcb);
+	ctx->signal_draw(tib, vd, tvb, vs_basic, ps_basic);
+
+	// middle-position of triangle
+	auto tmid = point4f((tri.v0.x + tri.v1.x + tri.v2.x) / 3.f, (tri.v0.y + tri.v1.y + tri.v2.y) / 3.f, (tri.v0.z + tri.v1.z + tri.v2.z) / 3.f);
+
+	auto edge_normal = [](int a, int b, vector4f const& v0, vector4f const& v1, vector4f const& v2) -> vector4f
+	{
+		auto AB = vector4f{v1 - v0};
+		auto AC = vector4f{v2 - v0};
+		auto SN = cross_product(AB, AC);
+		auto N = vector4f{cross_product(AB, SN)};
+		//auto AC2 = vector4f{AC[b], AC[a], 0.f, 0.f};
+		//if (v1[a]*v2[b] - v0[b]*v1[a] - v0[a]*v2[b] - v1[b]*v2[a] + v0[a]*v2[b] + v0[b]*v2[a] < 0.f)
+		//if (dot_product(N, AC2) <= 0.f)
+		N = N * -1;
+		return N;
+	};
+
+	// centroids of edges
+	auto e0c = vector4f{(tri.v0 + tri.v1) / 2.f};
+	auto e1c = vector4f{(tri.v1 + tri.v2) / 2.f};
+	auto e2c = vector4f{(tri.v2 + tri.v0) / 2.f};
+
+	auto e0n = edge_normal(0,1, tri.v0, tri.v1, tri.v2); //vector4f{tmid - e0c};
+	auto e1n = edge_normal(0,1, tri.v1, tri.v2, tri.v0); //vector4f{tmid - e0c};
+	auto e2n = edge_normal(0,1, tri.v2, tri.v0, tri.v1); //vector4f{tmid - e0c};
+
+
+	// debug-lines
+	float dtvbd[] = {
+		tmid.x, tmid.y, tmid.z, 1.f, 1.f, 1.f, 1.f, 1.f,
+		tmid.x + n.x, tmid.y + n.y, tmid.z + n.z, 1.f, 1.f, 1.f, 1.f, 1.f,
+		e0c.x, e0c.y, e0c.z, 1.f, 1.f, 1.f, 1.f, 1.f,
+		e0c.x + e0n.x, e0c.y + e0n.y, e0c.z + e0n.z, 1.f,  1.f, 1.f, 1.f, 1.f,
+		e1c.x, e1c.y, e1c.z, 1.f, 1.f, 1.f, 1.f, 1.f,
+		e1c.x + e1n.x, e1c.y + e1n.y, e1c.z + e1n.z, 1.f, 1.f, 1.f, 1.f, 1.f,
+		e2c.x, e2c.y, e2c.z, 1.f, 1.f, 1.f, 1.f, 1.f,
+		e2c.x + e2n.x, e2c.y + e2n.y, e2c.z + e2n.z, 1.f, 1.f, 1.f, 1.f, 1.f,
+	};
+
+	auto dtvb = shiny::create_vertex_buffer(ctx, shiny::buffer_usage_t::immutable, vd, 8, dtvbd);
+	ctx->signal_ia_topology(shiny::topology_t::line);
+	ctx->signal_draw(vd, dtvb, vs, ps);
+	ctx->signal_ia_topology(shiny::topology_t::triangle);
+}
+
 
 int main()
 {
 	auto tri = math::triangle_t
-		{ math::point4f(0.35f, 0.f, 0.f)
-		, math::point4f(0.f, 0.3f, 0.0f)
-		, math::point4f(0.f, 0.f, 0.4f)
+	{math::point4f(0.15f, 0.f, 0.4f)
+		, math::point4f(0.f, 0.3f, 0.15f)
+		, math::point4f(-0.35f, 0.05f, 0.f)
 		};
 
 	//auto r = math::intersect_aabc_triangle2(math::aabc_t{0.125f, 0.125f, 0.375f, 0.25f}, tri);
@@ -477,7 +548,7 @@ int main()
 	auto ctx = shiny::create_context(shiny_runtime, window, shiny::primary_adapter);
 
 	// vertex declaration
-	auto vd = shiny_runtime.vertex_declaration_of({
+	vd = shiny_runtime.vertex_declaration_of({
 		{shiny::vertex_stream_semantic_t::position, 0, shiny::element_format_t::f32x4},
 		{shiny::vertex_stream_semantic_t::color, 0, shiny::element_format_t::f32x4}
 	});
@@ -485,19 +556,19 @@ int main()
 	// shaders
 	auto f = atma::filesystem::file_t("../../shaders/vs_debug.hlsl");
 	auto fm = f.read_into_memory();
-	auto vs = shiny::create_vertex_shader(ctx, vd, fm, false);
+	vs = shiny::create_vertex_shader(ctx, vd, fm, false);
 
 	auto f2 = atma::filesystem::file_t("../../shaders/ps_debug.hlsl");
 	auto fm2 = f2.read_into_memory();
-	auto ps = shiny::create_fragment_shader(ctx, fm2, false);
+	ps = shiny::create_fragment_shader(ctx, fm2, false);
 
 	auto vs_basic_file = atma::filesystem::file_t("../../shaders/vs_basic.hlsl");
 	auto vs_basic_mem = vs_basic_file.read_into_memory();
-	auto vs_basic = shiny::create_vertex_shader(ctx, vd, vs_basic_mem, false);
+	vs_basic = shiny::create_vertex_shader(ctx, vd, vs_basic_mem, false);
 
 	auto ps_basic_file = atma::filesystem::file_t("../../shaders/ps_basic.hlsl");
 	auto ps_basic_mem = ps_basic_file.read_into_memory();
-	auto ps_basic = shiny::create_fragment_shader(ctx, ps_basic_mem, false);
+	ps_basic = shiny::create_fragment_shader(ctx, ps_basic_mem, false);
 
 	// vertex-buffer
 	float vbd[] = {
@@ -530,11 +601,6 @@ int main()
 
 	// constant buffer
 	static float t = 0.f;
-	struct cb_t
-	{
-		aml::matrix4f world_matrix;
-		aml::vector4f color;
-	};
 	
 	auto cbd = cb_t{aml::matrix4f::identity(), aml::vector4f{1.f, 0.f, 0.f, 1.f}};
 	auto cb = shiny::create_constant_buffer(ctx, sizeof(cb_t), &cbd);
@@ -604,6 +670,11 @@ int main()
 	window->key_state.on_key_up(fooey::key_t::S, [&] { S = false; });
 	window->key_state.on_key_up(fooey::key_t::D, [&] { D = false; });
 
+	auto sbs = shiny::blend_state_t{};
+	
+	auto blend = ctx->make_blender(sbs);
+	ctx->signal_om_blending(blend);
+
 	//std::chrono::duration<std::chrono::milliseconds> elapsed;
 	std::chrono::time_point<std::chrono::high_resolution_clock> start = std::chrono::high_resolution_clock::now();
 	int frames = 0;
@@ -652,35 +723,9 @@ int main()
 			scene.signal_draw(ib, vd, vb, vs, ps);
 		});
 
-		// triangle
-		// vertex-buffer
-		float tvbd[] = {
-			tri.v0.x, tri.v0.y, tri.v0.z, 1.f, .3f,0.f,0.f,.2f,
-			tri.v1.x, tri.v1.y, tri.v1.z, 1.f, 0.f,.3f,0.f,.2f,
-			tri.v2.x, tri.v2.y, tri.v2.z, 1.f, 0.f,0.f,.3f,.2f,
-		};
-
-		auto tvb = shiny::create_vertex_buffer(ctx, shiny::buffer_usage_t::immutable, vd, 3, tvbd);
-
-		// index-buffer
-		uint16 tibd[] = {
-			0, 1, 2
-		};
-		auto tib = shiny::create_index_buffer(ctx, shiny::buffer_usage_t::immutable, 16, 3, tibd);
-
-		//scene.signal_res_update(cb, sizeof(cb_t), &cbd);
-		//ctx->signal_vs_upload_constant_buffer(1, cb);
-		//ctx->signal_cs_upload_constant_buffer(1, cb);
-
-		//scene.signal_draw(ib, vd, vb, vs, ps);
-		namespace SD = shiny::draw_dsl;
-
-		auto tcbd = cb_t{aml::matrix4f::identity(), aml::vector4f{0.f, 0.f, 1.f, 0.3f}};
-		auto tcb = shiny::create_constant_buffer(ctx, sizeof(cb_t), &tcbd);
-		scene.signal_cs_upload_constant_buffer(1, tcb);
-		scene.signal_draw(tib, vd, tvb, vs_basic, ps_basic);
-
 		ctx->signal_draw_scene(scene);
+
+		debug_draw_triangle(ctx, tri);
 
 		ctx->signal_block();
 		ctx->signal_present();

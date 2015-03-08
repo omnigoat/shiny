@@ -223,6 +223,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\shiny\adapter.hpp" />
+    <ClInclude Include="..\..\include\shiny\blend_state.hpp" />
     <ClInclude Include="..\..\include\shiny\buffer.hpp" />
     <ClInclude Include="..\..\include\shiny\camera.hpp" />
     <ClInclude Include="..\..\include\shiny\compute_shader.hpp" />
@@ -232,7 +233,7 @@
     <ClInclude Include="..\..\include\shiny\generic_buffer.hpp" />
     <ClInclude Include="..\..\include\shiny\geometry_declaration.hpp" />
     <ClInclude Include="..\..\include\shiny\geometry_shader.hpp" />
-    <ClInclude Include="..\..\include\shiny\platform\win32\blend_state.hpp" />
+    <ClInclude Include="..\..\include\shiny\platform\win32\blender.hpp" />
     <ClInclude Include="..\..\include\shiny\platform\win32\buffer.hpp" />
     <ClInclude Include="..\..\include\shiny\platform\win32\compute_shader.hpp" />
     <ClInclude Include="..\..\include\shiny\platform\win32\dxgid3d_convert.hpp" />

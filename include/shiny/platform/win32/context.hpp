@@ -1,5 +1,5 @@
 #pragma once
-//======================================================================
+
 #include <shiny/dust_fwd.hpp>
 #include <shiny/element_format.hpp>
 #include <shiny/adapter.hpp>
@@ -10,8 +10,10 @@
 #include <shiny/geometry_shader.hpp>
 #include <shiny/vertex_shader.hpp>
 #include <shiny/fragment_shader.hpp>
+#include <shiny/blend_state.hpp>
 
 #include <shiny/platform/win32/d3d_fwd.hpp>
+#include <shiny/platform/win32/blender.hpp>
 
 #include <fooey/fooey_fwd.hpp>
 #include <fooey/event_handler.hpp>
@@ -21,13 +23,15 @@
 #include <atma/thread/engine.hpp>
 #include <atma/shared_memory.hpp>
 #include <atma/math/vector4f.hpp>
+#include <atma/hash.hpp>
 
 #include <thread>
 #include <mutex>
-//======================================================================
-namespace shiny {
-//======================================================================
+#include <unordered_map>
 
+
+namespace shiny
+{
 	namespace constant_buffer_index
 	{
 		uint const user = 3;
@@ -89,7 +93,12 @@ namespace shiny {
 		bound_resources_t shader_resources;
 	};
 
-
+	enum class topology_t
+	{
+		point,
+		line,
+		triangle
+	};
 
 
 	struct context_t : atma::ref_counted
@@ -112,11 +121,17 @@ namespace shiny {
 		auto signal_draw(shared_state_t const&, vertex_stage_state_t const&, fragment_stage_state_t const&) -> void;
 
 
+		auto signal_ia_topology(topology_t) -> void;
+
+
 		// resources
 		auto signal_res_map(resource_ptr const&, uint subresource, map_type_t, map_callback_t const&) -> void;
 		auto signal_res_update(constant_buffer_ptr const&, uint data_size, void*) -> void;
 		auto signal_res_update(constant_buffer_ptr const&, atma::shared_memory_t const&) -> void;
 
+
+		// something something stage
+		auto signal_om_blending(blender_cptr const&) -> void;
 
 		// geometry-stage
 		auto signal_gs_upload_constant_buffer(uint index, constant_buffer_cptr const&) -> void;
@@ -144,6 +159,9 @@ namespace shiny {
 		
 		auto d3d_device() const -> platform::d3d_device_ptr const& { return d3d_device_; }
 		auto d3d_immediate_context() const -> platform::d3d_context_ptr const& { return d3d_immediate_context_; }
+
+	public:
+		auto make_blender(blend_state_t const&) -> blender_ptr;
 
 	private:
 		context_t(runtime_t&, fooey::window_ptr const&, uint adapter);
@@ -190,6 +208,8 @@ namespace shiny {
 		display_mode_t requested_windowed_display_mode_, requested_fullscreen_display_mode_;
 		display_mode_t* requested_display_mode_;
 
+		// blenders
+		std::unordered_map<blend_state_t, blender_ptr, atma::std_hash_functor_adaptor_t> cached_blenders_;
 
 		// cache for vertex-layouts
 		std::map<std::tuple<vertex_shader_ptr, vertex_declaration_t const*>, platform::d3d_input_layout_ptr> cached_input_layouts_;

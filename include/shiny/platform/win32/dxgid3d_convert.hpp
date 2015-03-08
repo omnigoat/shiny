@@ -3,7 +3,7 @@
 #include <shiny/platform/win32/d3d_fwd.hpp>
 #include <shiny/platform/win32/dxgi_fwd.hpp>
 #include <shiny/element_format.hpp>
-
+#include <shiny/blend_state.hpp>
 
 namespace shiny { namespace platform {
 	
@@ -42,6 +42,26 @@ namespace shiny { namespace platform {
 
 		ATMA_ASSERT((uint)bu < std::extent<decltype(mapping)>::value);
 		return mapping[(uint)bu];
+	}
+
+	inline auto d3dblend_of(blending_t b) -> D3D11_BLEND
+	{
+		static D3D11_BLEND const mapping[] =
+		{
+			D3D11_BLEND_ZERO,
+			D3D11_BLEND_ONE,
+			D3D11_BLEND_SRC_COLOR,
+			D3D11_BLEND_INV_SRC_COLOR,
+			D3D11_BLEND_SRC_ALPHA,
+			D3D11_BLEND_INV_SRC_ALPHA,
+			D3D11_BLEND_DEST_COLOR,
+			D3D11_BLEND_INV_DEST_COLOR,
+			D3D11_BLEND_DEST_ALPHA,
+			D3D11_BLEND_INV_DEST_ALPHA,
+		};
+
+		ATMA_ASSERT((uint)b < std::extent<decltype(mapping)>::value);
+		return mapping[(uint)b];
 	}
 
 }}

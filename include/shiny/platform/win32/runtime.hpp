@@ -1,5 +1,5 @@
 #pragma once
-//======================================================================
+
 #include <shiny/platform/win32/dxgi_fwd.hpp>
 #include <shiny/platform/win32/d3d_fwd.hpp>
 
@@ -19,7 +19,8 @@
 
 #include <vector>
 #include <map>
-//======================================================================
+
+
 namespace shiny
 {
 	struct runtime_t

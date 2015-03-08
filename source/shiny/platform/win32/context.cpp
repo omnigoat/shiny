@@ -266,34 +266,9 @@ auto context_t::signal_d3d_buffer_upload(platform::d3d_buffer_ptr const& buffer,
 
 auto context_t::signal_draw(vertex_declaration_t const* vd, vertex_buffer_ptr const& vb, vertex_shader_ptr const& vs, fragment_shader_ptr const& ps) -> void
 {
-	engine_.signal([&, vd, vb, vs, ps]{
-		UINT stride = vd->stride();
-		UINT offset = 0;
-
-		auto vbs = vb->d3d_buffer().get();
-
-
-		D3D11_BLEND_DESC blendStateDesc;
-		ZeroMemory(&blendStateDesc, sizeof(D3D11_BLEND_DESC));
-		blendStateDesc.AlphaToCoverageEnable = FALSE;
-		blendStateDesc.IndependentBlendEnable = FALSE;
-		blendStateDesc.RenderTarget[0].BlendEnable = TRUE;
-		blendStateDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
-		blendStateDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
-		blendStateDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
-		blendStateDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ZERO;
-		blendStateDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
-		blendStateDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
-		blendStateDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-
-		auto blendState = atma::com_ptr<ID3D11BlendState>{};
-		if (FAILED(d3d_device_->CreateBlendState(&blendStateDesc, blendState.assign()))) {
-			printf("Failed To Create Blend State\n");
-		}
-		d3d_immediate_context_->OMSetBlendState(blendState.get(), NULL, 0xFFFFFF);
-
-
-
+	engine_.signal([&, vd, vb, vs, ps]
+	{
+#if 0
 		D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
 		depthStencilDesc.DepthEnable = TRUE;
 		depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
@@ -317,19 +292,29 @@ auto context_t::signal_draw(vertex_declaration_t const* vd, vertex_buffer_ptr co
 		ID3D11DepthStencilState *m_DepthStencilState;
 		d3d_device_->CreateDepthStencilState(&depthStencilDesc, &m_DepthStencilState);
 		d3d_immediate_context_->OMSetDepthStencilState(m_DepthStencilState, 0);
+#endif
 
+		UINT stride = vd->stride();
+		UINT offset = 0;
 
-#if 1
-		d3d_immediate_context_->IASetInputLayout(vs->d3d_input_layout().get());
+		// input-layout
+		auto ILkey = std::make_tuple(vs, vd);
+		auto IL = cached_input_layouts_.find(ILkey);
+		if (IL == cached_input_layouts_.end()) {
+			IL = cached_input_layouts_.insert(std::make_pair(ILkey, create_d3d_input_layout(vs, vd))).first;
+		}
+
+		auto vbs = vb->d3d_buffer().get();
+
+		d3d_immediate_context_->IASetInputLayout(IL->second.get());
 		d3d_immediate_context_->IASetIndexBuffer(nullptr, DXGI_FORMAT_UNKNOWN, 0);
 		d3d_immediate_context_->IASetVertexBuffers(0, 1, &vbs, &stride, &offset);
-		d3d_immediate_context_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		//d3d_immediate_context_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 		d3d_immediate_context_->VSSetShader(vs->d3d_vs().get(), nullptr, 0);
 		d3d_immediate_context_->PSSetShader(ps->d3d_ps().get(), nullptr, 0);
 
 		d3d_immediate_context_->Draw(vb->vertex_count(), 0);
-#endif
 	});
 }
 
@@ -349,6 +334,7 @@ auto context_t::signal_draw(index_buffer_ptr const& ib, vertex_declaration_t con
 		d3d_device_->CreateRasterizerState(&wfdesc, WireFrame.assign());
 		d3d_immediate_context_->RSSetState(WireFrame.get());
 
+#if 0
 		D3D11_BLEND_DESC blendStateDesc;
 		ZeroMemory(&blendStateDesc, sizeof(D3D11_BLEND_DESC));
 		blendStateDesc.AlphaToCoverageEnable = FALSE;
@@ -367,7 +353,7 @@ auto context_t::signal_draw(index_buffer_ptr const& ib, vertex_declaration_t con
 			printf("Failed To Create Blend State\n");
 		}
 		d3d_immediate_context_->OMSetBlendState(blendState.get(), NULL, 0xFFFFFF);
-
+#endif
 
 
 		D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
@@ -562,26 +548,6 @@ auto context_t::signal_draw(shared_state_t const& ss, vertex_stage_state_t const
 {
 	engine_.signal([&, ss, vss, fss]
 	{
-		D3D11_BLEND_DESC blendStateDesc;
-		ZeroMemory(&blendStateDesc, sizeof(D3D11_BLEND_DESC));
-		blendStateDesc.AlphaToCoverageEnable = FALSE;
-		blendStateDesc.IndependentBlendEnable = FALSE;
-		blendStateDesc.RenderTarget[0].BlendEnable = TRUE;
-		blendStateDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
-		blendStateDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
-		blendStateDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
-		blendStateDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_SRC_ALPHA;
-		blendStateDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_DEST_ALPHA;
-		blendStateDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
-		blendStateDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-
-		auto blendState = atma::com_ptr<ID3D11BlendState>{};
-		if (FAILED(d3d_device_->CreateBlendState(&blendStateDesc, blendState.assign()))) {
-			printf("Failed To Create Blend State\n");
-		}
-		d3d_immediate_context_->OMSetBlendState(blendState.get(), NULL, 0xFFFFFF);
-
-
 		auto const& vs = vss.vertex_shader;
 		auto const& vb = vss.vertex_buffer;
 		auto const* vd = vb->vertex_declaration();
@@ -619,3 +585,64 @@ auto context_t::signal_gs_set(geometry_shader_ptr const& gs) -> void
 		d3d_immediate_context_->GSSetShader(gs->d3d_gs().get(), nullptr, 0);
 	});
 }
+
+
+
+auto context_t::make_blender(blend_state_t const& bs) -> blender_ptr
+{
+	// cached?
+	auto candidate = cached_blenders_.find(bs);
+	if (candidate != cached_blenders_.end())
+		return candidate->second;
+
+	// not cached; construct
+	auto d3d_blend_desc = D3D11_BLEND_DESC{};
+	d3d_blend_desc.AlphaToCoverageEnable = false;
+	d3d_blend_desc.IndependentBlendEnable = !bs.multitarget_collapse;
+	for (int i = 0; i != 8; ++i)
+	{
+		auto const& rt = bs.rendertarget[i];
+		auto& d3drt = d3d_blend_desc.RenderTarget[i];
+
+		d3drt.BlendEnable = rt.blending_enabled;
+		d3drt.DestBlend = platform::d3dblend_of(rt.dest_blend);
+		d3drt.DestBlendAlpha = platform::d3dblend_of(rt.dest_blend_alpha);
+		d3drt.SrcBlend = platform::d3dblend_of(rt.src_blend);
+		d3drt.SrcBlendAlpha = platform::d3dblend_of(rt.src_blend_alpha);
+		d3drt.BlendOp = D3D11_BLEND_OP_ADD;
+		d3drt.BlendOpAlpha = D3D11_BLEND_OP_ADD;
+		d3drt.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+	}
+
+	platform::d3d_blend_state_ptr d3d_bs;
+
+	ATMA_ENSURE_IS(S_OK, d3d_device_->CreateBlendState(&d3d_blend_desc, d3d_bs.assign()));
+
+	auto thing = blender_ptr(new blender_t(shared_from_this<context_t>(), d3d_bs));
+
+	cached_blenders_[bs] = thing;
+	return thing;
+}
+
+auto context_t::signal_om_blending(blender_cptr const& b) -> void
+{
+	engine_.signal([&, b]{
+		d3d_immediate_context_->OMSetBlendState(b->d3d_blend_state().get(), nullptr, 0xffffffff);
+	});
+}
+
+auto context_t::signal_ia_topology(topology_t t) -> void
+{
+	engine_.signal([&, t]{
+		auto d3dt =
+			(t == topology_t::point) ? D3D11_PRIMITIVE_TOPOLOGY_POINTLIST :
+			(t == topology_t::line) ? D3D11_PRIMITIVE_TOPOLOGY_LINELIST :
+			D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+
+		d3d_immediate_context_->IASetPrimitiveTopology(d3dt);
+	});
+}
+
+
+
+
