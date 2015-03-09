@@ -354,7 +354,7 @@ auto octree_t::insert(math::triangle_t const& tri) -> bool
 
 auto octree_t::node_t::insert(math::triangle_t const& tri) -> bool
 {
-	if (!atma::math::intersect_aabc_triangle2(aabc, tri))
+	if (!atma::math::intersect_aabc_triangle(aabc, tri))
 	{
 		return false;
 	}
@@ -623,7 +623,7 @@ int main()
 	auto strafe_direction = math::vector4f{1.f, 0.f, 0.f, 0.f};
 
 	math::vector4f rotation;
-	float walk_speed = 0.02f;
+	float walk_speed = 0.2f;
 
 
 	bool mouse_down = false;
@@ -714,7 +714,7 @@ int main()
 			auto ib = shiny::create_index_buffer(ctx, shiny::buffer_usage_t::immutable, 16, 36, ibd);
 
 			auto scale = aml::matrix4f::scale(x->aabc.diameter());
-			auto move = aml::matrix4f::translate(x->aabc.origin());
+			auto move = aml::matrix4f::translate(x->aabc.center());
 			auto transform = move * scale;
 
 			auto cbd = cb_t{transform, aml::vector4f{1.f, 1.f - (level / 6.f), 0.f, .15f}};
