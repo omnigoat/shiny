@@ -231,6 +231,7 @@
     <ClInclude Include="..\..\include\shiny\compute_shader.hpp" />
     <ClInclude Include="..\..\include\shiny\constant_buffer.hpp" />
     <ClInclude Include="..\..\include\shiny\context.hpp" />
+    <ClInclude Include="..\..\include\shiny\draw_state.hpp" />
     <ClInclude Include="..\..\include\shiny\dust_fwd.hpp" />
     <ClInclude Include="..\..\include\shiny\generic_buffer.hpp" />
     <ClInclude Include="..\..\include\shiny\geometry_declaration.hpp" />

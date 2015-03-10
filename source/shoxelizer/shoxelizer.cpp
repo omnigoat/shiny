@@ -529,12 +529,10 @@ auto debug_draw_triangle(shiny::context_ptr const& ctx, math::triangle_t const& 
 int main()
 {
 	auto tri = math::triangle_t
-	{math::point4f(0.15f, 0.f, 0.4f)
+		{ math::point4f(0.15f, 0.f, 0.4f)
 		, math::point4f(0.f, 0.3f, 0.15f)
 		, math::point4f(-0.35f, 0.05f, 0.f)
 		};
-
-	//auto r = math::intersect_aabc_triangle2(math::aabc_t{0.125f, 0.125f, 0.375f, 0.25f}, tri);
 
 	auto oct = octree_t{octree_allocate_tag{6}};
 	oct.insert(tri);
@@ -649,8 +647,7 @@ int main()
 				return;
 			if (level != 6)
 				return;
-			//++i;
-			// setup box
+			
 			auto vb = shiny::create_vertex_buffer(ctx, shiny::buffer_usage_t::immutable, vd, 8, vbd);
 			auto ib = shiny::create_index_buffer(ctx, shiny::buffer_usage_t::immutable, 16, 36, ibd);
 
@@ -663,6 +660,8 @@ int main()
 			scene.signal_cs_upload_constant_buffer(1, cb);
 			scene.signal_draw(ib, vd, vb, vs, ps);
 		});
+		//scene.debug_signal_draw_cube(position, extents);
+		//scene.debug_signal_draw_line(p0, p1, color);
 
 		ctx->signal_draw_scene(scene);
 

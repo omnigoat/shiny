@@ -340,6 +340,9 @@
     <ClInclude Include="..\..\include\pepper\freelook_camera_controller.hpp">
       <Filter>include\pepper</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\shiny\draw_state.hpp">
+      <Filter>include\shiny</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="..\..\shaders\cs_test.hlsl">
