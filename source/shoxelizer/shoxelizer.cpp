@@ -16,6 +16,8 @@
 #include <shiny/platform/win32/generic_buffer.hpp>
 #include <shelf/file.hpp>
 
+#include <pepper/freelook_camera_controller.hpp>
+
 #include <fooey/widgets/window.hpp>
 #include <fooey/fooey.hpp>
 #include <fooey/events/resize.hpp>
@@ -615,91 +617,30 @@ int main()
 		running = false;
 	});
 
-	float x = 0.f;
-	float y = 0.f;
-
-	auto position         = math::vector4f{0.f, 0.f, -2.f, 1.f};
-	auto walk_direction   = math::vector4f{0.f, 0.f, 1.f, 0.f};
-	auto strafe_direction = math::vector4f{1.f, 0.f, 0.f, 0.f};
-
-	math::vector4f rotation;
-	float walk_speed = 0.2f;
-
-
 	bool mouse_down = false;
 	int ox = 0, oy = 0;
 	window->on({
 		{"close", [&running](fooey::event_t const&){
 			running = false;
-		}},
-
-		{"mouse-move", [&](fooey::events::mouse_t const& e) {
-			
-			if (mouse_down)
-			{
-				auto dx = e.x() - ox;
-				x += dx * 0.01f;
-
-				auto dy = e.y() - oy;
-				y -= dy * 0.01f;
-			}
-
-			ox = e.x();
-			oy = e.y();
-		}},
-
-		{"mouse-down.left", [&]{
-			mouse_down = true;
-		}},
-		{"mouse-up.left", [&]{
-			mouse_down = false;
-		}},
-		{"mouse-leave", [&]{
-			mouse_down = false;
 		}}
 	});
-
-	bool W = false, A = false, S = false, D = false;
-	window->key_state.on_key_down(fooey::key_t::W, [&] { W = true; });
-	window->key_state.on_key_down(fooey::key_t::A, [&] { A = true; });
-	window->key_state.on_key_down(fooey::key_t::S, [&] { S = true; });
-	window->key_state.on_key_down(fooey::key_t::D, [&] { D = true; });
-
-	window->key_state.on_key_up(fooey::key_t::W, [&] { W = false; });
-	window->key_state.on_key_up(fooey::key_t::A, [&] { A = false; });
-	window->key_state.on_key_up(fooey::key_t::S, [&] { S = false; });
-	window->key_state.on_key_up(fooey::key_t::D, [&] { D = false; });
 
 	auto sbs = shiny::blend_state_t{};
 	
 	auto blend = ctx->make_blender(sbs);
 	ctx->signal_om_blending(blend);
 
+	auto camera_controller = pepper::freelook_camera_controller_t{window};
+	camera_controller.require_mousedown_for_rotation(true);
+
 	//std::chrono::duration<std::chrono::milliseconds> elapsed;
 	std::chrono::time_point<std::chrono::high_resolution_clock> start = std::chrono::high_resolution_clock::now();
 	int frames = 0;
 	while (running)
 	{
-		t += 0.1f;
-
-		if (y > atma::math::pi_over_two - 0.1)
-			y = atma::math::pi_over_two - 0.1f;
-		else if (y < -atma::math::pi_over_two + 0.1f)
-			y = -atma::math::pi_over_two + 0.1f;
-
-		if (W) position += walk_direction * walk_speed;
-		if (A) position += strafe_direction * walk_speed;
-		if (S) position -= walk_direction * walk_speed;
-		if (D) position -= strafe_direction * walk_speed;
-
-		walk_direction = math::point4f(sin(x) * cos(y), sin(y), cos(x) * cos(y));
-		strafe_direction = math::cross_product(walk_direction, math::vector4f(0.f, 1.f, 0.f, 0.f));
-
-		auto camera = shiny::camera_t(
-			math::look_at(position, position + walk_direction, math::vector4f {0.f, 1.f, 0.f, 0.f}),
-			math::perspective_fov(math::pi_over_two, (float)window->height() / window->width(), 0.03434f, 120.f));
-
-		auto scene = shiny::scene_t{ctx, camera, shiny::rendertarget_clear_t{.2f, .2f, .2f}};
+		camera_controller.update(1);
+		
+		auto scene = shiny::scene_t{ctx, camera_controller.camera(), shiny::rendertarget_clear_t{.2f, .2f, .2f}};
 		
 		int i = 0;
 		oct.root_->for_each(0, [&](int level, octree_t::node_t const* x)
