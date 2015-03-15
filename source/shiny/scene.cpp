@@ -37,7 +37,7 @@ scene_t::scene_t(context_ptr const& context, camera_t const& camera, rendertarge
 	auto sd = scene_data_t{
 		camera.view(),
 		camera.projection(),
-		(camera.projection() * camera.view()).inverted(),
+		invert(camera.projection() * camera.view()),
 		0.f
 	};
 

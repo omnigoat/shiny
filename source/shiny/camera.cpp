@@ -17,7 +17,7 @@ camera_t::camera_t(aml::matrix4f const& view, aml::matrix4f const& proj)
 	: view_(view), proj_(proj), view_dirty_(), proj_dirty_()
 {
 	// decompose view
-	auto m = view.inverted();
+	auto m = aml::invert(view);
 	eye_ = aml::vector4f(m[3][0], m[3][1], m[3][2], 1.f);
 	view_dir_ = aml::vector4f(m[2][0], m[2][1], m[2][2], 0.f);
 	up_ = aml::vector4f(m[1][0], m[1][1], m[1][2], 0.f);
@@ -83,10 +83,10 @@ auto camera_t::set_fov(float r) -> void
 	proj_dirty_ = true;
 }
 
-auto camera_t::decompose_projection(float& fov, float& aspect, float& near, float& far) -> void
+auto camera_t::decompose_projection(float& fov, float& aspect, float& near_plane, float& far_plane) -> void
 {
 	fov = atan(1.f / proj_[0][0]) * 2.f;
 	aspect = proj_[1][1] / proj_[0][0];
-	near = 2.f * (-proj_[3][2] / (proj_[2][2] + 1.f));
-	far = -proj_[3][2] / (proj_[2][2] - 1.f);
+	near_plane = 2.f * (-proj_[3][2] / (proj_[2][2] + 1.f));
+	far_plane = -proj_[3][2] / (proj_[2][2] - 1.f);
 }

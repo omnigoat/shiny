@@ -448,7 +448,7 @@ auto debug_draw_triangle(shiny::context_ptr const& ctx, math::triangle_t const& 
 {
 	using namespace atma::math;
 
-	auto n = math::vector4f{math::cross_product(tri.v1 - tri.v0, tri.v2 - tri.v0).normalized()};
+	auto n = aml::normalize(math::vector4f{math::cross_product(tri.v1 - tri.v0, tri.v2 - tri.v0)});
 
 
 #if 0
@@ -715,7 +715,7 @@ int main()
 
 			auto scale = aml::matrix4f::scale(x->aabc.diameter());
 			auto move = aml::matrix4f::translate(x->aabc.center());
-			auto transform = move * scale;
+			auto transform = scale * move;
 
 			auto cbd = cb_t{transform, aml::vector4f{1.f, 1.f - (level / 6.f), 0.f, .15f}};
 			auto cb = shiny::create_constant_buffer(ctx, sizeof(cb_t), &cbd);

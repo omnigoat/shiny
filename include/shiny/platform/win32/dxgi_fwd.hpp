@@ -4,6 +4,8 @@
 #include <atma/com_ptr.hpp>
 
 #pragma warning(push,3)
+#include <initguid.h>
+#include <guiddef.h>
 #include <dxgi.h>
 #pragma warning(pop)
 #undef min

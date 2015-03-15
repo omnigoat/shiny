@@ -23,9 +23,9 @@ namespace shiny {
 
 		auto set_aspect(float ratio) -> void;
 		auto set_fov(float radians) -> void;
-		auto set_clipping(float near, float far) -> void;
+		auto set_clipping(float near_plane, float far_plane) -> void;
 		
-		auto decompose_projection(float& fov, float& aspect, float& near, float& far) -> void;
+		auto decompose_projection(float& fov, float& aspect, float& near_plane, float& far_plane) -> void;
 
 	private:
 		mutable atma::math::matrix4f view_, proj_;
