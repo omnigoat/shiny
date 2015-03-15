@@ -140,6 +140,13 @@ namespace shiny {
 		streaming,
 	};
 
+	enum class topology_t
+	{
+		point,
+		line,
+		triangle
+	};
+
 	template <typename T>
 	struct bitflags_t
 	{

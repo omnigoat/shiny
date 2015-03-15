@@ -180,6 +180,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\source\pepper\freelook_camera_controller.cpp" />
     <ClCompile Include="..\..\source\shiny\camera.cpp" />
     <ClCompile Include="..\..\source\shiny\element_format.cpp" />
     <ClCompile Include="..\..\source\shiny\platform\win32\buffer.cpp" />
@@ -222,6 +223,7 @@
     <ClCompile Include="..\..\vendor\zlib\zutil.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\include\pepper\freelook_camera_controller.hpp" />
     <ClInclude Include="..\..\include\shiny\adapter.hpp" />
     <ClInclude Include="..\..\include\shiny\blend_state.hpp" />
     <ClInclude Include="..\..\include\shiny\buffer.hpp" />
@@ -229,6 +231,7 @@
     <ClInclude Include="..\..\include\shiny\compute_shader.hpp" />
     <ClInclude Include="..\..\include\shiny\constant_buffer.hpp" />
     <ClInclude Include="..\..\include\shiny\context.hpp" />
+    <ClInclude Include="..\..\include\shiny\draw_state.hpp" />
     <ClInclude Include="..\..\include\shiny\dust_fwd.hpp" />
     <ClInclude Include="..\..\include\shiny\generic_buffer.hpp" />
     <ClInclude Include="..\..\include\shiny\geometry_declaration.hpp" />

@@ -42,6 +42,12 @@
     <Filter Include="source\shiny\platform\win32">
       <UniqueIdentifier>{37dcddbd-688b-4d43-b54b-6a7f2c8fc705}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\pepper">
+      <UniqueIdentifier>{a7317f47-27e6-41e4-97b6-1e032791b321}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\pepper">
+      <UniqueIdentifier>{18e8745c-d8b7-420f-9b42-690bef13824c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\source\main.cpp">
@@ -163,6 +169,9 @@
     </ClCompile>
     <ClCompile Include="..\..\source\shiny\vertex_stream.cpp">
       <Filter>source\shiny</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\pepper\freelook_camera_controller.cpp">
+      <Filter>source\pepper</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -326,6 +335,12 @@
       <Filter>include\shiny\platform\win32</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\shiny\blend_state.hpp">
+      <Filter>include\shiny</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\pepper\freelook_camera_controller.hpp">
+      <Filter>include\pepper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\shiny\draw_state.hpp">
       <Filter>include\shiny</Filter>
     </ClInclude>
   </ItemGroup>
