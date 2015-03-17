@@ -2,7 +2,7 @@
 
 #include <shiny/platform/win32/dxgid3d_convert.hpp>
 
-#include <shiny/vertex_declaration.hpp>
+#include <shiny/data_declaration.hpp>
 #include <shiny/context.hpp>
 
 
@@ -10,13 +10,13 @@ using namespace shiny;
 using shiny::vertex_shader_t;
 
 
-auto shiny::create_vertex_shader(context_ptr const& context, vertex_declaration_t const* vd, atma::unique_memory_t const& memory, bool precompiled, atma::string const& entrypoint) -> vertex_shader_ptr
+auto shiny::create_vertex_shader(context_ptr const& context, data_declaration_t const* vd, atma::unique_memory_t const& memory, bool precompiled, atma::string const& entrypoint) -> vertex_shader_ptr
 {
 	return vertex_shader_ptr(new vertex_shader_t(context, vd, memory.begin(), memory.size(), precompiled, entrypoint));
 }
 
-vertex_shader_t::vertex_shader_t(context_ptr const& ctx, vertex_declaration_t const* vd, void const* data, size_t data_length, bool precompiled, atma::string const& entrypoint)
-: context_(ctx), vertex_declaration_(vd)
+vertex_shader_t::vertex_shader_t(context_ptr const& ctx, data_declaration_t const* vd, void const* data, size_t data_length, bool precompiled, atma::string const& entrypoint)
+: context_(ctx), data_declaration_(vd)
 {
 	// create blob
 	if (precompiled)
@@ -43,10 +43,10 @@ vertex_shader_t::vertex_shader_t(context_ptr const& ctx, vertex_declaration_t co
 	// create input-layout
 	uint offset = 0;
 	std::vector<D3D11_INPUT_ELEMENT_DESC> d3d_elements;
-	for (auto const& x : vertex_declaration_->streams())
+	for (auto const& x : data_declaration_->streams())
 	{
 		d3d_elements.push_back({
-			x.semantic() == vertex_stream_semantic_t::position ? "Position" : "Color",
+			x.semantic().c_str(),
 			0, platform::dxgi_format_of(x.element_format()), 0, offset, D3D11_INPUT_PER_VERTEX_DATA, 0
 		});
 

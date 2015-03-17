@@ -1,7 +1,7 @@
 #include <shiny/runtime.hpp>
 #include <shiny/context.hpp>
 #include <shiny/vertex_buffer.hpp>
-#include <shiny/vertex_declaration.hpp>
+#include <shiny/data_declaration.hpp>
 #include <shiny/vertex_shader.hpp>
 #include <shiny/fragment_shader.hpp>
 #include <shiny/constant_buffer.hpp>
@@ -36,6 +36,8 @@
 #include <atma/enable_if.hpp>
 #include <atma/bind.hpp>
 #include <atma/filesystem/file.hpp>
+
+
 
 
 
@@ -444,7 +446,7 @@ struct cb_t
 
 shiny::vertex_shader_ptr vs_basic, vs;
 shiny::fragment_shader_ptr ps_basic, ps;
-shiny::vertex_declaration_t const* vd;
+shiny::data_declaration_t const* vd;
 
 auto debug_draw_triangle(shiny::context_ptr const& ctx, math::triangle_t const& tri) -> void
 {
@@ -548,9 +550,9 @@ int main()
 	auto ctx = shiny::create_context(shiny_runtime, window, shiny::primary_adapter);
 
 	// vertex declaration
-	vd = shiny_runtime.vertex_declaration_of({
-		{shiny::vertex_stream_semantic_t::position, 0, shiny::element_format_t::f32x4},
-		{shiny::vertex_stream_semantic_t::color, 0, shiny::element_format_t::f32x4}
+	vd = shiny_runtime.make_data_declaration({
+		{"position", 0, shiny::element_format_t::f32x4},
+		{"color", 0, shiny::element_format_t::f32x4}
 	});
 
 	// shaders

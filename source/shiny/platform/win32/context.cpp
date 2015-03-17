@@ -4,7 +4,7 @@
 #include <shiny/platform/win32/d3d_fwd.hpp>
 #include <shiny/platform/win32/dxgi_fwd.hpp>
 
-#include <shiny/vertex_declaration.hpp>
+#include <shiny/data_declaration.hpp>
 #include <shiny/vertex_buffer.hpp>
 #include <shiny/vertex_shader.hpp>
 #include <shiny/fragment_shader.hpp>
@@ -264,7 +264,7 @@ auto context_t::signal_d3d_buffer_upload(platform::d3d_buffer_ptr const& buffer,
 	});
 }
 
-auto context_t::signal_draw(vertex_declaration_t const* vd, vertex_buffer_ptr const& vb, vertex_shader_ptr const& vs, fragment_shader_ptr const& ps) -> void
+auto context_t::signal_draw(data_declaration_t const* vd, vertex_buffer_ptr const& vb, vertex_shader_ptr const& vs, fragment_shader_ptr const& ps) -> void
 {
 	engine_.signal([&, vd, vb, vs, ps]
 	{
@@ -318,7 +318,7 @@ auto context_t::signal_draw(vertex_declaration_t const* vd, vertex_buffer_ptr co
 	});
 }
 
-auto context_t::signal_draw(index_buffer_ptr const& ib, vertex_declaration_t const* vd, vertex_buffer_ptr const& vb, vertex_shader_ptr const& vs, fragment_shader_ptr const& ps) -> void
+auto context_t::signal_draw(index_buffer_ptr const& ib, data_declaration_t const* vd, vertex_buffer_ptr const& vb, vertex_shader_ptr const& vs, fragment_shader_ptr const& ps) -> void
 {
 	engine_.signal([&, ib, vd, vb, vs, ps]{
 		UINT stride = vd->stride();
@@ -509,14 +509,14 @@ auto context_t::signal_fs_upload_shader_resource(uint index, resource_ptr const&
 	});
 }
 
-auto context_t::create_d3d_input_layout(vertex_shader_ptr const& vs, vertex_declaration_t const* vd) -> platform::d3d_input_layout_ptr
+auto context_t::create_d3d_input_layout(vertex_shader_ptr const& vs, data_declaration_t const* vd) -> platform::d3d_input_layout_ptr
 {
 	uint offset = 0;
 	std::vector<D3D11_INPUT_ELEMENT_DESC> d3d_elements;
 	for (auto const& x : vd->streams())
 	{
 		d3d_elements.push_back({
-			x.semantic() == vertex_stream_semantic_t::position ? "Position" : "Color",
+			x.semantic().c_str(),
 			0, platform::dxgi_format_of(x.element_format()), 0, offset, D3D11_INPUT_PER_VERTEX_DATA, 0
 		});
 
@@ -550,12 +550,12 @@ auto context_t::signal_draw(shared_state_t const& ss, vertex_stage_state_t const
 	{
 		auto const& vs = vss.vertex_shader;
 		auto const& vb = vss.vertex_buffer;
-		auto const* vd = vb->vertex_declaration();
+		auto const* vd = vb->data_declaration();
 
 		auto const& fs = fss.fragment_shader;
 
 		// input assembler
-		ATMA_ASSERT(vs->vertex_declaration() == vss.vertex_buffer->vertex_declaration());
+		ATMA_ASSERT(vs->data_declaration() == vss.vertex_buffer->data_declaration());
 
 		UINT offset = 0, stride = vd->stride();
 		d3d_immediate_context_->IASetInputLayout(vs->d3d_input_layout().get());
@@ -643,6 +643,9 @@ auto context_t::signal_ia_topology(topology_t t) -> void
 	});
 }
 
+auto context_t::setup_debug_geometry() -> void
+{
+}
 
 
 

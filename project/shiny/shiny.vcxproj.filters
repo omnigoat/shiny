@@ -164,14 +164,14 @@
     <ClCompile Include="..\..\source\shiny\scene.cpp">
       <Filter>source\shiny</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\shiny\vertex_declaration.cpp">
-      <Filter>source\shiny</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\source\shiny\vertex_stream.cpp">
-      <Filter>source\shiny</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\source\pepper\freelook_camera_controller.cpp">
       <Filter>source\pepper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\shiny\data_stream.cpp">
+      <Filter>source\shiny</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\shiny\data_declaration.cpp">
+      <Filter>source\shiny</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -182,9 +182,6 @@
       <Filter>include\shiny</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\shiny\vertex_buffer.hpp">
-      <Filter>include\shiny</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\shiny\vertex_declaration.hpp">
       <Filter>include\shiny</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\shiny\output.hpp">
@@ -310,9 +307,6 @@
     <ClInclude Include="..\..\include\shiny\element_format.hpp">
       <Filter>include\shiny</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\shiny\vertex_stream.hpp">
-      <Filter>include\shiny</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\shelf\file.hpp">
       <Filter>include\shelf</Filter>
     </ClInclude>
@@ -341,6 +335,12 @@
       <Filter>include\pepper</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\shiny\draw_state.hpp">
+      <Filter>include\shiny</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\shiny\data_stream.hpp">
+      <Filter>include\shiny</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\shiny\data_declaration.hpp">
       <Filter>include\shiny</Filter>
     </ClInclude>
   </ItemGroup>

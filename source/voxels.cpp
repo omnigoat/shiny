@@ -1,7 +1,7 @@
 #include <shiny/runtime.hpp>
 #include <shiny/context.hpp>
 #include <shiny/vertex_buffer.hpp>
-#include <shiny/vertex_declaration.hpp>
+#include <shiny/data_declaration.hpp>
 #include <shiny/vertex_shader.hpp>
 #include <shiny/fragment_shader.hpp>
 #include <shiny/constant_buffer.hpp>
@@ -24,7 +24,7 @@
 
 
 // vertex declaration
-shiny::vertex_declaration_t const* vd = nullptr;
+shiny::data_declaration_t const* vd = nullptr;
 
 // vertex-buffer
 float vbd[] = {
@@ -213,8 +213,8 @@ public:
 
 void voxels_init(shiny::context_ptr const& ctx)
 {
-	vd = ctx->runtime().vertex_declaration_of({
-		{shiny::vertex_stream_semantic_t::position, 0, shiny::element_format_t::f32x4}
+	vd = ctx->runtime().make_data_declaration({
+		{"position", 0, shiny::element_format_t::f32x4}
 	});
 
 	vb = shiny::create_vertex_buffer(ctx, shiny::buffer_usage_t::immutable, vd, 8, vbd);

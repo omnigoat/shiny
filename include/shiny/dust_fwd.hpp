@@ -34,9 +34,9 @@ namespace shiny {
 	using  geometry_streams_t = std::vector<geometry_stream_t>;
 	struct geometry_declaration_t;
 
-	struct vertex_stream_t;
-	typedef std::vector<vertex_stream_t> vertex_streams_t;
-	struct vertex_declaration_t;
+	struct data_stream_t;
+	typedef std::vector<data_stream_t> data_streams_t;
+	struct data_declaration_t;
 
 	struct vertex_buffer_t;
 	typedef atma::intrusive_ptr<vertex_buffer_t> vertex_buffer_ptr;

@@ -2,7 +2,6 @@
 
 #include <shiny/platform/win32/dxgid3d_convert.hpp>
 #include <shiny/context.hpp>
-#include <shiny/vertex_declaration.hpp>
 
 #include <atma/assert.hpp>
 

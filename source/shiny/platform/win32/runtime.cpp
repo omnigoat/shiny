@@ -115,12 +115,12 @@ auto runtime_t::dxgi_output_of(platform::dxgi_adapter_ptr const& adapter, uint o
 	return i->second[output_index];
 }
 
-auto runtime_t::vertex_declaration_of(shiny::vertex_streams_t const& streams) -> vertex_declaration_t const*
+auto runtime_t::make_data_declaration(shiny::data_streams_t const& streams) -> data_declaration_t const*
 {
-	auto i = vertex_declaration_cache_.find(streams);
-	if (i == vertex_declaration_cache_.end()) {
-		auto p = std::unique_ptr<vertex_declaration_t>(new vertex_declaration_t(streams));
-		i = vertex_declaration_cache_.insert(std::make_pair(streams, std::move(p))).first;
+	auto i = data_declaration_cache_.find(streams);
+	if (i == data_declaration_cache_.end()) {
+		auto p = std::unique_ptr<data_declaration_t>(new data_declaration_t(streams));
+		i = data_declaration_cache_.insert(std::make_pair(streams, std::move(p))).first;
 	}
 
 	return i->second.get();

@@ -51,8 +51,8 @@ namespace shiny
 		auto signal_fullscreen_toggle(uint output_index = primary_output) -> void;
 		auto signal_present() -> void;
 		auto signal_clear(atma::math::vector4f const&) -> void;
-		auto signal_draw(vertex_declaration_t const*, vertex_buffer_ptr const&, vertex_shader_ptr const&, fragment_shader_ptr const&) -> void;
-		auto signal_draw(index_buffer_ptr const&, vertex_declaration_t const*, vertex_buffer_ptr const&, vertex_shader_ptr const&, fragment_shader_ptr const&) -> void;
+		auto signal_draw(data_declaration_t const*, vertex_buffer_ptr const&, vertex_shader_ptr const&, fragment_shader_ptr const&) -> void;
+		auto signal_draw(index_buffer_ptr const&, data_declaration_t const*, vertex_buffer_ptr const&, vertex_shader_ptr const&, fragment_shader_ptr const&) -> void;
 		auto signal_draw_scene(scene_t&) -> void;
 		
 		auto signal_draw(shared_state_t const&, vertex_stage_state_t const&, fragment_stage_state_t const&) -> void;
@@ -107,7 +107,10 @@ namespace shiny
 		auto create_swapchain() -> void; 
 		auto setup_rendertarget(uint width, uint height) -> void;
 		auto recreate_backbuffer() -> void;
-		auto create_d3d_input_layout(vertex_shader_ptr const&, vertex_declaration_t const*) -> platform::d3d_input_layout_ptr;
+		auto create_d3d_input_layout(vertex_shader_ptr const&, data_declaration_t const*) -> platform::d3d_input_layout_ptr;
+
+		auto setup_debug_geometry() -> void;
+		auto setup_debug_shaders() -> void;
 
 		auto pull_display_format(display_mode_t&, DXGI_SWAP_CHAIN_DESC&) -> void;
 		auto push_display_format(DXGI_MODE_DESC&, display_mode_t const&) -> void;
@@ -149,7 +152,15 @@ namespace shiny
 		std::unordered_map<blend_state_t, blender_ptr, atma::std_hash_functor_adaptor_t> cached_blenders_;
 
 		// cache for vertex-layouts
-		std::map<std::tuple<vertex_shader_ptr, vertex_declaration_t const*>, platform::d3d_input_layout_ptr> cached_input_layouts_;
+		std::map<std::tuple<vertex_shader_ptr, data_declaration_t const*>, platform::d3d_input_layout_ptr> cached_input_layouts_;
+
+
+		// debug stuff
+		vertex_buffer_ptr debug_vertices_;
+		index_buffer_ptr debug_indices_;
+
+
+
 
 		friend auto create_context(runtime_t&, fooey::window_ptr const&, uint adapter) -> context_ptr;
 	};

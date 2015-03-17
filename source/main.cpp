@@ -2,7 +2,7 @@
 #include <shiny/runtime.hpp>
 #include <shiny/context.hpp>
 #include <shiny/vertex_buffer.hpp>
-#include <shiny/vertex_declaration.hpp>
+#include <shiny/data_declaration.hpp>
 #include <shiny/vertex_shader.hpp>
 #include <shiny/fragment_shader.hpp>
 #include <shiny/constant_buffer.hpp>
@@ -61,16 +61,16 @@ int main()
 	auto dust_runtime = shiny::runtime_t();
 	auto ctx = shiny::create_context(dust_runtime, window, shiny::primary_adapter);
 
-	// vertex declaration
-	auto vd = dust_runtime.vertex_declaration_of({
-		{shiny::vertex_stream_semantic_t::position, 0, shiny::element_format_t::f32x4},
-		{shiny::vertex_stream_semantic_t::color, 0, shiny::element_format_t::f32x4}
+	// data declaration
+	auto dd = dust_runtime.make_data_declaration({
+		{"position", 0, shiny::element_format_t::f32x4},
+		{"color", 0, shiny::element_format_t::f32x4}
 	});
 
 	// shaders
 	auto f = atma::filesystem::file_t("../../shaders/vs_basic.hlsl");
 	auto fm = f.read_into_memory();
-	auto vs = shiny::create_vertex_shader(ctx, vd, fm, false);
+	auto vs = shiny::create_vertex_shader(ctx, dd, fm, false);
 
 	auto f2 = atma::filesystem::file_t("../../shaders/ps_basic.hlsl");
 	auto fm2 = f2.read_into_memory();
@@ -87,7 +87,7 @@ int main()
 		-0.5f, -0.5f,  0.5f, 1.f,   1.f, 1.f, 1.f, 1.f,
 		-0.5f, -0.5f, -0.5f, 1.f,   1.f, 0.f, 0.f, 1.f,
 	};
-	auto vb = shiny::create_vertex_buffer(ctx, shiny::buffer_usage_t::immutable, vd, 8, vbd);
+	auto vb = shiny::create_vertex_buffer(ctx, shiny::buffer_usage_t::immutable, dd, 8, vbd);
 
 	// index-buffer
 	uint16 ibd[] = {
@@ -261,7 +261,7 @@ int main()
 		world_matrix = math::rotation_y(t * 0.002f);
 		scene.signal_res_update(cb, sizeof(world_matrix), &world_matrix);
 		scene.signal_cs_upload_constant_buffer(1, cb);
-		scene.signal_draw(ib, vd, vb, vs, ps);
+		scene.signal_draw(ib, dd, vb, vs, ps);
 		ctx->signal_draw_scene(scene);
 #endif
 

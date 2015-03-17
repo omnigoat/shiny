@@ -3,7 +3,7 @@
 #include <shiny/context.hpp>
 #include <shiny/camera.hpp>
 #include <shiny/constant_buffer.hpp>
-#include <shiny/vertex_declaration.hpp>
+#include <shiny/data_declaration.hpp>
 #include <shiny/vertex_buffer.hpp>
 #include <shiny/index_buffer.hpp>
 #include <shiny/vertex_shader.hpp>
@@ -64,7 +64,7 @@ auto scene_t::signal_cs_upload_constant_buffer(uint index, constant_buffer_cptr 
 	});
 }
 
-auto scene_t::signal_draw(index_buffer_ptr const& ib, vertex_declaration_t const* vd, vertex_buffer_ptr const& vb, vertex_shader_ptr const& vs, fragment_shader_ptr const& ps) -> void
+auto scene_t::signal_draw(index_buffer_ptr const& ib, data_declaration_t const* vd, vertex_buffer_ptr const& vb, vertex_shader_ptr const& vs, fragment_shader_ptr const& ps) -> void
 {
 	queue_.push([&, ib, vd, vb, vs, ps] {
 		context_->signal_draw(ib, vd, vb, vs, ps);

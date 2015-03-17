@@ -5,7 +5,7 @@
 
 #include <shiny/element_format.hpp>
 #include <shiny/output.hpp>
-#include <shiny/vertex_declaration.hpp>
+#include <shiny/data_declaration.hpp>
 #include <shiny/geometry_declaration.hpp>
 
 #include <fooey/fooey_fwd.hpp>
@@ -36,7 +36,7 @@ namespace shiny
 		// generic functions
 		auto output_for_window(fooey::window_ptr const&) -> output_ptr;
 		auto output_of(adapter_ptr const&, uint output_index) -> output_ptr;
-		auto vertex_declaration_of(vertex_streams_t const&) -> vertex_declaration_t const*;
+		auto make_data_declaration(data_streams_t const&) -> data_declaration_t const*;
 		auto geometry_declaration_of(geometry_streams_t const&) -> geometry_declaration_t const*;
 
 		// dxgi/d3d specific
@@ -70,7 +70,7 @@ namespace shiny
 
 
 		std::map<geometry_streams_t, std::unique_ptr<geometry_declaration_t>> geometry_declaration_cache_;
-		std::map<vertex_streams_t, std::unique_ptr<vertex_declaration_t>> vertex_declaration_cache_;
+		std::map<data_streams_t, std::unique_ptr<data_declaration_t>> data_declaration_cache_;
 	};
 }
 
