@@ -7,6 +7,16 @@
 
 namespace shiny { namespace platform {
 	
+	namespace detail
+	{
+		template <typename T, size_t N, typename E>
+		inline auto lookup(T(&map)[N], E x) -> T
+		{
+			ATMA_ASSERT((size_t)x < N); //std::extent<decltype(map)>::value);
+			return map[(uint)x];
+		}
+	}
+
 	inline auto dxgi_format_of(element_format_t fmt) -> DXGI_FORMAT
 	{
 		static DXGI_FORMAT const mapping[] =
@@ -62,6 +72,17 @@ namespace shiny { namespace platform {
 
 		ATMA_ASSERT((uint)b < std::extent<decltype(mapping)>::value);
 		return mapping[(uint)b];
+	}
+
+	inline auto d3d_input_class_of(data_stream_stage_t x) -> D3D11_INPUT_CLASSIFICATION
+	{
+		static D3D11_INPUT_CLASSIFICATION const mapping[] =
+		{
+			D3D11_INPUT_PER_INSTANCE_DATA,
+			D3D11_INPUT_PER_VERTEX_DATA,
+		};
+
+		return detail::lookup(mapping, x);
 	}
 
 }}

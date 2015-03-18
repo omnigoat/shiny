@@ -516,8 +516,10 @@ auto context_t::create_d3d_input_layout(vertex_shader_ptr const& vs, data_declar
 	for (auto const& x : vd->streams())
 	{
 		d3d_elements.push_back({
-			x.semantic().c_str(),
-			0, platform::dxgi_format_of(x.element_format()), 0, offset, D3D11_INPUT_PER_VERTEX_DATA, 0
+			x.semantic().c_str(), 0,
+			platform::dxgi_format_of(x.element_format()),
+			0, offset,
+			platform::d3d_input_class_of(x.stage()), 0
 		});
 
 		offset += x.size();

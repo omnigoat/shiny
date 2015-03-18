@@ -147,6 +147,13 @@ namespace shiny {
 		triangle
 	};
 
+	enum class data_stream_stage_t
+	{
+		input_assembly,
+		vertex,
+	};
+
+
 	template <typename T>
 	struct bitflags_t
 	{

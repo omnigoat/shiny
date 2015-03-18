@@ -8,22 +8,17 @@
 
 namespace shiny
 {
-	enum class data_stream_stage_t
-	{
-		input_assembly,
-		vertex,
-	};
-
 	struct data_stream_t
 	{
-		data_stream_t(atma::string const&, uint index, element_format_t);
-		data_stream_t(atma::string const&, uint index, element_format_t, data_stream_stage_t);
+		data_stream_t(atma::string const&, uint index, element_format_t, data_stream_stage_t = data_stream_stage_t::vertex);
+		auto stage() const -> data_stream_stage_t const&;
 		auto semantic() const -> atma::string const&;
 		auto index() const -> uint;
 		auto element_format() const -> element_format_t;
 		auto size() const -> uint;
 
 	private:
+		data_stream_stage_t stage_;
 		atma::string semantic_;
 		uint index_;
 		element_format_t element_format_;
