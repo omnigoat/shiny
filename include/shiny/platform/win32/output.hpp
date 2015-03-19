@@ -1,7 +1,7 @@
 #pragma once
 //======================================================================
 #include <shiny/platform/win32/dxgi_fwd.hpp>
-#include <shiny/dust_fwd.hpp>
+#include <shiny/shiny_fwd.hpp>
 
 #include <atma/com_ptr.hpp>
 #include <atma/intrusive_ptr.hpp>

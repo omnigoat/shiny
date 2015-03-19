@@ -1,6 +1,6 @@
 #pragma once
 
-#include <shiny/dust_fwd.hpp>
+#include <shiny/shiny_fwd.hpp>
 #include <shiny/data_stream.hpp>
 
 

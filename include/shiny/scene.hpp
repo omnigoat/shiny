@@ -1,6 +1,6 @@
 #pragma once
 
-#include <shiny/dust_fwd.hpp>
+#include <shiny/shiny_fwd.hpp>
 
 #include <atma/types.hpp>
 #include <atma/thread/engine.hpp>

@@ -1,6 +1,6 @@
 #pragma once
 //======================================================================
-#include <shiny/dust_fwd.hpp>
+#include <shiny/shiny_fwd.hpp>
 #include <shiny/platform/win32/d3d_fwd.hpp>
 #include <shiny/element_format.hpp>
 //======================================================================

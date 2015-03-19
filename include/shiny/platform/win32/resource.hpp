@@ -1,7 +1,7 @@
 #pragma once
 //======================================================================
 #include <shiny/platform/win32/d3d_fwd.hpp>
-#include <shiny/dust_fwd.hpp>
+#include <shiny/shiny_fwd.hpp>
 //======================================================================
 namespace shiny
 {

@@ -217,9 +217,6 @@
     <ClInclude Include="..\..\include\shiny\platform\win32\vertex_shader.hpp">
       <Filter>include\shiny\platform\win32</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\shiny\dust_fwd.hpp">
-      <Filter>include\shiny</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\shiny\platform\win32\vertex_buffer.hpp">
       <Filter>include\shiny\platform\win32</Filter>
     </ClInclude>
@@ -341,6 +338,9 @@
       <Filter>include\shiny</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\shiny\data_declaration.hpp">
+      <Filter>include\shiny</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\shiny\shiny_fwd.hpp">
       <Filter>include\shiny</Filter>
     </ClInclude>
   </ItemGroup>

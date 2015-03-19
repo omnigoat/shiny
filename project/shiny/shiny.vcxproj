@@ -234,7 +234,6 @@
     <ClInclude Include="..\..\include\shiny\data_declaration.hpp" />
     <ClInclude Include="..\..\include\shiny\data_stream.hpp" />
     <ClInclude Include="..\..\include\shiny\draw_state.hpp" />
-    <ClInclude Include="..\..\include\shiny\dust_fwd.hpp" />
     <ClInclude Include="..\..\include\shiny\generic_buffer.hpp" />
     <ClInclude Include="..\..\include\shiny\geometry_declaration.hpp" />
     <ClInclude Include="..\..\include\shiny\geometry_shader.hpp" />
@@ -268,6 +267,7 @@
     <ClInclude Include="..\..\include\shiny\platform\win32\dxgi_fwd.hpp" />
     <ClInclude Include="..\..\include\shiny\platform\win32\output.hpp" />
     <ClInclude Include="..\..\include\shiny\scene.hpp" />
+    <ClInclude Include="..\..\include\shiny\shiny_fwd.hpp" />
     <ClInclude Include="..\..\include\shiny\texture2d.hpp" />
     <ClInclude Include="..\..\include\shiny\texture3d.hpp" />
     <ClInclude Include="..\..\include\shiny\vertex_buffer.hpp" />
