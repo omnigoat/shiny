@@ -37,7 +37,7 @@
 #include <atma/bind.hpp>
 #include <atma/filesystem/file.hpp>
 
-
+#include <shox/morton.hpp>
 
 
 
@@ -395,6 +395,7 @@ struct obj_model_t
 
 	auto vertices() const -> verts_t const& { return verts_; }
 	auto faces() const -> faces_t const& { return faces_; }
+	auto triangle_of(aml::vector4i const&) const -> aml::triangle_t;
 
 private:
 	verts_t verts_;
@@ -436,6 +437,12 @@ obj_model_t::obj_model_t(shelf::file_t& file)
 		}
 	});
 }
+
+auto obj_model_t::triangle_of(aml::vector4i const& f) const -> aml::triangle_t
+{
+	return aml::triangle_t{verts_[f.x - 1], verts_[f.y - 1], verts_[f.z - 1]};
+}
+
 
 struct cb_t
 {
@@ -528,7 +535,7 @@ auto debug_draw_triangle(shiny::context_ptr const& ctx, math::triangle_t const& 
 }
 
 
-int main()
+int debug_everything()
 {
 	auto tri = math::triangle_t
 		{ math::point4f(0.15f, 0.f, 0.4f)
@@ -662,8 +669,6 @@ int main()
 			scene.signal_cs_upload_constant_buffer(1, cb);
 			scene.signal_draw(ib, vd, vb, vs, ps);
 		});
-		//scene.debug_signal_draw_cube(position, extents);
-		//scene.debug_signal_draw_line(p0, p1, color);
 
 		ctx->signal_draw_scene(scene);
 
@@ -674,12 +679,15 @@ int main()
 	}
 
 	ctx->signal_block();
+	return 0;
+}
 
-
-#if 0
+int main()
+{
 	auto sf = shelf::file_t{"../../data/dragon.obj"};
 	auto obj = obj_model_t{sf};
 
+#if 0
 	auto f2 = shelf::file_t{"../../data/dragon2.msh", shelf::file_access_t::write};
 
 	uint64 verts = obj.vertices().size();
@@ -689,8 +697,83 @@ int main()
 
 	f2.write(&obj.vertices()[0], sizeof(math::vector4f) * verts);
 	f2.write(&obj.faces()[0], sizeof(math::vector4i) * faces);
-#elif 0
+
 	auto msh_file = shelf::file_t {"../../data/dragon2.msh"};
 	auto msh = msh_model_t{msh_file};
 #endif
+
+	// try for 128^3 grid
+	auto const gridsize = 128;
+
+	struct voxel_t
+	{
+		uint64 morton;
+	};
+
+	auto fragments = std::vector<voxel_t>{};
+
+	// get the real-world bounding box of the model
+	auto bbmin = aml::point4f(FLT_MAX, FLT_MAX, FLT_MAX), bbmax = aml::point4f(-FLT_MAX, -FLT_MAX, -FLT_MAX);
+
+	for (auto const& v : obj.vertices())
+	{
+		if (v.x < bbmin.x) bbmin.x = v.x;
+		if (v.y < bbmin.y) bbmin.y = v.y;
+		if (v.z < bbmin.z) bbmin.z = v.z;
+
+		if (bbmax.x < v.x) bbmax.x = v.x;
+		if (bbmax.y < v.y) bbmax.y = v.y;
+		if (bbmax.z < v.z) bbmax.z = v.z;
+	}
+
+
+	auto tri_dp = bbmax - bbmin;
+	//auto mid = (bbmin + bbmax) / 2.f;
+
+
+	// expand to a cube
+	auto gridwidth = std::max({tri_dp.x, tri_dp.y, tri_dp.z});
+	auto halfgridwidth = gridwidth / 2.f;
+
+	auto voxelwidth = gridwidth / gridsize;
+
+	for (auto const& f : obj.faces())
+	{
+		auto t = obj.triangle_of(f);
+		auto tbb = t.aabb();
+		auto info = aml::aabb_triangle_intersection_info_t{aml::vector4f{voxelwidth, voxelwidth, voxelwidth}, t.v0, t.v1, t.v2};
+
+		auto tgridmin = aml::vector4i{
+			(int)(gridsize * ((tbb.min_point().x - bbmin.x) / gridwidth)),
+			(int)(gridsize * ((tbb.min_point().y - bbmin.y) / gridwidth)),
+			(int)(gridsize * ((tbb.min_point().z - bbmin.z) / gridwidth)),
+			0};
+
+		auto tgridmax = aml::vector4i{
+			(int)(gridsize * ((tbb.max_point().x - bbmin.x) / gridwidth)),
+			(int)(gridsize * ((tbb.max_point().y - bbmin.y) / gridwidth)),
+			(int)(gridsize * ((tbb.max_point().z - bbmin.z) / gridwidth)),
+			0};
+
+		for (int x = tgridmin.x; x <= tgridmax.x; ++x)
+		{
+			for (int y = tgridmin.y; y <= tgridmax.y; ++y)
+			{
+				for (int z = tgridmin.z; z <= tgridmin.z; ++z)
+				{
+					auto aabc = aml::aabc_t{
+						bbmin.x + x * voxelwidth + voxelwidth / 2.f,
+						bbmin.y + y * voxelwidth + voxelwidth / 2.f,
+						bbmin.z + z * voxelwidth + voxelwidth / 2.f,
+						voxelwidth};
+
+					if (aml::intersect_aabb_triangle(aabc, info))
+						fragments.push_back({shox::morton_encoding(x, y, z)});
+				}
+			}
+		}
+	}
+
 }
+
+
