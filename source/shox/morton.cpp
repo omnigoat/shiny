@@ -1,7 +1,7 @@
 #include <../../shiny/include/shox/morton.hpp>
 
 
-uint32 const shox::detail::morton256_x[256] =
+uint32 const moxi::detail::morton256_x[256] =
 {
 	0x00000000, 0x00000001, 0x00000008, 0x00000009, 0x00000040, 0x00000041, 0x00000048, 0x00000049,
 	0x00000200, 0x00000201, 0x00000208, 0x00000209, 0x00000240, 0x00000241, 0x00000248, 0x00000249,
@@ -37,7 +37,7 @@ uint32 const shox::detail::morton256_x[256] =
 	0x00249200, 0x00249201, 0x00249208, 0x00249209, 0x00249240, 0x00249241, 0x00249248, 0x00249249,
 };
 
-uint32 const shox::detail::morton256_y[256] =
+uint32 const moxi::detail::morton256_y[256] =
 {
 	0x00000000, 0x00000002, 0x00000010, 0x00000012, 0x00000080, 0x00000082, 0x00000090, 0x00000092,
 	0x00000400, 0x00000402, 0x00000410, 0x00000412, 0x00000480, 0x00000482, 0x00000490, 0x00000492,
@@ -73,7 +73,7 @@ uint32 const shox::detail::morton256_y[256] =
 	0x00492400, 0x00492402, 0x00492410, 0x00492412, 0x00492480, 0x00492482, 0x00492490, 0x00492492,
 };
 
-uint32 const shox::detail::morton256_z[256] =
+uint32 const moxi::detail::morton256_z[256] =
 {
 	0x00000000, 0x00000004, 0x00000020, 0x00000024, 0x00000100, 0x00000104, 0x00000120, 0x00000124,
 	0x00000800, 0x00000804, 0x00000820, 0x00000824, 0x00000900, 0x00000904, 0x00000920, 0x00000924,
@@ -109,7 +109,7 @@ uint32 const shox::detail::morton256_z[256] =
 	0x00924800, 0x00924804, 0x00924820, 0x00924824, 0x00924900, 0x00924904, 0x00924920, 0x00924924,
 };
 
-auto shox::morton_encoding(uint x, uint y, uint z) -> uint64
+auto moxi::morton_encoding(uint x, uint y, uint z) -> uint64
 {
 	return
 		uint64(detail::morton256_z[(z >> 16) & 0xff] | detail::morton256_y[(y >> 16) & 0xff] | detail::morton256_x[(x >> 16) & 0xff]) << 48 |
@@ -117,7 +117,7 @@ auto shox::morton_encoding(uint x, uint y, uint z) -> uint64
 		uint64(detail::morton256_z[(z >>  0) & 0xff] | detail::morton256_y[(y >>  0) & 0xff] | detail::morton256_x[(x >>  0) & 0xff]);
 }
 
-auto shox::morton_decoding(uint64 morton, uint& x, uint& y, uint& z) -> void
+auto moxi::morton_decoding(uint64 morton, uint& x, uint& y, uint& z) -> void
 {
 	x = 0;
 	y = 0;

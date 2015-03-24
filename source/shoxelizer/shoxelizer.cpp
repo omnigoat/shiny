@@ -741,7 +741,7 @@ int main()
 	{
 		auto t = obj.triangle_of(f);
 		auto tbb = t.aabb();
-		auto info = aml::aabb_triangle_intersection_info_t{aml::vector4f{voxelwidth, voxelwidth, voxelwidth}, t.v0, t.v1, t.v2};
+		//auto info = aml::aabb_triangle_intersection_info_t{aml::vector4f{voxelwidth, voxelwidth, voxelwidth}, t.v0, t.v1, t.v2};
 
 		auto tgridmin = aml::vector4i{
 			(int)(gridsize * ((tbb.min_point().x - bbmin.x) / gridwidth)),
@@ -767,12 +767,19 @@ int main()
 						bbmin.z + z * voxelwidth + voxelwidth / 2.f,
 						voxelwidth};
 
-					if (aml::intersect_aabb_triangle(aabc, info))
-						fragments.push_back({shox::morton_encoding(x, y, z)});
+					if (aml::intersect_aabb_triangle(aabc, t))
+						fragments.push_back({moxi::morton_encoding(x, y, z)});
 				}
 			}
 		}
 	}
+
+	// sort voxels
+	//std::sort(fragments.begin(), fragments.end());
+
+	// visualize poorly :P
+
+
 
 }
 

@@ -3,7 +3,7 @@
 #include <atma/types.hpp>
 
 
-namespace shox
+namespace moxi
 {
 	namespace detail
 	{
