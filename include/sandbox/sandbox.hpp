@@ -30,14 +30,19 @@ namespace sandbox
 
 	private:
 		// data-declarations
+		shiny::data_declaration_t const* dd_position;
 		shiny::data_declaration_t const* dd_position_color;
 
 		// shaders
-		shiny::vertex_shader_cptr vs_flat;
-		shiny::fragment_shader_cptr fs_flat;
+		shiny::vertex_shader_ptr vs_flat;
+		shiny::fragment_shader_ptr fs_flat;
 
 		// geometry
+		static float cube_vertices[];
+		static uint16 cube_indices[];
 		shiny::vertex_buffer_cptr vb_cube;
 		shiny::index_buffer_cptr ib_cube;
+
+		friend struct plugin_t;
 	};
 }

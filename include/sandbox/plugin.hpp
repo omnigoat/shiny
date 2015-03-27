@@ -39,6 +39,13 @@ namespace sandbox
 		auto vb_cube() const -> shiny::vertex_buffer_cptr const&   { return app_->vb_cube; }
 		auto ib_cube() const -> shiny::index_buffer_cptr const&    { return app_->ib_cube; }
 #endif
+		auto dd_position() const -> shiny::data_declaration_t const*;
+		
+		auto cube_vertices() const -> float const*;
+		auto cube_indices() const -> uint16 const*;
+		
+		auto vs_flat() const -> shiny::vertex_shader_ptr const&;
+		auto fs_flat() const -> shiny::fragment_shader_ptr const&;
 
 	private:
 		application_t* app_;

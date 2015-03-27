@@ -20,6 +20,9 @@ namespace sandbox
 
 	private:
 		shiny::context_ptr ctx;
+
+		shiny::vertex_buffer_ptr vb;
+		shiny::index_buffer_ptr ib;
 	};
 
 	using voxelization_plugin_ptr = atma::intrusive_ptr<voxelization_plugin_t>;;

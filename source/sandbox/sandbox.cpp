@@ -40,41 +40,48 @@
 using namespace sandbox;
 using sandbox::application_t;
 
+float application_t::cube_vertices[] =
+{
+	0.5f, 0.5f, 0.5f, 1.f, 1.f, 0.f, 0.f, 1.f,
+	0.5f, 0.5f, -0.5f, 1.f, 0.f, 1.f, 0.f, 1.f,
+	0.5f, -0.5f, 0.5f, 1.f, 0.f, 0.f, 1.f, 1.f,
+	0.5f, -0.5f, -0.5f, 1.f, 1.f, 1.f, 0.f, 1.f,
+	-0.5f, 0.5f, 0.5f, 1.f, 1.f, 0.f, 1.f, 1.f,
+	-0.5f, 0.5f, -0.5f, 1.f, 0.f, 1.f, 1.f, 1.f,
+	-0.5f, -0.5f, 0.5f, 1.f, 1.f, 1.f, 1.f, 1.f,
+	-0.5f, -0.5f, -0.5f, 1.f, 1.f, 0.f, 0.f, 1.f,
+};
+
+uint16 application_t::cube_indices[] =
+{
+	4, 5, 7, 7, 6, 4, // -x plane
+	0, 2, 3, 3, 1, 0, // +x plane
+	2, 6, 7, 7, 3, 2, // -y plane
+	0, 1, 5, 5, 4, 0, // +y plane
+	5, 1, 3, 3, 7, 5, // -z plane
+	6, 2, 0, 0, 4, 6, // +z plane
+};
+
 application_t::application_t()
 	: window_renderer(fooey::system_renderer())
 	, window(fooey::window("Excitement!", 480, 360))
 	, runtime{}
-	, ctx(shiny::create_context(runtime, window, shiny::primary_adapter))
 {
 	window_renderer->add_window(window);
+	ctx = shiny::create_context(runtime, window, shiny::primary_adapter);
 
 	// geometry
+	dd_position = runtime.make_data_declaration({
+		{"position", 0, shiny::element_format_t::f32x4}
+	});
+
 	dd_position_color = runtime.make_data_declaration({
 		{"position", 0, shiny::element_format_t::f32x4},
 		{"color", 0, shiny::element_format_t::f32x4}
 	});
 
-	float cube_verts[] ={
-		0.5f, 0.5f, 0.5f, 1.f, 1.f, 0.f, 0.f, 1.f,
-		0.5f, 0.5f, -0.5f, 1.f, 0.f, 1.f, 0.f, 1.f,
-		0.5f, -0.5f, 0.5f, 1.f, 0.f, 0.f, 1.f, 1.f,
-		0.5f, -0.5f, -0.5f, 1.f, 1.f, 1.f, 0.f, 1.f,
-		-0.5f, 0.5f, 0.5f, 1.f, 1.f, 0.f, 1.f, 1.f,
-		-0.5f, 0.5f, -0.5f, 1.f, 0.f, 1.f, 1.f, 1.f,
-		-0.5f, -0.5f, 0.5f, 1.f, 1.f, 1.f, 1.f, 1.f,
-		-0.5f, -0.5f, -0.5f, 1.f, 1.f, 0.f, 0.f, 1.f,
-	};
-	vb_cube = shiny::create_vertex_buffer(ctx, shiny::buffer_usage_t::immutable, dd_position_color, 8, cube_verts);
-
-	uint16 ibd[] ={
-		4, 5, 7, 7, 6, 4, // -x plane
-		0, 2, 3, 3, 1, 0, // +x plane
-		2, 6, 7, 7, 3, 2, // -y plane
-		0, 1, 5, 5, 4, 0, // +y plane
-		5, 1, 3, 3, 7, 5, // -z plane
-		6, 2, 0, 0, 4, 6, // +z plane
-	};
-	ib_cube = shiny::create_index_buffer(ctx, shiny::buffer_usage_t::immutable, 16, 36, ibd);
+	vb_cube = shiny::create_vertex_buffer(ctx, shiny::buffer_usage_t::immutable, dd_position_color, 8, cube_vertices);
+	ib_cube = shiny::create_index_buffer(ctx, shiny::buffer_usage_t::immutable, 16, 36, cube_indices);
 
 
 	// shaders
@@ -121,25 +128,38 @@ auto application_t::run() -> int
 	}
 
 
-	//
-	//  main run-loop
-	//
+	// camera-controller
 	auto cc = pepper::freelook_camera_controller_t{window};
 
+	// timestep of 16ms = 60hz
+	auto const timestep_uint = 16u;
+	auto const timestep = std::chrono::milliseconds(timestep_uint);
+	
+	// main-loop
+	auto time_frame_end = std::chrono::high_resolution_clock::time_point();
 	while (running)
 	{
-		cc.update(1);
+		auto time_now = std::chrono::high_resolution_clock::now();
+		
+		if (std::chrono::duration_cast<std::chrono::milliseconds>(time_now - time_frame_end) <= timestep)
+			continue;
+		time_frame_end = time_now;
+
+		cc.update(timestep_uint);
 
 		for (auto const& x : plugins_) {
 			x->input_update();
 		}
 
 		// all plugins draw to same scene
-		auto scene = shiny::scene_t{ctx, cc.camera()};
+		auto scene = shiny::scene_t{ctx, cc.camera(), shiny::rendertarget_clear_t{0.2f, 0.2f, 0.2f}};
 		for (auto const& x : plugins_) {
 			x->gfx_draw(scene);
 		}
 		ctx->signal_draw_scene(scene);
+
+		ctx->signal_present();
+		ctx->signal_block();
 	}
 
 	return 0;
@@ -150,6 +170,32 @@ auto application_t::register_plugin(plugin_ptr const& plugin) -> void
 {
 	plugins_.push_back(plugin);
 }
+
+auto plugin_t::dd_position() const -> shiny::data_declaration_t const*
+{
+	return app_->dd_position;
+}
+
+auto plugin_t::cube_vertices() const -> float const*
+{
+	return app_->cube_vertices;
+}
+
+auto plugin_t::cube_indices() const -> uint16 const*
+{
+	return app_->cube_indices;
+}
+
+auto plugin_t::vs_flat() const -> shiny::vertex_shader_ptr const&
+{
+	return app_->vs_flat;
+}
+
+auto plugin_t::fs_flat() const -> shiny::fragment_shader_ptr const&
+{
+	return app_->fs_flat;
+}
+
 
 #if 0
 auto intialize(shiny::context_ptr const& ctx) -> void
@@ -312,3 +358,5 @@ int main()
 
 	return app.run();
 }
+
+

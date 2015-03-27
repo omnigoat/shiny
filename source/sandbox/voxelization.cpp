@@ -1,11 +1,13 @@
 #include <sandbox/voxelization.hpp>
 
 #include <shiny/context.hpp>
+#include <shiny/scene.hpp>
 
 #include <shelf/file.hpp>
 
 #include <shox/morton.hpp>
 
+#include <atma/math/matrix4f.hpp>
 #include <atma/math/vector4f.hpp>
 #include <atma/math/vector4i.hpp>
 #include <atma/math/triangle.hpp>
@@ -69,6 +71,16 @@ auto voxelization_plugin_t::gfx_setup(shiny::context_ptr const& ctx2) -> void
 	ctx = ctx2;
 }
 
+struct voxel_t
+{
+	uint64 morton;
+};
+
+auto operator < (voxel_t const& lhs, voxel_t const& rhs) -> bool
+{
+	return lhs.morton < rhs.morton;
+}
+
 auto voxelization_plugin_t::main_setup() -> void
 {
 	auto sf = shelf::file_t{"../../data/dragon.obj"};
@@ -77,10 +89,7 @@ auto voxelization_plugin_t::main_setup() -> void
 	// try for 128^3 grid
 	auto const gridsize = 128;
 
-	struct voxel_t
-	{
-		uint64 morton;
-	};
+	
 
 	auto fragments = std::vector<voxel_t>{};
 
@@ -146,8 +155,37 @@ auto voxelization_plugin_t::main_setup() -> void
 		}
 	}
 
+	std::sort(fragments.begin(), fragments.end());
+
+	std::vector<aml::vector4f> vertices;
+	std::vector<uint16> indices;
+
+	uint64 m = 0;
+	int fragidx = 0;
+	for (auto const& frag : fragments)
+	{
+		uint x, y, z;
+		moxi::morton_decoding(frag.morton, x, y, z);
+
+		auto scale = aml::matrix4f::scale(0.1f);
+		auto translate = aml::matrix4f::translate(aml::vector4f{(float)x, (float)y, (float)z});
+		auto cmp = translate * scale;
+		
+		for (int i = 0; i != 8; ++i) {
+			auto v = aml::vector4f{cube_vertices()[i * 4 + 0], cube_vertices()[i * 4 + 1], cube_vertices()[i * 4 + 2], cube_vertices()[i * 4 + 3]};
+			vertices.push_back(v * cmp);
+		}
+
+		for (auto idx = cube_indices(); idx != cube_indices() + 36; ++idx)
+			indices.push_back(fragidx * 8 + *idx);
+		++fragidx;
+	}
+
+	vb = shiny::create_vertex_buffer(ctx, shiny::buffer_usage_t::immutable, dd_position(), vertices.size(), &vertices[0]);
+	ib = shiny::create_index_buffer(ctx, shiny::buffer_usage_t::immutable, sizeof(uint16), indices.size(), &indices[0]);
 }
 
 auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
 {
+	scene.signal_draw(ib, dd_position_color(), vb, vs_flat(), fs_flat());
 }
