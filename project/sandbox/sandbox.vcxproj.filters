@@ -9,15 +9,30 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
+    <Filter Include="source\plugins">
+      <UniqueIdentifier>{c54adfad-d8d5-4c59-8174-6cdc5f45fe7c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\plugins">
+      <UniqueIdentifier>{14b6de9c-7eb9-49ce-a18e-ac2dcb68e0db}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\sandbox\sandbox.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\sandbox\voxelization.hpp">
+      <Filter>include\plugins</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\sandbox\plugin.hpp">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\source\sandbox\sandbox.cpp">
       <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\sandbox\voxelization.cpp">
+      <Filter>source\plugins</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

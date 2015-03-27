@@ -193,34 +193,6 @@ namespace shelf
 
 
 
-	template <size_t Bufsize, typename FN>
-	auto for_each_line(abstract_input_stream_t& stream, size_t maxsize, FN&& fn) -> void
-	{
-		char buf[Bufsize];
-		atma::string line;
-
-		// read bytes into line until newline is found
-		auto rr = shelf::read_result_t{shelf::stream_status_t::ok, 0};
-		while (rr.status == shelf::stream_status_t::ok)
-		{
-			rr = stream.read(buf, Bufsize);
-			auto bufend = buf + rr.bytes_read;
-			auto bufp = buf;
-
-			while (bufp != bufend)
-			{
-				auto newline = std::find(bufp, bufend, '\n');
-				line.append(bufp, newline);
-
-				if (newline != bufend) {
-					fn(line.raw_begin(), line.raw_size());
-					line.clear();
-				}
-
-				bufp = (newline == bufend) ? bufend : newline + 1;
-			}
-		}
-	}
 
 
 }

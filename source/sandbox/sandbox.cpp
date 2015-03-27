@@ -1,3 +1,6 @@
+#include <sandbox/sandbox.hpp>
+#include <sandbox/voxelization.hpp>
+
 #include <shiny/runtime.hpp>
 #include <shiny/context.hpp>
 #include <shiny/vertex_buffer.hpp>
@@ -32,15 +35,130 @@
 
 #include <atma/filesystem/file.hpp>
 
-#include <sandbox/sandbox.hpp>
 
+
+using namespace sandbox;
+using sandbox::application_t;
+
+application_t::application_t()
+	: window_renderer(fooey::system_renderer())
+	, window(fooey::window("Excitement!", 480, 360))
+	, runtime{}
+	, ctx(shiny::create_context(runtime, window, shiny::primary_adapter))
+{
+	window_renderer->add_window(window);
+
+	// geometry
+	dd_position_color = runtime.make_data_declaration({
+		{"position", 0, shiny::element_format_t::f32x4},
+		{"color", 0, shiny::element_format_t::f32x4}
+	});
+
+	float cube_verts[] ={
+		0.5f, 0.5f, 0.5f, 1.f, 1.f, 0.f, 0.f, 1.f,
+		0.5f, 0.5f, -0.5f, 1.f, 0.f, 1.f, 0.f, 1.f,
+		0.5f, -0.5f, 0.5f, 1.f, 0.f, 0.f, 1.f, 1.f,
+		0.5f, -0.5f, -0.5f, 1.f, 1.f, 1.f, 0.f, 1.f,
+		-0.5f, 0.5f, 0.5f, 1.f, 1.f, 0.f, 1.f, 1.f,
+		-0.5f, 0.5f, -0.5f, 1.f, 0.f, 1.f, 1.f, 1.f,
+		-0.5f, -0.5f, 0.5f, 1.f, 1.f, 1.f, 1.f, 1.f,
+		-0.5f, -0.5f, -0.5f, 1.f, 1.f, 0.f, 0.f, 1.f,
+	};
+	vb_cube = shiny::create_vertex_buffer(ctx, shiny::buffer_usage_t::immutable, dd_position_color, 8, cube_verts);
+
+	uint16 ibd[] ={
+		4, 5, 7, 7, 6, 4, // -x plane
+		0, 2, 3, 3, 1, 0, // +x plane
+		2, 6, 7, 7, 3, 2, // -y plane
+		0, 1, 5, 5, 4, 0, // +y plane
+		5, 1, 3, 3, 7, 5, // -z plane
+		6, 2, 0, 0, 4, 6, // +z plane
+	};
+	ib_cube = shiny::create_index_buffer(ctx, shiny::buffer_usage_t::immutable, 16, 36, ibd);
+
+
+	// shaders
+	auto vs_basic_file = atma::filesystem::file_t("../../shaders/vs_basic.hlsl");
+	auto vs_basic_mem = vs_basic_file.read_into_memory();
+	vs_flat = shiny::create_vertex_shader(ctx, dd_position_color, vs_basic_mem, false);
+
+	auto ps_basic_file = atma::filesystem::file_t("../../shaders/ps_basic.hlsl");
+	auto ps_basic_mem = ps_basic_file.read_into_memory();
+	fs_flat = shiny::create_fragment_shader(ctx, ps_basic_mem, false);
+}
+
+auto application_t::run() -> int
+{
+	bool running = true;
+
+
+	//
+	//  generic input handling
+	//
+	window->on({
+		{"close", [&running](fooey::event_t const&){
+			running = false;
+		}}
+	});
+
+	window->key_state.on_key_down(fooey::key_t::Alt + fooey::key_t::Enter, [&]{
+		ctx->signal_fullscreen_toggle(1);
+	});
+
+	window->key_state.on_key_down(fooey::key_t::Esc, [&running]{
+		running = false;
+	});
+
+
+	//
+	//  initialize plugins
+	//
+	for (auto const& x : plugins_)
+	{
+		x->input_bind(window);
+		x->gfx_setup(ctx);
+		x->main_setup();
+	}
+
+
+	//
+	//  main run-loop
+	//
+	auto cc = pepper::freelook_camera_controller_t{window};
+
+	while (running)
+	{
+		cc.update(1);
+
+		for (auto const& x : plugins_) {
+			x->input_update();
+		}
+
+		// all plugins draw to same scene
+		auto scene = shiny::scene_t{ctx, cc.camera()};
+		for (auto const& x : plugins_) {
+			x->gfx_draw(scene);
+		}
+		ctx->signal_draw_scene(scene);
+	}
+
+	return 0;
+}
+
+
+auto application_t::register_plugin(plugin_ptr const& plugin) -> void
+{
+	plugins_.push_back(plugin);
+}
+
+#if 0
 auto intialize(shiny::context_ptr const& ctx) -> void
 {
 	auto&& shiny_runtime = ctx->runtime();
 
 
 	// data declaration
-	sandbox::dd_position_color = shiny_runtime.make_data_declaration({
+	dd_position_color = shiny_runtime.make_data_declaration({
 		{"position", 0, shiny::element_format_t::f32x4},
 		{"color", 0, shiny::element_format_t::f32x4}
 	});
@@ -48,7 +166,7 @@ auto intialize(shiny::context_ptr const& ctx) -> void
 	// shaders
 	auto f = atma::filesystem::file_t("../../shaders/vs_debug.hlsl");
 	auto fm = f.read_into_memory();
-	auto vs = shiny::create_vertex_shader(ctx, sandbox::dd_position_color, fm, false);
+	auto vs = shiny::create_vertex_shader(ctx, dd_position_color, fm, false);
 
 	auto f2 = atma::filesystem::file_t("../../shaders/ps_debug.hlsl");
 	auto fm2 = f2.read_into_memory();
@@ -56,11 +174,11 @@ auto intialize(shiny::context_ptr const& ctx) -> void
 
 	auto vs_basic_file = atma::filesystem::file_t("../../shaders/vs_basic.hlsl");
 	auto vs_basic_mem = vs_basic_file.read_into_memory();
-	sandbox::vs_flat = shiny::create_vertex_shader(ctx, sandbox::dd_position_color, vs_basic_mem, false);
+	vs_flat = shiny::create_vertex_shader(ctx, dd_position_color, vs_basic_mem, false);
 
 	auto ps_basic_file = atma::filesystem::file_t("../../shaders/ps_basic.hlsl");
 	auto ps_basic_mem = ps_basic_file.read_into_memory();
-	sandbox::fs_flat = shiny::create_fragment_shader(ctx, ps_basic_mem, false);
+	fs_flat = shiny::create_fragment_shader(ctx, ps_basic_mem, false);
 
 	// geometry
 	float cube_verts[] ={
@@ -73,7 +191,7 @@ auto intialize(shiny::context_ptr const& ctx) -> void
 		-0.5f, -0.5f, 0.5f, 1.f, 1.f, 1.f, 1.f, 1.f,
 		-0.5f, -0.5f, -0.5f, 1.f, 1.f, 0.f, 0.f, 1.f,
 	};
-	sandbox::vb_cube = shiny::create_vertex_buffer(ctx, shiny::buffer_usage_t::immutable, sandbox::dd_position_color, 8, cube_verts);
+	vb_cube = shiny::create_vertex_buffer(ctx, shiny::buffer_usage_t::immutable, dd_position_color, 8, cube_verts);
 
 	uint16 ibd[] ={
 		4, 5, 7, 7, 6, 4, // -x plane
@@ -83,14 +201,16 @@ auto intialize(shiny::context_ptr const& ctx) -> void
 		5, 1, 3, 3, 7, 5, // -z plane
 		6, 2, 0, 0, 4, 6, // +z plane
 	};
-	sandbox::ib_cube = shiny::create_index_buffer(ctx, shiny::buffer_usage_t::immutable, 16, 36, ibd);
+	ib_cube = shiny::create_index_buffer(ctx, shiny::buffer_usage_t::immutable, 16, 36, ibd);
 
 	// just do blending here
 	auto sbs = shiny::blend_state_t{};
 	auto blend = ctx->make_blender(sbs);
 	ctx->signal_om_blending(blend);
 }
+#endif
 
+#if 0
 auto bind_input(fooey::window_ptr const& window, shiny::context_ptr const& ctx) -> void
 {
 	window->key_state.on_key_down(fooey::key_t::Alt + fooey::key_t::Enter, [ctx]{
@@ -108,11 +228,13 @@ auto bind_input(fooey::window_ptr const& window, shiny::context_ptr const& ctx) 
 		}}
 	});
 }
+#endif
 
 auto update_input(fooey::window_ptr const& window, shiny::context_ptr const& ctx) -> void
 {
 }
 
+#if 0
 auto runloop(shiny::context_ptr const& ctx) -> void
 {
 	bool running = true;
@@ -180,19 +302,13 @@ auto runloop(shiny::context_ptr const& ctx) -> void
 
 	ctx->signal_block();
 }
+#endif
 
 int main()
 {
-	// setup gui
-	auto renderer = fooey::system_renderer();
-	auto window = fooey::window("Excitement.", 480, 360);
-	renderer->add_window(window);
+	auto app = sandbox::application_t{};
 
-	// initialise shiny
-	auto shiny_runtime = shiny::runtime_t();
-	auto ctx = shiny::create_context(shiny_runtime, window, shiny::primary_adapter);
+	app.register_plugin(plugin_ptr(new sandbox::voxelization_plugin_t{&app}));
 
-	initialize(ctx);
-	bind_input(window, ctx);
-	runloop(ctx);
+	return app.run();
 }
