@@ -54,7 +54,7 @@ obj_model_t::obj_model_t(shelf::file_t& file)
 			case 'f': {
 				int32 a, b, c;
 				sscanf(str, "f %d %d %d", &a, &b, &c);
-				faces_.push_back(aml::vector4i{a, b, c, 0});
+				faces_.push_back(aml::vector4i{a - 1, b - 1, c - 1, 0});
 				break;
 			}
 		}
@@ -63,7 +63,7 @@ obj_model_t::obj_model_t(shelf::file_t& file)
 
 auto obj_model_t::triangle_of(aml::vector4i const& f) const -> aml::triangle_t
 {
-	return aml::triangle_t{verts_[f.x - 1], verts_[f.y - 1], verts_[f.z - 1]};
+	return aml::triangle_t{verts_[f.x], verts_[f.y], verts_[f.z]};
 }
 
 auto voxelization_plugin_t::gfx_setup(shiny::context_ptr const& ctx2) -> void
@@ -81,6 +81,11 @@ auto operator < (voxel_t const& lhs, voxel_t const& rhs) -> bool
 	return lhs.morton < rhs.morton;
 }
 
+auto operator == (voxel_t const& lhs, voxel_t const& rhs) -> bool
+{
+	return lhs.morton == rhs.morton;
+}
+
 auto voxelization_plugin_t::main_setup() -> void
 {
 	auto sf = shelf::file_t{"../../data/dragon.obj"};
@@ -90,7 +95,7 @@ auto voxelization_plugin_t::main_setup() -> void
 	auto const gridsize = 128;
 
 	
-
+#if 1
 	auto fragments = std::vector<voxel_t>{};
 
 	// get the real-world bounding box of the model
@@ -156,9 +161,13 @@ auto voxelization_plugin_t::main_setup() -> void
 	}
 
 	std::sort(fragments.begin(), fragments.end());
+	
+	fragments.erase(
+		std::unique(fragments.begin(), fragments.end()),
+		fragments.end());
 
 	std::vector<aml::vector4f> vertices;
-	std::vector<uint16> indices;
+	std::vector<uint32> indices;
 
 	uint64 m = 0;
 	int fragidx = 0;
@@ -170,9 +179,10 @@ auto voxelization_plugin_t::main_setup() -> void
 		auto scale = aml::matrix4f::scale(0.1f);
 		auto translate = aml::matrix4f::translate(aml::vector4f{(float)x, (float)y, (float)z});
 		auto cmp = translate * scale;
-		
-		for (int i = 0; i != 8; ++i) {
-			auto v = aml::vector4f{cube_vertices()[i * 4 + 0], cube_vertices()[i * 4 + 1], cube_vertices()[i * 4 + 2], cube_vertices()[i * 4 + 3]};
+
+		for (int i = 0; i != 8; ++i)
+		{
+			auto v = aml::vector4f{cube_vertices()[i * 8 + 0], cube_vertices()[i * 8 + 1], cube_vertices()[i * 8 + 2], cube_vertices()[i * 8 + 3]};
 			vertices.push_back(v * cmp);
 		}
 
@@ -180,12 +190,27 @@ auto voxelization_plugin_t::main_setup() -> void
 			indices.push_back(fragidx * 8 + *idx);
 		++fragidx;
 	}
+#endif
+
+
+	uint32* mi = new uint32[obj.faces().size() * 3];
+	size_t i = 0;
+	for (auto const& x : obj.faces()) {
+		//memcpy(mi + i * 3, &x.x, 3 * sizeof(uint32));
+		mi[i * 3 + 0] = x.x;
+		mi[i * 3 + 1] = x.y;
+		mi[i * 3 + 2] = x.z;
+		++i;
+	}
 
 	vb = shiny::create_vertex_buffer(ctx, shiny::buffer_usage_t::immutable, dd_position(), vertices.size(), &vertices[0]);
-	ib = shiny::create_index_buffer(ctx, shiny::buffer_usage_t::immutable, sizeof(uint16), indices.size(), &indices[0]);
+	ib = shiny::create_index_buffer(ctx, shiny::buffer_usage_t::immutable, sizeof(uint32), indices.size(), &indices[0]);
+
+	//vb = shiny::create_vertex_buffer(ctx, shiny::buffer_usage_t::immutable, dd_position(), obj.vertices().size(), &obj.vertices()[0]);
+	//ib = shiny::create_index_buffer(ctx, shiny::buffer_usage_t::immutable, sizeof(uint32), obj.faces().size() * 3, mi);
 }
 
 auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
 {
-	scene.signal_draw(ib, dd_position_color(), vb, vs_flat(), fs_flat());
+	scene.signal_draw(ib, dd_position(), vb, vs_flat(), fs_flat());
 }

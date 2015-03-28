@@ -19,15 +19,14 @@ struct ps_input
 	float3 normal : Normal;
 };
 
-ps_input main(float4 position : Position, float4 color : Color)
+ps_input main(float4 position : Position)
 {
 	ps_input output;
 
-	matrix wvp = mul(proj, mul(view, world));
+	matrix wvp = mul(proj, view);
 
 	output.position = mul(wvp, position);
 	output.pos = output.position;
-	output.color = color;
 	output.normal = mul(world, position);
 	return output;
 }

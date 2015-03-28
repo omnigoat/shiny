@@ -13,5 +13,5 @@ float4 main(ps_input input) : SV_Target
 
 	//float c = max(dot(normalize(input.normal), lightdir), 0.f);
 	//c = max(c, c + 0.2f);
-	return float4(input.color.rgb, input.color.a);
+	return float4(0.f, 0.f, 0.f, 1.f);
 }

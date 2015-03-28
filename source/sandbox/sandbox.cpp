@@ -64,7 +64,7 @@ uint16 application_t::cube_indices[] =
 
 application_t::application_t()
 	: window_renderer(fooey::system_renderer())
-	, window(fooey::window("Excitement!", 480, 360))
+	, window(fooey::window("Excitement!", 640, 480))
 	, runtime{}
 {
 	window_renderer->add_window(window);
@@ -87,7 +87,7 @@ application_t::application_t()
 	// shaders
 	auto vs_basic_file = atma::filesystem::file_t("../../shaders/vs_basic.hlsl");
 	auto vs_basic_mem = vs_basic_file.read_into_memory();
-	vs_flat = shiny::create_vertex_shader(ctx, dd_position_color, vs_basic_mem, false);
+	vs_flat = shiny::create_vertex_shader(ctx, dd_position, vs_basic_mem, false);
 
 	auto ps_basic_file = atma::filesystem::file_t("../../shaders/ps_basic.hlsl");
 	auto ps_basic_mem = ps_basic_file.read_into_memory();
@@ -130,6 +130,7 @@ auto application_t::run() -> int
 
 	// camera-controller
 	auto cc = pepper::freelook_camera_controller_t{window};
+	cc.require_mousedown_for_rotation(true);
 
 	// timestep of 16ms = 60hz
 	auto const timestep_uint = 16u;
@@ -174,6 +175,11 @@ auto application_t::register_plugin(plugin_ptr const& plugin) -> void
 auto plugin_t::dd_position() const -> shiny::data_declaration_t const*
 {
 	return app_->dd_position;
+}
+
+auto plugin_t::dd_position_color() const -> shiny::data_declaration_t const*
+{
+	return app_->dd_position_color;
 }
 
 auto plugin_t::cube_vertices() const -> float const*

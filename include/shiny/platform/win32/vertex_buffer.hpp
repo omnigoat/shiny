@@ -7,7 +7,7 @@ namespace shiny
 {
 	struct vertex_buffer_t : buffer_t
 	{
-		vertex_buffer_t(context_ptr const&, buffer_usage_t, data_declaration_t const*, uint vertex_count, void* data, uint data_vertcount);
+		vertex_buffer_t(context_ptr const&, buffer_usage_t, data_declaration_t const*, uint vertex_count, void const* data, uint data_vertcount);
 		~vertex_buffer_t();
 
 		auto data_declaration() const -> data_declaration_t const* { return data_declaration_; }
@@ -31,7 +31,7 @@ namespace shiny
 	inline auto create_vertex_buffer(
 		context_ptr const& ctx, buffer_usage_t usage,
 		data_declaration_t const* vd, uint vertex_count,
-		void* data, uint data_vertcount = 0)
+		void const* data, uint data_vertcount = 0)
 		-> vertex_buffer_ptr
 	{
 		return vertex_buffer_ptr(new vertex_buffer_t(ctx, usage, vd, vertex_count, data, data_vertcount));

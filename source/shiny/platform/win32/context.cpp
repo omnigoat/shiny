@@ -326,6 +326,7 @@ auto context_t::signal_draw(index_buffer_ptr const& ib, data_declaration_t const
 
 		auto vbs = vb->d3d_buffer().get();
 
+#if 0
 		D3D11_RASTERIZER_DESC wfdesc;
 		ZeroMemory(&wfdesc, sizeof(D3D11_RASTERIZER_DESC));
 		wfdesc.FillMode = D3D11_FILL_SOLID;
@@ -333,6 +334,7 @@ auto context_t::signal_draw(index_buffer_ptr const& ib, data_declaration_t const
 		atma::com_ptr<ID3D11RasterizerState> WireFrame;
 		d3d_device_->CreateRasterizerState(&wfdesc, WireFrame.assign());
 		d3d_immediate_context_->RSSetState(WireFrame.get());
+#endif
 
 #if 0
 		D3D11_BLEND_DESC blendStateDesc;
@@ -392,7 +394,7 @@ auto context_t::signal_draw(index_buffer_ptr const& ib, data_declaration_t const
 		d3d_immediate_context_->VSSetShader(vs->d3d_vs().get(), nullptr, 0);
 		d3d_immediate_context_->PSSetShader(ps->d3d_ps().get(), nullptr, 0);
 		d3d_immediate_context_->IASetInputLayout(IL->second.get());
-		d3d_immediate_context_->IASetIndexBuffer(ib->d3d_buffer().get(), DXGI_FORMAT_R16_UINT, 0);
+		d3d_immediate_context_->IASetIndexBuffer(ib->d3d_buffer().get(), DXGI_FORMAT_R32_UINT, 0);
 		d3d_immediate_context_->IASetVertexBuffers(0, 1, &vbs, &stride, &offset);
 		d3d_immediate_context_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		d3d_immediate_context_->DrawIndexed(ib->index_count(), 0, 0);
