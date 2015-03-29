@@ -95,7 +95,7 @@ auto voxelization_plugin_t::main_setup() -> void
 	auto obj = obj_model_t{sf};
 
 	// try for 128^3 grid
-	auto const gridsize = 128;
+	auto const gridsize = 256;
 
 	
 #if 1
@@ -193,30 +193,35 @@ auto voxelization_plugin_t::main_setup() -> void
 			indices.push_back(fragidx * 8 + *idx);
 		++fragidx;
 	}
-#endif
 
 
-	uint32* mi = new uint32[obj.faces().size() * 3];
-	size_t i = 0;
-	for (auto const& x : obj.faces()) {
-		//memcpy(mi + i * 3, &x.x, 3 * sizeof(uint32));
-		mi[i * 3 + 0] = x.x;
-		mi[i * 3 + 1] = x.y;
-		mi[i * 3 + 2] = x.z;
-		++i;
-	}
+	
 
 	vb = shiny::create_vertex_buffer(ctx, shiny::buffer_usage_t::immutable, dd_position(), (uint)vertices.size(), &vertices[0]);
 	ib = shiny::create_index_buffer(ctx, shiny::buffer_usage_t::immutable, shiny::index_format_t::index32, (uint)indices.size(), &indices[0]);
 
+#else
+	uint32* mi = new uint32[obj.faces().size() * 3];
+	size_t i = 0;
+	for (auto const& x : obj.faces()) {
+		//memcpy(mi + i * 3, &x.x, 3 * sizeof(uint32));
+		mi[i * 3 + 2] = x.x;
+		mi[i * 3 + 1] = x.y;
+		mi[i * 3 + 0] = x.z;
+		++i;
+	}
+
+
+	vb = shiny::create_vertex_buffer(ctx, shiny::buffer_usage_t::immutable, dd_position(), obj.vertices().size(), &obj.vertices()[0]);
+	ib = shiny::create_index_buffer(ctx, shiny::buffer_usage_t::immutable, shiny::index_format_t::index32, obj.faces().size() * 3, mi);
+
+#endif
 
 	auto f2 = atma::filesystem::file_t("../../shaders/gs_normal.hlsl");
 	auto fm2 = f2.read_into_memory();
 	gs = shiny::create_geometry_shader(ctx, fm2, false);
 
 
-	//vb = shiny::create_vertex_buffer(ctx, shiny::buffer_usage_t::immutable, dd_position(), obj.vertices().size(), &obj.vertices()[0]);
-	//ib = shiny::create_index_buffer(ctx, shiny::buffer_usage_t::immutable, sizeof(uint32), obj.faces().size() * 3, mi);
 }
 
 auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
