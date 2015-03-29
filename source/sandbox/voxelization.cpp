@@ -212,7 +212,7 @@ auto voxelization_plugin_t::main_setup() -> void
 
 	auto f2 = atma::filesystem::file_t("../../shaders/gs_normal.hlsl");
 	auto fm2 = f2.read_into_memory();
-	//auto gs = shiny::create_geometry_shader(ctx, fm2, false);
+	gs = shiny::create_geometry_shader(ctx, fm2, false);
 
 
 	//vb = shiny::create_vertex_buffer(ctx, shiny::buffer_usage_t::immutable, dd_position(), obj.vertices().size(), &obj.vertices()[0]);
@@ -226,6 +226,7 @@ auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
 	shiny::signal_draw(ctx, scene.draw_batch()
 		, sdc::input_assembly_stage(dd_position(), vb, ib)
 		, sdc::vertex_stage(vs_flat(), shiny::bound_constant_buffers_t{{0, scene.scene_buffer()}})
+		, sdc::geometry_stage(gs)
 		, sdc::fragment_stage(fs_flat())
 		);
 

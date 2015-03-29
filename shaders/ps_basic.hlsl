@@ -1,17 +1,15 @@
-struct ps_input
+struct PSInput
 {
-	float4 blah : SV_Position;
-	float4 pos : Position;
-	float4 color : Color;
+	float4 position : SV_Position;
+	float4 world_position : Position;
 	float3 normal : Normal;
 };
 
-float4 main(ps_input input) : SV_Target
+float4 main(PSInput input) : SV_Target
 {
-	//float3 light = float3(-2.f, 2.f, -2.f);
-	//float3 lightdir = normalize(light - input.pos.xyz);
+	float3 light = float3(-20.f, 20.f, -10.f);
+	float3 lightdir = normalize(light - input.world_position.xyz);
 
-	//float c = max(dot(normalize(input.normal), lightdir), 0.f);
-	//c = max(c, c + 0.2f);
-	return float4(0.f, 0.f, 0.f, 1.f);
+	float c = max(dot(normalize(input.normal), lightdir), 0.f);
+	return float4(c, c, c, 1.f);
 }

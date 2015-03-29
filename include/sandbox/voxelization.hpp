@@ -23,6 +23,8 @@ namespace sandbox
 
 		shiny::vertex_buffer_ptr vb;
 		shiny::index_buffer_ptr ib;
+
+		shiny::geometry_shader_ptr gs;
 	};
 
 	using voxelization_plugin_ptr = atma::intrusive_ptr<voxelization_plugin_t>;;

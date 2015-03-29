@@ -11,22 +11,19 @@ cbuffer buf_model : register(b1)
 };
 
 
-struct ps_input
+struct VSOutput
 {
 	float4 position : SV_Position;
-	float4 pos : Position;
-	float4 color : Color;
-	float3 normal : Normal;
+	float4 world_position : Position;
 };
 
-ps_input main(float4 position : Position)
+VSOutput main(float4 position : Position)
 {
-	ps_input output;
+	VSOutput output;
 
 	matrix wvp = mul(proj, view);
 
 	output.position = mul(wvp, position);
-	output.pos = output.position;
-	output.normal = mul(world, position);
+	output.world_position = position;
 	return output;
 }
