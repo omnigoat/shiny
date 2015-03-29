@@ -184,6 +184,7 @@
     <ClCompile Include="..\..\source\shiny\camera.cpp" />
     <ClCompile Include="..\..\source\shiny\data_declaration.cpp" />
     <ClCompile Include="..\..\source\shiny\data_stream.cpp" />
+    <ClCompile Include="..\..\source\shiny\draw.cpp" />
     <ClCompile Include="..\..\source\shiny\element_format.cpp" />
     <ClCompile Include="..\..\source\shiny\platform\win32\buffer.cpp" />
     <ClCompile Include="..\..\source\shiny\platform\win32\compute_shader.cpp" />
@@ -233,6 +234,7 @@
     <ClInclude Include="..\..\include\shiny\context.hpp" />
     <ClInclude Include="..\..\include\shiny\data_declaration.hpp" />
     <ClInclude Include="..\..\include\shiny\data_stream.hpp" />
+    <ClInclude Include="..\..\include\shiny\draw.hpp" />
     <ClInclude Include="..\..\include\shiny\draw_state.hpp" />
     <ClInclude Include="..\..\include\shiny\generic_buffer.hpp" />
     <ClInclude Include="..\..\include\shiny\geometry_declaration.hpp" />
@@ -284,6 +286,16 @@
     <FxCompile Include="..\..\shaders\cs_test.hlsl">
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">5.0</ShaderModel>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="..\..\shaders\gs_normal.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Geometry</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Geometry</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Geometry</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Geometry</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
     </FxCompile>
     <FxCompile Include="..\..\shaders\ps_basic.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>

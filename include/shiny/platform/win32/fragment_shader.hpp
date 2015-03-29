@@ -12,7 +12,7 @@ namespace shiny
 	{
 		friend auto create_fragment_shader(context_ptr const&, atma::unique_memory_t const&, bool precompiled, atma::string const& entrypoint = "main") -> fragment_shader_ptr;
 
-		auto d3d_ps() const -> platform::d3d_fragment_shader_ptr const& { return d3d_ps_; }
+		auto d3d_fs() const -> platform::d3d_fragment_shader_ptr const& { return d3d_fs_; }
 
 	private:
 		fragment_shader_t(context_ptr const&, void const*, size_t, bool, atma::string const&);
@@ -21,7 +21,7 @@ namespace shiny
 		context_ptr context_;
 
 		platform::d3d_blob_ptr d3d_blob_;
-		platform::d3d_fragment_shader_ptr d3d_ps_;
+		platform::d3d_fragment_shader_ptr d3d_fs_;
 	};
 }
 

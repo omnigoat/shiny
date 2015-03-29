@@ -15,7 +15,7 @@ namespace shiny
 		auto semantic() const -> atma::string const&;
 		auto index() const -> uint;
 		auto element_format() const -> element_format_t;
-		auto size() const -> uint;
+		auto size() const -> size_t;
 
 	private:
 		data_stream_stage_t stage_;

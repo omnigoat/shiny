@@ -454,7 +454,7 @@ auto debug_draw_triangle(shiny::context_ptr const& ctx, math::triangle_t const& 
 	auto tvb = shiny::create_vertex_buffer(ctx, shiny::buffer_usage_t::immutable, vd, 3, tvbd);
 
 	uint16 tibd[] = {0, 1, 2};
-	auto tib = shiny::create_index_buffer(ctx, shiny::buffer_usage_t::immutable, 16, 3, tibd);
+	auto tib = shiny::create_index_buffer(ctx, shiny::buffer_usage_t::immutable, shiny::index_format_t::index16, 3, tibd);
 
 	auto tcbd = cb_t{aml::matrix4f::identity(), aml::vector4f{1.f, 1.f, 1.f, 0.3f}};
 	auto tcb = shiny::create_constant_buffer(ctx, sizeof(cb_t), &tcbd);
@@ -573,7 +573,7 @@ int debug_everything()
 		5, 1, 3, 3, 7, 5, // -z plane
 		6, 2, 0, 0, 4, 6, // +z plane
 	};
-	auto ib = shiny::create_index_buffer(ctx, shiny::buffer_usage_t::immutable, 16, 36, ibd);
+	auto ib = shiny::create_index_buffer(ctx, shiny::buffer_usage_t::immutable, shiny::index_format_t::index16, 36, ibd);
 
 
 
@@ -630,7 +630,7 @@ int debug_everything()
 				return;
 			
 			auto vb = shiny::create_vertex_buffer(ctx, shiny::buffer_usage_t::immutable, vd, 8, vbd);
-			auto ib = shiny::create_index_buffer(ctx, shiny::buffer_usage_t::immutable, 16, 36, ibd);
+			auto ib = shiny::create_index_buffer(ctx, shiny::buffer_usage_t::immutable, shiny::index_format_t::index16, 36, ibd);
 
 			auto scale = aml::matrix4f::scale(x->aabc.diameter());
 			auto move = aml::matrix4f::translate(x->aabc.center());
@@ -638,8 +638,8 @@ int debug_everything()
 
 			auto cbd = cb_t{transform, aml::vector4f{1.f, 1.f - (level / 6.f), 0.f, .15f}};
 			auto cb = shiny::create_constant_buffer(ctx, sizeof(cb_t), &cbd);
-			scene.signal_cs_upload_constant_buffer(1, cb);
-			scene.signal_draw(ib, vd, vb, vs, ps);
+			//scene.signal_cs_upload_constant_buffer(1, cb);
+			//scene.signal_draw(ib, vd, vb, vs, ps);
 		});
 
 		ctx->signal_draw_scene(scene);

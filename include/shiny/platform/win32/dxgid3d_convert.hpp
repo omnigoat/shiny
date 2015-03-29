@@ -12,7 +12,7 @@ namespace shiny { namespace platform {
 		template <typename T, size_t N, typename E>
 		inline auto lookup(T(&map)[N], E x) -> T
 		{
-			ATMA_ASSERT((size_t)x < N); //std::extent<decltype(map)>::value);
+			ATMA_ASSERT((size_t)x < N);
 			return map[(uint)x];
 		}
 	}
@@ -36,8 +36,7 @@ namespace shiny { namespace platform {
 			DXGI_FORMAT_R32_TYPELESS,
 		};
 
-		ATMA_ASSERT((uint)fmt < std::extent<decltype(mapping)>::value);
-		return mapping[(uint)fmt];
+		return detail::lookup(mapping, fmt);
 	}
 
 	inline auto d3dbind_of(buffer_type_t bu) -> D3D11_BIND_FLAG
@@ -50,8 +49,7 @@ namespace shiny { namespace platform {
 			D3D11_BIND_SHADER_RESOURCE
 		};
 
-		ATMA_ASSERT((uint)bu < std::extent<decltype(mapping)>::value);
-		return mapping[(uint)bu];
+		return detail::lookup(mapping, bu);
 	}
 
 	inline auto d3dblend_of(blending_t b) -> D3D11_BLEND
@@ -70,8 +68,7 @@ namespace shiny { namespace platform {
 			D3D11_BLEND_INV_DEST_ALPHA,
 		};
 
-		ATMA_ASSERT((uint)b < std::extent<decltype(mapping)>::value);
-		return mapping[(uint)b];
+		return detail::lookup(mapping, b);
 	}
 
 	inline auto d3d_input_class_of(data_stream_stage_t x) -> D3D11_INPUT_CLASSIFICATION
@@ -80,6 +77,17 @@ namespace shiny { namespace platform {
 		{
 			D3D11_INPUT_PER_INSTANCE_DATA,
 			D3D11_INPUT_PER_VERTEX_DATA,
+		};
+
+		return detail::lookup(mapping, x);
+	}
+
+	inline auto dxgi_format_of(index_format_t x) -> DXGI_FORMAT
+	{
+		static DXGI_FORMAT const mapping[] =
+		{
+			DXGI_FORMAT_R16_UINT,
+			DXGI_FORMAT_R32_UINT,
 		};
 
 		return detail::lookup(mapping, x);

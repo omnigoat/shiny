@@ -32,14 +32,16 @@ namespace shiny {
 		bool clear_;
 	};
 
+
+
+
 	struct scene_t
 	{
 		scene_t(context_ptr const&, camera_t const&, rendertarget_clear_t const& = rendertarget_clear_t{});
 
-		auto signal_res_update(constant_buffer_ptr&, uint data_size, void*) -> void;
-		auto signal_cs_upload_constant_buffer(uint index, constant_buffer_cptr const&) -> void;
+		auto scene_buffer() const -> constant_buffer_ptr const& { return scene_buffer_; }
 
-		auto signal_draw(index_buffer_ptr const&, data_declaration_t const*, vertex_buffer_ptr const&, vertex_shader_ptr const&, fragment_shader_ptr const&) -> void;
+		auto draw_batch() -> atma::thread::engine_t::queue_t::batch_t& { return batch_; }
 
 	private:
 		auto execute() -> void;
@@ -49,6 +51,7 @@ namespace shiny {
 		constant_buffer_ptr scene_buffer_;
 
 		atma::thread::engine_t::queue_t queue_;
+		atma::thread::engine_t::queue_t::batch_t batch_;
 
 		friend struct context_t;
 	};

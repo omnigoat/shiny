@@ -2,6 +2,7 @@
 
 #include <shiny/shiny_fwd.hpp>
 
+#include <atma/thread/engine.hpp>
 
 namespace shiny
 {
@@ -60,6 +61,11 @@ namespace shiny
 		bound_constant_buffers_t constant_buffers;
 		bound_resources_t shader_resources;
 	};
+
+
+
+
+
 
 
 }

@@ -9,7 +9,7 @@
 using namespace shiny;
 using shiny::buffer_t;
 
-buffer_t::buffer_t(context_ptr const& ctx, buffer_type_t type, buffer_usage_t usage, uint element_size, uint element_count, void const* data, uint data_element_count)
+buffer_t::buffer_t(context_ptr const& ctx, buffer_type_t type, buffer_usage_t usage, size_t element_size, uint element_count, void const* data, uint data_element_count)
 : resource_t(ctx, {}), type_(type), usage_(usage), size_(element_size * element_count)
 {
 	ATMA_ASSERT(size_);
@@ -76,7 +76,7 @@ buffer_t::buffer_t(context_ptr const& ctx, buffer_type_t type, buffer_usage_t us
 
 
 	// create buffer
-	auto buffer_desc = D3D11_BUFFER_DESC{(UINT)size_, d3d_bu, platform::d3dbind_of(type_), d3d_ca, misc_flags, element_size};
+	auto buffer_desc = D3D11_BUFFER_DESC{(UINT)size_, d3d_bu, platform::d3dbind_of(type_), d3d_ca, misc_flags, (UINT)element_size};
 	switch (usage_)
 	{
 		case buffer_usage_t::immutable:

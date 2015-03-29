@@ -41,13 +41,13 @@ vertex_shader_t::vertex_shader_t(context_ptr const& ctx, data_declaration_t cons
 
 
 	// create input-layout
-	uint offset = 0;
+	size_t offset = 0;
 	std::vector<D3D11_INPUT_ELEMENT_DESC> d3d_elements;
 	for (auto const& x : data_declaration_->streams())
 	{
 		d3d_elements.push_back({
 			x.semantic().c_str(),
-			0, platform::dxgi_format_of(x.element_format()), 0, offset, D3D11_INPUT_PER_VERTEX_DATA, 0
+			0, platform::dxgi_format_of(x.element_format()), 0, (UINT)offset, D3D11_INPUT_PER_VERTEX_DATA, 0
 		});
 
 		offset += x.size();

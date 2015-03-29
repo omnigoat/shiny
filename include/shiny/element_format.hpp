@@ -1,5 +1,5 @@
 #pragma once
-//======================================================================
+
 namespace shiny
 {
 	// how to read:
@@ -28,7 +28,18 @@ namespace shiny
 		g32,
 	};
 
-
 	auto element_count(element_format_t) -> int;
-	auto element_size(element_format_t) -> int;
+	auto element_size(element_format_t) -> size_t;
+
+
+
+
+	enum class index_format_t
+	{
+		index16,
+		index32,
+	};
+
+	auto index_size(index_format_t) -> size_t;
+
 }

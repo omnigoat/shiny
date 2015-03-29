@@ -1,12 +1,13 @@
 #pragma once
-//======================================================================
+
 #include <atma/types.hpp>
 #include <atma/intrusive_ptr.hpp>
 
 #include <vector>
-//======================================================================
-namespace shiny {
-	
+
+
+namespace shiny
+{
 	struct runtime_t;
 
 	struct adapter_t;

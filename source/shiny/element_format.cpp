@@ -35,9 +35,9 @@ auto shiny::element_count(shiny::element_format_t f) -> int
 	return -1;
 }
 
-auto shiny::element_size(element_format_t fmt) -> int
+auto shiny::element_size(element_format_t fmt) -> size_t
 {
-	static int const mapping[] =
+	static size_t const mapping[] =
 	{
 		0,
 
@@ -56,4 +56,20 @@ auto shiny::element_size(element_format_t fmt) -> int
 
 	ATMA_ASSERT((int)fmt < std::extent<decltype(mapping)>::value);
 	return mapping[(int)fmt];
+}
+
+auto shiny::index_size(index_format_t fmt) -> size_t
+{
+	switch (fmt)
+	{
+		case index_format_t::index16:
+			return 2;
+
+		case index_format_t::index32:
+			return 4;
+
+		default:
+			ATMA_HALT("bad index-format");
+			return 0;
+	}
 }

@@ -12,6 +12,7 @@
 #include <shiny/fragment_shader.hpp>
 #include <shiny/blend_state.hpp>
 #include <shiny/draw_state.hpp>
+#include <shiny/draw.hpp>
 
 #include <shiny/platform/win32/d3d_fwd.hpp>
 #include <shiny/platform/win32/blender.hpp>
@@ -57,29 +58,43 @@ namespace shiny
 		
 		auto signal_draw(shared_state_t const&, vertex_stage_state_t const&, fragment_stage_state_t const&) -> void;
 
-
-		auto signal_ia_topology(topology_t) -> void;
-
-
 		// resources
 		auto signal_res_map(resource_ptr const&, uint subresource, map_type_t, map_callback_t const&) -> void;
 		auto signal_res_update(constant_buffer_ptr const&, uint data_size, void*) -> void;
 		auto signal_res_update(constant_buffer_ptr const&, atma::shared_memory_t const&) -> void;
 
 
-		// something something stage
-		auto signal_om_blending(blender_cptr const&) -> void;
+
+
+
+		// input-assembly stage
+		auto immediate_ia_set_data_declaration(data_declaration_t const*) -> void;
+		auto immediate_ia_set_vertex_buffer(vertex_buffer_cptr const&) -> void;
+		auto immediate_ia_set_index_buffer(index_buffer_cptr const&) -> void;
+		auto immediate_ia_set_topology(topology_t) -> void;
+
+		auto signal_ia_topology(topology_t) -> void;
+
 
 		// geometry-stage
+		auto immediate_gs_set_geometry_shader(geometry_shader_cptr const&) -> void;
+
 		auto signal_gs_upload_constant_buffer(uint index, constant_buffer_cptr const&) -> void;
-		auto signal_gs_set(geometry_shader_ptr const&) -> void;
 
 
 		// vertex-stage
+		auto immediate_vs_set_vertex_shader(vertex_shader_cptr const&) -> void;
+		auto immediate_vs_set_constant_buffers(bound_constant_buffers_t const&) -> void;
+		auto immediate_vs_set_resources(bound_resources_t const&) -> void;
+
 		auto signal_vs_upload_constant_buffer(uint index, constant_buffer_cptr const&) -> void;
 
 
-		// pixel-stage
+		// fragment-stage
+		auto immediate_fs_set_fragment_shader(fragment_shader_cptr const&) -> void;
+		auto immediate_fs_set_constant_buffers(bound_constant_buffers_t const&) -> void;
+		auto immediate_fs_set_resources(bound_resources_t const&) -> void;
+
 		auto signal_fs_upload_shader_resource(uint index, resource_ptr const&) -> void;
 		auto signal_fs_upload_constant_buffer(uint index, constant_buffer_cptr const&) -> void;
 
@@ -89,6 +104,15 @@ namespace shiny
 		auto signal_cs_upload_constant_buffer(uint index, constant_buffer_cptr const&) -> void;
 		auto signal_cs_upload_shader_resource(view_type_t, shader_resource2d_ptr const&) -> void;
 		auto signal_cs_dispatch(uint x, uint y, uint z) -> void;
+
+		// output-merger stage
+		auto signal_om_blending(blender_cptr const&) -> void;
+
+
+		// draw
+		auto immediate_draw_set_range(draw_range_t const&) -> void;
+		auto immediate_draw() -> void;
+
 
 
 		// d3d-specific
@@ -107,7 +131,7 @@ namespace shiny
 		auto create_swapchain() -> void; 
 		auto setup_rendertarget(uint width, uint height) -> void;
 		auto recreate_backbuffer() -> void;
-		auto create_d3d_input_layout(vertex_shader_ptr const&, data_declaration_t const*) -> platform::d3d_input_layout_ptr;
+		auto create_d3d_input_layout(vertex_shader_cptr const&, data_declaration_t const*) -> platform::d3d_input_layout_ptr;
 
 		auto setup_debug_geometry() -> void;
 		auto setup_debug_shaders() -> void;
@@ -135,6 +159,11 @@ namespace shiny
 		platform::d3d_depth_stencil_buffer_ptr d3d_depth_stencil_;
 		platform::d3d_texture2d_ptr d3d_depth_stencil_buffer_;
 
+		data_declaration_t const* data_declaration_;
+		index_buffer_cptr index_buffer_;
+		vertex_shader_cptr vertex_shader_;
+		draw_range_t draw_range_;
+
 		// fooey
 		fooey::window_ptr window_;
 		fooey::event_handler_t::delegate_set_t bound_events_;
@@ -152,7 +181,7 @@ namespace shiny
 		std::unordered_map<blend_state_t, blender_ptr, atma::std_hash_functor_adaptor_t> cached_blenders_;
 
 		// cache for vertex-layouts
-		std::map<std::tuple<vertex_shader_ptr, data_declaration_t const*>, platform::d3d_input_layout_ptr> cached_input_layouts_;
+		std::map<std::tuple<vertex_shader_cptr, data_declaration_t const*>, platform::d3d_input_layout_ptr> cached_input_layouts_;
 
 
 		// debug stuff
@@ -163,6 +192,8 @@ namespace shiny
 
 
 		friend auto create_context(runtime_t&, fooey::window_ptr const&, uint adapter) -> context_ptr;
+		friend auto detail::generate_draw_prelude(queue_t::batch_t&, context_ptr const&) -> void;
+		friend auto signal_draw(context_ptr const&, atma::thread::engine_t::queue_t::batch_t&) -> void;
 	};
 
 }

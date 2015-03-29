@@ -13,14 +13,14 @@ namespace shiny
 		data_declaration_t(data_declaration_t&&) = delete;
 
 		auto streams() const -> data_streams_t const&;
-		auto stride() const -> uint;
+		auto stride() const -> size_t;
 
 	private:
 		data_declaration_t(data_streams_t const&);
 
 	private:
 		data_streams_t streams_;
-		uint stride_;
+		size_t stride_;
 
 		friend struct runtime_t;
 	};

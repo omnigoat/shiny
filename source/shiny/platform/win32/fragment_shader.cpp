@@ -32,6 +32,6 @@ fragment_shader_t::fragment_shader_t(context_ptr const& ctx, void const* data, s
 
 
 	auto const& device = context_->d3d_device();
-	ATMA_ENSURE_IS(S_OK, device->CreatePixelShader(d3d_blob_->GetBufferPointer(), d3d_blob_->GetBufferSize(), nullptr, d3d_ps_.assign()));
+	ATMA_ENSURE_IS(S_OK, device->CreatePixelShader(d3d_blob_->GetBufferPointer(), d3d_blob_->GetBufferSize(), nullptr, d3d_fs_.assign()));
 }
 

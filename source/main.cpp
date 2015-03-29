@@ -98,7 +98,7 @@ int main()
 		5, 1, 3, 3, 7, 5, // -z plane
 		6, 2, 0, 0, 4, 6, // +z plane
 	};
-	auto ib = shiny::create_index_buffer(ctx, shiny::buffer_usage_t::immutable, 16, 36, ibd);
+	auto ib = shiny::create_index_buffer(ctx, shiny::buffer_usage_t::immutable, shiny::index_format_t::index16, 36, ibd);
 
 
 

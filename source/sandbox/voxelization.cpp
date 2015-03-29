@@ -2,6 +2,7 @@
 
 #include <shiny/context.hpp>
 #include <shiny/scene.hpp>
+#include <shiny/draw.hpp>
 
 #include <shelf/file.hpp>
 
@@ -13,6 +14,8 @@
 #include <atma/math/triangle.hpp>
 #include <atma/math/aabc.hpp>
 #include <atma/math/intersection.hpp>
+
+#include <atma/filesystem/file.hpp>
 
 
 using namespace sandbox;
@@ -47,7 +50,7 @@ obj_model_t::obj_model_t(shelf::file_t& file)
 			case 'v': {
 				float x, y, z;
 				sscanf(str, "v %f %f %f", &x, &y, &z);
-				verts_.push_back(aml::point4f(x, y, z));
+				verts_.push_back(aml::point4f(x, y, -z)); // reflect z because RH -> LH
 				break;
 			}
 
@@ -203,8 +206,14 @@ auto voxelization_plugin_t::main_setup() -> void
 		++i;
 	}
 
-	vb = shiny::create_vertex_buffer(ctx, shiny::buffer_usage_t::immutable, dd_position(), vertices.size(), &vertices[0]);
-	ib = shiny::create_index_buffer(ctx, shiny::buffer_usage_t::immutable, sizeof(uint32), indices.size(), &indices[0]);
+	vb = shiny::create_vertex_buffer(ctx, shiny::buffer_usage_t::immutable, dd_position(), (uint)vertices.size(), &vertices[0]);
+	ib = shiny::create_index_buffer(ctx, shiny::buffer_usage_t::immutable, shiny::index_format_t::index32, (uint)indices.size(), &indices[0]);
+
+
+	auto f2 = atma::filesystem::file_t("../../shaders/gs_normal.hlsl");
+	auto fm2 = f2.read_into_memory();
+	//auto gs = shiny::create_geometry_shader(ctx, fm2, false);
+
 
 	//vb = shiny::create_vertex_buffer(ctx, shiny::buffer_usage_t::immutable, dd_position(), obj.vertices().size(), &obj.vertices()[0]);
 	//ib = shiny::create_index_buffer(ctx, shiny::buffer_usage_t::immutable, sizeof(uint32), obj.faces().size() * 3, mi);
@@ -212,5 +221,22 @@ auto voxelization_plugin_t::main_setup() -> void
 
 auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
 {
-	scene.signal_draw(ib, dd_position(), vb, vs_flat(), fs_flat());
+	namespace sdc = shiny::draw_commands;
+	
+	shiny::signal_draw(ctx, scene.draw_batch()
+		, sdc::input_assembly_stage(dd_position(), vb, ib)
+		, sdc::vertex_stage(vs_flat(), shiny::bound_constant_buffers_t{{0, scene.scene_buffer()}})
+		, sdc::fragment_stage(fs_flat())
+		);
+
+#if 0
+	shiny::signal_draw(scene.draw_sink()
+		, sdc::input_stage(dd_position(), vb, ib)
+		, sdc::geometry_stage(gs)
+		, sdc::vertex_stage(vs)
+		, sdc::fragment_stage(fs)
+		);
+#endif
+	//scene.signal_draw(ib, dd_position(), vb, vs_flat(), fs_flat());
+	//scene.signal_draw(ib, dd_position(), vb, fs_flat(), vs_flat(), gs_flat())
 }

@@ -1,18 +1,21 @@
 #pragma once
-//======================================================================
+
 #include <shiny/buffer.hpp>
-//======================================================================
+#include <shiny/element_format.hpp>
+
 namespace shiny
 {
 	struct index_buffer_t : buffer_t
 	{
-		index_buffer_t(context_ptr const&, buffer_usage_t, uint index_size, uint index_count, void const* data, uint data_indexcount);
+		index_buffer_t(context_ptr const&, buffer_usage_t, index_format_t, uint index_count, void const* data, uint data_indexcount);
 		~index_buffer_t();
 
 		auto index_count() const -> uint { return index_count_; }
+		auto index_format() const -> index_format_t { return index_format_; }
 
 	private:
 		uint index_count_;
+		index_format_t index_format_;
 
 		friend struct locked_index_buffer_t;
 	};
@@ -29,11 +32,11 @@ namespace shiny
 	//
 	inline auto create_index_buffer(
 		context_ptr const& ctx, buffer_usage_t usage,
-		uint index_size, uint index_count,
+		index_format_t format, uint index_count,
 		void const* data, uint data_indexcount = 0)
 		-> index_buffer_ptr
 	{
-		return index_buffer_ptr(new index_buffer_t(ctx, usage, index_size, index_count, data, data_indexcount));
+		return index_buffer_ptr(new index_buffer_t(ctx, usage, format, index_count, data, data_indexcount));
 	}
 }
 

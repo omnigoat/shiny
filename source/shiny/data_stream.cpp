@@ -29,7 +29,7 @@ auto data_stream_t::element_format() const -> element_format_t
 	return element_format_;
 }
 
-auto data_stream_t::size() const -> uint
+auto data_stream_t::size() const -> size_t
 {
 	return element_size(element_format_);
 }

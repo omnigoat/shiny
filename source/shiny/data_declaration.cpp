@@ -16,7 +16,7 @@ auto data_declaration_t::streams() const -> data_streams_t const&
 	return streams_;
 }
 
-auto data_declaration_t::stride() const -> uint
+auto data_declaration_t::stride() const -> size_t
 {
 	return stride_;
 }

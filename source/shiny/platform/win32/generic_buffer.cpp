@@ -11,7 +11,7 @@ generic_buffer_t::generic_buffer_t(context_ptr const& ctx, buffer_usage_t usage,
 {
 }
 
-generic_buffer_t::generic_buffer_t(context_ptr const& ctx, buffer_usage_t usage, uint stride, uint elements, void const* data, uint data_elemcount)
+generic_buffer_t::generic_buffer_t(context_ptr const& ctx, buffer_usage_t usage, size_t stride, uint elements, void const* data, uint data_elemcount)
 : buffer_t(ctx, buffer_type_t::generic_buffer, usage, stride, elements, data, data_elemcount), element_count_(elements)
 {
 	auto desc = D3D11_SHADER_RESOURCE_VIEW_DESC{};

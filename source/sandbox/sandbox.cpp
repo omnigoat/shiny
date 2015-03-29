@@ -81,7 +81,7 @@ application_t::application_t()
 	});
 
 	vb_cube = shiny::create_vertex_buffer(ctx, shiny::buffer_usage_t::immutable, dd_position_color, 8, cube_vertices);
-	ib_cube = shiny::create_index_buffer(ctx, shiny::buffer_usage_t::immutable, 16, 36, cube_indices);
+	ib_cube = shiny::create_index_buffer(ctx, shiny::buffer_usage_t::immutable, shiny::index_format_t::index16, 36, cube_indices);
 
 
 	// shaders

@@ -173,6 +173,9 @@
     <ClCompile Include="..\..\source\shiny\data_declaration.cpp">
       <Filter>source\shiny</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\source\shiny\draw.cpp">
+      <Filter>source\shiny</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\shiny\context.hpp">
@@ -343,6 +346,9 @@
     <ClInclude Include="..\..\include\shiny\shiny_fwd.hpp">
       <Filter>include\shiny</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\shiny\draw.hpp">
+      <Filter>include\shiny</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="..\..\shaders\cs_test.hlsl">
@@ -364,6 +370,9 @@
       <Filter>shaders</Filter>
     </FxCompile>
     <FxCompile Include="..\..\shaders\vs_debug.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="..\..\shaders\gs_normal.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
   </ItemGroup>
