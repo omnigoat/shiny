@@ -95,7 +95,7 @@ auto voxelization_plugin_t::main_setup() -> void
 	auto obj = obj_model_t{sf};
 
 	// try for 128^3 grid
-	auto const gridsize = 256;
+	auto const gridsize = 512;
 
 	
 #if 1
@@ -148,7 +148,7 @@ auto voxelization_plugin_t::main_setup() -> void
 		{
 			for (int y = tgridmin.y; y <= tgridmax.y; ++y)
 			{
-				for (int z = tgridmin.z; z <= tgridmin.z; ++z)
+				for (int z = tgridmin.z; z <= tgridmax.z; ++z)
 				{
 					auto aabc = aml::aabc_t{
 						bbmin.x + x * voxelwidth + voxelwidth / 2.f,
