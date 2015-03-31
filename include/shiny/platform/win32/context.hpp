@@ -52,11 +52,8 @@ namespace shiny
 		auto signal_fullscreen_toggle(uint output_index = primary_output) -> void;
 		auto signal_present() -> void;
 		auto signal_clear(atma::math::vector4f const&) -> void;
-		auto signal_draw(data_declaration_t const*, vertex_buffer_ptr const&, vertex_shader_ptr const&, fragment_shader_ptr const&) -> void;
-		auto signal_draw(index_buffer_ptr const&, data_declaration_t const*, vertex_buffer_ptr const&, vertex_shader_ptr const&, fragment_shader_ptr const&) -> void;
 		auto signal_draw_scene(scene_t&) -> void;
-		
-		auto signal_draw(shared_state_t const&, vertex_stage_state_t const&, fragment_stage_state_t const&) -> void;
+
 
 		// resources
 		auto signal_res_map(resource_ptr const&, uint subresource, map_type_t, map_callback_t const&) -> void;
@@ -99,12 +96,6 @@ namespace shiny
 		auto signal_fs_upload_constant_buffer(uint index, constant_buffer_cptr const&) -> void;
 
 
-		// compute-stage
-		auto signal_cs_set(compute_shader_ptr const&) -> void;
-		auto signal_cs_upload_constant_buffer(uint index, constant_buffer_cptr const&) -> void;
-		auto signal_cs_upload_shader_resource(view_type_t, shader_resource2d_ptr const&) -> void;
-		auto signal_cs_dispatch(uint x, uint y, uint z) -> void;
-
 		// output-merger stage
 		auto signal_om_blending(blender_cptr const&) -> void;
 
@@ -112,6 +103,15 @@ namespace shiny
 		// draw
 		auto immediate_draw_set_range(draw_range_t const&) -> void;
 		auto immediate_draw() -> void;
+
+
+		// compute-stage
+		auto signal_cs_set(compute_shader_ptr const&) -> void;
+		auto signal_cs_upload_constant_buffer(uint index, constant_buffer_cptr const&) -> void;
+		auto signal_cs_upload_shader_resource(view_type_t, shader_resource2d_ptr const&) -> void;
+		auto signal_cs_dispatch(uint x, uint y, uint z) -> void;
+
+
 
 
 

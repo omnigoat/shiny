@@ -95,7 +95,7 @@ auto voxelization_plugin_t::main_setup() -> void
 	auto obj = obj_model_t{sf};
 
 	// try for 128^3 grid
-	auto const gridsize = 512;
+	auto const gridsize = 128;
 
 	
 #if 1
@@ -227,22 +227,11 @@ auto voxelization_plugin_t::main_setup() -> void
 auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
 {
 	namespace sdc = shiny::draw_commands;
-	
+
 	shiny::signal_draw(ctx, scene.draw_batch()
 		, sdc::input_assembly_stage(dd_position(), vb, ib)
 		, sdc::vertex_stage(vs_flat(), shiny::bound_constant_buffers_t{{0, scene.scene_buffer()}})
 		, sdc::geometry_stage(gs)
 		, sdc::fragment_stage(fs_flat())
 		);
-
-#if 0
-	shiny::signal_draw(scene.draw_sink()
-		, sdc::input_stage(dd_position(), vb, ib)
-		, sdc::geometry_stage(gs)
-		, sdc::vertex_stage(vs)
-		, sdc::fragment_stage(fs)
-		);
-#endif
-	//scene.signal_draw(ib, dd_position(), vb, vs_flat(), fs_flat());
-	//scene.signal_draw(ib, dd_position(), vb, fs_flat(), vs_flat(), gs_flat())
 }
