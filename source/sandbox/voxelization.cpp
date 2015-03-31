@@ -194,6 +194,35 @@ auto voxelization_plugin_t::main_setup() -> void
 		++fragidx;
 	}
 
+	std::vector<std::vector<uint>> levels;
+	std::vector<aml::vector4f> fragments3d;
+
+	// blocks are 8x8x8, so every 512 morton codes
+	{
+		auto const block_edge_size = 8;
+		auto i = fragments.begin();
+		auto idx = 0;
+
+		auto block_morton_width = block_edge_size * block_edge_size * block_edge_size;
+		auto block_idx_start = 0;
+		auto block_idx_end = block_idx_start + block_morton_width;
+
+		for (auto idx = 0; idx != gridsize * gridsize * gridsize; )
+		{
+			// skip past fully empty empty bricks
+			for ( ; block_idx_end < i->morton; )
+				block_idx_end = (block_idx_start = block_idx_end) + block_morton_width;
+
+			for (idx = block_idx_start; idx < i->morton; ++idx)
+				fragments3d.push_back(aml::vector4f{});
+
+			if (i->morton >= block_idx_end)
+				break;
+		}
+	}
+
+
+
 
 	
 

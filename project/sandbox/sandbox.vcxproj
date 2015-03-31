@@ -76,7 +76,7 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(ProjectDir)$(Platform)\$(Configuration)\</IntDir>
-    <IncludePath>$(SolutionDir)..\..\sandbox\include;$(SolutionDir)..\..\shiny\include;$(SolutionDir)..\..\fooey\include;$(SolutionDir)..\..\atma\vendor;$(SolutionDir)..\..\atma\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)..\..\shiny\include;$(SolutionDir)..\..\fooey\include;$(SolutionDir)..\..\atma\vendor;$(SolutionDir)..\..\atma\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -88,7 +88,7 @@
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(ProjectDir)$(Platform)\$(Configuration)\</IntDir>
-    <IncludePath>$(SolutionDir)..\..\sandbox\include;$(SolutionDir)..\..\shiny\include;$(SolutionDir)..\..\fooey\include;$(SolutionDir)..\..\atma\vendor;$(SolutionDir)..\..\atma\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)..\..\shiny\include;$(SolutionDir)..\..\fooey\include;$(SolutionDir)..\..\atma\vendor;$(SolutionDir)..\..\atma\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
