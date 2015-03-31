@@ -140,9 +140,6 @@
     <ClCompile Include="..\..\source\shiny\platform\win32\fragment_shader.cpp">
       <Filter>source\shiny\platform\win32</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\shiny\function.cpp">
-      <Filter>source\shiny</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\source\shiny\platform\win32\geometry_shader.cpp">
       <Filter>source\shiny\platform\win32</Filter>
     </ClCompile>
