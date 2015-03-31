@@ -54,6 +54,7 @@ namespace shiny
 		auto signal_clear(atma::math::vector4f const&) -> void;
 		auto signal_draw_scene(scene_t&) -> void;
 
+		auto immediate_reset_pipeline() -> void;
 
 		// "resources stage"
 		auto signal_res_map(resource_ptr const&, uint subresource, map_type_t, map_callback_t const&) -> void;
@@ -85,7 +86,7 @@ namespace shiny
 
 
 		// output-merger-stage
-		auto signal_om_blending(blender_cptr const&) -> void;
+		auto immediate_om_set_blending(blender_cptr const&) -> void;
 
 
 		// draw
@@ -177,11 +178,8 @@ namespace shiny
 		index_buffer_ptr debug_indices_;
 
 
-
-
+	private:
 		friend auto create_context(runtime_t&, fooey::window_ptr const&, uint adapter) -> context_ptr;
-		friend auto detail::generate_draw_prelude(queue_t::batch_t&, context_ptr const&) -> void;
-		friend auto signal_draw(context_ptr const&, atma::thread::engine_t::queue_t::batch_t&) -> void;
 	};
 
 }

@@ -416,15 +416,18 @@ auto context_t::make_blender(blend_state_t const& bs) -> blender_ptr
 	return thing;
 }
 
-auto context_t::signal_om_blending(blender_cptr const& b) -> void
+auto context_t::immediate_om_set_blending(blender_cptr const& b) -> void
 {
-	engine_.signal([&, b]{
-		d3d_immediate_context_->OMSetBlendState(b->d3d_blend_state().get(), nullptr, 0xffffffff);
-	});
+	d3d_immediate_context_->OMSetBlendState(b->d3d_blend_state().get(), nullptr, 0xffffffff);
 }
 
 auto context_t::setup_debug_geometry() -> void
 {
+}
+
+auto context_t::immediate_reset_pipeline() -> void
+{
+	draw_range_ = draw_range_t{};
 }
 
 auto context_t::immediate_ia_set_data_declaration(data_declaration_t const* dd) -> void
