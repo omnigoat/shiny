@@ -13,6 +13,7 @@
 #include <shiny/blend_state.hpp>
 #include <shiny/draw_state.hpp>
 #include <shiny/draw.hpp>
+#include <shiny/rendertarget_clear.hpp>
 
 #include <shiny/platform/win32/d3d_fwd.hpp>
 #include <shiny/platform/win32/blender.hpp>
@@ -48,13 +49,22 @@ namespace shiny
 		auto runtime() -> runtime_t& { return runtime_; }
 		auto runtime() const -> runtime_t const& { return runtime_; }
 
+
+		auto make_blender(blend_state_t const&) -> blender_ptr;
+
+
 		auto signal_block() -> void;
 		auto signal_fullscreen_toggle(uint output_index = primary_output) -> void;
 		auto signal_present() -> void;
 		auto signal_clear(atma::math::vector4f const&) -> void;
 		auto signal_draw_scene(scene_t&) -> void;
 
-		auto immediate_reset_pipeline() -> void;
+		auto immediate_clear(rendertarget_clear_t const&) -> void;
+
+
+		// pipeline-setup-stage
+		auto immediate_pipeline_reset() -> void;
+
 
 		// "resources stage"
 		auto signal_res_map(resource_ptr const&, uint subresource, map_type_t, map_callback_t const&) -> void;
@@ -103,15 +113,12 @@ namespace shiny
 
 
 
-
 		// d3d-specific
 		auto signal_d3d_buffer_upload(platform::d3d_buffer_ptr const&, void const* data, uint row_pitch, uint depth_pitch) -> void;
 		
 		auto d3d_device() const -> platform::d3d_device_ptr const& { return d3d_device_; }
 		auto d3d_immediate_context() const -> platform::d3d_context_ptr const& { return d3d_immediate_context_; }
 
-	public:
-		auto make_blender(blend_state_t const&) -> blender_ptr;
 
 	private:
 		context_t(runtime_t&, fooey::window_ptr const&, uint adapter);
@@ -143,7 +150,6 @@ namespace shiny
 
 		platform::d3d_device_ptr d3d_device_;
 		platform::d3d_context_ptr d3d_immediate_context_;
-		platform::d3d_context_ptr d3d_deferred_context_;
 		platform::d3d_render_target_view_ptr d3d_render_target_;
 		platform::d3d_depth_stencil_buffer_ptr d3d_depth_stencil_;
 		platform::d3d_texture2d_ptr d3d_depth_stencil_buffer_;

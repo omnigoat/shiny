@@ -246,6 +246,7 @@
     <ClInclude Include="..\..\include\shiny\platform\win32\resource.hpp" />
     <ClInclude Include="..\..\include\shiny\platform\win32\shader_resource2d.hpp" />
     <ClInclude Include="..\..\include\shiny\platform\win32\texture3d.hpp" />
+    <ClInclude Include="..\..\include\shiny\rendertarget_clear.hpp" />
     <ClInclude Include="..\..\include\shiny\resource.hpp" />
     <ClInclude Include="..\..\include\shiny\shader_resource2d.hpp" />
     <ClInclude Include="..\..\include\shiny\element_format.hpp" />

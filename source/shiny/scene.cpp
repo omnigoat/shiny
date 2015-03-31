@@ -19,10 +19,10 @@ using shiny::scene_t;
 scene_t::scene_t(context_ptr const& context, camera_t const& camera, rendertarget_clear_t const& fc)
 	: context_(context)
 {
-	if (fc.clear())
+	if (fc.clear_any())
 	{
 		batch_.push([&] {
-			context_->signal_clear(fc.color());
+			context_->immediate_clear(fc);
 		});
 	}
 
@@ -41,15 +41,7 @@ scene_t::scene_t(context_ptr const& context, camera_t const& camera, rendertarge
 		0.f
 	};
 
-	scene_buffer_ = shiny::create_constant_buffer(context_, sd);
-
-	//batch_.push([&] {
-	//	context_->signal_cs_upload_constant_buffer(0, scene_buffer_);
-	//});
+	scene_constant_buffer_ = shiny::create_constant_buffer(context_, sd);
 }
 
-auto scene_t::execute() -> void
-{
-	//context_->engine_.queue_.push(batch_);
-}
 

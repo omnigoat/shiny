@@ -10,7 +10,7 @@ using queue_t = atma::thread::engine_t::queue_t;
 auto shiny::detail::generate_draw_prelude(queue_t::batch_t& batch, context_ptr const& ctx) -> void
 {
 	batch.push([ctx](){
-		ctx->immediate_reset_pipeline(); // draw_range_ = draw_range_t{};
+		ctx->immediate_pipeline_reset();
 	});
 }
 
@@ -61,7 +61,5 @@ auto shiny::signal_draw(context_ptr const& ctx, atma::thread::engine_t::queue_t:
 	batch.push([ctx](){
 		ctx->immediate_draw();
 	});
-
-	//ctx->engine_.signal_batch(batch);
 }
 

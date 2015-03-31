@@ -246,17 +246,6 @@ auto context_t::signal_fullscreen_toggle(uint output_index) -> void
 	});
 }
 
-auto context_t::on_resize(fooey::events::resize_t& e) -> void
-{
-	if (requested_display_mode_ == &requested_fullscreen_display_mode_)
-		return;
-
-	requested_windowed_display_mode_.width = e.width();
-	requested_windowed_display_mode_.height = e.height();
-
-	requested_display_mode_ = &requested_windowed_display_mode_;
-}
-
 auto context_t::signal_d3d_buffer_upload(platform::d3d_buffer_ptr const& buffer, void const* data, uint row_pitch, uint depth_pitch) -> void
 {
 	engine_.signal([&, buffer, data, row_pitch, depth_pitch] {
@@ -284,7 +273,7 @@ auto context_t::signal_clear(atma::math::vector4f const& color) -> void
 
 auto context_t::signal_draw_scene(scene_t& scene) -> void
 {
-	engine_.signal_batch(scene.draw_batch());
+	engine_.signal_batch(scene.batch_);
 }
 
 auto context_t::signal_res_update(constant_buffer_ptr const& cb, uint data_size, void* data) -> void
@@ -301,6 +290,127 @@ auto context_t::signal_res_update(constant_buffer_ptr const& cb, atma::shared_me
 		d3d_immediate_context_->Unmap(cb->d3d_resource().get(), 0);
 	});
 }
+
+auto context_t::immediate_clear(rendertarget_clear_t const& rtc) -> void
+{
+	float color[4] = {rtc.color().x, rtc.color().y, rtc.color().z, rtc.color().w};
+	d3d_immediate_context_->ClearRenderTargetView(d3d_render_target_.get(), color);
+	d3d_immediate_context_->ClearDepthStencilView(d3d_depth_stencil_.get(), D3D11_CLEAR_DEPTH, rtc.depth(), rtc.stencil());
+}
+
+auto context_t::immediate_pipeline_reset() -> void
+{
+	draw_range_ = draw_range_t{};
+}
+
+auto context_t::immediate_ia_set_data_declaration(data_declaration_t const* dd) -> void
+{
+	data_declaration_ = dd;
+}
+
+auto context_t::immediate_ia_set_vertex_buffer(vertex_buffer_cptr const& vb) -> void
+{
+	ATMA_ASSERT(vb->data_declaration() == data_declaration_);
+
+	UINT stride = (UINT)vb->data_declaration()->stride(), offset = 0;
+	d3d_immediate_context_->IASetVertexBuffers(0, 1, &vb->d3d_buffer().get(), &stride, &offset);
+}
+
+auto context_t::immediate_ia_set_index_buffer(index_buffer_cptr const& ib) -> void
+{
+	index_buffer_ = ib;
+	auto fmt = platform::dxgi_format_of(ib->index_format());
+	d3d_immediate_context_->IASetIndexBuffer(ib->d3d_buffer().get(), fmt, 0);
+}
+
+auto context_t::immediate_ia_set_topology(topology_t t) -> void
+{
+	auto d3dt =
+		(t == topology_t::point) ? D3D11_PRIMITIVE_TOPOLOGY_POINTLIST :
+		(t == topology_t::line) ? D3D11_PRIMITIVE_TOPOLOGY_LINELIST :
+		D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+
+	d3d_immediate_context_->IASetPrimitiveTopology(d3dt);
+}
+
+auto context_t::immediate_gs_set_geometry_shader(geometry_shader_cptr const& gs) -> void
+{
+	d3d_immediate_context_->GSSetShader(gs->d3d_gs().get(), nullptr, 0);
+}
+
+auto context_t::immediate_vs_set_vertex_shader(vertex_shader_cptr const& vs) -> void
+{
+	vertex_shader_ = vs;
+	d3d_immediate_context_->VSSetShader(vs->d3d_vs().get(), nullptr, 0);
+}
+
+auto context_t::immediate_vs_set_constant_buffers(bound_constant_buffers_t const& cbs) -> void
+{
+	for (auto const& x : cbs) {
+		d3d_immediate_context_->VSSetConstantBuffers(x.first, 1, &x.second->d3d_buffer().get());
+	}
+}
+
+auto context_t::immediate_vs_set_resources(bound_resources_t const& rs) -> void
+{
+	for (auto const& x : rs) {
+		d3d_immediate_context_->VSSetShaderResources(x.first, 1, &x.second->d3d_srv().get());
+	}
+}
+
+auto context_t::immediate_fs_set_fragment_shader(fragment_shader_cptr const& fs) -> void
+{
+	d3d_immediate_context_->PSSetShader(fs->d3d_fs().get(), nullptr, 0);
+}
+
+auto context_t::immediate_fs_set_constant_buffers(bound_constant_buffers_t const& cbs) -> void
+{
+	for (auto const& x : cbs) {
+		d3d_immediate_context_->PSSetConstantBuffers(x.first, 1, &x.second->d3d_buffer().get());
+	}
+}
+
+auto context_t::immediate_fs_set_resources(bound_resources_t const& rs) -> void
+{
+	for (auto const& x : rs) {
+		d3d_immediate_context_->PSSetShaderResources(x.first, 1, &x.second->d3d_srv().get());
+	}
+}
+
+auto context_t::immediate_draw_set_range(draw_range_t const& dr) -> void
+{
+	draw_range_ = dr;
+}
+
+auto context_t::immediate_om_set_blending(blender_cptr const& b) -> void
+{
+	d3d_immediate_context_->OMSetBlendState(b->d3d_blend_state().get(), nullptr, 0xffffffff);
+}
+
+auto context_t::immediate_draw() -> void
+{
+	auto ILkey = std::make_tuple(vertex_shader_, data_declaration_);
+	auto IL = cached_input_layouts_.find(ILkey);
+	if (IL == cached_input_layouts_.end()) {
+		IL = cached_input_layouts_.insert(std::make_pair(ILkey, create_d3d_input_layout(vertex_shader_, data_declaration_))).first;
+	}
+
+	d3d_immediate_context_->IASetInputLayout(IL->second.get());
+
+	if (index_buffer_)
+	{
+		if (draw_range_.index_count == 0)
+			draw_range_.index_count = index_buffer_->index_count();
+
+		d3d_immediate_context_->DrawIndexed(draw_range_.index_count, draw_range_.index_offset, draw_range_.vertex_offset);
+	}
+	else
+	{
+		d3d_immediate_context_->Draw(draw_range_.vertex_count, draw_range_.vertex_offset);
+	}
+}
+
+
 
 auto context_t::signal_cs_upload_constant_buffer(uint index, constant_buffer_cptr const& buf) -> void
 {
@@ -416,119 +526,16 @@ auto context_t::make_blender(blend_state_t const& bs) -> blender_ptr
 	return thing;
 }
 
-auto context_t::immediate_om_set_blending(blender_cptr const& b) -> void
+
+
+auto context_t::on_resize(fooey::events::resize_t& e) -> void
 {
-	d3d_immediate_context_->OMSetBlendState(b->d3d_blend_state().get(), nullptr, 0xffffffff);
-}
+	if (requested_display_mode_ == &requested_fullscreen_display_mode_)
+		return;
 
-auto context_t::setup_debug_geometry() -> void
-{
-}
+	requested_windowed_display_mode_.width = e.width();
+	requested_windowed_display_mode_.height = e.height();
 
-auto context_t::immediate_reset_pipeline() -> void
-{
-	draw_range_ = draw_range_t{};
-}
-
-auto context_t::immediate_ia_set_data_declaration(data_declaration_t const* dd) -> void
-{
-	data_declaration_ = dd;
-}
-
-auto context_t::immediate_ia_set_vertex_buffer(vertex_buffer_cptr const& vb) -> void
-{
-	ATMA_ASSERT(vb->data_declaration() == data_declaration_);
-
-	UINT stride = (UINT)vb->data_declaration()->stride(), offset = 0;
-	d3d_immediate_context_->IASetVertexBuffers(0, 1, &vb->d3d_buffer().get(), &stride, &offset);
-}
-
-auto context_t::immediate_ia_set_index_buffer(index_buffer_cptr const& ib) -> void
-{
-	index_buffer_ = ib;
-	auto fmt = platform::dxgi_format_of(ib->index_format());
-	d3d_immediate_context_->IASetIndexBuffer(ib->d3d_buffer().get(), fmt, 0);
-}
-
-auto context_t::immediate_ia_set_topology(topology_t t) -> void
-{
-	auto d3dt =
-		(t == topology_t::point) ? D3D11_PRIMITIVE_TOPOLOGY_POINTLIST :
-		(t == topology_t::line) ? D3D11_PRIMITIVE_TOPOLOGY_LINELIST :
-		D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-
-	d3d_immediate_context_->IASetPrimitiveTopology(d3dt);
-}
-
-auto context_t::immediate_gs_set_geometry_shader(geometry_shader_cptr const& gs) -> void
-{
-	d3d_immediate_context_->GSSetShader(gs->d3d_gs().get(), nullptr, 0);
-}
-
-auto context_t::immediate_vs_set_vertex_shader(vertex_shader_cptr const& vs) -> void
-{
-	vertex_shader_ = vs;
-	d3d_immediate_context_->VSSetShader(vs->d3d_vs().get(), nullptr, 0);
-}
-
-auto context_t::immediate_vs_set_constant_buffers(bound_constant_buffers_t const& cbs) -> void
-{
-	for (auto const& x : cbs) {
-		d3d_immediate_context_->VSSetConstantBuffers(x.first, 1, &x.second->d3d_buffer().get());
-	}
-}
-
-auto context_t::immediate_vs_set_resources(bound_resources_t const& rs) -> void
-{
-	for (auto const& x : rs) {
-		d3d_immediate_context_->VSSetShaderResources(x.first, 1, &x.second->d3d_srv().get());
-	}
-}
-
-auto context_t::immediate_fs_set_fragment_shader(fragment_shader_cptr const& fs) -> void
-{
-	d3d_immediate_context_->PSSetShader(fs->d3d_fs().get(), nullptr, 0);
-}
-
-auto context_t::immediate_fs_set_constant_buffers(bound_constant_buffers_t const& cbs) -> void
-{
-	for (auto const& x : cbs) {
-		d3d_immediate_context_->PSSetConstantBuffers(x.first, 1, &x.second->d3d_buffer().get());
-	}
-}
-
-auto context_t::immediate_fs_set_resources(bound_resources_t const& rs) -> void
-{
-	for (auto const& x : rs) {
-		d3d_immediate_context_->PSSetShaderResources(x.first, 1, &x.second->d3d_srv().get());
-	}
-}
-
-auto context_t::immediate_draw_set_range(draw_range_t const& dr) -> void
-{
-	draw_range_ = dr;
-}
-
-auto context_t::immediate_draw() -> void
-{
-	auto ILkey = std::make_tuple(vertex_shader_, data_declaration_);
-	auto IL = cached_input_layouts_.find(ILkey);
-	if (IL == cached_input_layouts_.end()) {
-		IL = cached_input_layouts_.insert(std::make_pair(ILkey, create_d3d_input_layout(vertex_shader_, data_declaration_))).first;
-	}
-
-	d3d_immediate_context_->IASetInputLayout(IL->second.get());
-
-	if (index_buffer_)
-	{
-		if (draw_range_.index_count == 0)
-			draw_range_.index_count = index_buffer_->index_count();
-
-		d3d_immediate_context_->DrawIndexed(draw_range_.index_count, draw_range_.index_offset, draw_range_.vertex_offset);
-	}
-	else
-	{
-		d3d_immediate_context_->Draw(draw_range_.vertex_count, draw_range_.vertex_offset);
-	}
+	requested_display_mode_ = &requested_windowed_display_mode_;
 }
 

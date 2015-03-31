@@ -153,7 +153,7 @@ auto application_t::run() -> int
 		}
 
 		// all plugins draw to same scene
-		auto scene = shiny::scene_t{ctx, cc.camera(), shiny::rendertarget_clear_t{0.2f, 0.2f, 0.2f}};
+		auto scene = shiny::scene_t{ctx, cc.camera(), shiny::rendertarget_clear_t{aml::vector4f{0.2f, 0.2f, 0.2f}, 1.f}};
 		for (auto const& x : plugins_) {
 			x->gfx_draw(scene);
 		}

@@ -130,7 +130,7 @@ auto voxelization_plugin_t::main_setup() -> void
 	{
 		auto t = obj.triangle_of(f);
 		auto tbb = t.aabb();
-		//auto info = aml::aabb_triangle_intersection_info_t{aml::vector4f{voxelwidth, voxelwidth, voxelwidth}, t.v0, t.v1, t.v2};
+		auto info = aml::aabb_triangle_intersection_info_t{aml::vector4f{voxelwidth, voxelwidth, voxelwidth}, t.v0, t.v1, t.v2};
 
 		auto tgridmin = aml::vector4i{
 			(int)(gridsize * ((tbb.min_point().x - bbmin.x) / gridwidth)),
@@ -156,7 +156,7 @@ auto voxelization_plugin_t::main_setup() -> void
 						bbmin.z + z * voxelwidth + voxelwidth / 2.f,
 						voxelwidth};
 
-					if (aml::intersect_aabb_triangle(aabc, t))
+					if (aml::intersect_aabb_triangle(aabc, info))
 						fragments.push_back({moxi::morton_encoding(x, y, z)});
 				}
 			}
@@ -228,9 +228,9 @@ auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
 {
 	namespace sdc = shiny::draw_commands;
 
-	shiny::signal_draw(ctx, scene.draw_batch()
-		, sdc::input_assembly_stage(dd_position(), vb, ib)
-		, sdc::vertex_stage(vs_flat(), shiny::bound_constant_buffers_t{{0, scene.scene_buffer()}})
+	scene.draw
+		( sdc::input_assembly_stage(dd_position(), vb, ib)
+		, sdc::vertex_stage(vs_flat(), shiny::bound_constant_buffers_t{{0, scene.scene_constant_buffer()}})
 		, sdc::geometry_stage(gs)
 		, sdc::fragment_stage(fs_flat())
 		);
