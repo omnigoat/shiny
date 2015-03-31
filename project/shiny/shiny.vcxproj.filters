@@ -50,9 +50,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\source\main.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\source\shiny\platform\win32\runtime.cpp">
       <Filter>source\shiny\platform\win32</Filter>
     </ClCompile>
@@ -136,9 +133,6 @@
     </ClCompile>
     <ClCompile Include="..\..\source\shiny\platform\win32\generic_buffer.cpp">
       <Filter>source\shiny\platform\win32</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\source\voxels.cpp">
-      <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\shiny\platform\win32\resource.cpp">
       <Filter>source\shiny\platform\win32</Filter>

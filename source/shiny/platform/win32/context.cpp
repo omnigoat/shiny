@@ -264,143 +264,6 @@ auto context_t::signal_d3d_buffer_upload(platform::d3d_buffer_ptr const& buffer,
 	});
 }
 
-auto context_t::signal_draw(data_declaration_t const* vd, vertex_buffer_ptr const& vb, vertex_shader_ptr const& vs, fragment_shader_ptr const& ps) -> void
-{
-	engine_.signal([&, vd, vb, vs, ps]
-	{
-#if 0
-		D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
-		depthStencilDesc.DepthEnable = TRUE;
-		depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-		depthStencilDesc.DepthFunc = D3D11_COMPARISON_ALWAYS;
-		depthStencilDesc.StencilEnable = FALSE;
-		depthStencilDesc.StencilReadMask = 0xFF;
-		depthStencilDesc.StencilWriteMask = 0xFF;
-
-		// Stencil operations if pixel is front-facing
-		depthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-		depthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_ZERO;
-		depthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-		depthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-
-		// Stencil operations if pixel is back-facing
-		depthStencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-		depthStencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_ZERO;
-		depthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-		depthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-
-		ID3D11DepthStencilState *m_DepthStencilState;
-		d3d_device_->CreateDepthStencilState(&depthStencilDesc, &m_DepthStencilState);
-		d3d_immediate_context_->OMSetDepthStencilState(m_DepthStencilState, 0);
-#endif
-
-		UINT stride = (UINT)vd->stride();
-		UINT offset = 0;
-
-		// input-layout
-		auto ILkey = std::make_tuple(vs, vd);
-		auto IL = cached_input_layouts_.find(ILkey);
-		if (IL == cached_input_layouts_.end()) {
-			IL = cached_input_layouts_.insert(std::make_pair(ILkey, create_d3d_input_layout(vs, vd))).first;
-		}
-
-		auto vbs = vb->d3d_buffer().get();
-
-		d3d_immediate_context_->IASetInputLayout(IL->second.get());
-		d3d_immediate_context_->IASetIndexBuffer(nullptr, DXGI_FORMAT_UNKNOWN, 0);
-		d3d_immediate_context_->IASetVertexBuffers(0, 1, &vbs, &stride, &offset);
-		//d3d_immediate_context_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-		d3d_immediate_context_->VSSetShader(vs->d3d_vs().get(), nullptr, 0);
-		d3d_immediate_context_->PSSetShader(ps->d3d_fs().get(), nullptr, 0);
-
-		d3d_immediate_context_->Draw(vb->vertex_count(), 0);
-	});
-}
-
-auto context_t::signal_draw(index_buffer_ptr const& ib, data_declaration_t const* vd, vertex_buffer_ptr const& vb, vertex_shader_ptr const& vs, fragment_shader_ptr const& ps) -> void
-{
-	engine_.signal([&, ib, vd, vb, vs, ps]{
-		UINT stride = (UINT)vd->stride();
-		UINT offset = 0;
-
-		auto vbs = vb->d3d_buffer().get();
-
-#if 0
-		D3D11_RASTERIZER_DESC wfdesc;
-		ZeroMemory(&wfdesc, sizeof(D3D11_RASTERIZER_DESC));
-		wfdesc.FillMode = D3D11_FILL_SOLID;
-		wfdesc.CullMode = D3D11_CULL_NONE;
-		atma::com_ptr<ID3D11RasterizerState> WireFrame;
-		d3d_device_->CreateRasterizerState(&wfdesc, WireFrame.assign());
-		d3d_immediate_context_->RSSetState(WireFrame.get());
-#endif
-
-#if 0
-		D3D11_BLEND_DESC blendStateDesc;
-		ZeroMemory(&blendStateDesc, sizeof(D3D11_BLEND_DESC));
-		blendStateDesc.AlphaToCoverageEnable = FALSE;
-		blendStateDesc.IndependentBlendEnable = FALSE;
-		blendStateDesc.RenderTarget[0].BlendEnable = TRUE;
-		blendStateDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
-		blendStateDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
-		blendStateDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
-		blendStateDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ZERO;
-		blendStateDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
-		blendStateDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
-		blendStateDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-
-		auto blendState = atma::com_ptr<ID3D11BlendState>{};
-		if (FAILED(d3d_device_->CreateBlendState(&blendStateDesc, blendState.assign()))) {
-			printf("Failed To Create Blend State\n");
-		}
-		d3d_immediate_context_->OMSetBlendState(blendState.get(), NULL, 0xFFFFFF);
-#endif
-
-
-		D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
-		depthStencilDesc.DepthEnable = TRUE;
-		depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-		depthStencilDesc.DepthFunc = D3D11_COMPARISON_ALWAYS;
-		depthStencilDesc.StencilEnable = FALSE;
-		depthStencilDesc.StencilReadMask = 0xFF;
-		depthStencilDesc.StencilWriteMask = 0xFF;
-
-		// Stencil operations if pixel is front-facing
-		depthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-		depthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_ZERO;
-		depthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-		depthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-
-		// Stencil operations if pixel is back-facing
-		depthStencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-		depthStencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_ZERO;
-		depthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-		depthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-
-		ID3D11DepthStencilState *m_DepthStencilState;
-		d3d_device_->CreateDepthStencilState(&depthStencilDesc, &m_DepthStencilState);
-		d3d_immediate_context_->OMSetDepthStencilState(m_DepthStencilState, 0);
-
-
-
-		// input-layout
-		auto ILkey = std::make_tuple(vs, vd);
-		auto IL = cached_input_layouts_.find(ILkey);
-		if (IL == cached_input_layouts_.end()) {
-			IL = cached_input_layouts_.insert(std::make_pair(ILkey, create_d3d_input_layout(vs, vd))).first;
-		}
-
-		d3d_immediate_context_->VSSetShader(vs->d3d_vs().get(), nullptr, 0);
-		d3d_immediate_context_->PSSetShader(ps->d3d_fs().get(), nullptr, 0);
-		d3d_immediate_context_->IASetInputLayout(IL->second.get());
-		d3d_immediate_context_->IASetIndexBuffer(ib->d3d_buffer().get(), DXGI_FORMAT_R32_UINT, 0);
-		d3d_immediate_context_->IASetVertexBuffers(0, 1, &vbs, &stride, &offset);
-		d3d_immediate_context_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		d3d_immediate_context_->DrawIndexed(ib->index_count(), 0, 0);
-	});
-}
-
 auto context_t::signal_present() -> void
 {
 	engine_.signal([&] {
@@ -416,14 +279,6 @@ auto context_t::signal_clear(atma::math::vector4f const& color) -> void
 		float f4c[4] = {color.x, color.y, color.z, color.w};
 		d3d_immediate_context_->ClearRenderTargetView(d3d_render_target_.get(), f4c);
 		d3d_immediate_context_->ClearDepthStencilView(d3d_depth_stencil_.get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
-	});
-}
-
-auto context_t::signal_cs_upload_constant_buffer(uint index, constant_buffer_cptr const& buf) -> void
-{
-	engine_.signal([&, index, buf] {
-		d3d_immediate_context_->VSSetConstantBuffers(index, 1, &buf->d3d_buffer().get());
-		d3d_immediate_context_->PSSetConstantBuffers(index, 1, &buf->d3d_buffer().get());
 	});
 }
 
@@ -444,6 +299,14 @@ auto context_t::signal_res_update(constant_buffer_ptr const& cb, atma::shared_me
 		d3d_immediate_context_->Map(cb->d3d_resource().get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &sr);
 		memcpy(sr.pData, sm.begin(), sm.size());
 		d3d_immediate_context_->Unmap(cb->d3d_resource().get(), 0);
+	});
+}
+
+auto context_t::signal_cs_upload_constant_buffer(uint index, constant_buffer_cptr const& buf) -> void
+{
+	engine_.signal([&, index, buf] {
+		d3d_immediate_context_->VSSetConstantBuffers(index, 1, &buf->d3d_buffer().get());
+		d3d_immediate_context_->PSSetConstantBuffers(index, 1, &buf->d3d_buffer().get());
 	});
 }
 
@@ -494,23 +357,6 @@ auto context_t::signal_res_map(resource_ptr const& rs, uint subresource, map_typ
 	});
 }
 
-#if 0
-auto context_t::signal_cs_upload_generic_buffer(uint index, generic_buffer_ptr const& buf) -> void
-{
-	engine_.signal([&, index, buf] {
-		d3d_immediate_context_->CSSetShaderResources(index, 1, &buf->d3d_shader_resource_view().get());
-	});
-}
-#endif
-
-auto context_t::signal_fs_upload_shader_resource(uint index, resource_ptr const& resource) -> void
-{
-	ATMA_ASSERT(resource);
-	engine_.signal([&, index, resource] {
-		d3d_immediate_context_->PSSetShaderResources(index, 1, &resource->d3d_srv().get());
-	});
-}
-
 auto context_t::create_d3d_input_layout(vertex_shader_cptr const& vs, data_declaration_t const* vd) -> platform::d3d_input_layout_ptr
 {
 	size_t offset = 0;
@@ -532,54 +378,6 @@ auto context_t::create_d3d_input_layout(vertex_shader_cptr const& vs, data_decla
 		vs->d3d_blob()->GetBufferPointer(), vs->d3d_blob()->GetBufferSize(), result.assign()));
 
 	return result;
-}
-
-auto context_t::signal_vs_upload_constant_buffer(uint index, constant_buffer_cptr const& cb) -> void
-{
-	engine_.signal([&, index, cb] {
-		d3d_immediate_context_->VSSetConstantBuffers(index, 1, &cb->d3d_buffer().get());
-	});
-}
-
-auto context_t::signal_fs_upload_constant_buffer(uint index, constant_buffer_cptr const& cb) -> void
-{
-	engine_.signal([&, index, cb] {
-		d3d_immediate_context_->PSSetConstantBuffers(index, 1, &cb->d3d_buffer().get());
-	});
-}
-
-auto context_t::signal_draw(shared_state_t const& ss, vertex_stage_state_t const& vss, fragment_stage_state_t const& fss) -> void
-{
-	engine_.signal([&, ss, vss, fss]
-	{
-		auto const& vs = vss.vertex_shader;
-		auto const& vb = vss.vertex_buffer;
-		auto const* vd = vb->data_declaration();
-
-		auto const& fs = fss.fragment_shader;
-
-		// input assembler
-		ATMA_ASSERT(vs->data_declaration() == vss.vertex_buffer->data_declaration());
-
-		UINT offset = 0, stride = (UINT)vd->stride();
-		d3d_immediate_context_->IASetInputLayout(vs->d3d_input_layout().get());
-		d3d_immediate_context_->IASetIndexBuffer(nullptr, DXGI_FORMAT_UNKNOWN, 0);
-		d3d_immediate_context_->IASetVertexBuffers(0, 1, &vb->d3d_buffer().get(), &stride, &offset);
-		d3d_immediate_context_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-		// vertex-shader
-		d3d_immediate_context_->VSSetShader(vs->d3d_vs().get(), nullptr, 0);
-		for (auto const& x : ss.shader_resources) d3d_immediate_context_->VSSetShaderResources(x.first, 1, &x.second->d3d_srv().get());
-		//for (auto const& x : vss.shader_resources) d3d_immediate_context_->VSSetShaderResources(x.first, 1, &x.second->d3d_srv().get());
-
-		// fragment-shader
-		d3d_immediate_context_->PSSetShader(fs->d3d_fs().get(), nullptr, 0);
-		for (auto const& x : ss.shader_resources) d3d_immediate_context_->PSSetShaderResources(x.first, 1, &x.second->d3d_srv().get());
-		for (auto const& x : fss.shader_resources) d3d_immediate_context_->PSSetShaderResources(x.first, 1, &x.second->d3d_srv().get());
-
-		auto vertex_count = (vss.count == 0) ? vb->vertex_count() : vss.count;
-		d3d_immediate_context_->Draw(vertex_count, vss.offset);
-	});
 }
 
 auto context_t::make_blender(blend_state_t const& bs) -> blender_ptr
@@ -622,13 +420,6 @@ auto context_t::signal_om_blending(blender_cptr const& b) -> void
 {
 	engine_.signal([&, b]{
 		d3d_immediate_context_->OMSetBlendState(b->d3d_blend_state().get(), nullptr, 0xffffffff);
-	});
-}
-
-auto context_t::signal_ia_topology(topology_t t) -> void
-{
-	engine_.signal([&, t]{
-		immediate_ia_set_topology(t);
 	});
 }
 

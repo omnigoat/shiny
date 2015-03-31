@@ -55,28 +55,21 @@ namespace shiny
 		auto signal_draw_scene(scene_t&) -> void;
 
 
-		// resources
+		// "resources stage"
 		auto signal_res_map(resource_ptr const&, uint subresource, map_type_t, map_callback_t const&) -> void;
 		auto signal_res_update(constant_buffer_ptr const&, uint data_size, void*) -> void;
 		auto signal_res_update(constant_buffer_ptr const&, atma::shared_memory_t const&) -> void;
 
 
-
-
-
-		// input-assembly stage
+		// input-assembly-stage
 		auto immediate_ia_set_data_declaration(data_declaration_t const*) -> void;
 		auto immediate_ia_set_vertex_buffer(vertex_buffer_cptr const&) -> void;
 		auto immediate_ia_set_index_buffer(index_buffer_cptr const&) -> void;
 		auto immediate_ia_set_topology(topology_t) -> void;
 
-		auto signal_ia_topology(topology_t) -> void;
-
 
 		// geometry-stage
 		auto immediate_gs_set_geometry_shader(geometry_shader_cptr const&) -> void;
-
-		auto signal_gs_upload_constant_buffer(uint index, constant_buffer_cptr const&) -> void;
 
 
 		// vertex-stage
@@ -84,19 +77,14 @@ namespace shiny
 		auto immediate_vs_set_constant_buffers(bound_constant_buffers_t const&) -> void;
 		auto immediate_vs_set_resources(bound_resources_t const&) -> void;
 
-		auto signal_vs_upload_constant_buffer(uint index, constant_buffer_cptr const&) -> void;
-
 
 		// fragment-stage
 		auto immediate_fs_set_fragment_shader(fragment_shader_cptr const&) -> void;
 		auto immediate_fs_set_constant_buffers(bound_constant_buffers_t const&) -> void;
 		auto immediate_fs_set_resources(bound_resources_t const&) -> void;
 
-		auto signal_fs_upload_shader_resource(uint index, resource_ptr const&) -> void;
-		auto signal_fs_upload_constant_buffer(uint index, constant_buffer_cptr const&) -> void;
 
-
-		// output-merger stage
+		// output-merger-stage
 		auto signal_om_blending(blender_cptr const&) -> void;
 
 

@@ -203,10 +203,8 @@
     <ClCompile Include="..\..\source\shiny\platform\win32\vertex_buffer.cpp" />
     <ClCompile Include="..\..\source\shiny\platform\win32\vertex_shader.cpp" />
     <ClCompile Include="..\..\source\shiny\scene.cpp" />
-    <ClCompile Include="..\..\source\main.cpp" />
     <ClCompile Include="..\..\source\shelf\file.cpp" />
     <ClCompile Include="..\..\source\shiny\function.cpp" />
-    <ClCompile Include="..\..\source\voxels.cpp" />
     <ClCompile Include="..\..\vendor\zlib\adler32.c" />
     <ClCompile Include="..\..\vendor\zlib\compress.c" />
     <ClCompile Include="..\..\vendor\zlib\crc32.c" />
