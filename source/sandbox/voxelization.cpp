@@ -194,26 +194,51 @@ auto voxelization_plugin_t::main_setup() -> void
 		++fragidx;
 	}
 
-	std::vector<std::vector<uint>> levels;
+	struct vnode_t
+	{
+		uint64 children[8];
+		uint64 brick_idx[8];
+	};
+
+	auto const block_edge_size = uint64(8);
+	auto const levels_required = aml::log2(gridsize / block_edge_size);
+	auto node_levels = std::vector<std::vector<vnode_t>>{levels_required};
 	std::vector<aml::vector4f> fragments3d;
+
+	auto publish_node = [](int level, uint64 brick_morton_code, uint64 offset)
+	{
+		
+	};
+
+	auto publish_empty_brick = [&](uint64 brick_morton_code, uint64 offset)
+	{
+		auto& level = 0;
+		auto& node = node_levels[level].back();
+		node.brick_idx[morton_code % 8] = offset;
+
+		if (morton_code % 8 == 7) {
+			publish_node(level + 1, )
+		}
+	};
 
 	// blocks are 8x8x8, so every 512 morton codes
 	{
-		auto const block_edge_size = 8;
-		auto i = fragments.begin();
-		auto idx = 0;
-
-		auto block_morton_width = block_edge_size * block_edge_size * block_edge_size;
+		auto fragment_iter = fragments.begin();
+		
+		
+		auto brick_morton_width = block_edge_size * block_edge_size * block_edge_size;
 		auto block_idx_start = 0;
-		auto block_idx_end = block_idx_start + block_morton_width;
+		auto block_idx_end = block_idx_start + brick_morton_width;
 
-		for (auto idx = 0; idx != gridsize * gridsize * gridsize; )
+		for (auto fragment_idx = 0; fragment_idx != gridsize * gridsize * gridsize; )
 		{
 			// skip past fully empty empty bricks
-			for ( ; block_idx_end < i->morton; )
-				block_idx_end = (block_idx_start = block_idx_end) + block_morton_width;
+			for (; fragment_idx + brick_morton_width < fragment_iter->morton; fragment_idx += brick_morton_width)
+			{
+			}
 
-			for (idx = block_idx_start; idx < i->morton; ++idx)
+			auto brick_end = fragment_idx + brick_morton_width;
+			for ( ; fragment < i->morton; ++idx)
 				fragments3d.push_back(aml::vector4f{});
 
 			if (i->morton >= block_idx_end)
@@ -257,10 +282,11 @@ auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
 {
 	namespace sdc = shiny::draw_commands;
 
-	scene.draw
-		( sdc::input_assembly_stage(dd_position(), vb, ib)
-		, sdc::vertex_stage(vs_flat(), shiny::bound_constant_buffers_t{{0, scene.scene_constant_buffer()}})
-		, sdc::geometry_stage(gs)
-		, sdc::fragment_stage(fs_flat())
-		);
+	scene.draw(
+		sdc::input_assembly_stage(dd_position(), vb, ib),
+		sdc::vertex_stage(vs_flat(), shiny::bound_constant_buffers_t{
+			{0, scene.scene_constant_buffer()}
+		}),
+		sdc::geometry_stage(gs),
+		sdc::fragment_stage(fs_flat()));
 }
