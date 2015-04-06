@@ -3,6 +3,7 @@
 #include <shiny/context.hpp>
 #include <shiny/scene.hpp>
 #include <shiny/draw.hpp>
+#include <shiny/generic_buffer.hpp>
 
 #include <shelf/file.hpp>
 
@@ -89,6 +90,25 @@ auto operator == (voxel_t const& lhs, voxel_t const& rhs) -> bool
 	return lhs.morton == rhs.morton;
 }
 
+
+struct node_t
+{
+	node_t()
+		: children_offset{}
+		, brick_idx{}
+	{}
+
+	uint32 children_offset;
+	uint32 brick_idx;
+};
+
+struct level_t
+{
+	uint64 current_node_offset = std::numeric_limits<uint64>::max();
+	node_t storage;
+};
+
+
 auto voxelization_plugin_t::main_setup() -> void
 {
 	auto sf = shelf::file_t{"../../data/dragon.obj"};
@@ -99,7 +119,8 @@ auto voxelization_plugin_t::main_setup() -> void
 
 	
 #if 1
-	auto fragments = std::vector<voxel_t>{};
+	using fragments_t = std::vector<voxel_t>;
+	auto fragments = fragments_t{};
 
 	// get the real-world bounding box of the model
 	auto bbmin = aml::point4f(FLT_MAX, FLT_MAX, FLT_MAX), bbmax = aml::point4f(-FLT_MAX, -FLT_MAX, -FLT_MAX);
@@ -194,65 +215,84 @@ auto voxelization_plugin_t::main_setup() -> void
 		++fragidx;
 	}
 
-	struct vnode_t
-	{
-		uint64 children[8];
-		uint64 brick_idx[8];
-	};
 
+#if 1
+	// I guess just pick u8x4 for color atm
+	auto voxelbuf = shiny::create_generic_buffer(ctx, shiny::buffer_usage_t::immutable, shiny::element_format_t::u8x4, (uint)fragments.size(), &fragments[0], (uint)fragments.size());
+	//ctx->make_generic_buffer(shiny::buffer_usage_t::immutable, shiny::element_format_t::f32x4, fragments.size(), &fragments[0]);
+	//auto voxelbuf2 = shiny::buffer_t{ctx, shiny::buffer_type_t::generic_buffer, shiny::buffer_usage_t::immutable, }
+#endif
+
+#if 1
 	auto const block_edge_size = uint64(8);
-	auto const levels_required = aml::log2(gridsize / block_edge_size);
-	auto node_levels = std::vector<std::vector<vnode_t>>{levels_required};
-	std::vector<aml::vector4f> fragments3d;
+	auto const brick_morton_width = block_edge_size * block_edge_size * block_edge_size;
+	auto const levels_required = aml::log2(gridsize / block_edge_size) + 1;
+	auto const empty = std::numeric_limits<uint64>::max();
 
-	auto publish_node = [](int level, uint64 brick_morton_code, uint64 offset)
+
+
+	auto fragments3d = std::vector<aml::vector4f>{};
+	auto nodes = std::vector<node_t>{};
+
+	// root node
+	nodes.push_back(node_t{});
+
+
+	//
+	// sublevel_morton: the morton id of the item "below" us, for nodes > 0, this
+	// is a node N-1, for node0, this is a brick id
+	//
+	std::function<node_t&(int, uint64)> publish_node = [&](int level_idx, uint64 sublevel_morton) -> node_t&
 	{
-		
-	};
+		uint64 level_morton = sublevel_morton >> 3;
+		auto self_morton = level_morton & 0x7;
 
-	auto publish_empty_brick = [&](uint64 brick_morton_code, uint64 offset)
-	{
-		auto& level = 0;
-		auto& node = node_levels[level].back();
-		node.brick_idx[morton_code % 8] = offset;
+		if (level_idx == levels_required - 1)
+			return nodes[0];
 
-		if (morton_code % 8 == 7) {
-			publish_node(level + 1, )
-		}
-	};
+		auto* parent = &publish_node(level_idx + 1, level_morton);
 
-	// blocks are 8x8x8, so every 512 morton codes
-	{
-		auto fragment_iter = fragments.begin();
-		
-		
-		auto brick_morton_width = block_edge_size * block_edge_size * block_edge_size;
-		auto block_idx_start = 0;
-		auto block_idx_end = block_idx_start + brick_morton_width;
-
-		for (auto fragment_idx = 0; fragment_idx != gridsize * gridsize * gridsize; )
+		if (parent->children_offset == 0)
 		{
-			// skip past fully empty empty bricks
-			for (; fragment_idx + brick_morton_width < fragment_iter->morton; fragment_idx += brick_morton_width)
-			{
-			}
-
-			auto brick_end = fragment_idx + brick_morton_width;
-			for ( ; fragment < i->morton; ++idx)
-				fragments3d.push_back(aml::vector4f{});
-
-			if (i->morton >= block_idx_end)
-				break;
+			parent->children_offset = (uint32)nodes.size();
+			node_t nds[8];
+			nodes.insert(nodes.end(), nds, nds + 8);
+			parent = &publish_node(level_idx + 1, level_morton);
 		}
-	}
 
+		auto& node = nodes[parent->children_offset + self_morton];
 
+		return node;
+	};
 
+	auto publish_brick = [&](fragments_t::const_iterator const& begin, fragments_t::const_iterator const& end) -> void
+	{
+		auto brick_morton = begin->morton / brick_morton_width;
+		auto& node = publish_node(0, brick_morton);
+
+		node.brick_idx = (uint32)brick_morton;
+	};
 
 	
+	// node: node in octree, has 2x2x2 children, or a 
+	// node0: lowest-level node in our octree
+	// brick: an 8x8x8 collection of fragments
+	for (auto fragment_iter = fragments.begin(); fragment_iter != fragments.end(); )
+	{
+		auto brick_morton = fragment_iter->morton / brick_morton_width;
 
-	vb = shiny::create_vertex_buffer(ctx, shiny::buffer_usage_t::immutable, dd_position(), (uint)vertices.size(), &vertices[0]);
-	ib = shiny::create_index_buffer(ctx, shiny::buffer_usage_t::immutable, shiny::index_format_t::index32, (uint)indices.size(), &indices[0]);
+		// traverse all fragments in the brick
+		auto brick_end = fragment_iter;
+		while (brick_end != fragments.end() && brick_end->morton / brick_morton_width == brick_morton)
+			++brick_end;
+
+		publish_brick(fragment_iter, brick_end);
+		fragment_iter = brick_end;
+	}
+#endif
+
+	this->vb = shiny::create_vertex_buffer(this->ctx, shiny::buffer_usage_t::immutable, dd_position(), (uint)vertices.size(), &vertices[0]);
+	this->ib = shiny::create_index_buffer(ctx, shiny::buffer_usage_t::immutable, shiny::index_format_t::index32, (uint)indices.size(), &indices[0]);
 
 #else
 	uint32* mi = new uint32[obj.faces().size() * 3];

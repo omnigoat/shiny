@@ -9,16 +9,18 @@
 using namespace shiny;
 using shiny::buffer_t;
 
-buffer_t::buffer_t(context_ptr const& ctx, buffer_type_t type, buffer_usage_t usage, size_t element_size, uint element_count, void const* data, uint data_element_count)
-: resource_t(ctx, {}), type_(type), usage_(usage), size_(element_size * element_count)
-{
-	ATMA_ASSERT(size_);
 
+buffer_t::buffer_t(context_ptr const& ctx, buffer_type_t type, buffer_usage_t usage, size_t element_size, uint element_count, void const* data, uint data_element_count)
+: resource_t(ctx, {}), type_(type), usage_(usage), element_size_(element_size), element_count_(element_count)
+{
+	ATMA_ASSERT(size());
+
+	auto buffer_size = element_size_ * element_count_;
 
 	// fixup default element-count, figure out size of data
 	if (data_element_count == 0)
-		data_element_count = element_count;
-	auto data_size = element_size * data_element_count;
+		data_element_count = element_count_;
+	auto data_size = element_size_ * data_element_count;
 
 
 	// determine buffer-usage and cpu-access
@@ -64,7 +66,7 @@ buffer_t::buffer_t(context_ptr const& ctx, buffer_type_t type, buffer_usage_t us
 		case buffer_usage_t::long_lived_shadowed:
 		case buffer_usage_t::dynamic_shadowed:
 		{
-			shadow_buffer_.resize((uint)size_);
+			shadow_buffer_.resize((uint)buffer_size);
 			if (data)
 				memcpy(&shadow_buffer_[0], data, data_size);
 			break;
@@ -76,13 +78,13 @@ buffer_t::buffer_t(context_ptr const& ctx, buffer_type_t type, buffer_usage_t us
 
 
 	// create buffer
-	auto buffer_desc = D3D11_BUFFER_DESC{(UINT)size_, d3d_bu, platform::d3dbind_of(type_), d3d_ca, misc_flags, (UINT)element_size};
+	auto buffer_desc = D3D11_BUFFER_DESC{(UINT)buffer_size, d3d_bu, platform::d3dbind_of(type_), d3d_ca, misc_flags, (UINT)element_size};
 	switch (usage_)
 	{
 		case buffer_usage_t::immutable:
 		{
 			ATMA_ASSERT_MSG(data, "immutable buffers require data upon initialisation");
-			ATMA_ASSERT_MSG(size_ == data_size, "immutable buffer: you are allocating more than you're filling");
+			ATMA_ASSERT_MSG(buffer_size == data_size, "immutable buffer: you are allocating different than you're filling");
 			ATMA_ASSERT_MSG(d3d_ca == 0, "immutable buffer with cpu access? silly.");
 
 			auto d3d_data = D3D11_SUBRESOURCE_DATA{data, (UINT)data_size, 1};

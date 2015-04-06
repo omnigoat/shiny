@@ -93,10 +93,12 @@ namespace shiny
 		vertex_buffer,
 		index_buffer,
 		constant_buffer,
+
+		// used for structured-buffers
 		generic_buffer,
 
-		// maybe for unordered access views?
-		//generic_random_buffer,
+		// used for unordered-access-views
+		unordered_buffer,
 	};
 
 	enum class buffer_usage_t
