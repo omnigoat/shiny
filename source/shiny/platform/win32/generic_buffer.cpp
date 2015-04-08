@@ -6,18 +6,18 @@ using namespace shiny;
 using shiny::generic_buffer_t;
 
 
-generic_buffer_t::generic_buffer_t(context_ptr const& ctx, buffer_usage_t usage, element_format_t format, uint elements, void const* data, uint data_elemcount)
-: generic_buffer_t(ctx, usage, element_size(format), elements, data, data_elemcount)
+generic_buffer_t::generic_buffer_t(context_ptr const& ctx, resource_usage_flags_t const& rs, buffer_usage_t usage, element_format_t format, uint elements, void const* data, uint data_elemcount)
+	: generic_buffer_t(ctx, rs, usage, element_size(format), elements, data, data_elemcount)
 {
 }
 
-generic_buffer_t::generic_buffer_t(context_ptr const& ctx, buffer_usage_t usage, size_t stride, uint elements, void const* data, uint data_elemcount)
-: buffer_t(ctx, buffer_type_t::generic_buffer, usage, stride, elements, data, data_elemcount), element_count_(elements)
+generic_buffer_t::generic_buffer_t(context_ptr const& ctx, resource_usage_flags_t const& rs, buffer_usage_t usage, size_t stride, uint elements, void const* data, uint data_elemcount)
+	: buffer_t(ctx, buffer_type_t::generic_buffer, rs, usage, stride, elements, data, data_elemcount)
 {
-	auto desc = D3D11_SHADER_RESOURCE_VIEW_DESC{};
-	desc.Format = DXGI_FORMAT_UNKNOWN;
-	desc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
-	desc.Buffer = D3D11_BUFFER_SRV{0, data_elemcount};
+	auto desc = D3D11_SHADER_RESOURCE_VIEW_DESC{
+		DXGI_FORMAT_UNKNOWN,
+		D3D11_SRV_DIMENSION_BUFFER,
+		D3D11_BUFFER_SRV{0, element_count_}};
 
 	ATMA_ENSURE_IS(S_OK, context()->d3d_device()->CreateShaderResourceView(d3d_resource().get(), &desc, d3d_srv_.assign()));
 }

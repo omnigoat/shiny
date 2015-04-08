@@ -15,11 +15,10 @@ namespace shiny
 	{
 		using shadow_buffer_t = std::vector<char, atma::aligned_allocator_t<char, 4>>;
 
-		buffer_t(context_ptr const&, buffer_type_t, buffer_usage_t, size_t element_size, uint element_count, void const* data, uint data_element_count);
-		virtual ~buffer_t();
-
 		auto type() const -> buffer_type_t { return type_; }
 		auto usage() const -> buffer_usage_t { return usage_; }
+		auto stride() const -> size_t { return element_size_; }
+		auto element_count() const -> uint { return element_count_; }
 		auto size() const -> size_t { return element_size_ * element_count_; }
 		auto is_shadowing() const -> bool { return !shadow_buffer_.empty(); }
 
@@ -28,6 +27,9 @@ namespace shiny
 		auto d3d_srv() const -> platform::d3d_shader_resource_view_ptr const& override;
 
 	protected:
+		buffer_t(context_ptr const&, buffer_type_t, resource_usage_flags_t const&, buffer_usage_t, size_t element_size, uint element_count, void const* data, uint data_element_count);
+		virtual ~buffer_t();
+
 		auto upload_shadow_buffer() -> void;
 
 	protected:

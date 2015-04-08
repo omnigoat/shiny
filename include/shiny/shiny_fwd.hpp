@@ -93,12 +93,7 @@ namespace shiny
 		vertex_buffer,
 		index_buffer,
 		constant_buffer,
-
-		// used for structured-buffers
 		generic_buffer,
-
-		// used for unordered-access-views
-		unordered_buffer,
 	};
 
 	enum class buffer_usage_t
@@ -117,7 +112,6 @@ namespace shiny
 	{
 		render_target,
 		depth_stencil,
-		shader_resource,
 		unordered_access,
 	};
 
@@ -160,34 +154,59 @@ namespace shiny
 	template <typename T>
 	struct bitflags_t
 	{
+		using storage_type = std::underlying_type_t<T>;
+
 		bitflags_t()
-		: flags_()
+			: flags_()
 		{}
 
 		bitflags_t(T x)
-		: flags_(1 << (uint)x)
+			: flags_((T)(1 << (storage_type)x))
 		{}
 
 		bitflags_t(std::initializer_list<T> const& xs)
 		: flags_()
 		{
 			for (auto x : xs)
-				flags_ |= 1 << (uint)x;
+				(storage_type&)flags_ |= 1 << (storage_type)x;
 		}
 
 		auto operator & (T x) const -> bool {
-			return (flags_ & (1 << (uint) x)) != 0;
+			return ((storage_type&)flags_ & (1 << (storage_type)x)) != 0;
 		}
 
 		auto operator |= (T x) -> void {
-			flags_ |= (1 << (uint)x);
+			(storage_type&)flags_ |= (1 << (storage_type)x);
+		}
+
+		operator storage_type() const {
+			return flags_;
 		}
 
 	private:
-		uint32 flags_;
+		T flags_;
 	};
 
-	typedef bitflags_t<resource_usage_t> resource_usage_flags_t;
+	template <typename T>
+	auto operator | (bitflags_t<T> const& lhs, T rhs) -> bitflags_t<T>
+	{
+		auto tmp = lhs;
+		tmp |= rhs;
+		return tmp;
+	}
+
+#define ATMA_BITFLAGS_OR_OPERATOR(enum_typename) \
+	inline auto operator | (enum_typename lhs, enum_typename rhs) -> bitflags_t<enum_typename> { \
+		return {lhs, rhs}; \
+	}
+
+#define ATMA_BITFLAGS_DECL(flags_typename, enum_typename) \
+	using flags_typename = bitflags_t<enum_typename>; \
+	ATMA_BITFLAGS_OR_OPERATOR(enum_typename)
+
+
+
+	ATMA_BITFLAGS_DECL(resource_usage_flags_t, resource_usage_t);
 
 }
 

@@ -37,10 +37,10 @@ runtime_t::runtime_t()
 	ATMA_ASSERT(dxgi_factory_);
 
 	// get debug thing
-#ifdef _DEBUGj
+#ifdef _DEBUG
 	{
-		typedef HRESULT(__stdcall *fPtr)(const IID&, void**);
-		HMODULE hDll = GetModuleHandleW(L"dxgidebug.dll");
+		auto hDll = LoadLibrary(L"dxgidebug.dll");
+		typedef HRESULT(__stdcall *fPtr)(REFIID, void**);
 		fPtr DXGIGetDebugInterface = (fPtr)GetProcAddress(hDll, "DXGIGetDebugInterface");
 
 		DXGIGetDebugInterface(__uuidof(IDXGIDebug), (void**)&dxgi_debug);
@@ -92,9 +92,16 @@ auto shiny::runtime_t::dxgid3d_for_adapter(uint32 adapter_index) -> std::tuple<d
 	}
 	else
 	{
+#if _DEBUG
+#	define FLAG D3D11_CREATE_DEVICE_DEBUG
+#else
+#	define FLAG 0
+#endif
 		ATMA_ENSURE_IS(S_OK, D3D11CreateDevice(
 			adapter.get(), D3D_DRIVER_TYPE_UNKNOWN,
-			NULL, 0, NULL, 0, D3D11_SDK_VERSION,
+			NULL, FLAG,
+			NULL, 0,
+			D3D11_SDK_VERSION,
 			device.assign(),
 			NULL,
 			context.assign()

@@ -215,19 +215,42 @@ auto voxelization_plugin_t::main_setup() -> void
 		++fragidx;
 	}
 
-
-#if 1
-	// I guess just pick u8x4 for color atm
-	auto voxelbuf = shiny::create_generic_buffer(ctx, shiny::buffer_usage_t::immutable, shiny::element_format_t::u8x4, (uint)fragments.size(), &fragments[0], (uint)fragments.size());
-	//ctx->make_generic_buffer(shiny::buffer_usage_t::immutable, shiny::element_format_t::f32x4, fragments.size(), &fragments[0]);
-	//auto voxelbuf2 = shiny::buffer_t{ctx, shiny::buffer_type_t::generic_buffer, shiny::buffer_usage_t::immutable, }
-#endif
-
-#if 1
 	auto const block_edge_size = uint64(8);
 	auto const brick_morton_width = block_edge_size * block_edge_size * block_edge_size;
 	auto const levels_required = aml::log2(gridsize / block_edge_size) + 1;
 	auto const empty = std::numeric_limits<uint64>::max();
+
+
+#if 1
+	// load voxel data into GPU. in the future, when the fragments are generated GPU-side, this
+	// won't be necessary anymore.
+	auto voxelbuf = ctx->make_generic_buffer(shiny::resource_usage_t::unordered_access, shiny::buffer_usage_t::long_lived, sizeof(uint64), (uint)fragments.size(), &fragments[0], (uint)fragments.size());
+	//auto voxelbufview = ctx->make_resource_view(voxelbuf, shiny::element_format_t::u64, )
+	// one node is a 32-bit value for the brick, 32-bit value for the children-offset
+	auto const nodepool_size = 2*(gridsize*gridsize*gridsize) / (brick_morton_width);
+
+	auto nodepool = ctx->make_generic_buffer(shiny::resource_usage_t::unordered_access, shiny::buffer_usage_t::long_lived, sizeof(uint32)*2, nodepool_size, nullptr, 0);
+
+	//atma::thread::engine_t::queue_t::batch_t batch;
+	namespace sdc = shiny::draw_commands;
+	//shiny::signal_draw(ctx, sdc::input_assembly_stage()
+	//ctx->signal_cs_upload_shader_resource(shiny::view_type_t::read_only, )
+	
+#if 0
+	shiny::signal_compute(ctx,
+		shiny::bound_resources_t{
+			{0, voxelbuf->d3d_srv()},
+			{1, nodepool->d3d_srv()}
+		});
+#endif
+
+#endif
+
+	
+
+
+#if 1
+	
 
 
 

@@ -11,7 +11,7 @@ resource_t::resource_t(context_ptr const& ctx, resource_usage_flags_t usage_flag
 resource_t::resource_t(context_ptr const& ctx, texture_usage_t usage)
 : context_(ctx), usage_flags_()
 {
-	usage_flags_ |= resource_usage_t::shader_resource;
+	//usage_flags_ |= resource_usage_t::shader_resource;
 
 	switch (usage)
 	{

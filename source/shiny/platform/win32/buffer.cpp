@@ -10,8 +10,10 @@ using namespace shiny;
 using shiny::buffer_t;
 
 
-buffer_t::buffer_t(context_ptr const& ctx, buffer_type_t type, buffer_usage_t usage, size_t element_size, uint element_count, void const* data, uint data_element_count)
-: resource_t(ctx, {}), type_(type), usage_(usage), element_size_(element_size), element_count_(element_count)
+buffer_t::buffer_t(context_ptr const& ctx, buffer_type_t type, resource_usage_flags_t const& rs, buffer_usage_t usage, size_t element_size, uint element_count, void const* data, uint data_element_count)
+	: resource_t(ctx, rs)
+	, type_(type), usage_(usage)
+	, element_size_(element_size), element_count_(element_count)
 {
 	ATMA_ASSERT(size());
 
@@ -77,8 +79,18 @@ buffer_t::buffer_t(context_ptr const& ctx, buffer_type_t type, buffer_usage_t us
 	}
 
 
+	// determine binding
+	auto binding = platform::d3dbind_of(type_);
+	if (usage_flags() & resource_usage_t::render_target)
+		(uint&)binding |= D3D11_BIND_RENDER_TARGET;
+	if (usage_flags() & resource_usage_t::depth_stencil)
+		(uint&)binding |= D3D11_BIND_DEPTH_STENCIL;
+	if (usage_flags() & resource_usage_t::unordered_access)
+		(uint&)binding |= D3D11_BIND_UNORDERED_ACCESS;
+
+
 	// create buffer
-	auto buffer_desc = D3D11_BUFFER_DESC{(UINT)buffer_size, d3d_bu, platform::d3dbind_of(type_), d3d_ca, misc_flags, (UINT)element_size};
+	auto buffer_desc = D3D11_BUFFER_DESC{(UINT)buffer_size, d3d_bu, binding, d3d_ca, misc_flags, (UINT)element_size};
 	switch (usage_)
 	{
 		case buffer_usage_t::immutable:

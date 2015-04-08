@@ -42,8 +42,8 @@ texture2d_t::texture2d_t(context_ptr const& ctx, resource_usage_flags_t usage_fl
 		(uint&)d3dbind |= D3D11_BIND_RENDER_TARGET;
 	if (usage_flags & resource_usage_t::depth_stencil)
 		(uint&)d3dbind |= D3D11_BIND_DEPTH_STENCIL;
-	if (usage_flags & resource_usage_t::shader_resource)
-		(uint&)d3dbind |= D3D11_BIND_SHADER_RESOURCE;
+	//if (usage_flags & resource_usage_t::shader_resource)
+	//	(uint&)d3dbind |= D3D11_BIND_SHADER_RESOURCE;
 	if (usage_flags & resource_usage_t::unordered_access)
 		(uint&)d3dbind |= D3D11_BIND_UNORDERED_ACCESS;
 

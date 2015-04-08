@@ -19,13 +19,15 @@ namespace shiny
 
 		// 4-component
 		g8x4, s8x4, u8x4, sn8x4, un8x4,
-		f16x4, f32x4,
+		f16x4,
+		f32x4,
 
 		// 2-component
 		u32x2,
 
 		// 1-component
-		g32,
+		g32, s32, u32, sn32, un32,
+		g64, s64, u64, sn64, un64,
 	};
 
 	auto element_count(element_format_t) -> int;
