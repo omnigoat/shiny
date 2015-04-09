@@ -10,7 +10,7 @@ using namespace shiny;
 using shiny::buffer_t;
 
 
-buffer_t::buffer_t(context_ptr const& ctx, buffer_type_t type, resource_usage_flags_t const& rs, buffer_usage_t usage, size_t element_size, uint element_count, void const* data, uint data_element_count)
+buffer_t::buffer_t(context_ptr const& ctx, buffer_type_t type, resource_usage_mask_t const& rs, buffer_usage_t usage, size_t element_size, uint element_count, void const* data, uint data_element_count)
 	: resource_t(ctx, rs)
 	, type_(type), usage_(usage)
 	, element_size_(element_size), element_count_(element_count)
@@ -34,14 +34,18 @@ buffer_t::buffer_t(context_ptr const& ctx, buffer_type_t type, resource_usage_fl
 			d3d_bu = D3D11_USAGE_IMMUTABLE;
 			break;
 
-		case buffer_usage_t::long_lived:
-		case buffer_usage_t::long_lived_shadowed:
+		case buffer_usage_t::persistant:
+		case buffer_usage_t::persistant_shadowed:
 			d3d_bu = D3D11_USAGE_DEFAULT;
 			d3d_ca = D3D11_CPU_ACCESS_WRITE;
 			break;
 
-		case buffer_usage_t::dynamic:
-		case buffer_usage_t::dynamic_shadowed:
+		case buffer_usage_t::temporary:
+		case buffer_usage_t::temporary_shadowed:
+		case buffer_usage_t::transient:
+		case buffer_usage_t::transient_shadowed:
+		case buffer_usage_t::constant:
+		case buffer_usage_t::constant_shadowed:
 			d3d_bu = D3D11_USAGE_DYNAMIC;
 			d3d_ca = D3D11_CPU_ACCESS_WRITE;
 			break;
@@ -62,20 +66,20 @@ buffer_t::buffer_t(context_ptr const& ctx, buffer_type_t type, resource_usage_fl
 	}
 
 
-	// allocate shadow-buffer if need be
-	switch (usage_)
-	{
-		case buffer_usage_t::long_lived_shadowed:
-		case buffer_usage_t::dynamic_shadowed:
-		{
-			shadow_buffer_.resize((uint)buffer_size);
-			if (data)
-				memcpy(&shadow_buffer_[0], data, data_size);
-			break;
-		}
+	bool shadowed =
+		usage_ == buffer_usage_t::persistant_shadowed ||
+		usage_ == buffer_usage_t::temporary_shadowed ||
+		usage_ == buffer_usage_t::transient_shadowed ||
+		usage_ == buffer_usage_t::constant_shadowed
+		;
 
-		default:
-			break;
+
+	// allocate shadow-buffer if need be
+	if (shadowed)
+	{
+		shadow_buffer_.resize((uint)buffer_size);
+		if (data)
+			memcpy(&shadow_buffer_[0], data, data_size);
 	}
 
 
@@ -104,8 +108,10 @@ buffer_t::buffer_t(context_ptr const& ctx, buffer_type_t type, resource_usage_fl
 			break;
 		}
 
-		case buffer_usage_t::long_lived:
-		case buffer_usage_t::dynamic:
+		case buffer_usage_t::persistant:
+		case buffer_usage_t::temporary:
+		case buffer_usage_t::transient:
+		case buffer_usage_t::constant:
 		{
 			if (data) {
 				auto d3d_data = D3D11_SUBRESOURCE_DATA{data, (UINT)data_size, 1};
@@ -118,8 +124,10 @@ buffer_t::buffer_t(context_ptr const& ctx, buffer_type_t type, resource_usage_fl
 			break;
 		}
 
-		case buffer_usage_t::long_lived_shadowed:
-		case buffer_usage_t::dynamic_shadowed:
+		case buffer_usage_t::persistant_shadowed:
+		case buffer_usage_t::temporary_shadowed:
+		case buffer_usage_t::transient_shadowed:
+		case buffer_usage_t::constant_shadowed:
 		{
 			if (data) {
 				auto d3d_data = D3D11_SUBRESOURCE_DATA{&shadow_buffer_[0], (UINT)data_size, 1};

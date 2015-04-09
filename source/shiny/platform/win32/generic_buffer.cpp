@@ -6,12 +6,12 @@ using namespace shiny;
 using shiny::generic_buffer_t;
 
 
-generic_buffer_t::generic_buffer_t(context_ptr const& ctx, resource_usage_flags_t const& rs, buffer_usage_t usage, element_format_t format, uint elements, void const* data, uint data_elemcount)
+generic_buffer_t::generic_buffer_t(context_ptr const& ctx, resource_usage_mask_t const& rs, buffer_usage_t usage, element_format_t format, uint elements, void const* data, uint data_elemcount)
 	: generic_buffer_t(ctx, rs, usage, element_size(format), elements, data, data_elemcount)
 {
 }
 
-generic_buffer_t::generic_buffer_t(context_ptr const& ctx, resource_usage_flags_t const& rs, buffer_usage_t usage, size_t stride, uint elements, void const* data, uint data_elemcount)
+generic_buffer_t::generic_buffer_t(context_ptr const& ctx, resource_usage_mask_t const& rs, buffer_usage_t usage, size_t stride, uint elements, void const* data, uint data_elemcount)
 	: buffer_t(ctx, buffer_type_t::generic_buffer, rs, usage, stride, elements, data, data_elemcount)
 {
 	auto desc = D3D11_SHADER_RESOURCE_VIEW_DESC{

@@ -221,15 +221,21 @@ auto voxelization_plugin_t::main_setup() -> void
 	auto const empty = std::numeric_limits<uint64>::max();
 
 
-#if 1
+#if 0
 	// load voxel data into GPU. in the future, when the fragments are generated GPU-side, this
 	// won't be necessary anymore.
-	auto voxelbuf = ctx->make_generic_buffer(shiny::resource_usage_t::unordered_access, shiny::buffer_usage_t::long_lived, sizeof(uint64), (uint)fragments.size(), &fragments[0], (uint)fragments.size());
+	//ctx->make_buffer(
+		//shiny::resource_usage_t::standard,
+		//shiny::buffer_type_t::generic_buffer,
+		//shiny::buffer_access_t::cpu_none_gpu_readwrite,
+
+		
+	auto voxelbuf = ctx->make_generic_buffer(shiny::resource_usage_t::unordered_access, shiny::buffer_usage_t::persistant, sizeof(uint64), (uint)fragments.size(), &fragments[0], (uint)fragments.size());
 	//auto voxelbufview = ctx->make_resource_view(voxelbuf, shiny::element_format_t::u64, )
 	// one node is a 32-bit value for the brick, 32-bit value for the children-offset
 	auto const nodepool_size = 2*(gridsize*gridsize*gridsize) / (brick_morton_width);
 
-	auto nodepool = ctx->make_generic_buffer(shiny::resource_usage_t::unordered_access, shiny::buffer_usage_t::long_lived, sizeof(uint32)*2, nodepool_size, nullptr, 0);
+	auto nodepool = ctx->make_generic_buffer(shiny::resource_usage_t::unordered_access, shiny::buffer_usage_t::persistant, sizeof(uint32)*2, nodepool_size, nullptr, 0);
 
 	//atma::thread::engine_t::queue_t::batch_t batch;
 	namespace sdc = shiny::draw_commands;
@@ -249,7 +255,7 @@ auto voxelization_plugin_t::main_setup() -> void
 	
 
 
-#if 1
+#if 0
 	
 
 

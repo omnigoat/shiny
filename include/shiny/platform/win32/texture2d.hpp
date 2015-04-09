@@ -13,7 +13,7 @@ namespace shiny
 {
 	struct texture2d_t : resource_t
 	{
-		friend auto create_texture2d(context_ptr const&, resource_usage_flags_t, element_format_t, uint width, uint height) -> texture2d_ptr;
+		friend auto create_texture2d(context_ptr const&, resource_usage_mask_t, element_format_t, uint width, uint height) -> texture2d_ptr;
 		friend auto create_texture2d(context_ptr const&, element_format_t, uint width, uint height) -> texture2d_ptr;
 		
 		auto format() const -> element_format_t;
@@ -27,7 +27,7 @@ namespace shiny
 		auto d3d_srv() const -> platform::d3d_shader_resource_view_ptr const& override;
 
 	private:
-		texture2d_t(context_ptr const&, resource_usage_flags_t, element_format_t, uint width, uint height, uint mips);
+		texture2d_t(context_ptr const&, resource_usage_mask_t, element_format_t, uint width, uint height, uint mips);
 
 	private:
 		element_format_t format_;

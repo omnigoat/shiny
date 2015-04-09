@@ -4,7 +4,7 @@
 using namespace shiny;
 using shiny::resource_t;
 
-resource_t::resource_t(context_ptr const& ctx, resource_usage_flags_t usage_flags)
+resource_t::resource_t(context_ptr const& ctx, resource_usage_mask_t usage_flags)
 : context_(ctx), usage_flags_(usage_flags)
 {}
 

@@ -2,6 +2,7 @@
 
 #include <atma/types.hpp>
 #include <atma/intrusive_ptr.hpp>
+#include <atma/bitmask.hpp>
 
 #include <vector>
 
@@ -96,17 +97,50 @@ namespace shiny
 		generic_buffer,
 	};
 
+
+
+
+
 	enum class buffer_usage_t
 	{
-		// gpu-only
+		// immutable:
+		//   cpu: none
+		//   gpu: read
 		immutable,
-		dynamic,
-		long_lived,
 
-		// backed by shadow-buffer
-		dynamic_shadowed,
-		long_lived_shadowed,
+		// persistant:
+		//   cpu: write
+		//   gpu: read (write with unordered-access)
+		//   update: update-subresource (d3d)
+		persistant,
+		persistant_shadowed,
+
+		// temporary:
+		//   cpu: write
+		//   gpu: read
+		//   update: map/unmap
+		temporary,
+		temporary_shadowed,
+
+		// transient:
+		//   cpu: write
+		//   gpu: read
+		//   update: map/discard
+		//   NOTE: these should be pooled
+		transient,
+		transient_shadowed,
+
+		// constant:
+		//   cpu: write
+		//   gpu: read
+		//   update: map/discard
+		constant,
+		constant_shadowed,
 	};
+
+
+
+
 
 	enum class resource_usage_t
 	{
@@ -114,6 +148,8 @@ namespace shiny
 		depth_stencil,
 		unordered_access,
 	};
+
+	ATMA_BITMASK(resource_usage_mask_t, resource_usage_t);
 
 	enum class view_type_t
 	{
@@ -149,64 +185,6 @@ namespace shiny
 		input_assembly,
 		vertex,
 	};
-
-
-	template <typename T>
-	struct bitflags_t
-	{
-		using storage_type = std::underlying_type_t<T>;
-
-		bitflags_t()
-			: flags_()
-		{}
-
-		bitflags_t(T x)
-			: flags_((T)(1 << (storage_type)x))
-		{}
-
-		bitflags_t(std::initializer_list<T> const& xs)
-		: flags_()
-		{
-			for (auto x : xs)
-				(storage_type&)flags_ |= 1 << (storage_type)x;
-		}
-
-		auto operator & (T x) const -> bool {
-			return ((storage_type&)flags_ & (1 << (storage_type)x)) != 0;
-		}
-
-		auto operator |= (T x) -> void {
-			(storage_type&)flags_ |= (1 << (storage_type)x);
-		}
-
-		operator storage_type() const {
-			return flags_;
-		}
-
-	private:
-		T flags_;
-	};
-
-	template <typename T>
-	auto operator | (bitflags_t<T> const& lhs, T rhs) -> bitflags_t<T>
-	{
-		auto tmp = lhs;
-		tmp |= rhs;
-		return tmp;
-	}
-
-#define ATMA_BITFLAGS_OR_OPERATOR(enum_typename) \
-	inline auto operator | (enum_typename lhs, enum_typename rhs) -> bitflags_t<enum_typename> { \
-		return {lhs, rhs}; \
-	}
-
-#define ATMA_BITFLAGS_DECL(flags_typename, enum_typename) \
-	using flags_typename = bitflags_t<enum_typename>; \
-	ATMA_BITFLAGS_OR_OPERATOR(enum_typename)
-
-
-
-	ATMA_BITFLAGS_DECL(resource_usage_flags_t, resource_usage_t);
 
 }
 

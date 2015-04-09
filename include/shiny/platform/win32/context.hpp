@@ -50,8 +50,8 @@ namespace shiny
 		auto runtime() -> runtime_t& { return runtime_; }
 		auto runtime() const -> runtime_t const& { return runtime_; }
 
-		auto make_generic_buffer(resource_usage_flags_t const&, buffer_usage_t, size_t stride, uint elements, void const* data, uint data_elemcount) -> generic_buffer_ptr;
-		auto make_generic_buffer(resource_usage_flags_t const&, buffer_usage_t, size_t stride, uint elements) -> generic_buffer_ptr;
+		auto make_generic_buffer(resource_usage_mask_t const&, buffer_usage_t, size_t stride, uint elements, void const* data, uint data_elemcount) -> generic_buffer_ptr;
+		auto make_generic_buffer(resource_usage_mask_t const&, buffer_usage_t, size_t stride, uint elements) -> generic_buffer_ptr;
 		auto make_blender(blend_state_t const&) -> blender_ptr;
 
 

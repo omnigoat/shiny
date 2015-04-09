@@ -27,7 +27,7 @@ namespace shiny
 		auto d3d_srv() const -> platform::d3d_shader_resource_view_ptr const& override;
 
 	protected:
-		buffer_t(context_ptr const&, buffer_type_t, resource_usage_flags_t const&, buffer_usage_t, size_t element_size, uint element_count, void const* data, uint data_element_count);
+		buffer_t(context_ptr const&, buffer_type_t, resource_usage_mask_t const&, buffer_usage_t, size_t element_size, uint element_count, void const* data, uint data_element_count);
 		virtual ~buffer_t();
 
 		auto upload_shadow_buffer() -> void;
