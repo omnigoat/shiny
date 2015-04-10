@@ -167,6 +167,9 @@
     <ClCompile Include="..\..\source\shiny\draw.cpp">
       <Filter>source\shiny</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\source\shiny\platform\win32\resource_view.cpp">
+      <Filter>source\shiny\platform\win32</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\shiny\context.hpp">
@@ -342,6 +345,9 @@
     </ClInclude>
     <ClInclude Include="..\..\include\shiny\rendertarget_clear.hpp">
       <Filter>include\shiny</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\shiny\platform\win32\resource_view.hpp">
+      <Filter>include\shiny\platform\win32</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -196,6 +196,7 @@
     <ClCompile Include="..\..\source\shiny\platform\win32\output.cpp" />
     <ClCompile Include="..\..\source\shiny\platform\win32\fragment_shader.cpp" />
     <ClCompile Include="..\..\source\shiny\platform\win32\resource.cpp" />
+    <ClCompile Include="..\..\source\shiny\platform\win32\resource_view.cpp" />
     <ClCompile Include="..\..\source\shiny\platform\win32\runtime.cpp" />
     <ClCompile Include="..\..\source\shiny\platform\win32\shader_resource2d.cpp" />
     <ClCompile Include="..\..\source\shiny\platform\win32\texture2d.cpp" />
@@ -243,6 +244,7 @@
     <ClInclude Include="..\..\include\shiny\platform\win32\generic_buffer.hpp" />
     <ClInclude Include="..\..\include\shiny\platform\win32\geometry_shader.hpp" />
     <ClInclude Include="..\..\include\shiny\platform\win32\resource.hpp" />
+    <ClInclude Include="..\..\include\shiny\platform\win32\resource_view.hpp" />
     <ClInclude Include="..\..\include\shiny\platform\win32\shader_resource2d.hpp" />
     <ClInclude Include="..\..\include\shiny\platform\win32\texture3d.hpp" />
     <ClInclude Include="..\..\include\shiny\rendertarget_clear.hpp" />

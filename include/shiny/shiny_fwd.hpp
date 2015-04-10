@@ -71,8 +71,14 @@ namespace shiny
 	struct shader_resource2d_t;
 	typedef atma::intrusive_ptr<shader_resource2d_t> shader_resource2d_ptr;
 
+	struct resource_view_t;
+	using  resource_view_ptr  = atma::intrusive_ptr<resource_view_t>;
+	using  resource_view_cptr = atma::intrusive_ptr<resource_view_t const>;
+
 	struct resource_t;
-	typedef atma::intrusive_ptr<resource_t> resource_ptr;
+	//typedef atma::intrusive_ptr<resource_t> resource_ptr;
+	using resource_ptr  = atma::intrusive_ptr<resource_t>;
+	using resource_cptr = atma::intrusive_ptr<resource_t const>;
 	typedef std::vector<std::pair<uint, resource_ptr>> bound_resources_t;
 
 	struct generic_buffer_t;
@@ -150,6 +156,14 @@ namespace shiny
 	};
 
 	ATMA_BITMASK(resource_usage_mask_t, resource_usage_t);
+
+	enum class gpu_access_t
+	{
+		none,
+		read,
+		write,
+		read_write
+	};
 
 	enum class view_type_t
 	{
