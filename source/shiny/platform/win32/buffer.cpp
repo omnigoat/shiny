@@ -15,9 +15,13 @@ buffer_t::buffer_t(context_ptr const& ctx, buffer_type_t type, resource_usage_ma
 	, type_(type), usage_(usage)
 	, element_size_(element_size), element_count_(element_count)
 {
+	// no zero-size buffers
 	ATMA_ASSERT(size());
+	// unordered-access buffers must be placed into persistant storage
+	ATMA_ASSERT(!(rs & resource_usage_t::unordered_access) || (usage == buffer_usage_t::persistant || usage == buffer_usage_t::persistant_shadowed));
 
-	auto buffer_size = element_size_ * element_count_;
+
+	auto buffer_size = size();
 
 	// fixup default element-count, figure out size of data
 	if (data_element_count == 0)
@@ -37,7 +41,6 @@ buffer_t::buffer_t(context_ptr const& ctx, buffer_type_t type, resource_usage_ma
 		case buffer_usage_t::persistant:
 		case buffer_usage_t::persistant_shadowed:
 			d3d_bu = D3D11_USAGE_DEFAULT;
-			d3d_ca = D3D11_CPU_ACCESS_WRITE;
 			break;
 
 		case buffer_usage_t::temporary:
@@ -100,7 +103,7 @@ buffer_t::buffer_t(context_ptr const& ctx, buffer_type_t type, resource_usage_ma
 		case buffer_usage_t::immutable:
 		{
 			ATMA_ASSERT_MSG(data, "immutable buffers require data upon initialisation");
-			ATMA_ASSERT_MSG(buffer_size == data_size, "immutable buffer: you are allocating different than you're filling");
+			ATMA_ASSERT_MSG(buffer_size == data_size, "immutable buffer: allocation size != data size");
 			ATMA_ASSERT_MSG(d3d_ca == 0, "immutable buffer with cpu access? silly.");
 
 			auto d3d_data = D3D11_SUBRESOURCE_DATA{data, (UINT)data_size, 1};
@@ -153,14 +156,4 @@ auto buffer_t::upload_shadow_buffer() -> void
 
 	context()->signal_d3d_buffer_upload(d3d_buffer_, &shadow_buffer_[0], shadow_buffer_.size(), 1);
 	context()->signal_block();
-}
-
-auto buffer_t::d3d_resource() const -> platform::d3d_resource_ptr
-{
-	return d3d_buffer_;
-}
-
-auto buffer_t::d3d_srv() const -> platform::d3d_shader_resource_view_ptr const&
-{
-	return d3d_srv_;
 }

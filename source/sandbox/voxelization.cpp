@@ -119,7 +119,7 @@ auto voxelization_plugin_t::main_setup() -> void
 
 	
 #if 1
-	using fragments_t = std::vector<voxel_t>;
+	using fragments_t = shiny::generic_buffer_t::typed_shadow_buffer_t<voxel_t>;
 	auto fragments = fragments_t{};
 
 	// get the real-world bounding box of the model
@@ -221,16 +221,15 @@ auto voxelization_plugin_t::main_setup() -> void
 	auto const empty = std::numeric_limits<uint64>::max();
 
 
-#if 0
-	// load voxel data into GPU. in the future, when the fragments are generated GPU-side, this
-	// won't be necessary anymore.
-	//ctx->make_buffer(
-		//shiny::resource_usage_t::standard,
-		//shiny::buffer_type_t::generic_buffer,
-		//shiny::buffer_access_t::cpu_none_gpu_readwrite,
+#if 1
+	auto voxelbuf = shiny::make_generic_buffer(ctx,
+		shiny::resource_usage_t::unordered_access,
+		shiny::buffer_usage_t::persistant,
+		fragments);
 
-		
-	auto voxelbuf = ctx->make_generic_buffer(shiny::resource_usage_t::unordered_access, shiny::buffer_usage_t::persistant, sizeof(uint64), (uint)fragments.size(), &fragments[0], (uint)fragments.size());
+	//auto vv = voxelbuf->make_view(gpu_access_t::read, )
+	//auto vv = shiny::make_resource_view(voxelbuf, gpu_access_t::read, element_format_t::u64);
+
 	//auto voxelbufview = ctx->make_resource_view(voxelbuf, shiny::element_format_t::u64, )
 	// one node is a 32-bit value for the brick, 32-bit value for the children-offset
 	auto const nodepool_size = 2*(gridsize*gridsize*gridsize) / (brick_morton_width);
@@ -242,10 +241,12 @@ auto voxelization_plugin_t::main_setup() -> void
 	//shiny::signal_draw(ctx, sdc::input_assembly_stage()
 	//ctx->signal_cs_upload_shader_resource(shiny::view_type_t::read_only, )
 	
+	//auto voxbuf2 = shiny::adapt_generic_buffer(voxbuf, )
+
 #if 0
 	shiny::signal_compute(ctx,
 		shiny::bound_resources_t{
-			{0, voxelbuf->d3d_srv()},
+			{0, fragbuf_view},
 			{1, nodepool->d3d_srv()}
 		});
 #endif

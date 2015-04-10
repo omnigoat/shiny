@@ -13,7 +13,9 @@ namespace shiny
 {
 	struct buffer_t : resource_t
 	{
-		using shadow_buffer_t = std::vector<char, atma::aligned_allocator_t<char, 4>>;
+		template <typename T>
+		using typed_shadow_buffer_t = std::vector<T, atma::aligned_allocator_t<T, 16>>;
+		using shadow_buffer_t = typed_shadow_buffer_t<char>;
 
 		auto type() const -> buffer_type_t { return type_; }
 		auto usage() const -> buffer_usage_t { return usage_; }
@@ -23,8 +25,8 @@ namespace shiny
 		auto is_shadowing() const -> bool { return !shadow_buffer_.empty(); }
 
 		auto d3d_buffer() const -> platform::d3d_buffer_ptr const& { return d3d_buffer_; }
-		auto d3d_resource() const -> platform::d3d_resource_ptr override;
-		auto d3d_srv() const -> platform::d3d_shader_resource_view_ptr const& override;
+		auto d3d_resource() const -> platform::d3d_resource_ptr override { return d3d_buffer_; }
+		auto d3d_srv() const -> platform::d3d_shader_resource_view_ptr const& override { return d3d_srv_; }
 
 	protected:
 		buffer_t(context_ptr const&, buffer_type_t, resource_usage_mask_t const&, buffer_usage_t, size_t element_size, uint element_count, void const* data, uint data_element_count);

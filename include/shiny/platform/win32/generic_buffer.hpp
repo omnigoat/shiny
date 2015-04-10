@@ -8,11 +8,24 @@ namespace shiny
 {
 	struct generic_buffer_t : shiny::buffer_t
 	{
-	protected:
-		generic_buffer_t(context_ptr const&, resource_usage_mask_t const&, buffer_usage_t usage, element_format_t format, uint elements, void const* data, uint data_elemcount);
 		generic_buffer_t(context_ptr const&, resource_usage_mask_t const&, buffer_usage_t usage, size_t stride, uint elements, void const* data, uint data_elemcount);
-
-	private:
-		friend struct context_t;
 	};
+
+
+	auto make_generic_buffer(
+		context_ptr const&,
+		resource_usage_mask_t,
+		buffer_usage_t,
+		size_t stride, uint elements,
+		void const* data, uint data_elements) -> generic_buffer_ptr;
+
+	template <typename T>
+	inline auto make_generic_buffer(
+		context_ptr const& ctx,
+		resource_usage_mask_t mask,
+		buffer_usage_t usage,
+		generic_buffer_t::typed_shadow_buffer_t<T> const& data) -> generic_buffer_ptr
+	{
+		return make_generic_buffer(ctx, mask, usage, sizeof(T), data.size(), &data[0], data.size());
+	}
 }
