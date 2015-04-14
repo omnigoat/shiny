@@ -83,6 +83,11 @@ namespace shiny
 
 	struct generic_buffer_t;
 	typedef atma::intrusive_ptr<generic_buffer_t> generic_buffer_ptr;
+	typedef atma::intrusive_ptr<generic_buffer_t const> generic_buffer_cptr;
+
+	struct structured_buffer_t;
+	using  structured_buffer_ptr  = atma::intrusive_ptr<structured_buffer_t>;
+	using  structured_buffer_cptr = atma::intrusive_ptr<structured_buffer_t const>;
 
 	struct blender_t;
 	using  blender_ptr  = atma::intrusive_ptr<blender_t>;
@@ -100,7 +105,12 @@ namespace shiny
 		vertex_buffer,
 		index_buffer,
 		constant_buffer,
+
+		// 
 		generic_buffer,
+
+		// 
+		structured_buffer,
 	};
 
 
@@ -146,12 +156,21 @@ namespace shiny
 
 
 
+	enum class pipeline_stage_t
+	{
+		input_assembly,
+		vertex,
+		geometry,
+		fragment,
+	};
 
+	ATMA_BITMASK(pipeline_stage_mask_t, pipeline_stage_t);
 
 	enum class resource_usage_t
 	{
 		render_target,
 		depth_stencil,
+		shader_resource,
 		unordered_access,
 	};
 
@@ -167,8 +186,17 @@ namespace shiny
 
 	enum class view_type_t
 	{
-		read_only,
-		read_write
+		buffer,
+		texture2d,
+		texture3d,
+	};
+
+	enum class resource_type_t
+	{
+		buffer,
+		texture2d,
+		texture3d,
+		texture_cube
 	};
 
 	enum class map_type_t

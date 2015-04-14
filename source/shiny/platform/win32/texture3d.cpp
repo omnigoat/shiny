@@ -56,8 +56,6 @@ texture3d_t::texture3d_t(context_ptr const& ctx, texture_usage_t usage, element_
 		d3dfmt, d3dusage, d3dbind, d3dcpu, 0};
 
 	ATMA_ENSURE_IS(S_OK, device->CreateTexture3D(&desc, nullptr, d3d_texture_.assign()));
-
-	ATMA_ENSURE_IS(S_OK, device->CreateShaderResourceView(d3d_texture_.get(), nullptr, d3d_srv_.assign()));
 }
 
 auto texture3d_t::format() const -> element_format_t
@@ -98,9 +96,4 @@ auto texture3d_t::d3d_texture() -> platform::d3d_texture3d_ptr&
 auto texture3d_t::d3d_resource() const -> platform::d3d_resource_ptr
 {
 	return d3d_texture_;
-}
-
-auto texture3d_t::d3d_srv() const -> platform::d3d_shader_resource_view_ptr const&
-{
-	return d3d_srv_;
 }

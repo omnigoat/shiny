@@ -34,6 +34,8 @@ namespace shiny { namespace platform {
 			DXGI_FORMAT_R32G32_UINT,
 
 			DXGI_FORMAT_R32_TYPELESS,
+			DXGI_FORMAT_R32_SINT,
+			DXGI_FORMAT_R32_UINT,
 		};
 
 		return detail::lookup(mapping, fmt);

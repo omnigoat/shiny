@@ -26,8 +26,7 @@ namespace shiny
 		u32x2,
 
 		// 1-component
-		g32, s32, u32, sn32, un32,
-		g64, s64, u64, sn64, un64,
+		g32, s32, u32,
 	};
 
 	auto element_count(element_format_t) -> int;

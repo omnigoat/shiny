@@ -11,7 +11,6 @@ namespace shiny
 		generic_buffer_t(context_ptr const&, resource_usage_mask_t const&, buffer_usage_t usage, size_t stride, uint elements, void const* data, uint data_elemcount);
 	};
 
-
 	auto make_generic_buffer(
 		context_ptr const&,
 		resource_usage_mask_t,

@@ -10,7 +10,7 @@ using namespace shiny;
 using shiny::buffer_t;
 
 
-buffer_t::buffer_t(context_ptr const& ctx, buffer_type_t type, resource_usage_mask_t const& rs, buffer_usage_t usage, size_t element_size, uint element_count, void const* data, uint data_element_count)
+buffer_t::buffer_t(context_ptr const& ctx, buffer_type_t type, resource_usage_mask_t rs, buffer_usage_t usage, size_t element_size, uint element_count, void const* data, uint data_element_count)
 	: resource_t(ctx, rs)
 	, type_(type), usage_(usage)
 	, element_size_(element_size), element_count_(element_count)
@@ -19,6 +19,7 @@ buffer_t::buffer_t(context_ptr const& ctx, buffer_type_t type, resource_usage_ma
 	ATMA_ASSERT(size());
 	// unordered-access buffers must be placed into persistant storage
 	ATMA_ASSERT(!(rs & resource_usage_t::unordered_access) || (usage == buffer_usage_t::persistant || usage == buffer_usage_t::persistant_shadowed));
+
 
 
 	auto buffer_size = size();
@@ -59,13 +60,11 @@ buffer_t::buffer_t(context_ptr const& ctx, buffer_type_t type, resource_usage_ma
 	}
 
 
-	// determine special flags based off buffer-type
-	auto misc_flags = D3D11_RESOURCE_MISC_FLAG();
-	switch (type_)
+	// structured buffer?
+	auto misc_flags = D3D11_RESOURCE_MISC_FLAG{};
+	if (type_ == buffer_type_t::structured_buffer)
 	{
-		case buffer_type_t::generic_buffer:
-			(uint&)misc_flags |= D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
-			break;
+		(uint&)misc_flags |= D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
 	}
 
 
@@ -94,6 +93,10 @@ buffer_t::buffer_t(context_ptr const& ctx, buffer_type_t type, resource_usage_ma
 		(uint&)binding |= D3D11_BIND_DEPTH_STENCIL;
 	if (usage_flags() & resource_usage_t::unordered_access)
 		(uint&)binding |= D3D11_BIND_UNORDERED_ACCESS;
+
+
+	// hack! test! haxxor!
+	(uint&)binding |= D3D11_BIND_SHADER_RESOURCE;
 
 
 	// create buffer
@@ -143,11 +146,28 @@ buffer_t::buffer_t(context_ptr const& ctx, buffer_type_t type, resource_usage_ma
 			break;
 		}
 	}
+
+
+	//default_read_view_ = make_resource_view(shared_from_this<resource_t>(), gpu_access_t::read, )
 }
 
 
 buffer_t::~buffer_t()
 {
+}
+
+auto buffer_t::bind(bind_default_read_view_t const& v) -> void
+{
+	ATMA_ASSERT(!default_read_view_);
+
+	default_read_view_ = make_resource_view(shared_from_this<resource_t>(), gpu_access_t::read, v.element_format, v.subset);
+}
+
+auto buffer_t::bind(bind_default_read_write_view_t const& v) -> void
+{
+	ATMA_ASSERT(!default_read_write_view_);
+
+	default_read_write_view_ = make_resource_view(shared_from_this<resource_t>(), gpu_access_t::read_write, v.element_format, v.subset);
 }
 
 auto buffer_t::upload_shadow_buffer() -> void

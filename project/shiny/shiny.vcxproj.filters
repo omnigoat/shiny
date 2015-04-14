@@ -83,9 +83,6 @@
     <ClCompile Include="..\..\source\shiny\platform\win32\buffer.cpp">
       <Filter>source\shiny\platform\win32</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\shiny\platform\win32\shader_resource2d.cpp">
-      <Filter>source\shiny\platform\win32</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\vendor\zlib\adler32.c">
       <Filter>vendor\zlib</Filter>
     </ClCompile>
@@ -265,9 +262,6 @@
     <ClInclude Include="..\..\include\shiny\resource.hpp">
       <Filter>include\shiny</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\shiny\platform\win32\shader_resource2d.hpp">
-      <Filter>include\shiny\platform\win32</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\shiny\shader_resource2d.hpp">
       <Filter>include\shiny</Filter>
     </ClInclude>
@@ -347,6 +341,12 @@
       <Filter>include\shiny</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\shiny\platform\win32\resource_view.hpp">
+      <Filter>include\shiny\platform\win32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\shiny\resource_view.hpp">
+      <Filter>include\shiny</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\shiny\platform\win32\structured_buffer.hpp">
       <Filter>include\shiny\platform\win32</Filter>
     </ClInclude>
   </ItemGroup>

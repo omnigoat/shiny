@@ -15,13 +15,13 @@
 #include <shiny/compute_shader.hpp>
 #include <shiny/texture2d.hpp>
 #include <shiny/texture3d.hpp>
-#include <shiny/shader_resource2d.hpp>
 #include <shiny/generic_buffer.hpp>
 #include <shiny/vertex_buffer.hpp>
 #include <shiny/index_buffer.hpp>
 
 #include <fooey/events/resize.hpp>
 #include <fooey/keys.hpp>
+#include <fooey/widgets/window.hpp>
 
 #include <vector>
 #include <atomic>
@@ -354,7 +354,7 @@ auto context_t::immediate_vs_set_constant_buffers(bound_constant_buffers_t const
 auto context_t::immediate_vs_set_resources(bound_resources_t const& rs) -> void
 {
 	for (auto const& x : rs) {
-		d3d_immediate_context_->VSSetShaderResources(x.first, 1, &x.second->d3d_srv().get());
+		//d3d_immediate_context_->VSSetShaderResources(x.first, 1, &x.second->d3d_srv().get());
 	}
 }
 
@@ -373,7 +373,7 @@ auto context_t::immediate_fs_set_constant_buffers(bound_constant_buffers_t const
 auto context_t::immediate_fs_set_resources(bound_resources_t const& rs) -> void
 {
 	for (auto const& x : rs) {
-		d3d_immediate_context_->PSSetShaderResources(x.first, 1, &x.second->d3d_srv().get());
+		//d3d_immediate_context_->PSSetShaderResources(x.first, 1, &x.second->d3d_srv().get());
 	}
 }
 
@@ -425,21 +425,6 @@ auto context_t::signal_cs_set(compute_shader_ptr const& cs) -> void
 	engine_.signal([&, cs] {
 		d3d_immediate_context_->CSSetShader(cs->d3d_cs().get(), nullptr, 0);
 	});
-}
-
-
-auto context_t::signal_cs_upload_shader_resource(view_type_t view_type, shader_resource2d_ptr const& rs) -> void
-{
-	if (view_type == view_type_t::read_only) {
-		engine_.signal([&, rs] {
-			d3d_immediate_context_->CSSetShaderResources(0, 1, &(ID3D11ShaderResourceView*&)rs->d3d_view().get());
-		});
-	}
-	else {
-		engine_.signal([&, rs] {
-			d3d_immediate_context_->CSSetUnorderedAccessViews(0, 1, &(ID3D11UnorderedAccessView*&)rs->d3d_view().get(), nullptr);
-		});
-	}
 }
 
 auto context_t::signal_cs_dispatch(uint x, uint y, uint z) -> void

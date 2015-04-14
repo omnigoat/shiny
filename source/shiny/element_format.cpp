@@ -27,8 +27,7 @@ auto shiny::element_count(shiny::element_format_t f) -> int
 			return 2;
 
 		// 1-component
-		case ef::g32: case ef::s32: case ef::u32: case ef::sn32: case ef::un32:
-		case ef::g64: case ef::s64: case ef::u64: case ef::sn64: case ef::un64:
+		case ef::g32: case ef::s32: case ef::u32:
 			return 1;
 	}
 
@@ -50,8 +49,7 @@ auto shiny::element_size(element_format_t fmt) -> size_t
 		8,
 
 		// 1-component
-		4,4,4,4,4,
-		8,8,8,8,8,
+		4,4,4,
 	};
 
 	ATMA_ASSERT((int)fmt < std::extent<decltype(mapping)>::value);

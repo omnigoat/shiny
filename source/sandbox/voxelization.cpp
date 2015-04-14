@@ -4,6 +4,7 @@
 #include <shiny/scene.hpp>
 #include <shiny/draw.hpp>
 #include <shiny/generic_buffer.hpp>
+#include <shiny/platform/win32/resource_view.hpp>
 
 #include <shelf/file.hpp>
 
@@ -222,14 +223,42 @@ auto voxelization_plugin_t::main_setup() -> void
 
 
 #if 1
-	auto voxelbuf = shiny::make_generic_buffer(ctx,
-		shiny::resource_usage_t::unordered_access,
+	auto voxelbuf = shiny::make_buffer(ctx,
+		shiny::buffer_type_t::structured_buffer,
+		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
 		shiny::buffer_usage_t::persistant,
-		fragments);
+		sizeof(uint32), 4, nullptr, 4,
+			shiny::bind_default_read_view_t{},
+			shiny::bind_default_read_write_view_t{});
 
-	//auto vv = voxelbuf->make_view(gpu_access_t::read, )
-	//auto vv = shiny::make_resource_view(voxelbuf, gpu_access_t::read, element_format_t::u64);
+#if 0
+	auto vv = shiny::make_resource_view(voxelbuf,
+		shiny::gpu_access_t::read,
+		shiny::element_format_t::unknown,
+		shiny::resource_subset_t::whole);
 
+	auto vv2 = shiny::make_resource_view(voxelbuf,
+		shiny::gpu_access_t::read_write,
+		shiny::element_format_t::unknown,
+		shiny::resource_subset_t::whole);
+
+	auto tt = shiny::make_texture2d(ctx,
+		shiny::resource_usage_mask_t::none,
+		shiny::element_format_t::u8x4,
+		64, 64,
+		shiny::generate_default_view_t::whole);
+
+	
+	auto tx3 = shrc::make_texture2d(ctx,
+		shiny::resource_usage_mask_t::none,
+		shiny::element_format_t::u8x4,
+		64, 64,
+		shiny::make_uniform_view_t{shiny::gpu_access_t::read_write},
+		shiny::make_uniform_view_t{shiny::gpu_access_t::read})
+
+	tx3->resource_view(2)
+
+	auto ttv = shiny::extract_resource_view(tt);
 	//auto voxelbufview = ctx->make_resource_view(voxelbuf, shiny::element_format_t::u64, )
 	// one node is a 32-bit value for the brick, 32-bit value for the children-offset
 	auto const nodepool_size = 2*(gridsize*gridsize*gridsize) / (brick_morton_width);
@@ -242,6 +271,7 @@ auto voxelization_plugin_t::main_setup() -> void
 	//ctx->signal_cs_upload_shader_resource(shiny::view_type_t::read_only, )
 	
 	//auto voxbuf2 = shiny::adapt_generic_buffer(voxbuf, )
+#endif
 
 #if 0
 	shiny::signal_compute(ctx,

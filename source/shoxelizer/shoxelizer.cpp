@@ -10,7 +10,6 @@
 #include <shiny/scene.hpp>
 #include <shiny/texture2d.hpp>
 #include <shiny/compute_shader.hpp>
-#include <shiny/shader_resource2d.hpp>
 #include <shiny/texture3d.hpp>
 #include <shiny/blend_state.hpp>
 #include <shiny/platform/win32/generic_buffer.hpp>
