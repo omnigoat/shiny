@@ -9,7 +9,8 @@ using shiny::texture2d_t;
 
 
 texture2d_t::texture2d_t(context_ptr const& ctx, resource_usage_mask_t usage_flags, element_format_t format, uint width, uint height, uint mips)
-: resource_t(ctx, usage_flags), format_(format), width_(width), height_(height), mips_(mips)
+	: resource_t(ctx, resource_type_t::texture2d, usage_flags, shiny::element_size(format), width * height)
+	, format_(format), width_(width), height_(height), mips_(mips)
 {
 	auto const& device = context()->d3d_device();
 
@@ -18,22 +19,20 @@ texture2d_t::texture2d_t(context_ptr const& ctx, resource_usage_mask_t usage_fla
 	auto d3dcpu = D3D11_CPU_ACCESS_FLAG();
 	auto d3dfmt = platform::dxgi_format_of(format);
 
-	auto const miplevels =
-		(usage_flags & resource_usage_t::render_target) ? 1 :
-		(usage_flags & resource_usage_t::depth_stencil) ? 1 :
-		mips_;
+	if (usage_flags & resource_usage_t::render_target || usage_flags & resource_usage_t::depth_stencil)
+		ATMA_ASSERT_MSG(mips_ == 1, "render-targets|depth-stencil-targets can not have mipmaps");
 
 	if (usage_flags & resource_usage_t::render_target)
 		(uint&)d3dbind |= D3D11_BIND_RENDER_TARGET;
 	if (usage_flags & resource_usage_t::depth_stencil)
 		(uint&)d3dbind |= D3D11_BIND_DEPTH_STENCIL;
-	//if (usage_flags & resource_usage_t::shader_resource)
-	//	(uint&)d3dbind |= D3D11_BIND_SHADER_RESOURCE;
+	if (usage_flags & resource_usage_t::shader_resource)
+		(uint&)d3dbind |= D3D11_BIND_SHADER_RESOURCE;
 	if (usage_flags & resource_usage_t::unordered_access)
 		(uint&)d3dbind |= D3D11_BIND_UNORDERED_ACCESS;
 
 	D3D11_TEXTURE2D_DESC texdesc{
-		width_, height_, miplevels, 1,
+		width_, height_, mips_, 1,
 		d3dfmt, {1, 0}, d3dusage, d3dbind, d3dcpu, 0};
 
 	ATMA_ENSURE_IS(S_OK, device->CreateTexture2D(&texdesc, nullptr, d3d_texture_.assign()));

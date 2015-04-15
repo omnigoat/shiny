@@ -47,15 +47,12 @@ namespace shiny
 		using typed_shadow_buffer_t = std::vector<T, atma::aligned_allocator_t<T, 16>>;
 		using shadow_buffer_t = typed_shadow_buffer_t<char>;
 
-		buffer_t(context_ptr const&, buffer_type_t, resource_usage_mask_t, buffer_usage_t, size_t element_size, uint element_count, void const* data, uint data_element_count);
+		buffer_t(context_ptr const&, resource_type_t, resource_usage_mask_t, buffer_usage_t, size_t element_stride, size_t element_count, void const* data, size_t data_element_count);
 		virtual ~buffer_t();
 
-		auto type() const -> buffer_type_t { return type_; }
-		auto usage() const -> buffer_usage_t { return usage_; }
-		auto stride() const -> size_t { return element_size_; }
-		auto size() const -> size_t { return element_size_ * element_count_; }
+		auto buffer_usage() const -> buffer_usage_t { return buffer_usage_; }
 		auto is_shadowing() const -> bool { return !shadow_buffer_.empty(); }
-		auto element_count() const -> uint override { return element_count_; }
+		
 		auto default_read_view() const -> resource_view_ptr const& { return default_read_view_; }
 		auto default_read_write_view() const -> resource_view_ptr const& { return default_read_write_view_; }
 
@@ -69,10 +66,7 @@ namespace shiny
 		auto upload_shadow_buffer() -> void;
 
 	protected:
-		buffer_type_t type_;
-		buffer_usage_t usage_;
-		size_t element_size_;
-		uint element_count_;
+		buffer_usage_t buffer_usage_;
 
 		shadow_buffer_t shadow_buffer_;
 
@@ -85,13 +79,13 @@ namespace shiny
 
 	template <typename... Args>
 	inline auto make_buffer(context_ptr const& ctx,
-		buffer_type_t type,
+		resource_type_t type,
 		resource_usage_mask_t rum,
 		buffer_usage_t bu,
-		size_t element_size, uint element_count, void const* data, uint data_element_count,
+		size_t element_stride, size_t element_count, void const* data, size_t data_element_count,
 		Args&&... req_views) -> buffer_ptr
 	{
-		auto b = atma::make_intrusive_ptr<buffer_t>(ctx, type, rum, bu, element_size, element_count, data, data_element_count);
+		auto b = atma::make_intrusive_ptr<buffer_t>(ctx, type, rum, bu, element_stride, element_count, data, data_element_count);
 		int _[] = { 0, (b->bind(req_views), 0)... };
 		return b;
 	}

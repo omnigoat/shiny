@@ -17,15 +17,15 @@ resource_subset_t const resource_subset_t::whole = resource_subset_t{};
 resource_view_t::resource_view_t(resource_cptr const& rs, view_type_t view_type, gpu_access_t gpua, element_format_t ef, resource_subset_t subset)
 	: resource_(rs), view_type_(view_type), gpu_access_(gpua), format_(ef), subset_(subset)
 {
-	if (rs->usage_flags() & resource_usage_t::structured)
+	if (rs->resource_type() == resource_type_t::structured_buffer)
 	{
 		ATMA_ASSERT_MSG(ef == element_format_t::unknown, "structured buffers don't specify typed-views. use element_format_t::unknown");
 	}
 
 	auto fmt = platform::dxgi_format_of(format_);
-	
-	//if (subset_.count == 0)
-		//subset_.count = resource_->
+
+	if (subset_.count == 0)
+		subset_.count = rs->elements_count();
 
 	switch (gpu_access_)
 	{
@@ -34,7 +34,7 @@ resource_view_t::resource_view_t(resource_cptr const& rs, view_type_t view_type,
 			auto desc = D3D11_SHADER_RESOURCE_VIEW_DESC{
 				fmt,
 				D3D11_SRV_DIMENSION_BUFFER,
-				D3D11_BUFFER_SRV{subset_.offset, 4}};
+				D3D11_BUFFER_SRV{(UINT)subset_.offset, (UINT)subset_.count}};
 
 			ATMA_ENSURE_IS(S_OK, context()->d3d_device()->CreateShaderResourceView(resource_->d3d_resource().get(), &desc, d3d_srv_.assign()));
 			break;
@@ -45,7 +45,7 @@ resource_view_t::resource_view_t(resource_cptr const& rs, view_type_t view_type,
 			auto desc = D3D11_UNORDERED_ACCESS_VIEW_DESC{
 				fmt,
 				D3D11_UAV_DIMENSION_BUFFER,
-				D3D11_BUFFER_UAV{subset_.offset, subset_.count}};
+				D3D11_BUFFER_UAV{(UINT)subset_.offset, (UINT)subset_.count}};
 
 			ATMA_ENSURE_IS(S_OK, context()->d3d_device()->CreateUnorderedAccessView(resource_->d3d_resource().get(), &desc, d3d_uav_.assign()));
 			break;

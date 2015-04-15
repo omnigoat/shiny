@@ -8,6 +8,6 @@ using shiny::constant_buffer_t;
 
 
 constant_buffer_t::constant_buffer_t(context_ptr const& context, size_t data_size, void const* data)
-	: buffer_t(context, false, resource_usage_mask_t::none, buffer_usage_t::constant, data_size, 1, data, 1)
+	: buffer_t(context, resource_type_t::constant_buffer, resource_usage_mask_t::none, buffer_usage_t::constant, data_size, 1, data, 1)
 {
 }

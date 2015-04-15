@@ -24,7 +24,8 @@ auto shiny::create_texture3d(context_ptr const& context, texture_usage_t usage, 
 
 
 texture3d_t::texture3d_t(context_ptr const& ctx, texture_usage_t usage, element_format_t format, uint width, uint height, uint depth, uint mips)
-: resource_t(ctx, usage), format_(format), mips_(mips), width_(width), height_(height), depth_(depth)
+	: resource_t(ctx, resource_type_t::texturd3d, resource_usage_mask_t::none, element_size(format), width * height * depth)
+	, format_(format), mips_(mips), width_(width), height_(height), depth_(depth)
 {
 	auto const& device = context()->d3d_device();
 

@@ -22,7 +22,6 @@ namespace shiny
 		auto width() const -> uint;
 		auto height() const -> uint;
 		auto mips() const -> uint;
-		auto element_count() const -> uint override { return width_ * height_; }
 
 		auto d3d_texture() const -> platform::d3d_texture2d_ptr const&;
 		auto d3d_texture() -> platform::d3d_texture2d_ptr&;

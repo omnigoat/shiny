@@ -13,21 +13,23 @@ namespace shiny
 {
 	struct resource_t : atma::ref_counted
 	{
-		resource_t(context_ptr const& ctx, resource_usage_mask_t usage_flags);
-		resource_t(context_ptr const& ctx, texture_usage_t usage);
-
+		resource_t(context_ptr const&, resource_type_t, resource_usage_mask_t, size_t element_stride, size_t element_count);
 		virtual ~resource_t();
 
 		auto context() const -> context_ptr const& { return context_; }
-		auto usage_flags() const -> resource_usage_mask_t { return usage_flags_; }
-		auto resource_type() const -> resource_type_t { return type_; }
-		virtual auto element_count() const -> uint = 0;
+		auto resource_type() const -> resource_type_t { return resource_type_; }
+		auto resource_usage() const -> resource_usage_mask_t { return resource_usage_; }
+		auto elements_stride() const -> size_t { return element_stride_; }
+		auto elements_count() const -> size_t { return element_count_; }
+		auto resource_size() const -> size_t { return element_stride_ * element_count_; }
 
 		virtual auto d3d_resource() const -> platform::d3d_resource_ptr = 0;
 
 	private:
 		context_ptr context_;
-		resource_usage_mask_t usage_flags_;
-		resource_type_t type_;
+		resource_type_t resource_type_;
+		resource_usage_mask_t resource_usage_;
+		size_t element_stride_;
+		size_t element_count_;
 	};
 }

@@ -100,17 +100,16 @@ namespace shiny
 	};
 
 
-	enum class buffer_type_t
+	enum class resource_type_t
 	{
 		vertex_buffer,
 		index_buffer,
 		constant_buffer,
-
-		// 
 		generic_buffer,
-
-		// 
 		structured_buffer,
+
+		texture2d,
+		texturd3d,
 	};
 
 
@@ -189,14 +188,6 @@ namespace shiny
 		buffer,
 		texture2d,
 		texture3d,
-	};
-
-	enum class resource_type_t
-	{
-		buffer,
-		texture2d,
-		texture3d,
-		texture_cube
 	};
 
 	enum class map_type_t

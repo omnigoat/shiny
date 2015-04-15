@@ -13,13 +13,13 @@ namespace shiny
 	{
 		resource_subset_t() = default;
 
-		resource_subset_t(uint offset, uint count)
+		resource_subset_t(size_t offset, size_t count)
 			: offset(offset), count(count)
 		{
 		}
 
-		uint offset = 0;
-		uint count  = 0;
+		size_t offset = 0;
+		size_t count  = 0;
 
 		static const resource_subset_t whole;
 	};

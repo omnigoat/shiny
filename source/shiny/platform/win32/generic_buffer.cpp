@@ -7,7 +7,7 @@ using shiny::generic_buffer_t;
 
 
 generic_buffer_t::generic_buffer_t(context_ptr const& ctx, resource_usage_mask_t const& rs, buffer_usage_t usage, size_t stride, uint elements, void const* data, uint data_elemcount)
-	: buffer_t(ctx, false, rs, usage, stride, elements, data, data_elemcount)
+	: buffer_t(ctx, resource_type_t::generic_buffer, rs, usage, stride, elements, data, data_elemcount)
 {
 }
 

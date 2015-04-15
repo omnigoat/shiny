@@ -224,7 +224,7 @@ auto voxelization_plugin_t::main_setup() -> void
 
 #if 1
 	auto voxelbuf = shiny::make_buffer(ctx,
-		shiny::buffer_type_t::structured_buffer,
+		shiny::resource_type_t::structured_buffer,
 		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
 		shiny::buffer_usage_t::persistant,
 		sizeof(uint32), 4, nullptr, 4,

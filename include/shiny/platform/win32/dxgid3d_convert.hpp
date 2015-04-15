@@ -41,14 +41,17 @@ namespace shiny { namespace platform {
 		return detail::lookup(mapping, fmt);
 	}
 
-	inline auto d3dbind_of(buffer_type_t bu) -> D3D11_BIND_FLAG
+	inline auto d3dbind_of(resource_type_t bu) -> D3D11_BIND_FLAG
 	{
 		static D3D11_BIND_FLAG const mapping[] =
 		{
 			D3D11_BIND_VERTEX_BUFFER,
 			D3D11_BIND_INDEX_BUFFER,
 			D3D11_BIND_CONSTANT_BUFFER,
-			D3D11_BIND_SHADER_RESOURCE
+			D3D11_BIND_FLAG{},
+			D3D11_BIND_FLAG{},
+			D3D11_BIND_FLAG{},
+			D3D11_BIND_FLAG{},
 		};
 
 		return detail::lookup(mapping, bu);
