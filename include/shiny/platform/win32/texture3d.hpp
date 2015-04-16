@@ -14,7 +14,7 @@ namespace shiny
 {
 	struct texture3d_t : resource_t
 	{
-		friend auto create_texture3d(context_ptr const&, texture_usage_t, element_format_t, uint width, uint height, uint depth, uint mips = 0) -> texture3d_ptr;
+		friend auto create_texture3d(context_ptr const&, resource_usage_mask_t, element_format_t, size_t, size_t, size_t, uint) -> texture3d_ptr;
 
 		auto format() const -> element_format_t;
 		auto mips() const -> uint;
@@ -38,5 +38,9 @@ namespace shiny
 	};
 
 
-	auto create_texture3d(context_ptr const& context, texture_usage_t usage, element_format_t format, uint width, uint mips = 0) -> texture3d_ptr;
+	auto make_texture3d(
+		context_ptr const&,
+		resource_usage_mask_t,
+		element_format_t,
+		size_t width, size_t height, size_t depth, uint mips) -> texture3d_ptr;
 }

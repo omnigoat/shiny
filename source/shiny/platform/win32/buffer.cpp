@@ -146,16 +146,19 @@ buffer_t::buffer_t(context_ptr const& ctx, resource_type_t type, resource_usage_
 
 buffer_t::~buffer_t()
 {
+	auto buf = typed_shadow_buffer_t<int>{4};
+
+	auto t = detail::buffer_allocation_t{4, 4, buf};
 }
 
-auto buffer_t::bind(bind_default_read_view_t const& v) -> void
+auto buffer_t::bind(gen_default_read_view_t const& v) -> void
 {
 	ATMA_ASSERT(!default_read_view_);
 
 	default_read_view_ = make_resource_view(shared_from_this<resource_t>(), gpu_access_t::read, v.element_format, v.subset);
 }
 
-auto buffer_t::bind(bind_default_read_write_view_t const& v) -> void
+auto buffer_t::bind(gen_default_read_write_view_t const& v) -> void
 {
 	ATMA_ASSERT(!default_read_write_view_);
 

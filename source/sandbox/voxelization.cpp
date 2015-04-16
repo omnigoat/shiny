@@ -109,6 +109,12 @@ struct level_t
 	node_t storage;
 };
 
+template <typename T>
+struct hooray
+{
+	hooray(T t)
+	{}
+};
 
 auto voxelization_plugin_t::main_setup() -> void
 {
@@ -117,7 +123,6 @@ auto voxelization_plugin_t::main_setup() -> void
 
 	// try for 128^3 grid
 	auto const gridsize = 128;
-
 	
 #if 1
 	using fragments_t = shiny::generic_buffer_t::typed_shadow_buffer_t<voxel_t>;
@@ -222,55 +227,31 @@ auto voxelization_plugin_t::main_setup() -> void
 	auto const empty = std::numeric_limits<uint64>::max();
 
 
-#if 1
 	auto voxelbuf = shiny::make_buffer(ctx,
 		shiny::resource_type_t::structured_buffer,
 		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
 		shiny::buffer_usage_t::persistant,
-		sizeof(uint32), 4, nullptr, 4,
-			shiny::bind_default_read_view_t{},
-			shiny::bind_default_read_write_view_t{});
+		//shiny::buffer_allocation_from_memory_t{fragments},
+		//shiny::buffer_allocation_t{sizeof(uint32), 234}.shadow_buffer_mv()
+			shiny::gen_default_read_view_t{},
+			shiny::gen_default_read_write_view_t{});
+
+	auto brickpool = shiny::make_texture3d(ctx,
+		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
+		shiny::buffer_usage_t::persistant,
+		shiny::element_format_t::u8x4,
+		512, 512, 512, 1
+			shiny::suppress_default_read_view_t{});
+
 
 #if 0
-	auto vv = shiny::make_resource_view(voxelbuf,
-		shiny::gpu_access_t::read,
-		shiny::element_format_t::unknown,
-		shiny::resource_subset_t::whole);
-
-	auto vv2 = shiny::make_resource_view(voxelbuf,
-		shiny::gpu_access_t::read_write,
-		shiny::element_format_t::unknown,
-		shiny::resource_subset_t::whole);
-
-	auto tt = shiny::make_texture2d(ctx,
-		shiny::resource_usage_mask_t::none,
-		shiny::element_format_t::u8x4,
-		64, 64,
-		shiny::generate_default_view_t::whole);
-
-	
-	auto tx3 = shrc::make_texture2d(ctx,
-		shiny::resource_usage_mask_t::none,
-		shiny::element_format_t::u8x4,
-		64, 64,
-		shiny::make_uniform_view_t{shiny::gpu_access_t::read_write},
-		shiny::make_uniform_view_t{shiny::gpu_access_t::read})
-
-	tx3->resource_view(2)
-
-	auto ttv = shiny::extract_resource_view(tt);
-	//auto voxelbufview = ctx->make_resource_view(voxelbuf, shiny::element_format_t::u64, )
-	// one node is a 32-bit value for the brick, 32-bit value for the children-offset
-	auto const nodepool_size = 2*(gridsize*gridsize*gridsize) / (brick_morton_width);
-
-	auto nodepool = ctx->make_generic_buffer(shiny::resource_usage_t::unordered_access, shiny::buffer_usage_t::persistant, sizeof(uint32)*2, nodepool_size, nullptr, 0);
-
-	//atma::thread::engine_t::queue_t::batch_t batch;
-	namespace sdc = shiny::draw_commands;
-	//shiny::signal_draw(ctx, sdc::input_assembly_stage()
-	//ctx->signal_cs_upload_shader_resource(shiny::view_type_t::read_only, )
-	
-	//auto voxbuf2 = shiny::adapt_generic_buffer(voxbuf, )
+	auto nodepool = shiny::make_buffer(ctx,
+		shiny::resource_type_t::structured_buffer,
+		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
+		shiny::buffer_usage_t::persistant,
+		//shiny::resource_allocate_memory_t{sizeof(uint32), 4},
+		shiny::resource_pull_data_t{fragments},
+			shiny::bind_default_read_write_view_t{});
 #endif
 
 #if 0
@@ -279,8 +260,6 @@ auto voxelization_plugin_t::main_setup() -> void
 			{0, fragbuf_view},
 			{1, nodepool->d3d_srv()}
 		});
-#endif
-
 #endif
 
 	

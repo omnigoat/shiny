@@ -13,30 +13,93 @@ namespace shiny
 {
 	namespace detail
 	{
-		struct bind_view_t
-		{
-			bind_view_t(element_format_t ef, resource_subset_t const& rs)
-				: element_format(ef), subset(rs)
-			{}
+		template <typename T>
+		using typed_shadow_buffer_t = std::vector<T, atma::aligned_allocator_t<T, 16>>;
 
+		using shadow_buffer_t = typed_shadow_buffer_t<char>;
+
+
+
+
+		struct gen_view_t
+		{
+			gen_view_t(bool, gpu_access_t, element_format_t, resource_subset_t)
+				{} // SERIOUSLY, do this
+
+			bool generate;
+			gpu_access_t gpu_access;
 			element_format_t element_format;
 			resource_subset_t subset;
 		};
+
+
+		template <typename T>
+		struct buf_vtable_t
+		{
+			static auto data_ptr(void const* buf) -> void const*
+			{
+				auto buf2 = reinterpret_cast<typed_shadow_buffer_t<T>&>(*buf);
+				return &buf2[0];
+			}
+
+			static auto copy(shadow_buffer_t& dest, void const* buf) -> void
+			{
+				auto const& buf2 = *reinterpret_cast<typed_shadow_buffer_t<T> const*>(buf);
+				dest = buf2;
+			}
+
+			static auto move(shadow_buffer_t& dest, void const* buf) -> void
+			{
+				auto buf2 = reinterpret_cast<typed_shadow_buffer_t<T>&>(*buf);
+				dest = std::move(buf2);
+			}
+		};
+
+		struct buffer_allocation_t
+		{
+			template <typename T>
+			buffer_allocation_t(size_t stride, size_t count, T&& t)
+				: stride(stride), count(count), buf_(&t)
+			{
+				init_vtable(std::forward<T>(t));
+			}
+
+			size_t stride;
+			size_t count;
+
+		private:
+			template <typename T>
+			auto init_vtable(typed_shadow_buffer_t<T>& lvalue) -> void
+			{
+				xfer_ = &buf_vtable_t<T>::copy;
+			}
+
+		private:
+			auto (*xfer_)(shadow_buffer_t&, void const*) -> void;
+			//auto (*cp_)(shadow_buffer_t&, void const*) -> void;
+			auto (*dp_)(void const*) -> void const*;
+
+			void* buf_;
+		};
+
+		
 	}
 
-	struct bind_default_read_view_t : detail::bind_view_t
+	struct gen_default_read_view_t : detail::gen_view_t
 	{
-		bind_default_read_view_t(element_format_t ef = element_format_t::unknown, resource_subset_t const& rs = resource_subset_t::whole)
-			: detail::bind_view_t{ef, rs}
+		gen_default_read_view_t(element_format_t ef = element_format_t::unknown, resource_subset_t rs = resource_subset_t::whole)
+			: detail::gen_view_t{true, gpu_access_t::read, ef, rs}
 		{}
 	};
 
-	struct bind_default_read_write_view_t : detail::bind_view_t
+	struct gen_default_read_write_view_t : detail::gen_view_t
 	{
-		bind_default_read_write_view_t(element_format_t ef = element_format_t::unknown, resource_subset_t const& rs = resource_subset_t::whole)
-			: detail::bind_view_t{ef, rs}
+		gen_default_read_write_view_t(element_format_t ef = element_format_t::unknown, resource_subset_t const& rs = resource_subset_t::whole)
+			: detail::gen_view_t{true, gpu_access_t::read_write, ef, rs}
 		{}
 	};
+
+
 
 
 
@@ -56,8 +119,8 @@ namespace shiny
 		auto default_read_view() const -> resource_view_ptr const& { return default_read_view_; }
 		auto default_read_write_view() const -> resource_view_ptr const& { return default_read_write_view_; }
 
-		auto bind(bind_default_read_view_t const&) -> void;
-		auto bind(bind_default_read_write_view_t const&) -> void;
+		auto bind(gen_default_read_view_t const&) -> void;
+		auto bind(gen_default_read_write_view_t const&) -> void;
 
 		auto d3d_buffer() const -> platform::d3d_buffer_ptr const& { return d3d_buffer_; }
 		auto d3d_resource() const -> platform::d3d_resource_ptr override { return d3d_buffer_; }
