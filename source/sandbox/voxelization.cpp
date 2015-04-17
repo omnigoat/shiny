@@ -18,7 +18,7 @@
 #include <atma/math/intersection.hpp>
 
 #include <atma/filesystem/file.hpp>
-
+#include <atma/vector.hpp>
 
 using namespace sandbox;
 using sandbox::voxelization_plugin_t;
@@ -109,13 +109,6 @@ struct level_t
 	node_t storage;
 };
 
-template <typename T>
-struct hooray
-{
-	hooray(T t)
-	{}
-};
-
 auto voxelization_plugin_t::main_setup() -> void
 {
 	auto sf = shelf::file_t{"../../data/dragon.obj"};
@@ -124,6 +117,12 @@ auto voxelization_plugin_t::main_setup() -> void
 	// try for 128^3 grid
 	auto const gridsize = 128;
 	
+
+	auto thing = atma::vector<int>{1, 2, 3, 4};
+	auto thing2 = atma::vector<int>{std::move(thing)};
+	auto v1 = thing[1];
+	thing2.resize(16);
+
 #if 1
 	using fragments_t = shiny::generic_buffer_t::typed_shadow_buffer_t<voxel_t>;
 	auto fragments = fragments_t{};
@@ -231,18 +230,19 @@ auto voxelization_plugin_t::main_setup() -> void
 		shiny::resource_type_t::structured_buffer,
 		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
 		shiny::buffer_usage_t::persistant,
-		//shiny::buffer_allocation_from_memory_t{fragments},
-		//shiny::buffer_allocation_t{sizeof(uint32), 234}.shadow_buffer_mv()
+		//shiny::buffer_allocation_t::from_memory(fragments),
+		sizeof(uint32), 4, nullptr, 4,
 			shiny::gen_default_read_view_t{},
 			shiny::gen_default_read_write_view_t{});
 
+#if 0
 	auto brickpool = shiny::make_texture3d(ctx,
 		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
 		shiny::buffer_usage_t::persistant,
 		shiny::element_format_t::u8x4,
 		512, 512, 512, 1
 			shiny::suppress_default_read_view_t{});
-
+#endif
 
 #if 0
 	auto nodepool = shiny::make_buffer(ctx,

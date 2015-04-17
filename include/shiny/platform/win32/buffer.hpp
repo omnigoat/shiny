@@ -31,58 +31,6 @@ namespace shiny
 			element_format_t element_format;
 			resource_subset_t subset;
 		};
-
-
-		template <typename T>
-		struct buf_vtable_t
-		{
-			static auto data_ptr(void const* buf) -> void const*
-			{
-				auto buf2 = reinterpret_cast<typed_shadow_buffer_t<T>&>(*buf);
-				return &buf2[0];
-			}
-
-			static auto copy(shadow_buffer_t& dest, void const* buf) -> void
-			{
-				auto const& buf2 = *reinterpret_cast<typed_shadow_buffer_t<T> const*>(buf);
-				dest = buf2;
-			}
-
-			static auto move(shadow_buffer_t& dest, void const* buf) -> void
-			{
-				auto buf2 = reinterpret_cast<typed_shadow_buffer_t<T>&>(*buf);
-				dest = std::move(buf2);
-			}
-		};
-
-		struct buffer_allocation_t
-		{
-			template <typename T>
-			buffer_allocation_t(size_t stride, size_t count, T&& t)
-				: stride(stride), count(count), buf_(&t)
-			{
-				init_vtable(std::forward<T>(t));
-			}
-
-			size_t stride;
-			size_t count;
-
-		private:
-			template <typename T>
-			auto init_vtable(typed_shadow_buffer_t<T>& lvalue) -> void
-			{
-				xfer_ = &buf_vtable_t<T>::copy;
-			}
-
-		private:
-			auto (*xfer_)(shadow_buffer_t&, void const*) -> void;
-			//auto (*cp_)(shadow_buffer_t&, void const*) -> void;
-			auto (*dp_)(void const*) -> void const*;
-
-			void* buf_;
-		};
-
-		
 	}
 
 	struct gen_default_read_view_t : detail::gen_view_t
@@ -100,7 +48,25 @@ namespace shiny
 	};
 
 
+	struct buffer_allocation_t
+	{
+		template <typename T>
+		buffer_allocation_t(size_t stride, size_t count, void const* data, size_t data_count)
+			: stride(stride), count(count), data(data), data_count(data_count)
+		{
+		}
 
+		size_t stride;
+		size_t count;
+		void const* data;
+		size_t data_count;
+
+		template <typename T>
+		static auto from_memory(detail::typed_shadow_buffer_t<T> const& memory) -> buffer_allocation_t
+		{
+			return buffer_allocation_t{sizeof(T), memory.size(), memory.data(), memory.size()};
+		}
+	};
 
 
 
