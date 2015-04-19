@@ -10,8 +10,8 @@ using namespace shiny;
 using shiny::buffer_t;
 
 
-buffer_t::buffer_t(context_ptr const& ctx, resource_type_t type, resource_usage_mask_t rs, buffer_usage_t usage, size_t element_stride, size_t element_count, void const* data, size_t data_element_count)
-	: resource_t(ctx, type, rs, element_stride, element_count)
+buffer_t::buffer_t(context_ptr const& ctx, resource_type_t type, resource_usage_mask_t rs, buffer_usage_t usage, buffer_dimensions_t const& bdm, buffer_data_t const& bdt)
+	: resource_t(ctx, type, rs, bdm.stride, bdm.count)
 	, buffer_usage_(usage)
 {
 	// no zero-size buffers
@@ -22,9 +22,10 @@ buffer_t::buffer_t(context_ptr const& ctx, resource_type_t type, resource_usage_
 
 
 	// fixup default element-count, figure out size of data
+	auto data_element_count = bdt.count;
 	if (data_element_count == 0)
-		data_element_count = element_count;
-	auto data_size = element_stride * data_element_count;
+		data_element_count = bdm.count;
+	auto data_size = bdm.stride * data_element_count;
 
 
 	// determine buffer-usage and cpu-access
@@ -77,8 +78,8 @@ buffer_t::buffer_t(context_ptr const& ctx, resource_type_t type, resource_usage_
 	if (shadowed)
 	{
 		shadow_buffer_.resize((uint)resource_size());
-		if (data)
-			memcpy(&shadow_buffer_[0], data, data_size);
+		if (bdt.data)
+			memcpy(&shadow_buffer_[0], bdt.data, data_size);
 	}
 
 
@@ -95,16 +96,16 @@ buffer_t::buffer_t(context_ptr const& ctx, resource_type_t type, resource_usage_
 
 
 	// create buffer
-	auto buffer_desc = D3D11_BUFFER_DESC{(UINT)resource_size(), d3d_bu, binding, d3d_ca, misc_flags, (UINT)element_stride};
+	auto buffer_desc = D3D11_BUFFER_DESC{(UINT)resource_size(), d3d_bu, binding, d3d_ca, misc_flags, (UINT)bdm.stride};
 	switch (buffer_usage_)
 	{
 		case buffer_usage_t::immutable:
 		{
-			ATMA_ASSERT_MSG(data, "immutable buffers require data upon initialisation");
+			ATMA_ASSERT_MSG(bdt.data, "immutable buffers require data upon initialisation");
 			ATMA_ASSERT_MSG(resource_size() == data_size, "immutable buffer: allocation size != data size");
 			ATMA_ASSERT_MSG(d3d_ca == 0, "immutable buffer with cpu access? silly.");
 
-			auto d3d_data = D3D11_SUBRESOURCE_DATA{data, (UINT)data_size, 1};
+			auto d3d_data = D3D11_SUBRESOURCE_DATA{bdt.data, (UINT)data_size, 1};
 			ATMA_ENSURE_IS(S_OK, context()->d3d_device()->CreateBuffer(&buffer_desc, &d3d_data, d3d_buffer_.assign()));
 			break;
 		}
@@ -114,8 +115,8 @@ buffer_t::buffer_t(context_ptr const& ctx, resource_type_t type, resource_usage_
 		case buffer_usage_t::transient:
 		case buffer_usage_t::constant:
 		{
-			if (data) {
-				auto d3d_data = D3D11_SUBRESOURCE_DATA{data, (UINT)data_size, 1};
+			if (bdt.data) {
+				auto d3d_data = D3D11_SUBRESOURCE_DATA{bdt.data, (UINT)data_size, 1};
 				ATMA_ENSURE_IS(S_OK, context()->d3d_device()->CreateBuffer(&buffer_desc, &d3d_data, d3d_buffer_.assign()));
 			}
 			else {
@@ -130,7 +131,7 @@ buffer_t::buffer_t(context_ptr const& ctx, resource_type_t type, resource_usage_
 		case buffer_usage_t::transient_shadowed:
 		case buffer_usage_t::constant_shadowed:
 		{
-			if (data) {
+			if (bdt.data) {
 				auto d3d_data = D3D11_SUBRESOURCE_DATA{&shadow_buffer_[0], (UINT)data_size, 1};
 				ATMA_ENSURE_IS(S_OK, context()->d3d_device()->CreateBuffer(&buffer_desc, &d3d_data, d3d_buffer_.assign()));
 			}
@@ -146,9 +147,6 @@ buffer_t::buffer_t(context_ptr const& ctx, resource_type_t type, resource_usage_
 
 buffer_t::~buffer_t()
 {
-	auto buf = typed_shadow_buffer_t<int>{4};
-
-	auto t = detail::buffer_allocation_t{4, 4, buf};
 }
 
 auto buffer_t::bind(gen_default_read_view_t const& v) -> void
@@ -169,6 +167,6 @@ auto buffer_t::upload_shadow_buffer() -> void
 {
 	ATMA_ASSERT(is_shadowing());
 
-	context()->signal_d3d_buffer_upload(d3d_buffer_, &shadow_buffer_[0], shadow_buffer_.size(), 1);
+	context()->signal_d3d_buffer_upload(d3d_buffer_, &shadow_buffer_[0], (uint)shadow_buffer_.size(), 1);
 	context()->signal_block();
 }

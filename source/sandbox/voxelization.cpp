@@ -109,6 +109,8 @@ struct level_t
 	node_t storage;
 };
 
+#include <atma/allocdata_t.hpp>
+
 auto voxelization_plugin_t::main_setup() -> void
 {
 	auto sf = shelf::file_t{"../../data/dragon.obj"};
@@ -117,11 +119,14 @@ auto voxelization_plugin_t::main_setup() -> void
 	// try for 128^3 grid
 	auto const gridsize = 128;
 	
-
-	auto thing = atma::vector<int>{1, 2, 3, 4};
-	auto thing2 = atma::vector<int>{std::move(thing)};
-	auto v1 = thing[1];
-	thing2.resize(16);
+	auto ad = atma::allocdata_t<std::allocator<std::string>>{};
+	auto s = std::string("hooray");
+	ad.allocate_n(8);
+	
+	auto ad2 = atma::allocdata_t<std::allocator<std::string>>{};
+	ad2.allocate_n(8);
+	ad2.construct_copy(0, s);
+	ad.memcpy(1, ad2, 0, 1);
 
 #if 1
 	using fragments_t = shiny::generic_buffer_t::typed_shadow_buffer_t<voxel_t>;
@@ -230,8 +235,8 @@ auto voxelization_plugin_t::main_setup() -> void
 		shiny::resource_type_t::structured_buffer,
 		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
 		shiny::buffer_usage_t::persistant,
-		//shiny::buffer_allocation_t::from_memory(fragments),
-		sizeof(uint32), 4, nullptr, 4,
+		shiny::buffer_dimensions_t::infer(fragments), //.upload(std::move(fragments)), //.gen_shadow_buffer_from{fragments.detach_buffer()},
+		shiny::buffer_data_t::copy(fragments),
 			shiny::gen_default_read_view_t{},
 			shiny::gen_default_read_write_view_t{});
 

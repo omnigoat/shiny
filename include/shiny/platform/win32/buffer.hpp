@@ -5,8 +5,7 @@
 #include <shiny/platform/win32/d3d_fwd.hpp>
 
 #include <atma/aligned_allocator.hpp>
-
-#include <vector>
+#include <atma/vector.hpp>
 
 
 namespace shiny
@@ -14,7 +13,7 @@ namespace shiny
 	namespace detail
 	{
 		template <typename T>
-		using typed_shadow_buffer_t = std::vector<T, atma::aligned_allocator_t<T, 16>>;
+		using typed_shadow_buffer_t = atma::vector<T, atma::aligned_allocator_t<T, 16>>;
 
 		using shadow_buffer_t = typed_shadow_buffer_t<char>;
 
@@ -48,35 +47,76 @@ namespace shiny
 	};
 
 
-	struct buffer_allocation_t
+	struct buffer_dimensions_t
 	{
-		template <typename T>
-		buffer_allocation_t(size_t stride, size_t count, void const* data, size_t data_count)
-			: stride(stride), count(count), data(data), data_count(data_count)
+		buffer_dimensions_t(size_t stride, size_t count)
+			: stride(stride), count(count)
 		{
 		}
 
 		size_t stride;
 		size_t count;
-		void const* data;
-		size_t data_count;
 
 		template <typename T>
-		static auto from_memory(detail::typed_shadow_buffer_t<T> const& memory) -> buffer_allocation_t
+		static auto infer(detail::typed_shadow_buffer_t<T> const& memory) -> buffer_dimensions_t
 		{
-			return buffer_allocation_t{sizeof(T), memory.size(), memory.data(), memory.size()};
+			return buffer_dimensions_t{sizeof(T), memory.size()};
 		}
 	};
 
+	struct buffer_data_t
+	{
+		enum class ownership_t
+		{
+			copy,
+			move,
+		};
 
+		template <typename T>
+		static auto copy(detail::typed_shadow_buffer_t<T> const& buf) -> buffer_data_t
+		{
+			return buffer_data_t{ownership_t::copy, buf.data(), buf.size()};
+		}
+
+		static auto copy(void const* data, size_t size) -> buffer_data_t
+		{
+			return buffer_data_t{ownership_t::copy, data, size};
+		}
+
+		template <typename T>
+		static auto move(detail::typed_shadow_buffer_t<T>& buf) -> buffer_data_t
+		{
+			auto s = buf.size();
+			auto b = buf.detach_buffer();
+			//auto m = b.detach_memory();
+			return buffer_data_t{ownership_t::move, b.detach_memory(), s};
+		}
+
+		ownership_t ownership;
+		void const* data;
+		size_t count;
+
+		~buffer_data_t()
+		{
+			if (data && ownership == ownership_t::move)
+			{
+				delete data;
+			}
+		}
+
+	private:
+		buffer_data_t(ownership_t ownership, void const* data, size_t count)
+			: ownership(ownership), data(data), count(count)
+		{}
+	};
 
 	struct buffer_t : resource_t
 	{
 		template <typename T>
-		using typed_shadow_buffer_t = std::vector<T, atma::aligned_allocator_t<T, 16>>;
+		using typed_shadow_buffer_t = atma::vector<T, atma::aligned_allocator_t<T, 16>>;
 		using shadow_buffer_t = typed_shadow_buffer_t<char>;
 
-		buffer_t(context_ptr const&, resource_type_t, resource_usage_mask_t, buffer_usage_t, size_t element_stride, size_t element_count, void const* data, size_t data_element_count);
+		buffer_t(context_ptr const&, resource_type_t, resource_usage_mask_t, buffer_usage_t, buffer_dimensions_t const&, buffer_data_t const&);
 		virtual ~buffer_t();
 
 		auto buffer_usage() const -> buffer_usage_t { return buffer_usage_; }
@@ -106,16 +146,20 @@ namespace shiny
 	};
 
 
+
+
 	template <typename... Args>
 	inline auto make_buffer(context_ptr const& ctx,
-		resource_type_t type,
-		resource_usage_mask_t rum,
+		resource_type_t rt,
+		resource_usage_mask_t ru,
 		buffer_usage_t bu,
-		size_t element_stride, size_t element_count, void const* data, size_t data_element_count,
+		buffer_dimensions_t const& bdm,
+		buffer_data_t const& bdt,
 		Args&&... req_views) -> buffer_ptr
 	{
-		auto b = atma::make_intrusive_ptr<buffer_t>(ctx, type, rum, bu, element_stride, element_count, data, data_element_count);
+		auto b = atma::make_intrusive_ptr<buffer_t>(ctx, rt, ru, bu, bdm, bdt);
 		int _[] = { 0, (b->bind(req_views), 0)... };
+		
 		return b;
 	}
 

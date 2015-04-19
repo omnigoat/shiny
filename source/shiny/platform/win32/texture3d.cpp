@@ -8,18 +8,11 @@ using namespace shiny;
 using shiny::texture3d_t;
 
 
-
-
-auto shiny::create_texture3d(context_ptr const& context, texture_usage_t usage, element_format_t format, uint width, uint height, uint depth, uint mips) -> texture3d_ptr
-{
-	return texture3d_ptr(new texture3d_t(context, usage, format, width, height, depth, mips));
-}
-
-auto shiny::create_texture3d(context_ptr const& context, texture_usage_t usage, element_format_t format, uint width, uint mips) -> texture3d_ptr
-{
-	return create_texture3d(context, usage, format, width, width, width, mips);
-}
-
+auto shiny::make_texture3d(
+	context_ptr const&,
+	resource_usage_mask_t,
+	element_format_t,
+	size_t width, size_t height, size_t depth, uint mips) -> texture3d_ptr;
 
 
 
