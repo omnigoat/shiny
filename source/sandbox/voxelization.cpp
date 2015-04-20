@@ -109,7 +109,7 @@ struct level_t
 	node_t storage;
 };
 
-#include <atma/allocdata_t.hpp>
+#include <atma/allocdata.hpp>
 
 auto voxelization_plugin_t::main_setup() -> void
 {
@@ -121,10 +121,10 @@ auto voxelization_plugin_t::main_setup() -> void
 	
 	auto ad = atma::allocdata_t<std::allocator<std::string>>{};
 	auto s = std::string("hooray");
-	ad.allocate_n(8);
+	ad.alloc(8);
 	
 	auto ad2 = atma::allocdata_t<std::allocator<std::string>>{};
-	ad2.allocate_n(8);
+	ad2.alloc(8);
 	ad2.construct_copy(0, s);
 	ad.memcpy(1, ad2, 0, 1);
 
