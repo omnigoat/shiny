@@ -88,8 +88,7 @@ namespace shiny
 		{
 			auto s = buf.size();
 			auto b = buf.detach_buffer();
-			//auto m = b.detach_memory();
-			return buffer_data_t{ownership_t::move, b.detach_memory(), s};
+			return buffer_data_t{ownership_t::move, b.detach_memory().ptr, s};
 		}
 
 		ownership_t ownership;

@@ -109,7 +109,7 @@ struct level_t
 	node_t storage;
 };
 
-#include <atma/allocdata.hpp>
+#include <atma/memory.hpp>
 
 auto voxelization_plugin_t::main_setup() -> void
 {
@@ -119,11 +119,11 @@ auto voxelization_plugin_t::main_setup() -> void
 	// try for 128^3 grid
 	auto const gridsize = 128;
 	
-	auto ad = atma::allocdata_t<std::allocator<std::string>>{};
+	auto ad = atma::memory_t<std::allocator<std::string>>{};
 	auto s = std::string("hooray");
 	ad.alloc(8);
 	
-	auto ad2 = atma::allocdata_t<std::allocator<std::string>>{};
+	auto ad2 = atma::memory_t<std::allocator<std::string>>{};
 	ad2.alloc(8);
 	ad2.construct_copy(0, s);
 	ad.memcpy(1, ad2, 0, 1);
@@ -235,8 +235,8 @@ auto voxelization_plugin_t::main_setup() -> void
 		shiny::resource_type_t::structured_buffer,
 		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
 		shiny::buffer_usage_t::persistant,
-		shiny::buffer_dimensions_t::infer(fragments), //.upload(std::move(fragments)), //.gen_shadow_buffer_from{fragments.detach_buffer()},
-		shiny::buffer_data_t::copy(fragments),
+		shiny::buffer_dimensions_t::infer(fragments),
+		shiny::buffer_data_t::move(fragments),
 			shiny::gen_default_read_view_t{},
 			shiny::gen_default_read_write_view_t{});
 

@@ -304,8 +304,9 @@ private:
 	template <typename FN>
 	auto imem_for_each(FN&& fn) -> void
 	{
-		for (auto i = buf_.begin<node_t>(); i != buf_.end<node_t>(); ++i)
-			fn(*i);
+		//for (auto i = buf_.begin<node_t>(); i != buf_.end<node_t>(); ++i)
+		for (auto&& x : view_)
+			fn(x);
 	}
 
 private:
