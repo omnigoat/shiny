@@ -77,9 +77,8 @@ buffer_t::buffer_t(context_ptr const& ctx, resource_type_t type, resource_usage_
 	// allocate shadow-buffer if need be
 	if (shadowed)
 	{
-		shadow_buffer_.resize((uint)resource_size());
 		if (bdt.data)
-			memcpy(&shadow_buffer_[0], bdt.data, data_size);
+			bdt.apply_to_shadowbuffer(shadow_buffer_);
 	}
 
 
@@ -105,7 +104,9 @@ buffer_t::buffer_t(context_ptr const& ctx, resource_type_t type, resource_usage_
 			ATMA_ASSERT_MSG(resource_size() == data_size, "immutable buffer: allocation size != data size");
 			ATMA_ASSERT_MSG(d3d_ca == 0, "immutable buffer with cpu access? silly.");
 
-			auto d3d_data = D3D11_SUBRESOURCE_DATA{bdt.data, (UINT)data_size, 1};
+			void const* data_ptr = nullptr;
+			bdt.apply_to_vram(data_ptr);
+			auto d3d_data = D3D11_SUBRESOURCE_DATA{data_ptr, (UINT)data_size, 1};
 			ATMA_ENSURE_IS(S_OK, context()->d3d_device()->CreateBuffer(&buffer_desc, &d3d_data, d3d_buffer_.assign()));
 			break;
 		}

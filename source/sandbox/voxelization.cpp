@@ -119,14 +119,11 @@ auto voxelization_plugin_t::main_setup() -> void
 	// try for 128^3 grid
 	auto const gridsize = 128;
 	
-	auto ad = atma::memory_t<std::allocator<std::string>>{};
-	auto s = std::string("hooray");
-	ad.alloc(8);
-	
-	auto ad2 = atma::memory_t<std::allocator<std::string>>{};
-	ad2.alloc(8);
-	ad2.construct_copy(0, s);
-	ad.memcpy(1, ad2, 0, 1);
+	auto numbers = atma::vector<int>{1, 2, 3, 4, 5};
+	auto numbers2 = atma::vector<int>{};
+	numbers2.attach_buffer(numbers.detach_buffer());
+	auto mem = atma::unique_memory_t{};
+	mem = numbers2.detach_buffer();
 
 #if 1
 	using fragments_t = shiny::generic_buffer_t::typed_shadow_buffer_t<voxel_t>;

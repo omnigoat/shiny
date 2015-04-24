@@ -15,7 +15,7 @@ namespace shiny
 		template <typename T>
 		using typed_shadow_buffer_t = atma::vector<T, atma::aligned_allocator_t<T, 16>>;
 
-		using shadow_buffer_t = typed_shadow_buffer_t<char>;
+		using shadow_buffer_t = typed_shadow_buffer_t<byte>;
 
 
 
@@ -29,6 +29,39 @@ namespace shiny
 			gpu_access_t gpu_access;
 			element_format_t element_format;
 			resource_subset_t subset;
+		};
+
+		template <typename T>
+		struct buffer_data_vtable_t;
+
+		template <typename T>
+		struct buffer_data_vtable_t<typed_shadow_buffer_t<T>>
+		{
+			static auto shadowbuffer_copy(shadow_buffer_t& dest, void const* srcptr, size_t size) -> void
+			{
+				auto const& src = *reinterpret_cast<typed_shadow_buffer_t<T> const*>(srcptr);
+				dest.assign(src.begin(), src.end());
+			}
+
+			static auto shadowbuffer_move(shadow_buffer_t& dest, void const* srcptr, size_t size) -> void
+			{
+				auto const& csrc = *reinterpret_cast<typed_shadow_buffer_t<T> const*>(srcptr);
+				auto& src = const_cast<typed_shadow_buffer_t<T>&>(csrc);
+				dest.attach_buffer(src.detach_buffer());
+			}
+
+			static auto vram_upload(void const*& dest, void const* srcptr, size_t size) -> void
+			{
+				auto const& csrc = *reinterpret_cast<typed_shadow_buffer_t<T> const*>(srcptr);
+				dest = csrc.data();
+			}
+
+			static auto vram_postupload_move(void const* srcptr, size_t size) -> void
+			{
+				auto const& csrc = *reinterpret_cast<typed_shadow_buffer_t<T> const*>(srcptr);
+				auto& src = const_cast<typed_shadow_buffer_t<T>&>(csrc);
+				src.detach_buffer();
+			}
 		};
 	}
 
@@ -72,48 +105,71 @@ namespace shiny
 			move,
 		};
 
-		template <typename T>
-		static auto copy(detail::typed_shadow_buffer_t<T> const& buf) -> buffer_data_t
+		static auto copy(void const*, size_t) -> buffer_data_t
 		{
-			return buffer_data_t{ownership_t::copy, buf.data(), buf.size()};
+			return buffer_data_t{ownership_t::copy, nullptr, 0};
 		}
 
-		static auto copy(void const* data, size_t size) -> buffer_data_t
+		template <typename T>
+		static auto copy(detail::typed_shadow_buffer_t<T>& buf) -> buffer_data_t
 		{
-			return buffer_data_t{ownership_t::copy, data, size};
+			auto r = buffer_data_t{ownership_t::move, &buf, buf.size()};
+			r.fn_shadowbuffer_ = &detail::buffer_data_vtable_t<detail::typed_shadow_buffer_t<T>>::shadowbuffer_copy;
+			r.fn_vram_ = &detail::buffer_data_vtable_t<detail::typed_shadow_buffer_t<T>>::vram_upload;
+			r.fn_vram_post_ = &detail::buffer_data_vtable_t<detail::typed_shadow_buffer_t<T>>::vram_postupload_move;
+			return r;
 		}
 
 		template <typename T>
 		static auto move(detail::typed_shadow_buffer_t<T>& buf) -> buffer_data_t
 		{
-			auto s = buf.size();
-			auto b = buf.detach_buffer();
-			return buffer_data_t{ownership_t::move, b.detach_memory().ptr, s};
+			auto r = buffer_data_t{ownership_t::move, &buf, buf.size()};
+			r.fn_shadowbuffer_ = &detail::buffer_data_vtable_t<detail::typed_shadow_buffer_t<T>>::shadowbuffer_move;
+			r.fn_vram_ = &detail::buffer_data_vtable_t<detail::typed_shadow_buffer_t<T>>::vram_upload;
+			r.fn_vram_post_ = &detail::buffer_data_vtable_t<detail::typed_shadow_buffer_t<T>>::vram_postupload_move;
+			return r;
 		}
 
-		ownership_t ownership;
-		void const* data;
-		size_t count;
-
-		~buffer_data_t()
+		auto apply_to_shadowbuffer(detail::shadow_buffer_t& buf) const -> void
 		{
-			if (data && ownership == ownership_t::move)
-			{
-				delete data;
-			}
+			fn_shadowbuffer_(buf, data, count);
+		}
+
+		auto apply_to_vram(void const*& dest) const -> void
+		{
+			fn_vram_(dest, data, count);
+		}
+
+		auto post_vram() const -> void
+		{
+			fn_vram_post_(data, count);
 		}
 
 	private:
 		buffer_data_t(ownership_t ownership, void const* data, size_t count)
 			: ownership(ownership), data(data), count(count)
+			, fn_shadowbuffer_(), fn_vram_(), fn_vram_post_()
 		{}
+
+		ownership_t ownership;
+		void const* data;
+		size_t count;
+		void (*fn_shadowbuffer_)(detail::shadow_buffer_t&, void const*, size_t);
+		void (*fn_vram_)(void const*&, void const*, size_t);
+		void (*fn_vram_post_)(void const*, size_t);
+
+		friend struct buffer_t;
 	};
 
 	struct buffer_t : resource_t
 	{
+		//template <typename T>
+		//using typed_shadow_buffer_t = atma::vector<T, atma::aligned_allocator_t<T, 16>>;
+		//using shadow_buffer_t = typed_shadow_buffer_t<char>;
 		template <typename T>
-		using typed_shadow_buffer_t = atma::vector<T, atma::aligned_allocator_t<T, 16>>;
-		using shadow_buffer_t = typed_shadow_buffer_t<char>;
+		using typed_shadow_buffer_t = detail::typed_shadow_buffer_t<T>;
+		using shadow_buffer_t = detail::shadow_buffer_t;
+
 
 		buffer_t(context_ptr const&, resource_type_t, resource_usage_mask_t, buffer_usage_t, buffer_dimensions_t const&, buffer_data_t const&);
 		virtual ~buffer_t();
