@@ -22,8 +22,9 @@ namespace shiny
 
 		struct gen_view_t
 		{
-			gen_view_t(bool, gpu_access_t, element_format_t, resource_subset_t)
-				{} // SERIOUSLY, do this
+			gen_view_t(bool g, gpu_access_t ga, element_format_t ef, resource_subset_t rs)
+				: generate(g), gpu_access(ga), element_format(ef), subset(rs)
+			{}
 
 			bool generate;
 			gpu_access_t gpu_access;
@@ -34,6 +35,39 @@ namespace shiny
 		template <typename T>
 		struct buffer_data_vtable_t;
 
+
+		// raw-pointer
+		template <>
+		struct buffer_data_vtable_t<void const*>
+		{
+			static auto shadowbuffer_copy(shadow_buffer_t& dest, void const* srcptr, size_t size) -> void
+			{
+				auto ptr = reinterpret_cast<byte const*>(srcptr);
+				dest.assign(ptr, ptr + size);
+			}
+
+			static auto shadowbuffer_move(shadow_buffer_t& dest, void const* srcptr, size_t size) -> void
+			{
+				auto ptr = const_cast<void*>(srcptr);
+				auto t = shadow_buffer_t::buffer_type{atma::unique_memory_take_ownership_tag{}, ptr, size};
+				dest.attach_buffer(std::move(t));
+			}
+
+			static auto vram_upload(void const*& dest, void const* srcptr, size_t size) -> void
+			{
+				dest = srcptr;
+			}
+
+			static auto vram_postupload_move(void const* srcptr, size_t) -> void
+			{
+				delete srcptr;
+			}
+
+			static auto vram_postupload_copy(void const*, size_t) -> void
+			{}
+		};
+
+		// typed-shadow-buffer
 		template <typename T>
 		struct buffer_data_vtable_t<typed_shadow_buffer_t<T>>
 		{
@@ -99,64 +133,72 @@ namespace shiny
 
 	struct buffer_data_t
 	{
-		enum class ownership_t
-		{
-			copy,
-			move,
-		};
+		buffer_data_t(buffer_data_t const&) = delete;
+		buffer_data_t(buffer_data_t&&) = delete;
 
-		static auto copy(void const*, size_t) -> buffer_data_t
+		static auto copy(void const* data, size_t size) -> buffer_data_t
 		{
-			return buffer_data_t{ownership_t::copy, nullptr, 0};
+			using vtable = detail::buffer_data_vtable_t<void const*>;
+
+			return buffer_data_t{data, size,
+				&vtable::vram_upload,
+				&vtable::vram_postupload_copy,
+				&vtable::shadowbuffer_copy};
 		}
 
 		template <typename T>
 		static auto copy(detail::typed_shadow_buffer_t<T>& buf) -> buffer_data_t
 		{
-			auto r = buffer_data_t{ownership_t::move, &buf, buf.size()};
-			r.fn_shadowbuffer_ = &detail::buffer_data_vtable_t<detail::typed_shadow_buffer_t<T>>::shadowbuffer_copy;
-			r.fn_vram_ = &detail::buffer_data_vtable_t<detail::typed_shadow_buffer_t<T>>::vram_upload;
-			r.fn_vram_post_ = &detail::buffer_data_vtable_t<detail::typed_shadow_buffer_t<T>>::vram_postupload_move;
-			return r;
+			using vtable = detail::buffer_data_vtable_t<detail::typed_shadow_buffer_t<T>>;
+
+			return buffer_data_t{&buf, buf.size(),
+				&vtable::vram_upload,
+				&vtable::vram_postupload_copy,
+				&vtable::shadowbuffer_copy};
 		}
 
 		template <typename T>
 		static auto move(detail::typed_shadow_buffer_t<T>& buf) -> buffer_data_t
 		{
-			auto r = buffer_data_t{ownership_t::move, &buf, buf.size()};
-			r.fn_shadowbuffer_ = &detail::buffer_data_vtable_t<detail::typed_shadow_buffer_t<T>>::shadowbuffer_move;
-			r.fn_vram_ = &detail::buffer_data_vtable_t<detail::typed_shadow_buffer_t<T>>::vram_upload;
-			r.fn_vram_post_ = &detail::buffer_data_vtable_t<detail::typed_shadow_buffer_t<T>>::vram_postupload_move;
-			return r;
+			using vtable = detail::buffer_data_vtable_t<detail::typed_shadow_buffer_t<T>>;
+
+			return buffer_data_t{&buf, buf.size(),
+				&vtable::vram_upload,
+				&vtable::vram_postupload_move,
+				&vtable::shadowbuffer_move};
 		}
 
-		auto apply_to_shadowbuffer(detail::shadow_buffer_t& buf) const -> void
-		{
-			fn_shadowbuffer_(buf, data, count);
-		}
-
+	private:
 		auto apply_to_vram(void const*& dest) const -> void
 		{
-			fn_vram_(dest, data, count);
+			vram_fn_(dest, data, count);
 		}
 
 		auto post_vram() const -> void
 		{
-			fn_vram_post_(data, count);
+			vram_post_fn_(data, count);
+		}
+
+		auto apply_to_shadowbuffer(detail::shadow_buffer_t& buf) const -> void
+		{
+			shadowbuffer_fn_(buf, data, count);
 		}
 
 	private:
-		buffer_data_t(ownership_t ownership, void const* data, size_t count)
-			: ownership(ownership), data(data), count(count)
-			, fn_shadowbuffer_(), fn_vram_(), fn_vram_post_()
+		using vram_fnptr         = void(*)(void const*&, void const*, size_t);
+		using vram_post_fnptr    = void(*)(void const*, size_t);
+		using shadowbuffer_fnptr = void(*)(detail::shadow_buffer_t&, void const*, size_t);
+
+		buffer_data_t(void const* data, size_t count, vram_fnptr vf, vram_post_fnptr vpf, shadowbuffer_fnptr sf)
+			: data(data), count(count)
+			, vram_fn_(vf), vram_post_fn_(vpf), shadowbuffer_fn_(sf)
 		{}
 
-		ownership_t ownership;
 		void const* data;
 		size_t count;
-		void (*fn_shadowbuffer_)(detail::shadow_buffer_t&, void const*, size_t);
-		void (*fn_vram_)(void const*&, void const*, size_t);
-		void (*fn_vram_post_)(void const*, size_t);
+		vram_fnptr         vram_fn_;
+		vram_post_fnptr    vram_post_fn_;
+		shadowbuffer_fnptr shadowbuffer_fn_;
 
 		friend struct buffer_t;
 	};

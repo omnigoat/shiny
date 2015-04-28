@@ -108,6 +108,7 @@ buffer_t::buffer_t(context_ptr const& ctx, resource_type_t type, resource_usage_
 			bdt.apply_to_vram(data_ptr);
 			auto d3d_data = D3D11_SUBRESOURCE_DATA{data_ptr, (UINT)data_size, 1};
 			ATMA_ENSURE_IS(S_OK, context()->d3d_device()->CreateBuffer(&buffer_desc, &d3d_data, d3d_buffer_.assign()));
+			bdt.post_vram();
 			break;
 		}
 
@@ -116,11 +117,17 @@ buffer_t::buffer_t(context_ptr const& ctx, resource_type_t type, resource_usage_
 		case buffer_usage_t::transient:
 		case buffer_usage_t::constant:
 		{
-			if (bdt.data) {
-				auto d3d_data = D3D11_SUBRESOURCE_DATA{bdt.data, (UINT)data_size, 1};
+			if (bdt.data)
+			{
+				void const* data_ptr = nullptr;
+				bdt.apply_to_vram(data_ptr);
+				auto d3d_data = D3D11_SUBRESOURCE_DATA{data_ptr, (UINT)data_size, 1};
+
 				ATMA_ENSURE_IS(S_OK, context()->d3d_device()->CreateBuffer(&buffer_desc, &d3d_data, d3d_buffer_.assign()));
+				bdt.post_vram();
 			}
-			else {
+			else
+			{
 				ATMA_ENSURE_IS(S_OK, context()->d3d_device()->CreateBuffer(&buffer_desc, nullptr, d3d_buffer_.assign()));
 			}
 
