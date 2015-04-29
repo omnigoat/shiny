@@ -116,7 +116,7 @@ namespace shiny
 
 
 
-	enum class buffer_usage_t
+	enum class resource_storage_t
 	{
 		// immutable:
 		//   cpu: none

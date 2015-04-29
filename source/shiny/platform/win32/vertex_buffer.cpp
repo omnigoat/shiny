@@ -10,7 +10,7 @@ using namespace shiny;
 using shiny::vertex_buffer_t;
 
 
-vertex_buffer_t::vertex_buffer_t(context_ptr const& context, buffer_usage_t usage, data_declaration_t const* vd, uint vertex_count, void const* data, uint data_vertcount)
+vertex_buffer_t::vertex_buffer_t(context_ptr const& context, resource_storage_t usage, data_declaration_t const* vd, uint vertex_count, void const* data, uint data_vertcount)
 	: buffer_t(context,
 		resource_type_t::vertex_buffer,
 		resource_usage_mask_t::none,

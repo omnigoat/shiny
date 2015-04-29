@@ -10,14 +10,14 @@ using namespace shiny;
 using shiny::buffer_t;
 
 
-buffer_t::buffer_t(context_ptr const& ctx, resource_type_t type, resource_usage_mask_t rs, buffer_usage_t usage, buffer_dimensions_t const& bdm, buffer_data_t const& bdt)
+buffer_t::buffer_t(context_ptr const& ctx, resource_type_t type, resource_usage_mask_t rs, resource_storage_t usage, buffer_dimensions_t const& bdm, buffer_data_t const& bdt)
 	: resource_t(ctx, type, rs, bdm.stride, bdm.count)
 	, buffer_usage_(usage)
 {
 	// no zero-size buffers
 	ATMA_ASSERT(resource_size());
 	// unordered-access buffers must be placed into persistant storage
-	ATMA_ASSERT(!(rs & resource_usage_t::unordered_access) || (usage == buffer_usage_t::persistant || usage == buffer_usage_t::persistant_shadowed));
+	ATMA_ASSERT(!(rs & resource_usage_t::unordered_access) || (usage == resource_storage_t::persistant || usage == resource_storage_t::persistant_shadowed));
 
 
 
@@ -33,21 +33,21 @@ buffer_t::buffer_t(context_ptr const& ctx, resource_type_t type, resource_usage_
 	auto d3d_ca = D3D11_CPU_ACCESS_FLAG();
 	switch (buffer_usage_)
 	{
-		case buffer_usage_t::immutable:
+		case resource_storage_t::immutable:
 			d3d_bu = D3D11_USAGE_IMMUTABLE;
 			break;
 
-		case buffer_usage_t::persistant:
-		case buffer_usage_t::persistant_shadowed:
+		case resource_storage_t::persistant:
+		case resource_storage_t::persistant_shadowed:
 			d3d_bu = D3D11_USAGE_DEFAULT;
 			break;
 
-		case buffer_usage_t::temporary:
-		case buffer_usage_t::temporary_shadowed:
-		case buffer_usage_t::transient:
-		case buffer_usage_t::transient_shadowed:
-		case buffer_usage_t::constant:
-		case buffer_usage_t::constant_shadowed:
+		case resource_storage_t::temporary:
+		case resource_storage_t::temporary_shadowed:
+		case resource_storage_t::transient:
+		case resource_storage_t::transient_shadowed:
+		case resource_storage_t::constant:
+		case resource_storage_t::constant_shadowed:
 			d3d_bu = D3D11_USAGE_DYNAMIC;
 			d3d_ca = D3D11_CPU_ACCESS_WRITE;
 			break;
@@ -67,10 +67,10 @@ buffer_t::buffer_t(context_ptr const& ctx, resource_type_t type, resource_usage_
 
 
 	bool shadowed =
-		buffer_usage_ == buffer_usage_t::persistant_shadowed ||
-		buffer_usage_ == buffer_usage_t::temporary_shadowed ||
-		buffer_usage_ == buffer_usage_t::transient_shadowed ||
-		buffer_usage_ == buffer_usage_t::constant_shadowed
+		buffer_usage_ == resource_storage_t::persistant_shadowed ||
+		buffer_usage_ == resource_storage_t::temporary_shadowed ||
+		buffer_usage_ == resource_storage_t::transient_shadowed ||
+		buffer_usage_ == resource_storage_t::constant_shadowed
 		;
 
 
@@ -98,7 +98,7 @@ buffer_t::buffer_t(context_ptr const& ctx, resource_type_t type, resource_usage_
 	auto buffer_desc = D3D11_BUFFER_DESC{(UINT)resource_size(), d3d_bu, binding, d3d_ca, misc_flags, (UINT)bdm.stride};
 	switch (buffer_usage_)
 	{
-		case buffer_usage_t::immutable:
+		case resource_storage_t::immutable:
 		{
 			ATMA_ASSERT_MSG(bdt.data, "immutable buffers require data upon initialisation");
 			ATMA_ASSERT_MSG(resource_size() == data_size, "immutable buffer: allocation size != data size");
@@ -112,10 +112,10 @@ buffer_t::buffer_t(context_ptr const& ctx, resource_type_t type, resource_usage_
 			break;
 		}
 
-		case buffer_usage_t::persistant:
-		case buffer_usage_t::temporary:
-		case buffer_usage_t::transient:
-		case buffer_usage_t::constant:
+		case resource_storage_t::persistant:
+		case resource_storage_t::temporary:
+		case resource_storage_t::transient:
+		case resource_storage_t::constant:
 		{
 			if (bdt.data)
 			{
@@ -134,10 +134,10 @@ buffer_t::buffer_t(context_ptr const& ctx, resource_type_t type, resource_usage_
 			break;
 		}
 
-		case buffer_usage_t::persistant_shadowed:
-		case buffer_usage_t::temporary_shadowed:
-		case buffer_usage_t::transient_shadowed:
-		case buffer_usage_t::constant_shadowed:
+		case resource_storage_t::persistant_shadowed:
+		case resource_storage_t::temporary_shadowed:
+		case resource_storage_t::transient_shadowed:
+		case resource_storage_t::constant_shadowed:
 		{
 			if (bdt.data) {
 				auto d3d_data = D3D11_SUBRESOURCE_DATA{&shadow_buffer_[0], (UINT)data_size, 1};

@@ -213,10 +213,10 @@ namespace shiny
 		using shadow_buffer_t = detail::shadow_buffer_t;
 
 
-		buffer_t(context_ptr const&, resource_type_t, resource_usage_mask_t, buffer_usage_t, buffer_dimensions_t const&, buffer_data_t const&);
+		buffer_t(context_ptr const&, resource_type_t, resource_usage_mask_t, resource_storage_t, buffer_dimensions_t const&, buffer_data_t const&);
 		virtual ~buffer_t();
 
-		auto buffer_usage() const -> buffer_usage_t { return buffer_usage_; }
+		auto buffer_usage() const -> resource_storage_t { return buffer_usage_; }
 		auto is_shadowing() const -> bool { return !shadow_buffer_.empty(); }
 		
 		auto default_read_view() const -> resource_view_ptr const& { return default_read_view_; }
@@ -232,7 +232,7 @@ namespace shiny
 		auto upload_shadow_buffer() -> void;
 
 	protected:
-		buffer_usage_t buffer_usage_;
+		resource_storage_t buffer_usage_;
 
 		shadow_buffer_t shadow_buffer_;
 
@@ -249,7 +249,7 @@ namespace shiny
 	inline auto make_buffer(context_ptr const& ctx,
 		resource_type_t rt,
 		resource_usage_mask_t ru,
-		buffer_usage_t bu,
+		resource_storage_t bu,
 		buffer_dimensions_t const& bdm,
 		buffer_data_t const& bdt,
 		Args&&... req_views) -> buffer_ptr

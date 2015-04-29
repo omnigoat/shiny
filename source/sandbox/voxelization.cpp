@@ -231,7 +231,7 @@ auto voxelization_plugin_t::main_setup() -> void
 	auto voxelbuf = shiny::make_buffer(ctx,
 		shiny::resource_type_t::structured_buffer,
 		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
-		shiny::buffer_usage_t::persistant,
+		shiny::resource_storage_t::persistant,
 		shiny::buffer_dimensions_t::infer(fragments),
 		shiny::buffer_data_t::move(fragments),
 			shiny::gen_default_read_view_t{},
@@ -240,9 +240,9 @@ auto voxelization_plugin_t::main_setup() -> void
 #if 0
 	auto brickpool = shiny::make_texture3d(ctx,
 		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
-		shiny::buffer_usage_t::persistant,
-		shiny::element_format_t::u8x4,
-		512, 512, 512, 1
+		shiny::resource_storage_t::persistant,
+		shiny::texture_dimensions_t{shiny::element_format_t::u8x4, 512, 512, 512, 1},
+		shiny::buffer_data_t{},
 			shiny::suppress_default_read_view_t{});
 #endif
 
@@ -250,7 +250,7 @@ auto voxelization_plugin_t::main_setup() -> void
 	auto nodepool = shiny::make_buffer(ctx,
 		shiny::resource_type_t::structured_buffer,
 		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
-		shiny::buffer_usage_t::persistant,
+		shiny::resource_storage_t::persistant,
 		//shiny::resource_allocate_memory_t{sizeof(uint32), 4},
 		shiny::resource_pull_data_t{fragments},
 			shiny::bind_default_read_write_view_t{});
@@ -332,8 +332,8 @@ auto voxelization_plugin_t::main_setup() -> void
 	}
 #endif
 
-	this->vb = shiny::create_vertex_buffer(this->ctx, shiny::buffer_usage_t::immutable, dd_position(), (uint)vertices.size(), &vertices[0]);
-	this->ib = shiny::create_index_buffer(ctx, shiny::buffer_usage_t::immutable, shiny::index_format_t::index32, (uint)indices.size(), &indices[0]);
+	this->vb = shiny::create_vertex_buffer(this->ctx, shiny::resource_storage_t::immutable, dd_position(), (uint)vertices.size(), &vertices[0]);
+	this->ib = shiny::create_index_buffer(ctx, shiny::resource_storage_t::immutable, shiny::index_format_t::index32, (uint)indices.size(), &indices[0]);
 
 #else
 	uint32* mi = new uint32[obj.faces().size() * 3];
@@ -347,8 +347,8 @@ auto voxelization_plugin_t::main_setup() -> void
 	}
 
 
-	vb = shiny::create_vertex_buffer(ctx, shiny::buffer_usage_t::immutable, dd_position(), obj.vertices().size(), &obj.vertices()[0]);
-	ib = shiny::create_index_buffer(ctx, shiny::buffer_usage_t::immutable, shiny::index_format_t::index32, obj.faces().size() * 3, mi);
+	vb = shiny::create_vertex_buffer(ctx, shiny::resource_storage_t::immutable, dd_position(), obj.vertices().size(), &obj.vertices()[0]);
+	ib = shiny::create_index_buffer(ctx, shiny::resource_storage_t::immutable, shiny::index_format_t::index32, obj.faces().size() * 3, mi);
 
 #endif
 

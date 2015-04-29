@@ -511,7 +511,7 @@ auto context_t::make_blender(blend_state_t const& bs) -> blender_ptr
 	return thing;
 }
 
-auto context_t::make_generic_buffer(resource_usage_mask_t const& rs, buffer_usage_t bu, size_t stride, uint elements, void const* data, uint data_elemcount) -> generic_buffer_ptr
+auto context_t::make_generic_buffer(resource_usage_mask_t const& rs, resource_storage_t bu, size_t stride, uint elements, void const* data, uint data_elemcount) -> generic_buffer_ptr
 {
 	return generic_buffer_ptr(new generic_buffer_t(shared_from_this<context_t>(), rs, bu, stride, elements, data, data_elemcount));
 }
