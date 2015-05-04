@@ -9,44 +9,50 @@ using shiny::texture3d_t;
 
 
 auto shiny::make_texture3d(
-	context_ptr const&,
-	resource_usage_mask_t,
-	element_format_t,
-	size_t width, size_t height, size_t depth, uint mips) -> texture3d_ptr;
+	context_ptr const& ctx,
+	resource_usage_mask_t ru,
+	resource_storage_t rs,
+	texture3d_dimensions_t const& td) -> texture3d_ptr
+{
+	return atma::make_intrusive_ptr<texture3d_t>(ctx, ru, rs, td);
+}
 
 
 
-texture3d_t::texture3d_t(context_ptr const& ctx, texture_usage_t usage, element_format_t format, uint width, uint height, uint depth, uint mips)
-	: resource_t(ctx, resource_type_t::texturd3d, resource_usage_mask_t::none, element_size(format), width * height * depth)
-	, format_(format), mips_(mips), width_(width), height_(height), depth_(depth)
+texture3d_t::texture3d_t(context_ptr const& ctx, resource_usage_mask_t ru, resource_storage_t rs, texture3d_dimensions_t const& td)
+	: resource_t(ctx, resource_type_t::texturd3d, ru, element_size(td.format), td.width * td.height * td.depth)
+	, format_(td.format), mips_(td.mips), width_(td.width), height_(td.height), depth_(td.depth)
 {
 	auto const& device = context()->d3d_device();
 
 	auto d3dusage = D3D11_USAGE();
-	auto d3dbind = D3D11_BIND_SHADER_RESOURCE;
+	auto d3dbind = D3D11_BIND_FLAG{};
 	auto d3dcpu = D3D11_CPU_ACCESS_FLAG();
-	auto d3dfmt = platform::dxgi_format_of(format);
+	auto d3dfmt = platform::dxgi_format_of(td.format);
 
-	switch (usage)
-	{
-		case texture_usage_t::render_target:
-		case texture_usage_t::depth_stencil:
-			ATMA_HALT("not possible!");
-			break;
+	// resource-usage
+	if (ru & resource_usage_t::render_target || ru & resource_usage_t::depth_stencil) {
+		ATMA_HALT("not possible!");
+		return;
+	}
 
-		case texture_usage_t::immutable:
-			ATMA_HALT("not possible!");	
-			d3dusage = D3D11_USAGE_IMMUTABLE;
-			break;
+	if (ru & resource_usage_t::shader_resource)
+		(uint&)d3dbind |= D3D11_BIND_SHADER_RESOURCE;
+	if (ru & resource_usage_t::unordered_access)
+		(uint&)d3dbind |= D3D11_BIND_UNORDERED_ACCESS;
 
-		case texture_usage_t::streaming:
-			d3dusage = D3D11_USAGE_DYNAMIC;
-			d3dcpu = D3D11_CPU_ACCESS_WRITE;
-			break;
+	// resource-storage
+	if (rs == resource_storage_t::immutable) {
+		ATMA_HALT("not possible!");	
+		return;
+	}
+	else if (rs == resource_storage_t::transient) {
+		d3dusage = D3D11_USAGE_DYNAMIC;
+		d3dcpu = D3D11_CPU_ACCESS_WRITE;
 	}
 
 	auto desc = D3D11_TEXTURE3D_DESC{
-		width_, height_, depth_, 1,
+		(UINT)width_, (UINT)height_, (UINT)depth_, mips_,
 		d3dfmt, d3dusage, d3dbind, d3dcpu, 0};
 
 	ATMA_ENSURE_IS(S_OK, device->CreateTexture3D(&desc, nullptr, d3d_texture_.assign()));
@@ -62,17 +68,17 @@ auto texture3d_t::mips() const -> uint
 	return mips_;
 }
 
-auto texture3d_t::width() const -> uint
+auto texture3d_t::width() const -> size_t
 {
 	return width_;
 }
 
-auto texture3d_t::height() const -> uint
+auto texture3d_t::height() const -> size_t
 {
 	return height_;
 }
 
-auto texture3d_t::depth() const -> uint
+auto texture3d_t::depth() const -> size_t
 {
 	return depth_;
 }

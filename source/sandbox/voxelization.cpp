@@ -5,6 +5,7 @@
 #include <shiny/draw.hpp>
 #include <shiny/generic_buffer.hpp>
 #include <shiny/resource_view.hpp>
+#include <shiny/texture3d.hpp>
 
 #include <shelf/file.hpp>
 
@@ -117,7 +118,7 @@ auto voxelization_plugin_t::main_setup() -> void
 	auto obj = obj_model_t{sf};
 
 	// try for 128^3 grid
-	auto const gridsize = 128;
+	auto const gridsize = 512;
 	
 	auto numbers = atma::vector<int>{1, 2, 3, 4, 5};
 	auto numbers2 = atma::vector<int>{};
@@ -237,24 +238,22 @@ auto voxelization_plugin_t::main_setup() -> void
 			shiny::gen_default_read_view_t{},
 			shiny::gen_default_read_write_view_t{});
 
-#if 0
 	auto brickpool = shiny::make_texture3d(ctx,
 		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
 		shiny::resource_storage_t::persistant,
-		shiny::texture_dimensions_t{shiny::element_format_t::u8x4, 512, 512, 512, 1},
-		shiny::data_xfer_t{},
-			shiny::suppress_default_read_view_t{});
-#endif
+		shiny::texture3d_dimensions_t::cube(shiny::element_format_t::u8x4, gridsize, 1));
 
-#if 0
+	auto const brick_size = 8u;
+	auto nodes_required = (gridsize / brick_size) * (gridsize / brick_size) * (gridsize / brick_size);
+	auto node_size = sizeof(node_t) * 8;
+	auto fullsize = nodes_required * node_size;
+
 	auto nodepool = shiny::make_buffer(ctx,
 		shiny::resource_type_t::structured_buffer,
 		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
 		shiny::resource_storage_t::persistant,
-		//shiny::resource_allocate_memory_t{sizeof(uint32), 4},
-		shiny::resource_pull_data_t{fragments},
-			shiny::bind_default_read_write_view_t{});
-#endif
+		shiny::buffer_dimensions_t{node_size, nodes_required},
+		shiny::buffer_data_t{});
 
 #if 0
 	shiny::signal_compute(ctx,

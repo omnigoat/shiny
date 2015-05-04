@@ -62,6 +62,10 @@ namespace shiny
 
 	struct buffer_data_t
 	{
+		buffer_data_t()
+			: data(), count()
+		{}
+
 		buffer_data_t(void const* data, size_t count)
 			: data(data), count(count)
 		{}
