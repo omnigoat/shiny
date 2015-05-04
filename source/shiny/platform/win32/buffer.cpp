@@ -10,7 +10,9 @@ using namespace shiny;
 using shiny::buffer_t;
 
 
-buffer_t::buffer_t(context_ptr const& ctx, resource_type_t type, resource_usage_mask_t rs, resource_storage_t usage, buffer_dimensions_t const& bdm, buffer_data_t const& bdt)
+buffer_t::buffer_t(context_ptr const& ctx,
+			resource_type_t type, resource_usage_mask_t rs, resource_storage_t usage,
+			buffer_dimensions_t const& bdm, buffer_data_t const& bdt)
 	: resource_t(ctx, type, rs, bdm.stride, bdm.count)
 	, buffer_usage_(usage)
 {
@@ -74,14 +76,6 @@ buffer_t::buffer_t(context_ptr const& ctx, resource_type_t type, resource_usage_
 		;
 
 
-	// allocate shadow-buffer if need be
-	if (shadowed)
-	{
-		if (bdt.data)
-			bdt.apply_to_shadowbuffer(shadow_buffer_);
-	}
-
-
 	// determine binding
 	auto binding = platform::d3dbind_of(resource_type());
 	if (resource_usage() & resource_usage_t::render_target)
@@ -104,11 +98,8 @@ buffer_t::buffer_t(context_ptr const& ctx, resource_type_t type, resource_usage_
 			ATMA_ASSERT_MSG(resource_size() == data_size, "immutable buffer: allocation size != data size");
 			ATMA_ASSERT_MSG(d3d_ca == 0, "immutable buffer with cpu access? silly.");
 
-			void const* data_ptr = nullptr;
-			bdt.apply_to_vram(data_ptr);
-			auto d3d_data = D3D11_SUBRESOURCE_DATA{data_ptr, (UINT)data_size, 1};
+			auto d3d_data = D3D11_SUBRESOURCE_DATA{bdt.data, (UINT)data_size, 1};
 			ATMA_ENSURE_IS(S_OK, context()->d3d_device()->CreateBuffer(&buffer_desc, &d3d_data, d3d_buffer_.assign()));
-			bdt.post_vram();
 			break;
 		}
 
@@ -119,12 +110,8 @@ buffer_t::buffer_t(context_ptr const& ctx, resource_type_t type, resource_usage_
 		{
 			if (bdt.data)
 			{
-				void const* data_ptr = nullptr;
-				bdt.apply_to_vram(data_ptr);
-				auto d3d_data = D3D11_SUBRESOURCE_DATA{data_ptr, (UINT)data_size, 1};
-
+				auto d3d_data = D3D11_SUBRESOURCE_DATA{bdt.data, (UINT)data_size, 1};
 				ATMA_ENSURE_IS(S_OK, context()->d3d_device()->CreateBuffer(&buffer_desc, &d3d_data, d3d_buffer_.assign()));
-				bdt.post_vram();
 			}
 			else
 			{
@@ -139,14 +126,7 @@ buffer_t::buffer_t(context_ptr const& ctx, resource_type_t type, resource_usage_
 		case resource_storage_t::transient_shadowed:
 		case resource_storage_t::constant_shadowed:
 		{
-			if (bdt.data) {
-				auto d3d_data = D3D11_SUBRESOURCE_DATA{&shadow_buffer_[0], (UINT)data_size, 1};
-				ATMA_ENSURE_IS(S_OK, context()->d3d_device()->CreateBuffer(&buffer_desc, &d3d_data, d3d_buffer_.assign()));
-			}
-			else {
-				ATMA_ENSURE_IS(S_OK, context()->d3d_device()->CreateBuffer(&buffer_desc, nullptr, d3d_buffer_.assign()));
-			}
-
+			ATMA_HALT("not supported");
 			break;
 		}
 	}
@@ -171,10 +151,3 @@ auto buffer_t::bind(gen_default_read_write_view_t const& v) -> void
 	default_read_write_view_ = make_resource_view(shared_from_this<resource_t>(), gpu_access_t::read_write, v.element_format, v.subset);
 }
 
-auto buffer_t::upload_shadow_buffer() -> void
-{
-	ATMA_ASSERT(is_shadowing());
-
-	context()->signal_d3d_buffer_upload(d3d_buffer_, &shadow_buffer_[0], (uint)shadow_buffer_.size(), 1);
-	context()->signal_block();
-}

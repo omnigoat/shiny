@@ -16,7 +16,7 @@ vertex_buffer_t::vertex_buffer_t(context_ptr const& context, resource_storage_t 
 		resource_usage_mask_t::none,
 		usage,
 		buffer_dimensions_t{vd->stride(), vertex_count},
-		buffer_data_t::copy(data, data_vertcount))
+		buffer_data_t{data, data_vertcount})
 	, data_declaration_(vd), vertex_count_(vertex_count)
 {
 }

@@ -4,7 +4,7 @@
 #include <shiny/scene.hpp>
 #include <shiny/draw.hpp>
 #include <shiny/generic_buffer.hpp>
-#include <shiny/platform/win32/resource_view.hpp>
+#include <shiny/resource_view.hpp>
 
 #include <shelf/file.hpp>
 
@@ -126,7 +126,7 @@ auto voxelization_plugin_t::main_setup() -> void
 	mem = numbers2.detach_buffer();
 
 #if 1
-	using fragments_t = shiny::generic_buffer_t::typed_shadow_buffer_t<voxel_t>;
+	using fragments_t = shiny::buffer_t::aligned_data_t<voxel_t>;
 	auto fragments = fragments_t{};
 
 	// get the real-world bounding box of the model
@@ -233,7 +233,7 @@ auto voxelization_plugin_t::main_setup() -> void
 		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
 		shiny::resource_storage_t::persistant,
 		shiny::buffer_dimensions_t::infer(fragments),
-		shiny::buffer_data_t::move(fragments),
+		shiny::buffer_data_t{fragments},
 			shiny::gen_default_read_view_t{},
 			shiny::gen_default_read_write_view_t{});
 
@@ -242,7 +242,7 @@ auto voxelization_plugin_t::main_setup() -> void
 		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
 		shiny::resource_storage_t::persistant,
 		shiny::texture_dimensions_t{shiny::element_format_t::u8x4, 512, 512, 512, 1},
-		shiny::buffer_data_t{},
+		shiny::data_xfer_t{},
 			shiny::suppress_default_read_view_t{});
 #endif
 

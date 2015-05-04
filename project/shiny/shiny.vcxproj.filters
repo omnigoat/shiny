@@ -349,6 +349,9 @@
     <ClInclude Include="..\..\include\shiny\platform\win32\structured_buffer.hpp">
       <Filter>include\shiny\platform\win32</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\shiny\data_xfer.hpp">
+      <Filter>include\shiny</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="..\..\shaders\cs_test.hlsl">
