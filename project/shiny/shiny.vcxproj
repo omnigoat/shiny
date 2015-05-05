@@ -226,14 +226,13 @@
     <ClInclude Include="..\..\include\shiny\blend_state.hpp" />
     <ClInclude Include="..\..\include\shiny\buffer.hpp" />
     <ClInclude Include="..\..\include\shiny\camera.hpp" />
+    <ClInclude Include="..\..\include\shiny\compute.hpp" />
     <ClInclude Include="..\..\include\shiny\compute_shader.hpp" />
     <ClInclude Include="..\..\include\shiny\constant_buffer.hpp" />
     <ClInclude Include="..\..\include\shiny\context.hpp" />
     <ClInclude Include="..\..\include\shiny\data_declaration.hpp" />
     <ClInclude Include="..\..\include\shiny\data_stream.hpp" />
-    <ClInclude Include="..\..\include\shiny\data_xfer.hpp" />
     <ClInclude Include="..\..\include\shiny\draw.hpp" />
-    <ClInclude Include="..\..\include\shiny\draw_state.hpp" />
     <ClInclude Include="..\..\include\shiny\generic_buffer.hpp" />
     <ClInclude Include="..\..\include\shiny\geometry_declaration.hpp" />
     <ClInclude Include="..\..\include\shiny\geometry_shader.hpp" />
@@ -250,7 +249,6 @@
     <ClInclude Include="..\..\include\shiny\rendertarget_clear.hpp" />
     <ClInclude Include="..\..\include\shiny\resource.hpp" />
     <ClInclude Include="..\..\include\shiny\resource_view.hpp" />
-    <ClInclude Include="..\..\include\shiny\shader_resource2d.hpp" />
     <ClInclude Include="..\..\include\shiny\element_format.hpp" />
     <ClInclude Include="..\..\include\shiny\index_buffer.hpp" />
     <ClInclude Include="..\..\include\shiny\lock.hpp" />

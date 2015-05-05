@@ -262,9 +262,6 @@
     <ClInclude Include="..\..\include\shiny\resource.hpp">
       <Filter>include\shiny</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\shiny\shader_resource2d.hpp">
-      <Filter>include\shiny</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\vendor\zlib\deflate.h">
       <Filter>vendor\zlib</Filter>
     </ClInclude>
@@ -322,9 +319,6 @@
     <ClInclude Include="..\..\include\pepper\freelook_camera_controller.hpp">
       <Filter>include\pepper</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\shiny\draw_state.hpp">
-      <Filter>include\shiny</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\shiny\data_stream.hpp">
       <Filter>include\shiny</Filter>
     </ClInclude>
@@ -349,7 +343,7 @@
     <ClInclude Include="..\..\include\shiny\platform\win32\structured_buffer.hpp">
       <Filter>include\shiny\platform\win32</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\shiny\data_xfer.hpp">
+    <ClInclude Include="..\..\include\shiny\compute.hpp">
       <Filter>include\shiny</Filter>
     </ClInclude>
   </ItemGroup>
