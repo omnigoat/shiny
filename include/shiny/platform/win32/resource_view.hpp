@@ -32,12 +32,11 @@ namespace shiny
 
 	struct resource_view_t : atma::ref_counted
 	{
-		resource_view_t(resource_cptr const&, view_type_t, gpu_access_t, element_format_t, resource_subset_t);
+		resource_view_t(resource_cptr const&, resource_view_type_t, element_format_t, resource_subset_t);
 
 		auto context() const -> context_ptr const&;
 		auto resource() const -> resource_cptr const& { return resource_; }
-		auto view_type() const -> view_type_t { return view_type_; }
-		auto gpu_access() const -> gpu_access_t { return gpu_access_; }
+		auto view_type() const -> resource_view_type_t { return resource_view_type_; }
 		auto format() const -> element_format_t { return format_; }
 		auto subset() const -> resource_subset_t const& { return subset_; }
 
@@ -45,8 +44,7 @@ namespace shiny
 
 	private:
 		resource_cptr resource_;
-		view_type_t view_type_;
-		gpu_access_t gpu_access_;
+		resource_view_type_t resource_view_type_;
 		element_format_t format_;
 		resource_subset_t subset_;
 
@@ -62,5 +60,5 @@ namespace shiny
 	};
 #endif
 
-	auto make_resource_view(resource_cptr const&, gpu_access_t, element_format_t, resource_subset_t = resource_subset_t::whole) -> resource_view_ptr;
+	auto make_resource_view(resource_cptr const&, resource_view_type_t, element_format_t, resource_subset_t = resource_subset_t::whole) -> resource_view_ptr;
 }

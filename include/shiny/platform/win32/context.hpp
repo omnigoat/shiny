@@ -109,7 +109,6 @@ namespace shiny
 		// compute-stage
 		auto signal_cs_set(compute_shader_ptr const&) -> void;
 		auto signal_cs_upload_constant_buffer(uint index, constant_buffer_cptr const&) -> void;
-		auto signal_cs_upload_shader_resource(view_type_t, shader_resource2d_ptr const&) -> void;
 		auto signal_cs_dispatch(uint x, uint y, uint z) -> void;
 
 

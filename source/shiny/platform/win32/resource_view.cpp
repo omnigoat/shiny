@@ -14,8 +14,8 @@ using shiny::resource_view_t;
 resource_subset_t const resource_subset_t::whole = resource_subset_t{};
 
 
-resource_view_t::resource_view_t(resource_cptr const& rs, view_type_t view_type, gpu_access_t gpua, element_format_t ef, resource_subset_t subset)
-	: resource_(rs), view_type_(view_type), gpu_access_(gpua), format_(ef), subset_(subset)
+resource_view_t::resource_view_t(resource_cptr const& rs, resource_view_type_t view_type, element_format_t ef, resource_subset_t subset)
+	: resource_(rs), resource_view_type_(view_type), format_(ef), subset_(subset)
 {
 	if (rs->resource_type() == resource_type_t::structured_buffer)
 	{
@@ -27,9 +27,9 @@ resource_view_t::resource_view_t(resource_cptr const& rs, view_type_t view_type,
 	if (subset_.count == 0)
 		subset_.count = rs->elements_count();
 
-	switch (gpu_access_)
+	switch (view_type)
 	{
-		case gpu_access_t::read:
+		case resource_view_type_t::shader_resource:
 		{
 			auto desc = D3D11_SHADER_RESOURCE_VIEW_DESC{
 				fmt,
@@ -40,7 +40,7 @@ resource_view_t::resource_view_t(resource_cptr const& rs, view_type_t view_type,
 			break;
 		}
 
-		case gpu_access_t::read_write:
+		case resource_view_type_t::compute:
 		{
 			auto desc = D3D11_UNORDERED_ACCESS_VIEW_DESC{
 				fmt,
@@ -52,7 +52,7 @@ resource_view_t::resource_view_t(resource_cptr const& rs, view_type_t view_type,
 		}
 
 		default:
-			ATMA_HALT("bad value for gpu-access for resource-view");
+			ATMA_HALT("bad!!");
 			break;
 	}
 	
@@ -63,9 +63,9 @@ auto resource_view_t::context() const -> context_ptr const&
 	return resource_->context();
 }
 
-auto shiny::make_resource_view(resource_cptr const& r, gpu_access_t ga, element_format_t ef, resource_subset_t s) -> resource_view_ptr
+auto shiny::make_resource_view(resource_cptr const& r, resource_view_type_t vt, element_format_t ef, resource_subset_t s) -> resource_view_ptr
 {
-	return atma::make_intrusive_ptr<resource_view_t>(r, view_type_t::buffer, ga, ef, s);
+	return atma::make_intrusive_ptr<resource_view_t>(r, vt, ef, s);
 }
 
 

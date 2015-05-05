@@ -141,13 +141,13 @@ auto buffer_t::bind(gen_default_read_view_t const& v) -> void
 {
 	ATMA_ASSERT(!default_read_view_);
 
-	default_read_view_ = make_resource_view(shared_from_this<resource_t>(), gpu_access_t::read, v.element_format, v.subset);
+	//default_read_view_ = make_resource_view(shared_from_this<resource_t>(), gpu_access_t::read, v.element_format, v.subset);
 }
 
 auto buffer_t::bind(gen_default_read_write_view_t const& v) -> void
 {
 	ATMA_ASSERT(!default_read_write_view_);
 
-	default_read_write_view_ = make_resource_view(shared_from_this<resource_t>(), gpu_access_t::read_write, v.element_format, v.subset);
+	//default_read_write_view_ = make_resource_view(shared_from_this<resource_t>(), gpu_access_t::read_write, v.element_format, v.subset);
 }
 

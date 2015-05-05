@@ -63,23 +63,24 @@ namespace shiny
 	typedef atma::intrusive_ptr<texture3d_t> texture3d_ptr;
 
 	struct compute_shader_t;
-	typedef atma::intrusive_ptr<compute_shader_t> compute_shader_ptr;
+	using  compute_shader_ptr  = atma::intrusive_ptr<compute_shader_t>;
+	using  compute_shader_cptr = atma::intrusive_ptr<compute_shader_t const>;
 
-	struct buffer_t;
-	typedef atma::intrusive_ptr<buffer_t> buffer_ptr;
-
-	struct shader_resource2d_t;
-	typedef atma::intrusive_ptr<shader_resource2d_t> shader_resource2d_ptr;
+	struct resource_t;
+	using  resource_ptr  = atma::intrusive_ptr<resource_t>;
+	using  resource_cptr = atma::intrusive_ptr<resource_t const>;
+	using  bound_resource_t  = std::pair<uint, resource_cptr>;
+	using  bound_resources_t = std::vector<bound_resource_t>;
 
 	struct resource_view_t;
 	using  resource_view_ptr  = atma::intrusive_ptr<resource_view_t>;
 	using  resource_view_cptr = atma::intrusive_ptr<resource_view_t const>;
+	using  bound_resource_view_t  = std::pair<uint, resource_view_cptr>;
+	using  bound_resource_views_t = std::vector<bound_resource_t>;
 
-	struct resource_t;
-	//typedef atma::intrusive_ptr<resource_t> resource_ptr;
-	using resource_ptr  = atma::intrusive_ptr<resource_t>;
-	using resource_cptr = atma::intrusive_ptr<resource_t const>;
-	typedef std::vector<std::pair<uint, resource_ptr>> bound_resources_t;
+	struct buffer_t;
+	using  buffer_ptr  = atma::intrusive_ptr<buffer_t>;
+	using  buffer_cptr = atma::intrusive_ptr<buffer_t>;
 
 	struct generic_buffer_t;
 	typedef atma::intrusive_ptr<generic_buffer_t> generic_buffer_ptr;
@@ -112,6 +113,13 @@ namespace shiny
 		texturd3d,
 	};
 
+	enum class resource_view_type_t
+	{
+		standard,
+		render_target,
+		depth_stencil,
+		compute,
+	};
 
 
 
@@ -182,14 +190,7 @@ namespace shiny
 		write,
 		read_write
 	};
-
-	enum class view_type_t
-	{
-		buffer,
-		texture2d,
-		texture3d,
-	};
-
+	
 	enum class map_type_t
 	{
 		write,

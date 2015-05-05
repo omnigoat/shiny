@@ -223,10 +223,16 @@ auto voxelization_plugin_t::main_setup() -> void
 		++fragidx;
 	}
 
-	auto const block_edge_size = uint64(8);
-	auto const brick_morton_width = block_edge_size * block_edge_size * block_edge_size;
-	auto const levels_required = aml::log2(gridsize / block_edge_size) + 1;
+	auto const brick_edge_size = 8u;
+	auto const brick_morton_width = brick_edge_size * brick_edge_size * brick_edge_size;
+	auto const levels_required = aml::log2(gridsize / brick_edge_size) + 1;
 	auto const empty = std::numeric_limits<uint64>::max();
+
+	auto nodes_required = (gridsize / brick_edge_size) * (gridsize / brick_edge_size) * (gridsize / brick_edge_size);
+	nodes_required += nodes_required / 3; // size for levels
+	auto const node_size = sizeof(node_t) * 8;
+	auto const fullsize = nodes_required * node_size;
+
 
 
 	auto voxelbuf = shiny::make_buffer(ctx,
@@ -234,37 +240,38 @@ auto voxelization_plugin_t::main_setup() -> void
 		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
 		shiny::resource_storage_t::persistant,
 		shiny::buffer_dimensions_t::infer(fragments),
-		shiny::buffer_data_t{fragments},
-			shiny::gen_default_read_view_t{},
-			shiny::gen_default_read_write_view_t{});
+		shiny::buffer_data_t{fragments});
+
+	auto voxelbuf_view = shiny::make_resource_view(voxelbuf,
+		shiny::resource_view_type_t::compute,
+		shiny::element_format_t::unknown);
 
 	auto brickpool = shiny::make_texture3d(ctx,
 		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
 		shiny::resource_storage_t::persistant,
 		shiny::texture3d_dimensions_t::cube(shiny::element_format_t::u8x4, gridsize, 1));
 
-	auto const brick_size = 8u;
-	auto nodes_required = (gridsize / brick_size) * (gridsize / brick_size) * (gridsize / brick_size);
-	auto node_size = sizeof(node_t) * 8;
-	auto fullsize = nodes_required * node_size;
-
 	auto nodepool = shiny::make_buffer(ctx,
 		shiny::resource_type_t::structured_buffer,
 		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
 		shiny::resource_storage_t::persistant,
 		shiny::buffer_dimensions_t{node_size, nodes_required},
-		shiny::buffer_data_t{});
+		shiny::buffer_data_t{},
+			shiny::gen_default_read_write_view_t{});
 
-#if 0
+
+#if 1
+	// load fragments into brick-pool
 	shiny::signal_compute(ctx,
-		shiny::bound_resources_t{
-			{0, fragbuf_view},
-			{1, nodepool->d3d_srv()}
+		shiny::compute(cs_write_fragments_, 512, 1, 1),
+		shiny::bound_resource_views_t{
+			{0, voxelbuf_view}
+		},
+		shiny::bind_compute_views_t{
+			{0, brickpool}
 		});
+
 #endif
-
-	
-
 
 #if 0
 	
