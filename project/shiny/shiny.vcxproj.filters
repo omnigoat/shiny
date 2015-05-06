@@ -167,6 +167,9 @@
     <ClCompile Include="..\..\source\shiny\platform\win32\resource_view.cpp">
       <Filter>source\shiny\platform\win32</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\source\shiny\compute.cpp">
+      <Filter>source\shiny</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\shiny\context.hpp">

@@ -3,6 +3,7 @@
 #include <shiny/context.hpp>
 #include <shiny/scene.hpp>
 #include <shiny/draw.hpp>
+#include <shiny/compute.hpp>
 #include <shiny/generic_buffer.hpp>
 #include <shiny/resource_view.hpp>
 #include <shiny/texture3d.hpp>
@@ -251,6 +252,10 @@ auto voxelization_plugin_t::main_setup() -> void
 		shiny::resource_storage_t::persistant,
 		shiny::texture3d_dimensions_t::cube(shiny::element_format_t::u8x4, gridsize, 1));
 
+	auto brickpool_cview = shiny::make_resource_view(brickpool,
+		shiny::resource_view_type_t::compute,
+		shiny::element_format_t::unknown);
+
 	auto nodepool = shiny::make_buffer(ctx,
 		shiny::resource_type_t::structured_buffer,
 		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
@@ -262,14 +267,16 @@ auto voxelization_plugin_t::main_setup() -> void
 
 #if 1
 	// load fragments into brick-pool
+	namespace scc = shiny::compute_commands;
+
 	shiny::signal_compute(ctx,
-		shiny::compute(cs_write_fragments_, 512, 1, 1),
-		shiny::bound_resource_views_t{
+		scc::execute(shiny::compute_shader_cptr::null, 512, 1, 1),
+		scc::bind_input_views({
 			{0, voxelbuf_view}
-		},
-		shiny::bind_compute_views_t{
-			{0, brickpool}
-		});
+		}),
+		scc::bind_compute_views({
+			{0, brickpool_cview}
+		}));
 
 #endif
 

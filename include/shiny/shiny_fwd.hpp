@@ -76,7 +76,7 @@ namespace shiny
 	using  resource_view_ptr  = atma::intrusive_ptr<resource_view_t>;
 	using  resource_view_cptr = atma::intrusive_ptr<resource_view_t const>;
 	using  bound_resource_view_t  = std::pair<uint, resource_view_cptr>;
-	using  bound_resource_views_t = std::vector<bound_resource_t>;
+	using  bound_resource_views_t = std::vector<bound_resource_view_t>;
 
 	struct buffer_t;
 	using  buffer_ptr  = atma::intrusive_ptr<buffer_t>;
@@ -115,10 +115,13 @@ namespace shiny
 
 	enum class resource_view_type_t
 	{
-		standard,
+		// read-only (shader-resource)
+		input,
+		// read-write (unordered-access)
+		compute,
+
 		render_target,
 		depth_stencil,
-		compute,
 	};
 
 

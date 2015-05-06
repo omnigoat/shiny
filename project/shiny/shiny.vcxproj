@@ -182,6 +182,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\source\pepper\freelook_camera_controller.cpp" />
     <ClCompile Include="..\..\source\shiny\camera.cpp" />
+    <ClCompile Include="..\..\source\shiny\compute.cpp" />
     <ClCompile Include="..\..\source\shiny\data_declaration.cpp" />
     <ClCompile Include="..\..\source\shiny\data_stream.cpp" />
     <ClCompile Include="..\..\source\shiny\draw.cpp" />
