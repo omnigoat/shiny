@@ -270,13 +270,15 @@ auto voxelization_plugin_t::main_setup() -> void
 	namespace scc = shiny::compute_commands;
 
 	shiny::signal_compute(ctx,
-		scc::execute(shiny::compute_shader_cptr::null, 512, 1, 1),
 		scc::bind_input_views({
 			{0, voxelbuf_view}
 		}),
 		scc::bind_compute_views({
 			{0, brickpool_cview}
-		}));
+		}),
+
+		scc::dispatch(shiny::compute_shader_cptr::null, 512, 1, 1)
+	);
 
 #endif
 

@@ -29,7 +29,7 @@ resource_view_t::resource_view_t(resource_cptr const& rs, resource_view_type_t v
 
 	switch (view_type)
 	{
-		case resource_view_type_t::shader_resource:
+		case resource_view_type_t::input:
 		{
 			auto desc = D3D11_SHADER_RESOURCE_VIEW_DESC{
 				fmt,

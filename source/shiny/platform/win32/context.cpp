@@ -298,7 +298,7 @@ auto context_t::immediate_clear(rendertarget_clear_t const& rtc) -> void
 	d3d_immediate_context_->ClearDepthStencilView(d3d_depth_stencil_.get(), D3D11_CLEAR_DEPTH, rtc.depth(), rtc.stencil());
 }
 
-auto context_t::immediate_pipeline_reset() -> void
+auto context_t::immediate_draw_pipeline_reset() -> void
 {
 	draw_range_ = draw_range_t{};
 }
@@ -410,24 +410,49 @@ auto context_t::immediate_draw() -> void
 	}
 }
 
-
-
-auto context_t::signal_cs_upload_constant_buffer(uint index, constant_buffer_cptr const& buf) -> void
+auto context_t::immediate_compute_pipeline_reset() -> void
 {
-	engine_.signal([&, index, buf] {
-		d3d_immediate_context_->VSSetConstantBuffers(index, 1, &buf->d3d_buffer().get());
-		d3d_immediate_context_->PSSetConstantBuffers(index, 1, &buf->d3d_buffer().get());
+	engine_.signal([&]{
+		d3d_immediate_context_->CSSetConstantBuffers(0, 16, nullptr);
 	});
 }
 
-auto context_t::signal_cs_set(compute_shader_ptr const& cs) -> void
+auto context_t::immediate_cs_set_input_views(bound_resource_views_t const& views) -> void
 {
-	engine_.signal([&, cs] {
+	engine_.signal([&, views]
+	{
+		auto const count = 16;
+		ID3D11ShaderResourceView* srvs[16] = {};
+		
+		for (auto const& x : views)
+			srvs[x.first] = (ID3D11ShaderResourceView*)x.second->d3d_view().get();
+
+		d3d_immediate_context_->CSSetShaderResources(0, count, srvs);
+	});
+}
+
+auto context_t::immediate_cs_set_compute_views(bound_resource_views_t const& views) -> void
+{
+	engine_.signal([&, views]
+	{
+		auto const count = 16;
+		ID3D11UnorderedAccessView* uavs[16] ={};
+
+		for (auto const& x : views)
+			uavs[x.first] = (ID3D11UnorderedAccessView*)x.second->d3d_view().get();
+
+		d3d_immediate_context_->CSSetUnorderedAccessViews(0, count, uavs, nullptr);
+	});
+}
+
+auto context_t::immediate_cs_set_compute_shader(compute_shader_cptr const& cs) -> void
+{
+	engine_.signal([&, cs]{
 		d3d_immediate_context_->CSSetShader(cs->d3d_cs().get(), nullptr, 0);
 	});
 }
 
-auto context_t::signal_cs_dispatch(uint x, uint y, uint z) -> void
+auto context_t::immediate_compute(uint x, uint y, uint z) -> void
 {
 	engine_.signal([&, x, y, z]{
 		d3d_immediate_context_->Dispatch(x, y, z);

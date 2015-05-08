@@ -65,7 +65,8 @@ namespace shiny
 
 
 		// pipeline-setup-stage
-		auto immediate_pipeline_reset() -> void;
+		auto immediate_draw_pipeline_reset() -> void;
+		auto immediate_compute_pipeline_reset() -> void;
 
 
 		// "resources stage"
@@ -73,33 +74,27 @@ namespace shiny
 		auto signal_res_update(constant_buffer_ptr const&, uint data_size, void*) -> void;
 		auto signal_res_update(constant_buffer_ptr const&, atma::shared_memory_t const&) -> void;
 
-
 		// input-assembly-stage
 		auto immediate_ia_set_data_declaration(data_declaration_t const*) -> void;
 		auto immediate_ia_set_vertex_buffer(vertex_buffer_cptr const&) -> void;
 		auto immediate_ia_set_index_buffer(index_buffer_cptr const&) -> void;
 		auto immediate_ia_set_topology(topology_t) -> void;
 
-
 		// geometry-stage
 		auto immediate_gs_set_geometry_shader(geometry_shader_cptr const&) -> void;
-
 
 		// vertex-stage
 		auto immediate_vs_set_vertex_shader(vertex_shader_cptr const&) -> void;
 		auto immediate_vs_set_constant_buffers(bound_constant_buffers_t const&) -> void;
 		auto immediate_vs_set_resources(bound_resources_t const&) -> void;
 
-
 		// fragment-stage
 		auto immediate_fs_set_fragment_shader(fragment_shader_cptr const&) -> void;
 		auto immediate_fs_set_constant_buffers(bound_constant_buffers_t const&) -> void;
 		auto immediate_fs_set_resources(bound_resources_t const&) -> void;
 
-
 		// output-merger-stage
 		auto immediate_om_set_blending(blender_cptr const&) -> void;
-
 
 		// draw
 		auto immediate_draw_set_range(draw_range_t const&) -> void;
@@ -107,9 +102,10 @@ namespace shiny
 
 
 		// compute-stage
-		auto signal_cs_set(compute_shader_ptr const&) -> void;
-		auto signal_cs_upload_constant_buffer(uint index, constant_buffer_cptr const&) -> void;
-		auto signal_cs_dispatch(uint x, uint y, uint z) -> void;
+		auto immediate_cs_set_input_views(bound_resource_views_t const&) -> void;
+		auto immediate_cs_set_compute_views(bound_resource_views_t const&) -> void;
+		auto immediate_cs_set_compute_shader(compute_shader_cptr const&) -> void;
+		auto immediate_compute(uint x, uint y, uint z) -> void;
 
 
 

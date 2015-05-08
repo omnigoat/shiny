@@ -3,6 +3,7 @@
 #include <shiny/compute_shader.hpp>
 
 #include <atma/vector.hpp>
+#include <atma/thread/engine.hpp>
 
 
 namespace shiny
@@ -12,7 +13,7 @@ namespace shiny
 		
 	}
 
-	struct cs_execute_t
+	struct cs_dispatch_t
 	{
 		compute_shader_cptr shader;
 		uint x, y, z;
@@ -21,28 +22,23 @@ namespace shiny
 	struct bound_input_views_t
 	{
 		bound_input_views_t(std::initializer_list<bound_resource_view_t> list)
-			: views_(list.begin(), list.end())
+			: views(list.begin(), list.end())
 		{}
 
-		bound_resource_views_t views_;
+		bound_resource_views_t views;
 	};
 
 	struct bound_compute_views_t
 	{
 		bound_compute_views_t(std::initializer_list<bound_resource_view_t> list)
-			: views_(list.begin(), list.end())
+			: views(list.begin(), list.end())
 		{}
 
-		bound_resource_views_t views_;
+		bound_resource_views_t views;
 	};
 
 	namespace compute_commands
 	{
-		inline auto execute(compute_shader_cptr const& cs, uint x, uint y, uint z) -> cs_execute_t
-		{
-			return cs_execute_t{cs, x, y, z};
-		}
-
 		inline auto bind_input_views(std::initializer_list<bound_resource_view_t> views) -> bound_input_views_t
 		{
 			return bound_input_views_t{views};
@@ -52,15 +48,23 @@ namespace shiny
 		{
 			return bound_compute_views_t{views};
 		}
+
+		inline auto dispatch(compute_shader_cptr const& cs, uint x, uint y, uint z) -> cs_dispatch_t
+		{
+			return cs_dispatch_t{cs, x, y, z};
+		}
 	}
 
 
 
 	namespace detail
 	{
-		auto generate_compute_command(queue_t::batch_t&, context_ptr const&, cs_execute_t const&) -> void;
+		using queue_t = atma::thread::engine_t::queue_t;
+
+		auto generate_compute_prelude(queue_t::batch_t&, context_ptr const&) -> void;
 		auto generate_compute_command(queue_t::batch_t&, context_ptr const&, bound_input_views_t const&) -> void;
 		auto generate_compute_command(queue_t::batch_t&, context_ptr const&, bound_compute_views_t const&) -> void;
+		auto generate_compute_command(queue_t::batch_t&, context_ptr const&, cs_dispatch_t const&) -> void;
 	}
 
 
