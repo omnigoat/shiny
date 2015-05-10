@@ -206,6 +206,8 @@ auto voxelization_plugin_t::main_setup() -> void
 			indices.push_back(fragidx * 8 + *idx);
 		++fragidx;
 	}
+
+#if 0
 	auto it = fragments.begin() + 2000;
 	auto i1 = it ->morton; uint i1x, i1y, i1z; moxi::morton_decoding32(i1, i1x, i1y, i1z);
 	auto i2 = i1 / 8;      uint i2x, i2y, i2z; moxi::morton_decoding32(i2, i2x, i2y, i2z);
@@ -214,6 +216,7 @@ auto voxelization_plugin_t::main_setup() -> void
 	auto i4 = i3 / 8;      uint i4x, i4y, i4z; moxi::morton_decoding32(i4, i4x, i4y, i4z);
 	auto i5 = i4 / 8;      uint i5x, i5y, i5z; moxi::morton_decoding32(i5, i5x, i5y, i5z);
 	auto i6 = i5 / 8;      uint i6x, i6y, i6z; moxi::morton_decoding32(i6, i6x, i6y, i6z);
+#endif
 
 	auto const brick_edge_size = 8u;
 	auto const brick_morton_width = brick_edge_size * brick_edge_size * brick_edge_size;
@@ -222,7 +225,7 @@ auto voxelization_plugin_t::main_setup() -> void
 
 	auto nodes_required = (gridsize / brick_edge_size) * (gridsize / brick_edge_size) * (gridsize / brick_edge_size);
 	nodes_required += nodes_required / 3; // size for levels
-	auto const node_size = sizeof(node_t) * 8;
+	auto const node_size = sizeof(node_t);
 	auto const fullsize = nodes_required * node_size;
 
 
@@ -364,6 +367,17 @@ auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
 	auto fmem = f.read_into_memory();
 	auto cs = shiny::make_compute_shader(scene.context(), fmem.begin(), fmem.size());
 
+	auto const gridsize = 128;
+	auto const brick_edge_size = 8u;
+	auto const brick_morton_width = brick_edge_size * brick_edge_size * brick_edge_size;
+	auto const levels_required = aml::log2(gridsize / brick_edge_size) + 1;
+	auto const empty = std::numeric_limits<uint64>::max();
+
+	auto nodes_required = (gridsize / brick_edge_size) * (gridsize / brick_edge_size) * (gridsize / brick_edge_size);
+	nodes_required += nodes_required / 3; // size for levels
+	auto const node_size = sizeof(node_t);
+	auto const fullsize = nodes_required * node_size;
+
 	for (int i = 0; i != 4; ++i)
 	{
 		auto bb = shiny::make_constant_buffer(scene.context(), cs_cbuf{
@@ -392,7 +406,17 @@ auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
 				scc::dispatch(cs, (uint)fragments.size() / 64, 1, 1)
 			);
 
-			ctx->signal_res_map(nodepool, 0, shiny::map_type_t::read, [](shiny::mapped_subresource_t& sr){
+			auto stb = shiny::make_buffer(ctx,
+				shiny::resource_type_t::staging_buffer,
+				shiny::resource_usage_mask_t::none,
+				shiny::resource_storage_t::staging,
+				shiny::buffer_dimensions_t{node_size, nodes_required},
+				shiny::buffer_data_t{});
+
+			ctx->signal_copy_buffer(stb, nodepool);
+			//ctx->signal_block();
+			
+			ctx->signal_res_map(stb, 0, shiny::map_type_t::read, [](shiny::mapped_subresource_t& sr){
 				auto ud = (uint32*)sr.data;
 				std::cout << ud[0] << std::endl;
 			});

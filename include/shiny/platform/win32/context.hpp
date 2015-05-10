@@ -62,6 +62,10 @@ namespace shiny
 		auto signal_draw_scene(scene_t&) -> void;
 		auto signal(atma::thread::engine_t::queue_t::batch_t&) -> void;
 
+		auto signal_copy_buffer(resource_ptr const&, resource_cptr const&) -> void;
+
+
+
 		auto immediate_clear(rendertarget_clear_t const&) -> void;
 
 

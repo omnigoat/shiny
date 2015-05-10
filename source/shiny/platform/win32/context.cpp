@@ -574,3 +574,9 @@ auto context_t::on_resize(fooey::events::resize_t& e) -> void
 	requested_display_mode_ = &requested_windowed_display_mode_;
 }
 
+auto context_t::signal_copy_buffer(resource_ptr const& dest, resource_cptr const& src) -> void
+{
+	engine_.signal([&, dest, src]{
+		d3d_immediate_context_->CopyResource(dest->d3d_resource().get(), src->d3d_resource().get());
+	});
+}

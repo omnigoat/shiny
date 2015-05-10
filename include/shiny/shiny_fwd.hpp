@@ -109,6 +109,7 @@ namespace shiny
 		constant_buffer,
 		generic_buffer,
 		structured_buffer,
+		staging_buffer,
 
 		texture2d,
 		texturd3d,

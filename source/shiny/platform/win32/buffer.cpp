@@ -54,6 +54,11 @@ buffer_t::buffer_t(context_ptr const& ctx,
 			d3d_ca = D3D11_CPU_ACCESS_WRITE;
 			break;
 
+		case resource_storage_t::staging:
+			d3d_bu = D3D11_USAGE_STAGING;
+			(uint&)d3d_ca = D3D11_CPU_ACCESS_WRITE | D3D11_CPU_ACCESS_READ;
+			break;
+
 		default:
 			ATMA_HALT("buffer usage is ill-formed");
 			break;
@@ -106,14 +111,18 @@ buffer_t::buffer_t(context_ptr const& ctx,
 			break;
 		}
 
+		// constant-buffers must be 16byte sized
+		case resource_storage_t::constant:
+			data_size = ((data_size / 16) + 1) * 16;
+			// fallthrough
+
 		case resource_storage_t::persistant:
 		case resource_storage_t::temporary:
 		case resource_storage_t::transient:
-		case resource_storage_t::constant:
+		case resource_storage_t::staging:
 		{
 			if (bdt.data)
 			{
-				data_size = ((data_size / 16) + 1) * 16;
 				auto d3d_data = D3D11_SUBRESOURCE_DATA{bdt.data, (UINT)data_size, 1};
 				ATMA_ENSURE_IS(S_OK, context()->d3d_device()->CreateBuffer(&buffer_desc, &d3d_data, d3d_buffer_.assign()));
 			}
