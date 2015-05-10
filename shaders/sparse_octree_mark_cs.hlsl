@@ -75,8 +75,6 @@ void main(uint3 DTid : SV_DispatchThreadID)
 
 	uint voxel = fragments.Load(idx);
 	
-	nodepool[idx].children_offset = idx;
-
 	uint offset = 0;
 	uint child_idx = 0;
 
@@ -93,8 +91,5 @@ void main(uint3 DTid : SV_DispatchThreadID)
 		child_idx = morton & 0x7;
 	}
 
-	node_t node = nodepool.Load(offset * 8 + child_idx);
 	InterlockedOr(nodepool[offset * 8 + child_idx].children_offset, 0x80000000);
-
-	nodepool[idx].children_offset = idx;
 }

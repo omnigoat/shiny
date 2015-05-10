@@ -89,8 +89,10 @@ buffer_t::buffer_t(context_ptr const& ctx,
 		(uint&)binding |= D3D11_BIND_DEPTH_STENCIL;
 	if (resource_usage() & resource_usage_t::shader_resource)
 		(uint&)binding |= D3D11_BIND_SHADER_RESOURCE;
-	if (resource_usage() & resource_usage_t::unordered_access)
+	if (resource_usage() & resource_usage_t::unordered_access) {
 		(uint&)binding |= D3D11_BIND_UNORDERED_ACCESS;
+		//(uint&)binding |= D3D11_BIND_counter;
+	}
 
 	// cpu-access for unordered-access-buffers
 	//if (resource_usage() & resource_usage_t::unordered_access)

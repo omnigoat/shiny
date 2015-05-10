@@ -39,7 +39,10 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="..\..\shaders\effect_sparse_octree_create.hlsl">
+    <FxCompile Include="..\..\shaders\sparse_octree_mark_cs.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="..\..\shaders\sparse_octree_allocate.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
   </ItemGroup>
