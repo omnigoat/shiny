@@ -15,6 +15,9 @@
     <Filter Include="include\plugins">
       <UniqueIdentifier>{14b6de9c-7eb9-49ce-a18e-ac2dcb68e0db}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shaders">
+      <UniqueIdentifier>{7e73581f-5843-4238-aafc-9182fb93ae80}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\sandbox\sandbox.hpp">
@@ -34,5 +37,10 @@
     <ClCompile Include="..\..\source\sandbox\voxelization.cpp">
       <Filter>source\plugins</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="..\..\shaders\effect_sparse_octree_create.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

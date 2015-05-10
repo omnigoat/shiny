@@ -37,6 +37,7 @@ resource_view_t::resource_view_t(resource_cptr const& rs, resource_view_type_t v
 				D3D11_BUFFER_SRV{(UINT)subset_.offset, (UINT)subset_.count}};
 
 			ATMA_ENSURE_IS(S_OK, context()->d3d_device()->CreateShaderResourceView(resource_->d3d_resource().get(), &desc, d3d_srv_.assign()));
+			d3d_view_ = d3d_srv_;
 			break;
 		}
 
@@ -48,6 +49,7 @@ resource_view_t::resource_view_t(resource_cptr const& rs, resource_view_type_t v
 				D3D11_BUFFER_UAV{(UINT)subset_.offset, (UINT)subset_.count}};
 
 			ATMA_ENSURE_IS(S_OK, context()->d3d_device()->CreateUnorderedAccessView(resource_->d3d_resource().get(), &desc, d3d_uav_.assign()));
+			d3d_view_ = d3d_uav_;
 			break;
 		}
 

@@ -87,6 +87,9 @@ buffer_t::buffer_t(context_ptr const& ctx,
 	if (resource_usage() & resource_usage_t::unordered_access)
 		(uint&)binding |= D3D11_BIND_UNORDERED_ACCESS;
 
+	// cpu-access for unordered-access-buffers
+	//if (resource_usage() & resource_usage_t::unordered_access)
+		//(uint&)d3d_ca |= D3D11_CPU_ACCESS_READ;
 
 	// create buffer
 	auto buffer_desc = D3D11_BUFFER_DESC{(UINT)resource_size(), d3d_bu, binding, d3d_ca, misc_flags, (UINT)bdm.stride};
@@ -110,6 +113,7 @@ buffer_t::buffer_t(context_ptr const& ctx,
 		{
 			if (bdt.data)
 			{
+				data_size = ((data_size / 16) + 1) * 16;
 				auto d3d_data = D3D11_SUBRESOURCE_DATA{bdt.data, (UINT)data_size, 1};
 				ATMA_ENSURE_IS(S_OK, context()->d3d_device()->CreateBuffer(&buffer_desc, &d3d_data, d3d_buffer_.assign()));
 			}

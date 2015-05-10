@@ -14,4 +14,7 @@ namespace moxi
 
 	auto morton_encoding(uint x, uint y, uint z) -> uint64;
 	auto morton_decoding(uint64 morton, uint& x, uint& y, uint& z) -> void;
+
+	auto morton_encoding32(uint x, uint y, uint z) -> uint32;
+	auto morton_decoding32(uint32 morton, uint& x, uint& y, uint& z) -> void;
 }

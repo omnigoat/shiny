@@ -40,14 +40,12 @@ scene_t::scene_t(context_ptr const& context, camera_t const& camera, rendertarge
 		});
 	}
 
-	auto sd = scene_data_t{
+	scene_constant_buffer_ = shiny::make_constant_buffer(context_, scene_data_t{
 		camera.view(),
 		camera.projection(),
 		invert(camera.projection() * camera.view()),
 		0.f
-	};
-
-	scene_constant_buffer_ = shiny::create_constant_buffer(context_, sd);
+	});
 }
 
 

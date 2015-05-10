@@ -45,9 +45,10 @@ namespace shiny
 	typedef atma::intrusive_ptr<vertex_buffer_t const> vertex_buffer_cptr;
 
 	struct constant_buffer_t;
-	typedef atma::intrusive_ptr<constant_buffer_t> constant_buffer_ptr;
-	typedef atma::intrusive_ptr<constant_buffer_t const> constant_buffer_cptr;
-	typedef std::vector<std::pair<uint, constant_buffer_cptr>> bound_constant_buffers_t;
+	using  constant_buffer_ptr  = atma::intrusive_ptr<constant_buffer_t>;
+	using  constant_buffer_cptr = atma::intrusive_ptr<constant_buffer_t const>;
+	using  bound_constant_buffer_t  = std::pair<uint, constant_buffer_cptr>;
+	using  bound_constant_buffers_t = std::vector<bound_constant_buffer_t>;
 
 	struct index_buffer_t;
 	typedef atma::intrusive_ptr<index_buffer_t> index_buffer_ptr;
@@ -162,6 +163,8 @@ namespace shiny
 		//   update: map/discard
 		constant,
 		constant_shadowed,
+
+		staging,
 	};
 
 

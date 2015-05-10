@@ -39,6 +39,11 @@ namespace shiny
 
 	namespace compute_commands
 	{
+		inline auto bind_constant_buffers(std::initializer_list<bound_constant_buffer_t> buffers) -> bound_constant_buffers_t
+		{
+			return bound_constant_buffers_t{buffers};
+		}
+
 		inline auto bind_input_views(std::initializer_list<bound_resource_view_t> views) -> bound_input_views_t
 		{
 			return bound_input_views_t{views};
@@ -62,6 +67,7 @@ namespace shiny
 		using queue_t = atma::thread::engine_t::queue_t;
 
 		auto generate_compute_prelude(queue_t::batch_t&, context_ptr const&) -> void;
+		auto generate_compute_command(queue_t::batch_t&, context_ptr const&, bound_constant_buffers_t const&) -> void;
 		auto generate_compute_command(queue_t::batch_t&, context_ptr const&, bound_input_views_t const&) -> void;
 		auto generate_compute_command(queue_t::batch_t&, context_ptr const&, bound_compute_views_t const&) -> void;
 		auto generate_compute_command(queue_t::batch_t&, context_ptr const&, cs_dispatch_t const&) -> void;
@@ -81,7 +87,8 @@ namespace shiny
 	inline auto signal_compute(context_ptr const& ctx, Args&&... args) -> void
 	{
 		atma::thread::engine_t::queue_t::batch_t batch;
-		detail::generate_draw_prelude(batch, ctx);
+		detail::generate_compute_prelude(batch, ctx);
 		signal_compute(ctx, batch, std::forward<Args>(args)...);
+		ctx->signal(batch);
 	}
 }

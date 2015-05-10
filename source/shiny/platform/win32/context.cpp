@@ -276,6 +276,11 @@ auto context_t::signal_draw_scene(scene_t& scene) -> void
 	engine_.signal_batch(scene.batch_);
 }
 
+auto context_t::signal(atma::thread::engine_t::queue_t::batch_t& batch) -> void
+{
+	engine_.signal_batch(batch);
+}
+
 auto context_t::signal_res_update(constant_buffer_ptr const& cb, uint data_size, void* data) -> void
 {
 	signal_res_update(cb, atma::shared_memory_t(data_size, data));
@@ -413,7 +418,24 @@ auto context_t::immediate_draw() -> void
 auto context_t::immediate_compute_pipeline_reset() -> void
 {
 	engine_.signal([&]{
-		d3d_immediate_context_->CSSetConstantBuffers(0, 16, nullptr);
+		auto const cb_count = D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT;
+		ID3D11Buffer* bufs[cb_count] ={};
+
+		d3d_immediate_context_->CSSetConstantBuffers(0, cb_count, bufs);
+	});
+}
+
+auto context_t::immediate_cs_set_constant_buffers(bound_constant_buffers_t const& bufs) -> void
+{
+	engine_.signal([&, bufs]
+	{
+		auto const count = D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT;
+		ID3D11Buffer* dbufs[count] ={};
+		
+		for (auto const& x : bufs)
+			dbufs[x.first] = x.second->d3d_buffer().get();
+
+		d3d_immediate_context_->CSSetConstantBuffers(0, count, dbufs);
 	});
 }
 
@@ -435,8 +457,8 @@ auto context_t::immediate_cs_set_compute_views(bound_resource_views_t const& vie
 {
 	engine_.signal([&, views]
 	{
-		auto const count = 16;
-		ID3D11UnorderedAccessView* uavs[16] ={};
+		auto const count = D3D11_PS_CS_UAV_REGISTER_COUNT;
+		ID3D11UnorderedAccessView* uavs[count] ={};
 
 		for (auto const& x : views)
 			uavs[x.first] = (ID3D11UnorderedAccessView*)x.second->d3d_view().get();

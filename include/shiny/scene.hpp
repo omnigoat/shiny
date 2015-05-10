@@ -18,6 +18,8 @@ namespace shiny
 
 		auto scene_constant_buffer() const -> constant_buffer_ptr const& { return scene_constant_buffer_; }
 
+		auto context() const -> context_ptr const& { return context_; }
+
 		template <typename... Stages>
 		auto draw(Stages&&... stages) -> void;
 

@@ -7,6 +7,8 @@
 #include <shiny/generic_buffer.hpp>
 #include <shiny/resource_view.hpp>
 #include <shiny/texture3d.hpp>
+#include <shiny/compute_shader.hpp>
+#include <shiny/constant_buffer.hpp>
 
 #include <shelf/file.hpp>
 
@@ -78,22 +80,6 @@ auto voxelization_plugin_t::gfx_setup(shiny::context_ptr const& ctx2) -> void
 	ctx = ctx2;
 }
 
-struct voxel_t
-{
-	uint64 morton;
-};
-
-auto operator < (voxel_t const& lhs, voxel_t const& rhs) -> bool
-{
-	return lhs.morton < rhs.morton;
-}
-
-auto operator == (voxel_t const& lhs, voxel_t const& rhs) -> bool
-{
-	return lhs.morton == rhs.morton;
-}
-
-
 struct node_t
 {
 	node_t()
@@ -119,7 +105,7 @@ auto voxelization_plugin_t::main_setup() -> void
 	auto obj = obj_model_t{sf};
 
 	// try for 128^3 grid
-	auto const gridsize = 512;
+	auto const gridsize = 128;
 	
 	auto numbers = atma::vector<int>{1, 2, 3, 4, 5};
 	auto numbers2 = atma::vector<int>{};
@@ -128,9 +114,6 @@ auto voxelization_plugin_t::main_setup() -> void
 	mem = numbers2.detach_buffer();
 
 #if 1
-	using fragments_t = shiny::buffer_t::aligned_data_t<voxel_t>;
-	auto fragments = fragments_t{};
-
 	// get the real-world bounding box of the model
 	auto bbmin = aml::point4f(FLT_MAX, FLT_MAX, FLT_MAX), bbmax = aml::point4f(-FLT_MAX, -FLT_MAX, -FLT_MAX);
 
@@ -187,7 +170,7 @@ auto voxelization_plugin_t::main_setup() -> void
 						voxelwidth};
 
 					if (aml::intersect_aabb_triangle(aabc, info))
-						fragments.push_back({moxi::morton_encoding(x, y, z)});
+						fragments.push_back({moxi::morton_encoding32(x, y, z)});
 				}
 			}
 		}
@@ -207,7 +190,7 @@ auto voxelization_plugin_t::main_setup() -> void
 	for (auto const& frag : fragments)
 	{
 		uint x, y, z;
-		moxi::morton_decoding(frag.morton, x, y, z);
+		moxi::morton_decoding32(frag.morton, x, y, z);
 
 		auto scale = aml::matrix4f::scale(0.1f);
 		auto translate = aml::matrix4f::translate(aml::vector4f{(float)x, (float)y, (float)z});
@@ -223,6 +206,14 @@ auto voxelization_plugin_t::main_setup() -> void
 			indices.push_back(fragidx * 8 + *idx);
 		++fragidx;
 	}
+	auto it = fragments.begin() + 2000;
+	auto i1 = it ->morton; uint i1x, i1y, i1z; moxi::morton_decoding32(i1, i1x, i1y, i1z);
+	auto i2 = i1 / 8;      uint i2x, i2y, i2z; moxi::morton_decoding32(i2, i2x, i2y, i2z);
+	auto m2 = (i2 & 0x7); uint m2x, m2y, m2z; moxi::morton_decoding32(m2, m2x, m2y, m2z);
+	auto i3 = i2 / 8;      uint i3x, i3y, i3z; moxi::morton_decoding32(i3, i3x, i3y, i3z);
+	auto i4 = i3 / 8;      uint i4x, i4y, i4z; moxi::morton_decoding32(i4, i4x, i4y, i4z);
+	auto i5 = i4 / 8;      uint i5x, i5y, i5z; moxi::morton_decoding32(i5, i5x, i5y, i5z);
+	auto i6 = i5 / 8;      uint i6x, i6y, i6z; moxi::morton_decoding32(i6, i6x, i6y, i6z);
 
 	auto const brick_edge_size = 8u;
 	auto const brick_morton_width = brick_edge_size * brick_edge_size * brick_edge_size;
@@ -236,27 +227,23 @@ auto voxelization_plugin_t::main_setup() -> void
 
 
 
-	auto voxelbuf = shiny::make_buffer(ctx,
+	voxelbuf = shiny::make_buffer(ctx,
 		shiny::resource_type_t::structured_buffer,
 		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
 		shiny::resource_storage_t::persistant,
 		shiny::buffer_dimensions_t::infer(fragments),
 		shiny::buffer_data_t{fragments});
 
-	auto voxelbuf_view = shiny::make_resource_view(voxelbuf,
-		shiny::resource_view_type_t::compute,
+	voxelbuf_view = shiny::make_resource_view(voxelbuf,
+		shiny::resource_view_type_t::input,
 		shiny::element_format_t::unknown);
 
-	auto brickpool = shiny::make_texture3d(ctx,
+	brickpool = shiny::make_texture3d(ctx,
 		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
 		shiny::resource_storage_t::persistant,
 		shiny::texture3d_dimensions_t::cube(shiny::element_format_t::u8x4, gridsize, 1));
 
-	auto brickpool_cview = shiny::make_resource_view(brickpool,
-		shiny::resource_view_type_t::compute,
-		shiny::element_format_t::unknown);
-
-	auto nodepool = shiny::make_buffer(ctx,
+	nodepool = shiny::make_buffer(ctx,
 		shiny::resource_type_t::structured_buffer,
 		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
 		shiny::resource_storage_t::persistant,
@@ -264,24 +251,10 @@ auto voxelization_plugin_t::main_setup() -> void
 		shiny::buffer_data_t{},
 			shiny::gen_default_read_write_view_t{});
 
-
-#if 1
-	// load fragments into brick-pool
-	namespace scc = shiny::compute_commands;
-
-	shiny::signal_compute(ctx,
-		scc::bind_input_views({
-			{0, voxelbuf_view}
-		}),
-		scc::bind_compute_views({
-			{0, brickpool_cview}
-		}),
-
-		scc::dispatch(shiny::compute_shader_cptr::null, 512, 1, 1)
-	);
-
-#endif
-
+	nodepool_cview = shiny::make_resource_view(nodepool,
+		shiny::resource_view_type_t::compute,
+		shiny::element_format_t::unknown);
+	
 #if 0
 	
 
@@ -377,6 +350,57 @@ auto voxelization_plugin_t::main_setup() -> void
 auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
 {
 	namespace sdc = shiny::draw_commands;
+
+
+	struct cs_cbuf
+	{
+		uint32 fragment_count;
+		uint32 level;
+		uint32 levels;
+		uint32 pad;
+	};
+
+	auto f = atma::filesystem::file_t("../../shaders/effect_sparse_octree_create.hlsl");
+	auto fmem = f.read_into_memory();
+	auto cs = shiny::make_compute_shader(scene.context(), fmem.begin(), fmem.size());
+
+	for (int i = 0; i != 4; ++i)
+	{
+		auto bb = shiny::make_constant_buffer(scene.context(), cs_cbuf{
+			(uint32)fragments.size(),
+			i,
+			5
+		});
+
+#if 1
+		// construct sparse-octree
+		{
+			namespace scc = shiny::compute_commands;
+
+			shiny::signal_compute(scene.context(),
+				scc::bind_constant_buffers({
+					{0, bb}
+				}),
+
+				scc::bind_input_views({
+					{0, voxelbuf_view}
+				}),
+				scc::bind_compute_views({
+					{0, nodepool_cview}
+				}),
+
+				scc::dispatch(cs, (uint)fragments.size() / 64, 1, 1)
+			);
+
+			ctx->signal_res_map(nodepool, 0, shiny::map_type_t::read, [](shiny::mapped_subresource_t& sr){
+				auto ud = (uint32*)sr.data;
+				std::cout << ud[0] << std::endl;
+			});
+		}
+#endif
+	}
+
+
 
 	scene.draw(
 		sdc::input_assembly_stage(dd_position(), vb, ib),

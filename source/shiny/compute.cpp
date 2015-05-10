@@ -14,6 +14,13 @@ auto shiny::detail::generate_compute_prelude(queue_t::batch_t& batch, context_pt
 	});
 }
 
+auto shiny::detail::generate_compute_command(queue_t::batch_t& batch, context_ptr const& ctx, bound_constant_buffers_t const& buffers) -> void
+{
+	batch.push([ctx, buffers]{
+		ctx->immediate_cs_set_constant_buffers(buffers);
+	});
+}
+
 auto shiny::detail::generate_compute_command(queue_t::batch_t& batch, context_ptr const& ctx, bound_input_views_t const& views) -> void
 {
 	batch.push([ctx, views]{

@@ -60,6 +60,7 @@ namespace shiny
 		auto signal_present() -> void;
 		auto signal_clear(atma::math::vector4f const&) -> void;
 		auto signal_draw_scene(scene_t&) -> void;
+		auto signal(atma::thread::engine_t::queue_t::batch_t&) -> void;
 
 		auto immediate_clear(rendertarget_clear_t const&) -> void;
 
@@ -102,6 +103,7 @@ namespace shiny
 
 
 		// compute-stage
+		auto immediate_cs_set_constant_buffers(bound_constant_buffers_t const&) -> void;
 		auto immediate_cs_set_input_views(bound_resource_views_t const&) -> void;
 		auto immediate_cs_set_compute_views(bound_resource_views_t const&) -> void;
 		auto immediate_cs_set_compute_shader(compute_shader_cptr const&) -> void;
