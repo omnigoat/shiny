@@ -24,33 +24,29 @@ struct node_t
 
 
 RWStructuredBuffer<node_t> nodepool : register(u0);
-//RWStructuredBuffer<uint> counter : register(u0);
 
 
 [numthreads(2, 2, 2)]
-void main(uint3 DTid : SV_DispatchThreadID)
+void main(uint3 dtid : SV_DispatchThreadID, uint3 gid : SV_GroupID)
 {
 	uint offset = 0;
 	uint child_idx = 0;
+	node_t node = nodepool.Load(0);
 
-	nodepool[0].brick_id = 44;
-	return;
-
-	// navigate to node
-	node_t node = nodepool[0];
 	for (uint i = 0; i != level; ++i)
 	{
 		if (node.children_offset == 0)
 			return;
 
 		offset = node.children_offset;
-		uint3 ldt = DTid / pow(2, level - i);
-		child_idx = (ldt.x << 2) | (ldt.y << 2) | ldt.z;
+		uint3 ldt = gid / pow(2, level - i);
+		child_idx = (ldt.x << 2) | (ldt.y << 1) | ldt.z;
 		node = nodepool.Load(offset * 8 + child_idx);
 	}
 
 	if (node.children_offset & 0x80000000)
 	{
-		nodepool[offset * 8 + child_idx].children_offset = nodepool.IncrementCounter() + 1;
+		uint prev;
+		InterlockedExchange(nodepool[offset * 8 + child_idx].children_offset, nodepool.IncrementCounter() + 1, prev);
 	}
 }

@@ -42,7 +42,6 @@ buffer_t::buffer_t(context_ptr const& ctx,
 		case resource_storage_t::persistant:
 		case resource_storage_t::persistant_shadowed:
 			d3d_bu = D3D11_USAGE_DEFAULT;
-			d3d_ca = D3D11_CPU_ACCESS_WRITE;
 			break;
 
 		case resource_storage_t::temporary:

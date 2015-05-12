@@ -355,7 +355,7 @@ auto voxelization_plugin_t::main_setup() -> void
 	};
 
 	cs_mark = cs_from_file("../../shaders/sparse_octree_mark_cs.hlsl");
-	//cs_allocate = cs_from_file("../../shaders/sparse_octree_allocate.hlsl");
+	cs_allocate = cs_from_file("../../shaders/sparse_octree_allocate.hlsl");
 }
 
 auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
@@ -393,7 +393,7 @@ auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
 		shiny::resource_storage_t::staging,
 		shiny::buffer_dimensions_t{node_size, nodes_required},
 		shiny::buffer_data_t{});
-#if 0
+#if 1
 	nodepool = shiny::make_buffer(ctx,
 		shiny::resource_type_t::structured_buffer,
 		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
@@ -409,7 +409,7 @@ auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
 	
 	auto things = atma::vector<node_t>{nodes_required, nodes_required};
 
-	for (int i = 0; i != 4; ++i)
+	for (int i = 0; i != 5; ++i)
 	{
 		auto bb = shiny::make_constant_buffer(ctx, cs_cbuf{
 			(uint32)fragments.size(),
@@ -426,44 +426,22 @@ auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
 			for (auto j = 0; j != i; ++j) dim *= 2;
 
 			shiny::signal_compute(ctx,
-				scc::bind_constant_buffers({
-					{0, bb}
-				}),
+				scc::bind_constant_buffers({{0, bb}}),
+				scc::bind_input_views({{0, voxelbuf_view}}),
+				scc::bind_compute_views({{0, nodepool_cview}}),
+				scc::dispatch(cs_mark, fragments.size(), 1, 1));
 
-				scc::bind_input_views({
-					{0, voxelbuf_view}
-				}),
-				scc::bind_compute_views({
-					{0, nodepool_cview}
-				}),
-
-				scc::dispatch(cs_mark, 2, 2, 2)
-				//scc::dispatch(cs_allocate, dim, dim, dim)
-			);
-
-			ctx->signal_present();
-
-#if 0
-			auto dim = 1;
-			for (auto j = 0; j != i; ++j) dim *= 2;
-			
 			shiny::signal_compute(ctx,
-				scc::bind_constant_buffers({
-					{0, bb}
-				}),
+				scc::bind_constant_buffers({{0, bb}}),
+				scc::bind_compute_views({{0, nodepool_cview}}),
+				scc::dispatch(cs_allocate, dim, dim, dim));
 
-				scc::bind_compute_views({
-					{0, nodepool_cview}
-				}),
-
-				scc::dispatch(cs_allocate, dim, dim, dim)
-			);
-#endif
-
+			ctx->signal_block();
 			ctx->signal_copy_buffer(stb, nodepool);
 
 			ctx->signal_res_map(stb, 0, shiny::map_type_t::read, [&](shiny::mapped_subresource_t& sr){
-				memcpy(things.data(), sr.data, sizeof(node_t) * nodes_required);
+				uint32* ud = (uint32*)sr.data;
+				//memcpy(things.data(), sr.data, sizeof(node_t) * nodes_required);
 			});
 		}
 #endif

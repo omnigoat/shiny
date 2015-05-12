@@ -74,12 +74,9 @@ void main(uint3 DTid : SV_DispatchThreadID)
 		return;
 
 	uint voxel = fragments.Load(idx);
-	
+
 	uint offset = 0;
 	uint child_idx = 0;
-	InterlockedOr(nodepool[offset * 8 + child_idx].children_offset, 0x81110000);
-	return;
-
 	for (uint i = 0; i != level; ++i)
 	{
 		node_t node = nodepool.Load(offset * 8 + child_idx);
