@@ -43,7 +43,7 @@ namespace sandbox
 
 		shiny::geometry_shader_ptr gs;
 
-
+		shiny::compute_shader_ptr cs_mark, cs_allocate;
 
 		shiny::buffer_ptr voxelbuf;
 		shiny::resource_view_ptr voxelbuf_view;

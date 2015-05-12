@@ -42,6 +42,7 @@ buffer_t::buffer_t(context_ptr const& ctx,
 		case resource_storage_t::persistant:
 		case resource_storage_t::persistant_shadowed:
 			d3d_bu = D3D11_USAGE_DEFAULT;
+			d3d_ca = D3D11_CPU_ACCESS_WRITE;
 			break;
 
 		case resource_storage_t::temporary:
@@ -56,7 +57,7 @@ buffer_t::buffer_t(context_ptr const& ctx,
 
 		case resource_storage_t::staging:
 			d3d_bu = D3D11_USAGE_STAGING;
-			(uint&)d3d_ca = D3D11_CPU_ACCESS_WRITE | D3D11_CPU_ACCESS_READ;
+			d3d_ca = D3D11_CPU_ACCESS_READ;
 			break;
 
 		default:
@@ -91,7 +92,6 @@ buffer_t::buffer_t(context_ptr const& ctx,
 		(uint&)binding |= D3D11_BIND_SHADER_RESOURCE;
 	if (resource_usage() & resource_usage_t::unordered_access) {
 		(uint&)binding |= D3D11_BIND_UNORDERED_ACCESS;
-		//(uint&)binding |= D3D11_BIND_counter;
 	}
 
 	// cpu-access for unordered-access-buffers

@@ -23,7 +23,7 @@ compute_shader_t::compute_shader_t(context_ptr const& context, void const* data,
 	else
 	{
 		platform::d3d_blob_ptr errors;
-		ATMA_ENSURE_IS(S_OK, D3DCompile(data, data_size, nullptr, nullptr, nullptr, "main", "cs_5_0", D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, d3d_blob_.assign(), errors.assign()));
+		ATMA_ENSURE_IS(S_OK, D3DCompile(data, data_size, nullptr, nullptr, nullptr, "main", "cs_5_0", D3DCOMPILE_PREFER_FLOW_CONTROL | D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, d3d_blob_.assign(), errors.assign()));
 		if (errors.get())
 		{
 			std::cout << (char*)errors->GetBufferPointer() << std::endl;

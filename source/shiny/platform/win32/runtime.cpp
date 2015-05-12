@@ -37,7 +37,7 @@ runtime_t::runtime_t()
 	ATMA_ASSERT(dxgi_factory_);
 
 	// get debug thing
-#ifdef _DEBUG
+#if _DEBUG
 	{
 		auto hDll = LoadLibrary(L"dxgidebug.dll");
 		typedef HRESULT(__stdcall *fPtr)(REFIID, void**);

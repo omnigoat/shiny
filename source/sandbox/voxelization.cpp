@@ -347,7 +347,15 @@ auto voxelization_plugin_t::main_setup() -> void
 	auto fm2 = f2.read_into_memory();
 	gs = shiny::create_geometry_shader(ctx, fm2, false);
 
+	auto cs_from_file = [&](atma::string const& filename) -> shiny::compute_shader_ptr
+	{
+		auto f = atma::filesystem::file_t(filename.c_str());
+		auto fmem = f.read_into_memory();
+		return shiny::make_compute_shader(ctx, fmem.begin(), fmem.size());
+	};
 
+	cs_mark = cs_from_file("../../shaders/sparse_octree_mark_cs.hlsl");
+	//cs_allocate = cs_from_file("../../shaders/sparse_octree_allocate.hlsl");
 }
 
 auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
@@ -365,15 +373,7 @@ auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
 
 	auto ctx = scene.context();
 
-	auto cs_from_file = [&ctx](atma::string const& filename) -> shiny::compute_shader_ptr
-	{
-		auto f = atma::filesystem::file_t(filename.c_str());
-		auto fmem = f.read_into_memory();
-		return shiny::make_compute_shader(ctx, fmem.begin(), fmem.size());
-	};
-
-	auto cs_mark = cs_from_file("../../shaders/sparse_octree_mark_cs.hlsl");
-	auto cs_allocate = cs_from_file("../../shaders/sparse_octree_allocate.hlsl");
+	
 	
 
 	auto const gridsize = 128;
@@ -386,6 +386,28 @@ auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
 	nodes_required += nodes_required / 3; // size for levels
 	auto const node_size = sizeof(node_t);
 	auto const fullsize = nodes_required * node_size;
+
+	auto stb = shiny::make_buffer(ctx,
+		shiny::resource_type_t::staging_buffer,
+		shiny::resource_usage_mask_t::none,
+		shiny::resource_storage_t::staging,
+		shiny::buffer_dimensions_t{node_size, nodes_required},
+		shiny::buffer_data_t{});
+#if 0
+	nodepool = shiny::make_buffer(ctx,
+		shiny::resource_type_t::structured_buffer,
+		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
+		shiny::resource_storage_t::persistant,
+		shiny::buffer_dimensions_t{node_size, nodes_required},
+		shiny::buffer_data_t{},
+		shiny::gen_default_read_write_view_t{});
+
+	nodepool_cview = shiny::make_resource_view(nodepool,
+		shiny::resource_view_type_t::compute,
+		shiny::element_format_t::unknown);
+#endif
+	
+	auto things = atma::vector<node_t>{nodes_required, nodes_required};
 
 	for (int i = 0; i != 4; ++i)
 	{
@@ -400,6 +422,9 @@ auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
 		{
 			namespace scc = shiny::compute_commands;
 
+			auto dim = 1;
+			for (auto j = 0; j != i; ++j) dim *= 2;
+
 			shiny::signal_compute(ctx,
 				scc::bind_constant_buffers({
 					{0, bb}
@@ -412,10 +437,13 @@ auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
 					{0, nodepool_cview}
 				}),
 
-				scc::dispatch(cs_mark, (uint)fragments.size() / 64, 1, 1)
+				scc::dispatch(cs_mark, 2, 2, 2)
+				//scc::dispatch(cs_allocate, dim, dim, dim)
 			);
 
+			ctx->signal_present();
 
+#if 0
 			auto dim = 1;
 			for (auto j = 0; j != i; ++j) dim *= 2;
 			
@@ -430,19 +458,12 @@ auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
 
 				scc::dispatch(cs_allocate, dim, dim, dim)
 			);
-
-			auto stb = shiny::make_buffer(ctx,
-				shiny::resource_type_t::staging_buffer,
-				shiny::resource_usage_mask_t::none,
-				shiny::resource_storage_t::staging,
-				shiny::buffer_dimensions_t{node_size, nodes_required},
-				shiny::buffer_data_t{});
+#endif
 
 			ctx->signal_copy_buffer(stb, nodepool);
 
-			ctx->signal_res_map(stb, 0, shiny::map_type_t::read, [](shiny::mapped_subresource_t& sr){
-				auto ud = (uint32*)sr.data;
-				std::cout << ud[0] << std::endl;
+			ctx->signal_res_map(stb, 0, shiny::map_type_t::read, [&](shiny::mapped_subresource_t& sr){
+				memcpy(things.data(), sr.data, sizeof(node_t) * nodes_required);
 			});
 		}
 #endif

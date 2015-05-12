@@ -30,12 +30,14 @@ RWStructuredBuffer<node_t> nodepool : register(u0);
 [numthreads(2, 2, 2)]
 void main(uint3 DTid : SV_DispatchThreadID)
 {
-	
 	uint offset = 0;
 	uint child_idx = 0;
-	node_t node = nodepool.Load(offset * 8 + child_idx);
+
+	nodepool[0].brick_id = 44;
+	return;
 
 	// navigate to node
+	node_t node = nodepool[0];
 	for (uint i = 0; i != level; ++i)
 	{
 		if (node.children_offset == 0)
@@ -49,6 +51,6 @@ void main(uint3 DTid : SV_DispatchThreadID)
 
 	if (node.children_offset & 0x80000000)
 	{
-		node.children_offset = nodepool.IncrementCounter() + 1;
+		nodepool[offset * 8 + child_idx].children_offset = nodepool.IncrementCounter() + 1;
 	}
 }

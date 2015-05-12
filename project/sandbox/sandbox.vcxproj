@@ -117,6 +117,9 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>d3dcompiler.lib;dxgi.lib;dwmapi.lib;d3d11.lib;user32.lib;gdi32.lib</AdditionalDependencies>
     </Link>
+    <FxCompile>
+      <ShaderModel>5.0</ShaderModel>
+    </FxCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -153,6 +156,11 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>d3dcompiler.lib;dxgi.lib;dwmapi.lib;d3d11.lib;user32.lib;gdi32.lib</AdditionalDependencies>
     </Link>
+    <FxCompile>
+      <ShaderModel>5.0</ShaderModel>
+      <DisableOptimizations>true</DisableOptimizations>
+      <EnableDebuggingInformation>true</EnableDebuggingInformation>
+    </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\fooey\project\fooey.vcxproj">

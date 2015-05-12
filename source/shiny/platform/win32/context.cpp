@@ -477,7 +477,25 @@ auto context_t::immediate_cs_set_compute_shader(compute_shader_cptr const& cs) -
 auto context_t::immediate_compute(uint x, uint y, uint z) -> void
 {
 	engine_.signal([&, x, y, z]{
+#if 0
+		atma::com_ptr<ID3D11Query> query;
+		auto desc = D3D11_QUERY_DESC{D3D11_QUERY_EVENT, 0};
+		d3d_device_->CreateQuery(&desc, query.assign());
+		//d3d_immediate_context_->Begin(query.get());
+		//d3d_immediate_context_->End(query.get());
+		BOOL result;
+		while (S_OK != d3d_immediate_context_->GetData(query.get(), &result, sizeof(BOOL), 0))
+		{
+			std::cout << "not finished" << std::endl;
+		}
+#endif
 		d3d_immediate_context_->Dispatch(x, y, z);
+#if 0
+		auto const count = D3D11_PS_CS_UAV_REGISTER_COUNT;
+		ID3D11UnorderedAccessView* uavs[count] ={};
+		d3d_immediate_context_->CSSetUnorderedAccessViews(0, count, uavs, nullptr);
+#endif // 0
+
 	});
 }
 
@@ -491,7 +509,7 @@ auto context_t::signal_res_map(resource_ptr const& rs, uint subresource, map_typ
 		;
 
 	engine_.signal([&, rs, subresource, d3dmap, fn] {
-		D3D11_MAPPED_SUBRESOURCE sr;
+		auto sr = D3D11_MAPPED_SUBRESOURCE{};
 		ATMA_ENSURE_IS(S_OK, d3d_immediate_context_->Map(rs->d3d_resource().get(), subresource, d3dmap, 0, &sr));
 		mapped_subresource_t msr{sr.pData, sr.RowPitch, sr.DepthPitch};
 		fn(msr);
@@ -578,5 +596,7 @@ auto context_t::signal_copy_buffer(resource_ptr const& dest, resource_cptr const
 {
 	engine_.signal([&, dest, src]{
 		d3d_immediate_context_->CopyResource(dest->d3d_resource().get(), src->d3d_resource().get());
+		//d3d_immediate_context_->CopySubresourceRegion(dest->d3d_resource().get(), 0, 0, 0, 0, src->d3d_resource().get(), 0, nullptr);
+		//d3d_immediate_context_->Flush();
 	});
 }
