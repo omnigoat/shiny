@@ -417,86 +417,70 @@ auto context_t::immediate_draw() -> void
 
 auto context_t::immediate_compute_pipeline_reset() -> void
 {
-	engine_.signal([&]{
-		auto const cb_count = D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT;
-		ID3D11Buffer* bufs[cb_count] ={};
+	auto const cb_count = D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT;
+	ID3D11Buffer* bufs[cb_count] ={};
 
-		//d3d_immediate_context_->CSSetConstantBuffers(0, cb_count, bufs);
-	});
+	//d3d_immediate_context_->CSSetConstantBuffers(0, cb_count, bufs);
 }
 
 auto context_t::immediate_cs_set_constant_buffers(bound_constant_buffers_t const& bufs) -> void
 {
-	engine_.signal([&, bufs]
-	{
-		auto const count = D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT;
-		ID3D11Buffer* dbufs[count] ={};
-		
-		for (auto const& x : bufs)
-			dbufs[x.first] = x.second->d3d_buffer().get();
+	auto const count = D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT;
+	ID3D11Buffer* dbufs[count] ={};
+	
+	for (auto const& x : bufs)
+		dbufs[x.first] = x.second->d3d_buffer().get();
 
-		d3d_immediate_context_->CSSetConstantBuffers(0, count, dbufs);
-	});
+	d3d_immediate_context_->CSSetConstantBuffers(0, count, dbufs);
 }
 
 auto context_t::immediate_cs_set_input_views(bound_resource_views_t const& views) -> void
 {
-	engine_.signal([&, views]
-	{
-		auto const count = 16;
-		ID3D11ShaderResourceView* srvs[16] = {};
+	auto const count = 16;
+	ID3D11ShaderResourceView* srvs[16] = {};
 		
-		for (auto const& x : views)
-			srvs[x.first] = (ID3D11ShaderResourceView*)x.second->d3d_view().get();
+	for (auto const& x : views)
+		srvs[x.first] = (ID3D11ShaderResourceView*)x.second->d3d_view().get();
 
-		d3d_immediate_context_->CSSetShaderResources(0, count, srvs);
-	});
+	d3d_immediate_context_->CSSetShaderResources(0, count, srvs);
 }
 
 auto context_t::immediate_cs_set_compute_views(bound_resource_views_t const& views) -> void
 {
-	engine_.signal([&, views]
-	{
-		auto const count = D3D11_PS_CS_UAV_REGISTER_COUNT;
-		ID3D11UnorderedAccessView* uavs[count] ={};
+	auto const count = D3D11_PS_CS_UAV_REGISTER_COUNT;
+	ID3D11UnorderedAccessView* uavs[count] ={};
 
-		for (auto const& x : views)
-			uavs[x.first] = (ID3D11UnorderedAccessView*)x.second->d3d_view().get();
+	for (auto const& x : views)
+		uavs[x.first] = (ID3D11UnorderedAccessView*)x.second->d3d_view().get();
 
-		d3d_immediate_context_->CSSetUnorderedAccessViews(0, count, uavs, nullptr);
-	});
+	d3d_immediate_context_->CSSetUnorderedAccessViews(0, count, uavs, nullptr);
 }
 
 auto context_t::immediate_cs_set_compute_shader(compute_shader_cptr const& cs) -> void
 {
-	engine_.signal([&, cs]{
-		d3d_immediate_context_->CSSetShader(cs->d3d_cs().get(), nullptr, 0);
-	});
+	d3d_immediate_context_->CSSetShader(cs->d3d_cs().get(), nullptr, 0);
 }
 
 auto context_t::immediate_compute(uint x, uint y, uint z) -> void
 {
-	engine_.signal([&, x, y, z]{
 #if 0
-		atma::com_ptr<ID3D11Query> query;
-		auto desc = D3D11_QUERY_DESC{D3D11_QUERY_EVENT, 0};
-		d3d_device_->CreateQuery(&desc, query.assign());
-		//d3d_immediate_context_->Begin(query.get());
-		//d3d_immediate_context_->End(query.get());
-		BOOL result;
-		while (S_OK != d3d_immediate_context_->GetData(query.get(), &result, sizeof(BOOL), 0))
-		{
-			std::cout << "not finished" << std::endl;
-		}
+	atma::com_ptr<ID3D11Query> query;
+	auto desc = D3D11_QUERY_DESC{D3D11_QUERY_EVENT, 0};
+	d3d_device_->CreateQuery(&desc, query.assign());
+	//d3d_immediate_context_->Begin(query.get());
+	//d3d_immediate_context_->End(query.get());
+	BOOL result;
+	while (S_OK != d3d_immediate_context_->GetData(query.get(), &result, sizeof(BOOL), 0))
+	{
+		std::cout << "not finished" << std::endl;
+	}
 #endif
-		d3d_immediate_context_->Dispatch(x, y, z);
+	d3d_immediate_context_->Dispatch(x, y, z);
 #if 0
-		auto const count = D3D11_PS_CS_UAV_REGISTER_COUNT;
-		ID3D11UnorderedAccessView* uavs[count] ={};
-		d3d_immediate_context_->CSSetUnorderedAccessViews(0, count, uavs, nullptr);
+	auto const count = D3D11_PS_CS_UAV_REGISTER_COUNT;
+	ID3D11UnorderedAccessView* uavs[count] ={};
+	d3d_immediate_context_->CSSetUnorderedAccessViews(0, count, uavs, nullptr);
 #endif // 0
-
-	});
 }
 
 auto context_t::signal_res_map(resource_ptr const& rs, uint subresource, map_type_t maptype, map_callback_t const& fn) -> void
