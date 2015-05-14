@@ -23,6 +23,7 @@ namespace sandbox
 
 		virtual auto gfx_setup(shiny::context_ptr const&) -> void {}
 		virtual auto gfx_draw(shiny::scene_t&) -> void {}
+		virtual auto gfx_ctx_draw(shiny::context_ptr const&) -> void {}
 		virtual auto gfx_teardown() -> void {}
 
 		virtual auto main_setup() -> void {}

@@ -358,10 +358,8 @@ auto voxelization_plugin_t::main_setup() -> void
 	cs_allocate = cs_from_file("../../shaders/sparse_octree_allocate.hlsl");
 }
 
-auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
+auto voxelization_plugin_t::gfx_ctx_draw(shiny::context_ptr const& ctx) -> void
 {
-	namespace sdc = shiny::draw_commands;
-
 
 	struct cs_cbuf
 	{
@@ -371,10 +369,6 @@ auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
 		uint32 pad;
 	};
 
-	auto ctx = scene.context();
-
-	
-	
 
 	auto const gridsize = 128;
 	auto const brick_edge_size = 8u;
@@ -406,8 +400,6 @@ auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
 		shiny::resource_view_type_t::compute,
 		shiny::element_format_t::unknown);
 #endif
-	
-	auto things = atma::vector<node_t>{nodes_required, nodes_required};
 
 	for (int i = 0; i != 5; ++i)
 	{
@@ -431,24 +423,39 @@ auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
 				scc::bind_compute_views({{0, nodepool_cview}}),
 				scc::dispatch(cs_mark, fragments.size(), 1, 1));
 
+			//ctx->signal_block();
+#if 0
+			ctx->signal_copy_buffer(stb, nodepool);
+
+			ctx->signal_res_map(stb, 0, shiny::map_type_t::read, [](shiny::mapped_subresource_t& sr){
+				int breakpoint = 4;
+			});
+#endif
+
 			shiny::signal_compute(ctx,
 				scc::bind_constant_buffers({{0, bb}}),
 				scc::bind_compute_views({{0, nodepool_cview}}),
 				scc::dispatch(cs_allocate, dim, dim, dim));
 
-			ctx->signal_block();
-			ctx->signal_copy_buffer(stb, nodepool);
-
-			ctx->signal_res_map(stb, 0, shiny::map_type_t::read, [&](shiny::mapped_subresource_t& sr){
-				uint32* ud = (uint32*)sr.data;
-				//memcpy(things.data(), sr.data, sizeof(node_t) * nodes_required);
-			});
+			//ctx->signal_block();
 		}
+
 #endif
 	}
 
+	ctx->signal_block();
+	ctx->signal_copy_buffer(stb, nodepool);
 
+	ctx->signal_res_map(stb, 0, shiny::map_type_t::read, [](shiny::mapped_subresource_t& sr){
+		int breakpoint = 4;
+	});
+}
 
+auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
+{
+	namespace sdc = shiny::draw_commands;
+
+#if 0
 	scene.draw(
 		sdc::input_assembly_stage(dd_position(), vb, ib),
 		sdc::vertex_stage(vs_flat(), shiny::bound_constant_buffers_t{
@@ -456,4 +463,5 @@ auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
 		}),
 		sdc::geometry_stage(gs),
 		sdc::fragment_stage(fs_flat()));
+#endif
 }

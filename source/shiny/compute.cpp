@@ -45,6 +45,6 @@ auto shiny::detail::generate_compute_command(queue_t::batch_t& batch, context_pt
 
 auto shiny::signal_compute(context_ptr const& ctx, atma::thread::engine_t::queue_t::batch_t& batch) -> void
 {
-	// multiple dispatches can be made via commands
+	ctx->signal(batch);
 }
 

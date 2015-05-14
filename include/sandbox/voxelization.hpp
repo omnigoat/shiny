@@ -28,7 +28,8 @@ namespace sandbox
 			: plugin_t{app}
 		{}
 
-		auto gfx_setup(shiny::context_ptr const& ctx2) -> void override;
+		auto gfx_setup(shiny::context_ptr const&) -> void override;
+		auto gfx_ctx_draw(shiny::context_ptr const&) -> void override;
 		auto gfx_draw(shiny::scene_t&) -> void override;
 		
 		auto main_setup() -> void override;

@@ -89,6 +89,5 @@ namespace shiny
 		atma::thread::engine_t::queue_t::batch_t batch;
 		detail::generate_compute_prelude(batch, ctx);
 		signal_compute(ctx, batch, std::forward<Args>(args)...);
-		ctx->signal(batch);
 	}
 }

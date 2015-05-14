@@ -421,7 +421,7 @@ auto context_t::immediate_compute_pipeline_reset() -> void
 		auto const cb_count = D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT;
 		ID3D11Buffer* bufs[cb_count] ={};
 
-		d3d_immediate_context_->CSSetConstantBuffers(0, cb_count, bufs);
+		//d3d_immediate_context_->CSSetConstantBuffers(0, cb_count, bufs);
 	});
 }
 
