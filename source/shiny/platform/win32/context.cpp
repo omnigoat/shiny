@@ -580,7 +580,5 @@ auto context_t::signal_copy_buffer(resource_ptr const& dest, resource_cptr const
 {
 	engine_.signal([&, dest, src]{
 		d3d_immediate_context_->CopyResource(dest->d3d_resource().get(), src->d3d_resource().get());
-		//d3d_immediate_context_->CopySubresourceRegion(dest->d3d_resource().get(), 0, 0, 0, 0, src->d3d_resource().get(), 0, nullptr);
-		//d3d_immediate_context_->Flush();
 	});
 }

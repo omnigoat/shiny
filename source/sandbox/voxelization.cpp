@@ -354,6 +354,7 @@ auto voxelization_plugin_t::main_setup() -> void
 		return shiny::make_compute_shader(ctx, fmem.begin(), fmem.size());
 	};
 
+	cs_clear = cs_from_file("../../shaders/sparse_octree_clear.hlsl");
 	cs_mark = cs_from_file("../../shaders/sparse_octree_mark_cs.hlsl");
 	cs_allocate = cs_from_file("../../shaders/sparse_octree_allocate.hlsl");
 }
@@ -388,32 +389,38 @@ auto voxelization_plugin_t::gfx_ctx_draw(shiny::context_ptr const& ctx) -> void
 		shiny::buffer_dimensions_t{node_size, nodes_required},
 		shiny::buffer_data_t{});
 #if 1
-	nodepool = shiny::make_buffer(ctx,
+	auto nodepool = shiny::make_buffer(ctx,
 		shiny::resource_type_t::structured_buffer,
 		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
 		shiny::resource_storage_t::persistant,
 		shiny::buffer_dimensions_t{node_size, nodes_required},
-		shiny::buffer_data_t{},
-		shiny::gen_default_read_write_view_t{});
+		shiny::buffer_data_t{});
 
-	nodepool_cview = shiny::make_resource_view(nodepool,
+	auto nodepool_cview = shiny::make_resource_view(nodepool,
 		shiny::resource_view_type_t::compute,
 		shiny::element_format_t::unknown);
 #endif
+	namespace scc = shiny::compute_commands;
 
-	for (int i = 0; i != 5; ++i)
+	struct whatever { uint32 n; uint32 pad[3]; };
+
+	//auto cb = shiny::make_constant_buffer(ctx, whatever{nodes_required});
+	shiny::signal_compute(ctx,
+		scc::bind_compute_views({{0, nodepool_cview}}),
+		scc::dispatch(cs_clear, nodes_required / 64, 1, 1));
+
+	for (int i = 0; i != levels_required; ++i)
 	{
 		auto bb = shiny::make_constant_buffer(ctx, cs_cbuf{
 			(uint32)fragments.size(),
 			i,
-			5
+			levels_required
 		});
 
 #if 1
 		// construct sparse-octree
 		{
-			namespace scc = shiny::compute_commands;
-
+			
 			auto dim = 1;
 			for (auto j = 0; j != i; ++j) dim *= 2;
 
@@ -423,32 +430,25 @@ auto voxelization_plugin_t::gfx_ctx_draw(shiny::context_ptr const& ctx) -> void
 				scc::bind_compute_views({{0, nodepool_cview}}),
 				scc::dispatch(cs_mark, fragments.size(), 1, 1));
 
-			//ctx->signal_block();
-#if 0
 			ctx->signal_copy_buffer(stb, nodepool);
 
 			ctx->signal_res_map(stb, 0, shiny::map_type_t::read, [](shiny::mapped_subresource_t& sr){
 				int breakpoint = 4;
 			});
-#endif
 
 			shiny::signal_compute(ctx,
 				scc::bind_constant_buffers({{0, bb}}),
 				scc::bind_compute_views({{0, nodepool_cview}}),
 				scc::dispatch(cs_allocate, dim, dim, dim));
 
-			//ctx->signal_block();
-		}
+			ctx->signal_copy_buffer(stb, nodepool);
 
+			ctx->signal_res_map(stb, 0, shiny::map_type_t::read, [](shiny::mapped_subresource_t& sr){
+				int breakpoint = 4;
+			});
+		}
 #endif
 	}
-
-	ctx->signal_block();
-	ctx->signal_copy_buffer(stb, nodepool);
-
-	ctx->signal_res_map(stb, 0, shiny::map_type_t::read, [](shiny::mapped_subresource_t& sr){
-		int breakpoint = 4;
-	});
 }
 
 auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void

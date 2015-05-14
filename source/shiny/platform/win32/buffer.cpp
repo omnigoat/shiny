@@ -115,6 +115,7 @@ buffer_t::buffer_t(context_ptr const& ctx,
 		// constant-buffers must be 16byte sized
 		case resource_storage_t::constant:
 			data_size = ((data_size / 16) + 1) * 16;
+			//buffer_desc.StructureByteStride = (UINT)((bdm.stride / 16) + 1) * 16;
 			// fallthrough
 
 		case resource_storage_t::persistant:
