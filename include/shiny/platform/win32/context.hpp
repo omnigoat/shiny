@@ -144,6 +144,13 @@ namespace shiny
 		auto on_resize(fooey::events::resize_t&) -> void;
 
 	private:
+		// compute pipeline
+		bound_constant_buffers_t cs_cbs_;
+		bound_resource_views_t cs_uavs_;
+		bound_resource_views_t cs_srvs_;
+		compute_shader_cptr cs_shader_;
+
+	private:
 		atma::thread::engine_t engine_;
 		runtime_t& runtime_;
 

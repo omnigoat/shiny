@@ -48,5 +48,8 @@
     <FxCompile Include="..\..\shaders\sparse_octree_clear.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
+    <FxCompile Include="..\..\shaders\sparse_octree_write_fragments.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

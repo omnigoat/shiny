@@ -44,9 +44,9 @@ namespace sandbox
 
 		shiny::geometry_shader_ptr gs;
 
-		shiny::compute_shader_ptr cs_clear, cs_mark, cs_allocate;
+		shiny::compute_shader_ptr cs_clear, cs_mark, cs_allocate, cs_write_fragments;
 
-		shiny::buffer_ptr voxelbuf;
+		shiny::buffer_ptr voxelbuf, stb;
 		shiny::resource_view_ptr voxelbuf_view;
 
 		shiny::texture3d_ptr brickpool;
@@ -55,6 +55,8 @@ namespace sandbox
 
 		using fragments_t = shiny::buffer_t::aligned_data_t<voxel_t>;
 		fragments_t fragments;
+
+		atma::vector<shiny::resource_view_cptr> nodepoolviews;
 	};
 
 	using voxelization_plugin_ptr = atma::intrusive_ptr<voxelization_plugin_t>;;

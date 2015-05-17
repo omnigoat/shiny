@@ -76,7 +76,17 @@ namespace shiny
 	struct resource_view_t;
 	using  resource_view_ptr  = atma::intrusive_ptr<resource_view_t>;
 	using  resource_view_cptr = atma::intrusive_ptr<resource_view_t const>;
-	using  bound_resource_view_t  = std::pair<uint, resource_view_cptr>;
+
+	struct bound_resource_view_t
+	{
+		bound_resource_view_t(uint, resource_view_cptr const&);
+		bound_resource_view_t(uint, resource_view_cptr const&, uint);
+
+		uint idx;
+		resource_view_cptr view;
+		uint counter; // ~0 == do nothing
+	};
+
 	using  bound_resource_views_t = std::vector<bound_resource_view_t>;
 
 	struct buffer_t;

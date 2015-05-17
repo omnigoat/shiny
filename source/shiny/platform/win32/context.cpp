@@ -417,70 +417,73 @@ auto context_t::immediate_draw() -> void
 
 auto context_t::immediate_compute_pipeline_reset() -> void
 {
-	auto const cb_count = D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT;
-	ID3D11Buffer* bufs[cb_count] ={};
-
-	//d3d_immediate_context_->CSSetConstantBuffers(0, cb_count, bufs);
+	cs_cbs_.clear();
+	cs_srvs_.clear();
+	cs_uavs_.clear();
+	cs_shader_ = compute_shader_cptr::null;
 }
 
 auto context_t::immediate_cs_set_constant_buffers(bound_constant_buffers_t const& bufs) -> void
 {
-	auto const count = D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT;
-	ID3D11Buffer* dbufs[count] ={};
-	
-	for (auto const& x : bufs)
-		dbufs[x.first] = x.second->d3d_buffer().get();
-
-	d3d_immediate_context_->CSSetConstantBuffers(0, count, dbufs);
+	cs_cbs_ = bufs;
 }
 
 auto context_t::immediate_cs_set_input_views(bound_resource_views_t const& views) -> void
 {
-	auto const count = 16;
-	ID3D11ShaderResourceView* srvs[16] = {};
-		
-	for (auto const& x : views)
-		srvs[x.first] = (ID3D11ShaderResourceView*)x.second->d3d_view().get();
-
-	d3d_immediate_context_->CSSetShaderResources(0, count, srvs);
+	cs_srvs_ = views;
 }
 
 auto context_t::immediate_cs_set_compute_views(bound_resource_views_t const& views) -> void
 {
-	auto const count = D3D11_PS_CS_UAV_REGISTER_COUNT;
-	ID3D11UnorderedAccessView* uavs[count] ={};
-
-	for (auto const& x : views)
-		uavs[x.first] = (ID3D11UnorderedAccessView*)x.second->d3d_view().get();
-
-	d3d_immediate_context_->CSSetUnorderedAccessViews(0, count, uavs, nullptr);
+	cs_uavs_ = views;
 }
 
 auto context_t::immediate_cs_set_compute_shader(compute_shader_cptr const& cs) -> void
 {
-	d3d_immediate_context_->CSSetShader(cs->d3d_cs().get(), nullptr, 0);
+	cs_shader_ = cs;
 }
 
 auto context_t::immediate_compute(uint x, uint y, uint z) -> void
 {
-#if 0
-	atma::com_ptr<ID3D11Query> query;
-	auto desc = D3D11_QUERY_DESC{D3D11_QUERY_EVENT, 0};
-	d3d_device_->CreateQuery(&desc, query.assign());
-	//d3d_immediate_context_->Begin(query.get());
-	//d3d_immediate_context_->End(query.get());
-	BOOL result;
-	while (S_OK != d3d_immediate_context_->GetData(query.get(), &result, sizeof(BOOL), 0))
-	{
-		std::cout << "not finished" << std::endl;
+	// constant-buffers
+	auto const cbs_count = D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT;
+	ID3D11Buffer* cbs[cbs_count]{};
+	for (auto const& x : cs_cbs_)
+		cbs[x.first] = x.second->d3d_buffer().get();
+	d3d_immediate_context_->CSSetConstantBuffers(0, cbs_count, cbs);
+
+	// srvs
+	auto const srvs_count = D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT;
+	ID3D11ShaderResourceView* srvs[srvs_count]{};
+	for (auto const& x : cs_srvs_)
+		srvs[x.idx] = (ID3D11ShaderResourceView*)x.view->d3d_view().get();
+	d3d_immediate_context_->CSSetShaderResources(0, srvs_count, srvs);
+
+	// uavs
+	auto const uavs_count = D3D11_PS_CS_UAV_REGISTER_COUNT;
+	ID3D11UnorderedAccessView* uavs[uavs_count]{};
+	UINT atomic_counters[uavs_count];
+	memset(atomic_counters, -1, sizeof(atomic_counters));
+
+	for (auto const& x : cs_uavs_) {
+		uavs[x.idx] = (ID3D11UnorderedAccessView*)x.view->d3d_view().get();
+		atomic_counters[x.idx] = (UINT)x.counter;
 	}
-#endif
+	d3d_immediate_context_->CSSetUnorderedAccessViews(0, uavs_count, uavs, atomic_counters);
+
+	// shader
+	d3d_immediate_context_->CSSetShader(cs_shader_->d3d_cs().get(), nullptr, 0);
+
+	// dispatch
 	d3d_immediate_context_->Dispatch(x, y, z);
-#if 0
-	auto const count = D3D11_PS_CS_UAV_REGISTER_COUNT;
-	ID3D11UnorderedAccessView* uavs[count] ={};
-	d3d_immediate_context_->CSSetUnorderedAccessViews(0, count, uavs, nullptr);
-#endif // 0
+
+	// reset for now...
+	memset(uavs, 0, sizeof(uavs));
+	d3d_immediate_context_->CSSetUnorderedAccessViews(0, uavs_count, uavs, nullptr);
+
+	cs_cbs_.clear();
+	cs_srvs_.clear();
+	cs_uavs_.clear();
 }
 
 auto context_t::signal_res_map(resource_ptr const& rs, uint subresource, map_type_t maptype, map_callback_t const& fn) -> void

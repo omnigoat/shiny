@@ -1,6 +1,7 @@
 #include <shiny/platform/win32/resource_view.hpp>
 
 #include <shiny/context.hpp>
+#include <shiny/texture3d.hpp>
 #include <shiny/platform/win32/dxgid3d_convert.hpp>
 
 #include <atma/intrusive_ptr.hpp>
@@ -43,10 +44,22 @@ resource_view_t::resource_view_t(resource_cptr const& rs, resource_view_type_t v
 
 		case resource_view_type_t::compute:
 		{
-			auto desc = D3D11_UNORDERED_ACCESS_VIEW_DESC{
-				fmt,
-				D3D11_UAV_DIMENSION_BUFFER,
-				D3D11_BUFFER_UAV{(UINT)subset_.offset, (UINT)subset_.count, D3D11_BUFFER_UAV_FLAG_COUNTER}};
+			auto desc = D3D11_UNORDERED_ACCESS_VIEW_DESC{fmt};
+
+			switch (resource_->resource_type())
+			{
+				case resource_type_t::texturd3d:
+					desc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE3D;
+					desc.Texture3D = D3D11_TEX3D_UAV{0, 0, (UINT)atma::ptr_cast_static<texture3d_t const>(resource_)->depth()};
+					break;
+
+
+				case resource_type_t::structured_buffer:
+				case resource_type_t::generic_buffer:
+					desc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
+					desc.Buffer = D3D11_BUFFER_UAV{(UINT)subset_.offset, (UINT)subset_.count, 0};
+					break;
+			}
 
 			ATMA_ENSURE_IS(S_OK, context()->d3d_device()->CreateUnorderedAccessView(resource_->d3d_resource().get(), &desc, d3d_uav_.assign()));
 			d3d_view_ = d3d_uav_;
@@ -57,7 +70,10 @@ resource_view_t::resource_view_t(resource_cptr const& rs, resource_view_type_t v
 			ATMA_HALT("bad!!");
 			break;
 	}
-	
+}
+
+resource_view_t::~resource_view_t()
+{
 }
 
 auto resource_view_t::context() const -> context_ptr const&
@@ -71,3 +87,12 @@ auto shiny::make_resource_view(resource_cptr const& r, resource_view_type_t vt, 
 }
 
 
+shiny::bound_resource_view_t::bound_resource_view_t(uint idx, resource_view_cptr const& view)
+	: idx(idx), view(view), counter(~uint())
+{
+}
+
+shiny::bound_resource_view_t::bound_resource_view_t(uint idx, resource_view_cptr const& view, uint counter)
+	: idx(idx), view(view), counter(counter)
+{
+}

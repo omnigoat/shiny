@@ -33,6 +33,7 @@ namespace shiny
 	struct resource_view_t : atma::ref_counted
 	{
 		resource_view_t(resource_cptr const&, resource_view_type_t, element_format_t, resource_subset_t);
+		~resource_view_t();
 
 		auto context() const -> context_ptr const&;
 		auto resource() const -> resource_cptr const& { return resource_; }

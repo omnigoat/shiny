@@ -19,11 +19,19 @@ struct node_t
 	// always located at offset*8
 	uint children_offset;
 
+	// offset to 
 	uint brick_id;
 };
 
 
-RWStructuredBuffer<node_t> nodepool : register(u0);
+// atomic counters
+static const uint tile_counter = 0;
+static const uint brick_counter = 1;
+RWStructuredBuffer<uint> countbuf : register(u0);
+
+
+RWStructuredBuffer<node_t> nodepool : register(u1);
+RWTexture3D<uint> brickpool : register(u1);
 
 
 [numthreads(2, 2, 2)]
@@ -31,10 +39,10 @@ void main(uint3 gid : SV_GroupID, uint3 gtid : SV_GroupThreadID)
 {
 	uint offset = 0;
 	
-	// level 0: gid: [0, 0, 0], gtid: [2, 2, 2]
-	// level 1: gid: [0-1, 0-1, 0-1], gtid: [2, 2, 2]
-	// level 2: gid: [0-3, 0-3, 0-3]
-	// level 3: gid: [0-7], gtid: [0-1]
+	// we need to traverse from level 0 to level N, where N is whatever
+	// we've been dispatched to deal with. this is important because it means
+	// that our group-id is a larger power-of-two [pow(2, level) groups were
+	// dispatched in each dimension].
 	for (uint i = 0; i != level; ++i)
 	{
 		uint3 lgid      = gid / pow(2, level - i - 1) % 2;
@@ -47,12 +55,32 @@ void main(uint3 gid : SV_GroupID, uint3 gtid : SV_GroupThreadID)
 		offset = node.children_offset;
 	}
 
+	// offset now points to the tile that houses the 8 children of our level.
+	// for level 0, this would be tile 0. for level 1, this would be one of the
+	// 8 tiles pointed at by the 8 children of the root node.
+	//
+	// use the group-thread-id to index into one of these 8 children.
 	uint lgtid = (gtid.x << 2) | (gtid.y << 1) | gtid.z;
 
 	node_t node = nodepool.Load(offset * 8 + lgtid);
 	if (node.children_offset & 0x80000000)
 	{
-		uint prev;
-		InterlockedExchange(nodepool[offset * 8 + lgtid].children_offset, nodepool.IncrementCounter() + 1, prev);
+		// if we're allocating tiles
+		if (level < levels)
+		{
+			// allocate new tile (note that the counter should be initialized to 1)
+			uint tile;
+			InterlockedAdd(countbuf[tile_counter], 1, tile);
+
+			nodepool[offset * 8 + lgtid].children_offset = tile;
+		}
+		// if we're allocating bricks
+		else
+		{
+			uint brick;
+			InterlockedAdd(countbuf[brick_counter], 1, brick);
+
+			nodepool[offset * 8 + lgtid].brick_id = brick;
+		}
 	}
 }
