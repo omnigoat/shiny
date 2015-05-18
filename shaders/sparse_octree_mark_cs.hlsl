@@ -26,7 +26,7 @@ struct node_t
 StructuredBuffer<uint> fragments : register(t0);
 
 // 
-RWStructuredBuffer<node_t> nodepool : register(u0);
+RWStructuredBuffer<node_t> nodepool : register(u1);
 
 
 

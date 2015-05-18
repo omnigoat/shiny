@@ -10,7 +10,7 @@ struct node_t
 };
 
 
-RWStructuredBuffer<node_t> nodepool : register(u0);
+RWStructuredBuffer<node_t> nodepool : register(u1);
 
 
 
