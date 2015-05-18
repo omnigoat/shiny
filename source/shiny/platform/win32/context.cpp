@@ -585,3 +585,13 @@ auto context_t::signal_copy_buffer(resource_ptr const& dest, resource_cptr const
 		d3d_immediate_context_->CopyResource(dest->d3d_resource().get(), src->d3d_resource().get());
 	});
 }
+
+auto context_t::signal_rs_constant_buffer_upload(constant_buffer_ptr const& res, size_t offset, void const* data, size_t size) -> void
+{
+	auto mem = atma::shared_memory_t{(uint)size, (void*)data};
+
+	signal_res_map(res, 0, map_type_t::write_discard, [res, offset, mem](mapped_subresource_t const& sr){
+		memcpy(sr.data, mem.begin(), mem.size());
+	});
+}
+

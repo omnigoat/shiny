@@ -370,7 +370,6 @@ auto voxelization_plugin_t::main_setup() -> void
 
 auto voxelization_plugin_t::gfx_ctx_draw(shiny::context_ptr const& ctx) -> void
 {
-
 	struct cs_cbuf
 	{
 		uint32 fragment_count;
@@ -395,14 +394,17 @@ auto voxelization_plugin_t::gfx_ctx_draw(shiny::context_ptr const& ctx) -> void
 	auto cmem = atma::unique_memory_t{fullsize};
 	memset(cmem.begin(), 0, fullsize);
 
+	// constant-buffer
+	auto cb = shiny::make_constant_buffer(ctx, sizeof(cs_cbuf), nullptr);
+
 	// atomic counters
 	uint32 counters[2] = {1, 1};
 	auto countbuf = shiny::make_buffer(ctx,
 		shiny::resource_type_t::structured_buffer,
 		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
 		shiny::resource_storage_t::persistant,
-		shiny::buffer_dimensions_t{sizeof(counters), 1},
-		shiny::buffer_data_t{&counters, 1});
+		shiny::buffer_dimensions_t{sizeof(uint32), 2},
+		shiny::buffer_data_t{&counters, 2});
 
 	auto countbuf_view = shiny::make_resource_view(countbuf,
 		shiny::resource_view_type_t::compute,
@@ -430,57 +432,61 @@ auto voxelization_plugin_t::gfx_ctx_draw(shiny::context_ptr const& ctx) -> void
 		shiny::resource_view_type_t::compute,
 		shiny::element_format_t::unknown);
 
+
+
+
+
 	namespace scc = shiny::compute_commands;
 
-	struct whatever { uint32 n; uint32 pad[3]; };
+	// setup bound resources
+	auto bound_constant_buffers = scc::bind_constant_buffers({{0, cb}});
+	auto bound_input_views      = scc::bind_input_views({{0, voxelbuf_view}});
+	auto bound_compute_views    = scc::bind_compute_views({{0, countbuf_view}, {1, nodecache_view}, {2, brickcache_view}});
 
 	// reset atomic-counter
 	shiny::signal_compute(ctx,
 		scc::bind_compute_views({{0, nodecache_view, 0}}),
 		scc::dispatch(cs_clear, 0, 0, 0));
 
+	// mark & allocate tiles in the node-cache
 	for (int i = 0; i != levels_required; ++i)
 	{
-		auto cb = shiny::make_constant_buffer(ctx, cs_cbuf{
+		// update constant-buffer
+		ctx->signal_rs_constant_buffer_upload(cb, cs_cbuf{
 			(uint32)fragments.size(),
 			(uint32)i,
 			(uint32)levels_required
 		});
 
-		// pow(2, i - j);
-		auto dim = 1 << i;
+		auto d = aml::pow(2, i);
 
+		// 1) mark child-bearing nodes
+		// 2) allocate new tiles in node-cache
 		shiny::signal_compute(ctx,
-			scc::bind_constant_buffers({{0, cb}}),
-			scc::bind_input_views({{0, voxelbuf_view}}),
-			scc::bind_compute_views({{0, nodecache_view}}),
-			scc::dispatch(cs_mark, (uint)fragments.size() / 64, 1, 1));
-
-		ctx->signal_copy_buffer(stb, nodecache);
-
-		ctx->signal_res_map(stb, 0, shiny::map_type_t::read, [](shiny::mapped_subresource_t& sr){
-			int breakpoint = 4;
-		});
-
-		shiny::signal_compute(ctx,
-			scc::bind_constant_buffers({{0, cb}}),
-			scc::bind_compute_views({{0, countbuf_view}, {0, nodecache_view}}),
-			scc::dispatch(cs_allocate, dim, dim, dim));
+			bound_constant_buffers,
+			bound_input_views,
+			bound_compute_views,
+			scc::dispatch(cs_mark, (uint)fragments.size() / 64, 1, 1),
+			scc::dispatch(cs_allocate, d, d, d));
 	}
 
-	auto cb = shiny::make_constant_buffer(ctx, cs_cbuf{
+	ctx->signal_rs_constant_buffer_upload(cb, cs_cbuf{
 		(uint32)fragments.size(),
 		(uint32)levels_required,
 		(uint32)levels_required
 	});
 
-	// write fragments into 3d texture
+	// 1) mark nodes' brick_ids
+	// 2) allocate bricks from the brick-cache
+	// 3) write fragments into 3d texture
+	auto dim = aml::pow(2, (int)levels_required);
 	shiny::signal_compute(ctx,
-		scc::bind_constant_buffers({{0, cb}}),
-		scc::bind_input_views({{0, voxelbuf_view}}),
-		scc::bind_compute_views({{0, countbuf_view}, {1, nodecache_view}, {2, brickcache_view}}),
+		bound_constant_buffers,
+		bound_input_views,
+		bound_compute_views,
+		scc::dispatch(cs_mark, (uint)fragments.size() / 64, 1, 1),
+		scc::dispatch(cs_allocate, dim, dim, dim),
 		scc::dispatch(cs_write_fragments, (uint)fragments.size() / 64, 1, 1));
-
 	
 	ctx->signal_copy_buffer(stb, nodecache);
 

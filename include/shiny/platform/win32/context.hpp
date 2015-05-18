@@ -75,9 +75,14 @@ namespace shiny
 
 
 		// "resources stage"
+
+		#pragma region Obsolete
 		auto signal_res_map(resource_ptr const&, uint subresource, map_type_t, map_callback_t const&) -> void;
 		auto signal_res_update(constant_buffer_ptr const&, uint data_size, void*) -> void;
 		auto signal_res_update(constant_buffer_ptr const&, atma::shared_memory_t const&) -> void;
+		#pragma endregion
+		auto signal_rs_constant_buffer_upload(constant_buffer_ptr const&, size_t offset, void const* data, size_t size) -> void;
+		template <typename T> auto signal_rs_constant_buffer_upload(constant_buffer_ptr const&, T const&) -> void;
 
 		// input-assembly-stage
 		auto immediate_ia_set_data_declaration(data_declaration_t const*) -> void;
@@ -198,5 +203,11 @@ namespace shiny
 		friend auto create_context(runtime_t&, fooey::window_ptr const&, uint adapter) -> context_ptr;
 	};
 
+
+	template <typename T>
+	inline auto context_t::signal_rs_constant_buffer_upload(constant_buffer_ptr const& res, T const& t) -> void
+	{
+		signal_rs_constant_buffer_upload(res, 0, reinterpret_cast<void const*>(&t), sizeof(T));
+	}
 }
 
