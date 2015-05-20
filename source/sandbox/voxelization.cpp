@@ -426,7 +426,7 @@ auto voxelization_plugin_t::gfx_ctx_draw(shiny::context_ptr const& ctx) -> void
 	auto brickcache = shiny::make_texture3d(ctx,
 		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
 		shiny::resource_storage_t::persistant,
-		shiny::texture3d_dimensions_t::cube(shiny::element_format_t::u32, 512, 1));
+		shiny::texture3d_dimensions_t::cube(shiny::element_format_t::u32x2, 512, 1));
 
 	auto brickcache_view = shiny::make_resource_view(brickcache,
 		shiny::resource_view_type_t::compute,
@@ -468,8 +468,14 @@ auto voxelization_plugin_t::gfx_ctx_draw(shiny::context_ptr const& ctx) -> void
 			bound_compute_views,
 			scc::dispatch(cs_mark, (uint)fragments.size() / 64, 1, 1),
 			scc::dispatch(cs_allocate, d, d, d));
+
+		ctx->signal_copy_buffer(stb, nodecache);
+		ctx->signal_res_map(stb, 0, shiny::map_type_t::read, [](shiny::mapped_subresource_t& sr){
+			int breakpoint = 4;
+		});
 	}
 
+#if 1
 	ctx->signal_rs_constant_buffer_upload(cb, cs_cbuf{
 		(uint32)fragments.size(),
 		(uint32)levels_required,
@@ -487,9 +493,9 @@ auto voxelization_plugin_t::gfx_ctx_draw(shiny::context_ptr const& ctx) -> void
 		scc::dispatch(cs_mark, (uint)fragments.size() / 64, 1, 1),
 		scc::dispatch(cs_allocate, dim, dim, dim),
 		scc::dispatch(cs_write_fragments, (uint)fragments.size() / 64, 1, 1));
-	
-	ctx->signal_copy_buffer(stb, nodecache);
+#endif
 
+	ctx->signal_copy_buffer(stb, nodecache);
 	ctx->signal_res_map(stb, 0, shiny::map_type_t::read, [](shiny::mapped_subresource_t& sr){
 		int breakpoint = 4;
 	});

@@ -478,12 +478,12 @@ auto context_t::immediate_compute(uint x, uint y, uint z) -> void
 	d3d_immediate_context_->Dispatch(x, y, z);
 
 	// reset for now...
+	memset(cbs, 0, sizeof(cbs));
+	memset(srvs, 0, sizeof(srvs));
 	memset(uavs, 0, sizeof(uavs));
+	d3d_immediate_context_->CSSetConstantBuffers(0, cbs_count, cbs);
+	d3d_immediate_context_->CSSetShaderResources(0, srvs_count, srvs);
 	d3d_immediate_context_->CSSetUnorderedAccessViews(0, uavs_count, uavs, nullptr);
-
-	cs_cbs_.clear();
-	cs_srvs_.clear();
-	cs_uavs_.clear();
 }
 
 auto context_t::signal_res_map(resource_ptr const& rs, uint subresource, map_type_t maptype, map_callback_t const& fn) -> void

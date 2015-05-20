@@ -22,6 +22,12 @@ struct node_t
 	uint brick_id;
 };
 
+struct voxel_t
+{
+	uint color;
+	uint normal;
+};
+
 // input-buffer. list of voxel-fragments, only morton number
 StructuredBuffer<uint> fragments : register(t0);
 
@@ -31,7 +37,7 @@ static const uint brick_counter = 1;
 RWStructuredBuffer<uint> countbuf : register(u0);
 
 RWStructuredBuffer<node_t> nodepool : register(u1);
-RWTexture3D<uint> brickpool : register(u1);
+RWTexture3D<uint2> brickpool : register(u2);
 
 
 
@@ -98,9 +104,18 @@ void main(uint3 DTid : SV_DispatchThreadID)
 	node_t node = nodepool.Load(offset * 8 + child_idx);
 
 	// brick position is in morton coordinates
-	uint morton = node.brick_id;
-	uint x, y, z;
-	morton_decoding32(morton, x, y, z);
+	uint brick_morton = node.brick_id;
+	uint3 brick_coords;
+	morton_decoding32(brick_morton, brick_coords.x, brick_coords.y, brick_coords.z);
+	brick_coords *= 8;
 
-	//brickpool[uint3(x, y, z)]
+	// voxel coords within brick
+	uint voxel_morton = voxel & 0x7;
+	uint3 voxel_coords;
+	morton_decoding32(voxel_morton, voxel_coords.x, voxel_coords.y, voxel_coords.z);
+
+	// BLHABLHABLHK
+	uint3 coords = brick_coords + voxel_coords;
+
+	brickpool[coords] = uint2(0xffffffff, 0);
 }

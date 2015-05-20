@@ -80,6 +80,7 @@ void main(uint3 gid : SV_GroupID, uint3 gtid : SV_GroupThreadID)
 			uint brick;
 			InterlockedAdd(countbuf[brick_counter], 1, brick);
 
+			nodepool[offset * 8 + lgtid].children_offset = 0;
 			nodepool[offset * 8 + lgtid].brick_id = brick;
 		}
 	}
