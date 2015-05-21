@@ -33,6 +33,9 @@ namespace sandbox
 		auto gfx_draw(shiny::scene_t&) -> void override;
 		
 		auto main_setup() -> void override;
+		auto setup_voxelization() -> void;
+		auto setup_svo() -> void;
+		auto setup_rendering() -> void;
 
 		auto result() const -> int override { return EXIT_SUCCESS; }
 
@@ -43,20 +46,29 @@ namespace sandbox
 		shiny::index_buffer_ptr ib;
 
 		shiny::geometry_shader_ptr gs;
+		shiny::compute_shader_ptr cs_clear;
 
-		shiny::compute_shader_ptr cs_clear, cs_mark, cs_allocate, cs_write_fragments;
-
-		shiny::buffer_ptr voxelbuf, stb;
-		shiny::resource_view_ptr voxelbuf_view;
-
-		shiny::texture3d_ptr brickpool;
-		shiny::buffer_ptr nodepool;
-		shiny::resource_view_ptr nodepool_cview;
-
+	private:
+		// voxelization
 		using fragments_t = shiny::buffer_t::aligned_data_t<voxel_t>;
 		fragments_t fragments;
 
-		atma::vector<shiny::resource_view_cptr> nodepoolviews;
+		shiny::compute_shader_ptr cs_mark, cs_allocate, cs_write_fragments;
+		shiny::buffer_ptr voxelbuf, stb;
+		shiny::resource_view_ptr voxelbuf_view;
+
+		shiny::texture3d_ptr brickcache;
+		shiny::resource_view_ptr brickcache_view;
+
+		shiny::buffer_ptr nodecache;
+		shiny::resource_view_ptr nodecache_view;
+
+		shiny::buffer_ptr countbuf;
+		shiny::resource_view_ptr countbuf_view;
+
+	private:
+		// rendering
+		shiny::vertex_buffer_ptr vb_quad;
 	};
 
 	using voxelization_plugin_ptr = atma::intrusive_ptr<voxelization_plugin_t>;;

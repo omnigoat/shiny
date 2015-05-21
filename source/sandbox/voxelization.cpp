@@ -101,6 +101,13 @@ struct level_t
 
 auto voxelization_plugin_t::main_setup() -> void
 {
+	setup_voxelization();
+	setup_svo();
+	setup_rendering();
+}
+
+auto voxelization_plugin_t::setup_voxelization() -> void
+{
 	auto sf = shelf::file_t{"../../data/dragon.obj"};
 	auto obj = obj_model_t{sf};
 
@@ -113,7 +120,7 @@ auto voxelization_plugin_t::main_setup() -> void
 	auto mem = atma::unique_memory_t{};
 	mem = numbers2.detach_buffer();
 
-#if 1
+
 	// get the real-world bounding box of the model
 	auto bbmin = aml::point4f(FLT_MAX, FLT_MAX, FLT_MAX), bbmax = aml::point4f(-FLT_MAX, -FLT_MAX, -FLT_MAX);
 
@@ -207,17 +214,6 @@ auto voxelization_plugin_t::main_setup() -> void
 		++fragidx;
 	}
 
-#if 0
-	auto it = fragments.begin() + 2000;
-	auto i1 = it ->morton; uint i1x, i1y, i1z; moxi::morton_decoding32(i1, i1x, i1y, i1z);
-	auto i2 = i1 / 8;      uint i2x, i2y, i2z; moxi::morton_decoding32(i2, i2x, i2y, i2z);
-	auto m2 = (i2 & 0x7); uint m2x, m2y, m2z; moxi::morton_decoding32(m2, m2x, m2y, m2z);
-	auto i3 = i2 / 8;      uint i3x, i3y, i3z; moxi::morton_decoding32(i3, i3x, i3y, i3z);
-	auto i4 = i3 / 8;      uint i4x, i4y, i4z; moxi::morton_decoding32(i4, i4x, i4y, i4z);
-	auto i5 = i4 / 8;      uint i5x, i5y, i5z; moxi::morton_decoding32(i5, i5x, i5y, i5z);
-	auto i6 = i5 / 8;      uint i6x, i6y, i6z; moxi::morton_decoding32(i6, i6x, i6y, i6z);
-#endif
-
 	auto const brick_edge_size = 8u;
 	auto const brick_morton_width = brick_edge_size * brick_edge_size * brick_edge_size;
 	auto const levels_required = aml::log2(gridsize / brick_edge_size) + 1;
@@ -228,44 +224,6 @@ auto voxelization_plugin_t::main_setup() -> void
 	auto const node_size = sizeof(node_t);
 	auto const fullsize = nodes_required * node_size;
 
-
-
-	voxelbuf = shiny::make_buffer(ctx,
-		shiny::resource_type_t::structured_buffer,
-		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
-		shiny::resource_storage_t::persistant,
-		shiny::buffer_dimensions_t::infer(fragments),
-		shiny::buffer_data_t{fragments});
-
-	voxelbuf_view = shiny::make_resource_view(voxelbuf,
-		shiny::resource_view_type_t::input,
-		shiny::element_format_t::unknown);
-
-	brickpool = shiny::make_texture3d(ctx,
-		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
-		shiny::resource_storage_t::persistant,
-		shiny::texture3d_dimensions_t::cube(shiny::element_format_t::u8x4, gridsize, 1));
-
-#if 0
-	nodecache = shiny::make_buffer(ctx,
-		shiny::resource_type_t::structured_buffer,
-		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
-		shiny::resource_storage_t::persistant,
-		shiny::buffer_dimensions_t{node_size, nodes_required},
-		shiny::buffer_data_t{},
-			shiny::gen_default_read_write_view_t{});
-
-	nodecache_view = shiny::make_resource_view(nodecache,
-		shiny::resource_view_type_t::compute,
-		shiny::element_format_t::unknown);
-#endif
-
-	stb = shiny::make_buffer(ctx,
-		shiny::resource_type_t::staging_buffer,
-		shiny::resource_usage_mask_t::none,
-		shiny::resource_storage_t::staging,
-		shiny::buffer_dimensions_t{node_size, nodes_required},
-		shiny::buffer_data_t{});
 #if 0
 	
 
@@ -334,7 +292,7 @@ auto voxelization_plugin_t::main_setup() -> void
 	this->vb = shiny::create_vertex_buffer(this->ctx, shiny::resource_storage_t::immutable, dd_position(), (uint)vertices.size(), &vertices[0]);
 	this->ib = shiny::create_index_buffer(ctx, shiny::resource_storage_t::immutable, shiny::index_format_t::index32, (uint)indices.size(), &indices[0]);
 
-#else
+#if 0
 	uint32* mi = new uint32[obj.faces().size() * 3];
 	size_t i = 0;
 	for (auto const& x : obj.faces()) {
@@ -354,7 +312,10 @@ auto voxelization_plugin_t::main_setup() -> void
 	auto f2 = atma::filesystem::file_t("../../shaders/gs_normal.hlsl");
 	auto fm2 = f2.read_into_memory();
 	gs = shiny::create_geometry_shader(ctx, fm2, false);
+}
 
+auto voxelization_plugin_t::setup_svo() -> void
+{
 	auto cs_from_file = [&](atma::string const& filename) -> shiny::compute_shader_ptr
 	{
 		auto f = atma::filesystem::file_t(filename.c_str());
@@ -362,21 +323,10 @@ auto voxelization_plugin_t::main_setup() -> void
 		return shiny::make_compute_shader(ctx, fmem.begin(), fmem.size());
 	};
 
-	cs_clear = cs_from_file("../../shaders/sparse_octree_clear.hlsl");
-	cs_mark = cs_from_file("../../shaders/sparse_octree_mark_cs.hlsl");
-	cs_allocate = cs_from_file("../../shaders/sparse_octree_allocate.hlsl");
+	cs_clear           = cs_from_file("../../shaders/sparse_octree_clear.hlsl");
+	cs_mark            = cs_from_file("../../shaders/sparse_octree_mark_cs.hlsl");
+	cs_allocate        = cs_from_file("../../shaders/sparse_octree_allocate.hlsl");
 	cs_write_fragments = cs_from_file("../../shaders/sparse_octree_write_fragments.hlsl");
-}
-
-auto voxelization_plugin_t::gfx_ctx_draw(shiny::context_ptr const& ctx) -> void
-{
-	struct cs_cbuf
-	{
-		uint32 fragment_count;
-		uint32 level;
-		uint32 levels;
-		uint32 pad;
-	};
 
 
 	auto const gridsize = 128;
@@ -395,44 +345,60 @@ auto voxelization_plugin_t::gfx_ctx_draw(shiny::context_ptr const& ctx) -> void
 	memset(cmem.begin(), 0, fullsize);
 
 	// constant-buffer
-	auto cb = shiny::make_constant_buffer(ctx, sizeof(cs_cbuf), nullptr);
+	struct cbuf
+	{
+		uint32 fragment_count;
+		uint32 level;
+		uint32 levels;
+		uint32 pad;
+	};
+
+	auto cb = shiny::make_constant_buffer(ctx,
+		sizeof(cbuf),
+		nullptr);
 
 	// atomic counters
-	uint32 counters[2] = {1, 1};
-	auto countbuf = shiny::make_buffer(ctx,
+	uint32 counters[2] ={1, 1};
+	countbuf = shiny::make_buffer(ctx,
 		shiny::resource_type_t::structured_buffer,
 		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
 		shiny::resource_storage_t::persistant,
 		shiny::buffer_dimensions_t{sizeof(uint32), 2},
 		shiny::buffer_data_t{&counters, 2});
 
-	auto countbuf_view = shiny::make_resource_view(countbuf,
+	countbuf_view = shiny::make_resource_view(countbuf,
 		shiny::resource_view_type_t::compute,
 		shiny::element_format_t::unknown);
 
 	// node-cache
-	auto nodecache = shiny::make_buffer(ctx,
+	nodecache = shiny::make_buffer(ctx,
 		shiny::resource_type_t::structured_buffer,
 		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
 		shiny::resource_storage_t::persistant,
 		shiny::buffer_dimensions_t{node_size, nodes_required},
 		shiny::buffer_data_t{cmem.begin(), nodes_required});
 
-	auto nodecache_view = shiny::make_resource_view(nodecache,
+	nodecache_view = shiny::make_resource_view(nodecache,
 		shiny::resource_view_type_t::compute,
 		shiny::element_format_t::unknown);
 
 	// brick-cache
-	auto brickcache = shiny::make_texture3d(ctx,
+	brickcache = shiny::make_texture3d(ctx,
 		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
 		shiny::resource_storage_t::persistant,
 		shiny::texture3d_dimensions_t::cube(shiny::element_format_t::u32x2, 512, 1));
 
-	auto brickcache_view = shiny::make_resource_view(brickcache,
+	brickcache_view = shiny::make_resource_view(brickcache,
 		shiny::resource_view_type_t::compute,
 		shiny::element_format_t::unknown);
 
-
+	// staging buffer
+	stb = shiny::make_buffer(ctx,
+		shiny::resource_type_t::staging_buffer,
+		shiny::resource_usage_mask_t::none,
+		shiny::resource_storage_t::staging,
+		shiny::buffer_dimensions_t{node_size, nodes_required},
+		shiny::buffer_data_t{});
 
 
 
@@ -444,15 +410,16 @@ auto voxelization_plugin_t::gfx_ctx_draw(shiny::context_ptr const& ctx) -> void
 	auto bound_compute_views    = scc::bind_compute_views({{0, countbuf_view}, {1, nodecache_view}, {2, brickcache_view}});
 
 	// reset atomic-counter
+#if 0
 	shiny::signal_compute(ctx,
 		scc::bind_compute_views({{0, nodecache_view, 0}}),
 		scc::dispatch(cs_clear, 0, 0, 0));
+#endif
 
 	// mark & allocate tiles in the node-cache
 	for (int i = 0; i != levels_required; ++i)
 	{
-		// update constant-buffer
-		ctx->signal_rs_constant_buffer_upload(cb, cs_cbuf{
+		ctx->signal_rs_constant_buffer_upload(cb, cbuf{
 			(uint32)fragments.size(),
 			(uint32)i,
 			(uint32)levels_required
@@ -460,45 +427,50 @@ auto voxelization_plugin_t::gfx_ctx_draw(shiny::context_ptr const& ctx) -> void
 
 		auto d = aml::pow(2, i);
 
-		// 1) mark child-bearing nodes
-		// 2) allocate new tiles in node-cache
 		shiny::signal_compute(ctx,
 			bound_constant_buffers,
 			bound_input_views,
 			bound_compute_views,
 			scc::dispatch(cs_mark, (uint)fragments.size() / 64, 1, 1),
 			scc::dispatch(cs_allocate, d, d, d));
-
-		ctx->signal_copy_buffer(stb, nodecache);
-		ctx->signal_res_map(stb, 0, shiny::map_type_t::read, [](shiny::mapped_subresource_t& sr){
-			int breakpoint = 4;
-		});
 	}
-
-#if 1
-	ctx->signal_rs_constant_buffer_upload(cb, cs_cbuf{
-		(uint32)fragments.size(),
-		(uint32)levels_required,
-		(uint32)levels_required
-	});
 
 	// 1) mark nodes' brick_ids
 	// 2) allocate bricks from the brick-cache
 	// 3) write fragments into 3d texture
-	auto dim = aml::pow(2, (int)levels_required);
-	shiny::signal_compute(ctx,
-		bound_constant_buffers,
-		bound_input_views,
-		bound_compute_views,
-		scc::dispatch(cs_mark, (uint)fragments.size() / 64, 1, 1),
-		scc::dispatch(cs_allocate, dim, dim, dim),
-		scc::dispatch(cs_write_fragments, (uint)fragments.size() / 64, 1, 1));
-#endif
+	{
+		ctx->signal_rs_constant_buffer_upload(cb, cbuf{
+			(uint32)fragments.size(),
+			(uint32)levels_required,
+			(uint32)levels_required
+		});
 
+		auto dim = aml::pow(2, (int)levels_required);
+		shiny::signal_compute(ctx,
+			bound_constant_buffers,
+			bound_input_views,
+			bound_compute_views,
+			scc::dispatch(cs_mark, (uint)fragments.size() / 64, 1, 1),
+			scc::dispatch(cs_allocate, dim, dim, dim),
+			scc::dispatch(cs_write_fragments, (uint)fragments.size() / 64, 1, 1));
+	}
+
+#if _DEBUG
 	ctx->signal_copy_buffer(stb, nodecache);
 	ctx->signal_res_map(stb, 0, shiny::map_type_t::read, [](shiny::mapped_subresource_t& sr){
 		int breakpoint = 4;
 	});
+#endif
+}
+
+auto voxelization_plugin_t::setup_rendering() -> void
+{
+	
+}
+
+auto voxelization_plugin_t::gfx_ctx_draw(shiny::context_ptr const& ctx) -> void
+{
+	
 }
 
 auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
