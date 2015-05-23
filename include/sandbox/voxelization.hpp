@@ -49,22 +49,20 @@ namespace sandbox
 		shiny::compute_shader_ptr cs_clear;
 
 	private:
-		// voxelization
+		// fragments
 		using fragments_t = shiny::buffer_t::aligned_data_t<voxel_t>;
 		fragments_t fragments;
-
-		shiny::compute_shader_ptr cs_mark, cs_allocate, cs_write_fragments;
-		shiny::buffer_ptr voxelbuf, stb;
+		shiny::buffer_ptr voxelbuf;
 		shiny::resource_view_ptr voxelbuf_view;
 
+		// svo
 		shiny::texture3d_ptr brickcache;
-		shiny::resource_view_ptr brickcache_view;
+		shiny::buffer_ptr nodecache, countbuf;
+		shiny::resource_view_ptr brickcache_view, nodecache_view, countbuf_view;
+		shiny::compute_shader_ptr cs_mark, cs_allocate, cs_write_fragments;
 
-		shiny::buffer_ptr nodecache;
-		shiny::resource_view_ptr nodecache_view;
-
-		shiny::buffer_ptr countbuf;
-		shiny::resource_view_ptr countbuf_view;
+		// debug
+		shiny::buffer_ptr stb;
 
 	private:
 		// rendering

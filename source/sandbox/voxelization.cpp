@@ -215,12 +215,21 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 				indices.push_back(fragidx * 8 + *idx);
 			++fragidx;
 		}
+
+		this->vb = shiny::create_vertex_buffer(this->ctx, shiny::resource_storage_t::immutable, dd_position(), (uint)vertices.size(), &vertices[0]);
+		this->ib = shiny::create_index_buffer(ctx, shiny::resource_storage_t::immutable, shiny::index_format_t::index32, (uint)indices.size(), &indices[0]);
 	}
 
-	this->vb = shiny::create_vertex_buffer(this->ctx, shiny::resource_storage_t::immutable, dd_position(), (uint)vertices.size(), &vertices[0]);
-	this->ib = shiny::create_index_buffer(ctx, shiny::resource_storage_t::immutable, shiny::index_format_t::index32, (uint)indices.size(), &indices[0]);
+	voxelbuf = shiny::make_buffer(ctx,
+		shiny::resource_type_t::structured_buffer,
+		shiny::resource_usage_t::shader_resource,
+		shiny::resource_storage_t::persistant,
+		shiny::buffer_dimensions_t::infer(fragments),
+		shiny::buffer_data_t{fragments.data(), fragments.size()});
 
-
+	voxelbuf_view = shiny::make_resource_view(voxelbuf,
+		shiny::resource_view_type_t::input,
+		shiny::element_format_t::unknown);
 
 #if 1
 	// build cubes for rendering
@@ -408,7 +417,7 @@ auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
 {
 	namespace sdc = shiny::draw_commands;
 
-#if 0
+#if 1
 	scene.draw(
 		sdc::input_assembly_stage(dd_position(), vb, ib),
 		sdc::vertex_stage(vs_flat(), shiny::bound_constant_buffers_t{
