@@ -232,21 +232,23 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 		shiny::element_format_t::unknown);
 
 #if 1
-	// build cubes for rendering
-	auto mi = atma::unique_memory_t{sizeof(uint32) * obj.faces().size() * 3};
-	auto tmi = atma::memory_view_t<decltype(mi), uint32>{mi};
-
-	size_t i = 0;
-	for (auto const& f : obj.faces())
+	// load .obj triangles into vb/ib so that we can see the original mesh
 	{
-		tmi[i * 3 + 2] = f.x;
-		tmi[i * 3 + 1] = f.y;
-		tmi[i * 3 + 0] = f.z;
-		++i;
-	}
+		auto mi = atma::unique_memory_t{sizeof(uint32) * obj.faces().size() * 3};
+		auto tmi = atma::memory_view_t<decltype(mi), uint32>{mi};
 
-	vb = shiny::create_vertex_buffer(ctx, shiny::resource_storage_t::immutable, dd_position(), (uint)obj.vertices().size(), &obj.vertices()[0]);
-	ib = shiny::create_index_buffer(ctx, shiny::resource_storage_t::immutable, shiny::index_format_t::index32, (uint)obj.faces().size() * 3, mi.begin());
+		size_t i = 0;
+		for (auto const& f : obj.faces())
+		{
+			tmi[i * 3 + 2] = f.x;
+			tmi[i * 3 + 1] = f.y;
+			tmi[i * 3 + 0] = f.z;
+			++i;
+		}
+
+		vb = shiny::create_vertex_buffer(ctx, shiny::resource_storage_t::immutable, dd_position(), (uint)obj.vertices().size(), &obj.vertices()[0]);
+		ib = shiny::create_index_buffer(ctx, shiny::resource_storage_t::immutable, shiny::index_format_t::index32, (uint)obj.faces().size() * 3, mi.begin());
+	}
 #endif
 
 	auto f2 = atma::filesystem::file_t("../../shaders/gs_normal.hlsl");
@@ -316,7 +318,9 @@ auto voxelization_plugin_t::setup_svo() -> void
 		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
 		shiny::resource_storage_t::persistant,
 		shiny::buffer_dimensions_t{node_size, nodes_required},
-		shiny::buffer_data_t{cmem.begin(), nodes_required});
+		shiny::buffer_data_t{cmem.begin(), nodes_required},
+			shiny::gen_primary_input_view_t{},
+			shiny::gen_primary_compute_view_t{});
 
 	nodecache_view = shiny::make_resource_view(nodecache,
 		shiny::resource_view_type_t::compute,
@@ -330,6 +334,10 @@ auto voxelization_plugin_t::setup_svo() -> void
 
 	brickcache_view = shiny::make_resource_view(brickcache,
 		shiny::resource_view_type_t::compute,
+		shiny::element_format_t::unknown);
+
+	brickcache_input_view = shiny::make_resource_view(brickcache,
+		shiny::resource_view_type_t::input,
 		shiny::element_format_t::unknown);
 
 	// staging buffer
@@ -405,7 +413,34 @@ auto voxelization_plugin_t::setup_svo() -> void
 
 auto voxelization_plugin_t::setup_rendering() -> void
 {
-	
+	// vertex-buffer
+	float vbd[] ={
+		-1.f,  1.f, 0.f, 1.f,
+		 1.f,  1.f, 0.f, 1.f,
+		 1.f, -1.f, 0.f, 1.f,
+		 1.f, -1.f, 0.f, 1.f,
+		-1.f, -1.f, 0.f, 1.f,
+		-1.f,  1.f, 0.f, 1.f,
+	};
+
+	auto dd = ctx->runtime().make_data_declaration({
+		{"position", 0, shiny::element_format_t::f32x4}
+	});
+
+	vb_quad = shiny::create_vertex_buffer(ctx, shiny::resource_storage_t::persistant, dd, 8, vbd);
+
+
+	{
+		auto f = atma::filesystem::file_t("../../shaders/vs_voxels.cso");
+		auto fm = f.read_into_memory();
+		vs_voxels = shiny::create_vertex_shader(ctx, dd, fm, true);
+	}
+
+	{
+		auto f = atma::filesystem::file_t("../../shaders/ps_voxels.cso");
+		auto fm = f.read_into_memory();
+		fs_voxels = shiny::create_fragment_shader(ctx, fm, true);
+	}
 }
 
 auto voxelization_plugin_t::gfx_ctx_draw(shiny::context_ptr const& ctx) -> void
@@ -417,7 +452,7 @@ auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
 {
 	namespace sdc = shiny::draw_commands;
 
-#if 1
+#if 0
 	scene.draw(
 		sdc::input_assembly_stage(dd_position(), vb, ib),
 		sdc::vertex_stage(vs_flat(), shiny::bound_constant_buffers_t{
@@ -425,5 +460,14 @@ auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
 		}),
 		sdc::geometry_stage(gs),
 		sdc::fragment_stage(fs_flat()));
+#else
+	
+	shiny::signal_draw(ctx,
+		sdc::vertex_stage(vs_voxels),
+		sdc::fragment_stage(fs_voxels, shiny::bound_input_views_t{
+			{0, nodecache->primary_input_view()},
+			{1, brickcache_input_view}
+		})
+	);
 #endif
 }

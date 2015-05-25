@@ -60,6 +60,7 @@ namespace sandbox
 		shiny::buffer_ptr nodecache, countbuf;
 		shiny::resource_view_ptr brickcache_view, nodecache_view, countbuf_view;
 		shiny::compute_shader_ptr cs_mark, cs_allocate, cs_write_fragments;
+		shiny::resource_view_ptr nodecache_input_view, brickcache_input_view;
 
 		// debug
 		shiny::buffer_ptr stb;
@@ -67,6 +68,8 @@ namespace sandbox
 	private:
 		// rendering
 		shiny::vertex_buffer_ptr vb_quad;
+		shiny::vertex_shader_ptr vs_voxels;
+		shiny::fragment_shader_ptr fs_voxels;
 	};
 
 	using voxelization_plugin_ptr = atma::intrusive_ptr<voxelization_plugin_t>;;

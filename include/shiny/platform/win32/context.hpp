@@ -101,7 +101,9 @@ namespace shiny
 		// fragment-stage
 		auto immediate_fs_set_fragment_shader(fragment_shader_cptr const&) -> void;
 		auto immediate_fs_set_constant_buffers(bound_constant_buffers_t const&) -> void;
-		auto immediate_fs_set_resources(bound_resources_t const&) -> void;
+		//auto immediate_fs_set_resources(bound_resources_t const&) -> void;
+		auto immediate_fs_set_input_views(bound_input_views_t const&) -> void;
+		auto immediate_fs_set_compute_views(bound_compute_views_t const&) -> void;
 
 		// output-merger-stage
 		auto immediate_om_set_blending(blender_cptr const&) -> void;

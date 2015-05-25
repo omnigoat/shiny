@@ -1,6 +1,7 @@
 #pragma once
 
 #include <shiny/shiny_fwd.hpp>
+#include <shiny/resource_view.hpp>
 
 #include <atma/thread/engine.hpp>
 
@@ -34,7 +35,8 @@ namespace shiny
 	{
 		fragment_shader_cptr fs;
 		bound_constant_buffers_t cbs;
-		bound_resources_t brs;
+		bound_input_views_t ivs;
+		bound_compute_views_t cvs;
 	};
 
 	struct draw_range_t
@@ -69,9 +71,10 @@ namespace shiny
 			inline auto vs_set(vertex_stage_t& vs, bound_constant_buffers_t const& cbs) -> void { vs.cbs = cbs; }
 			inline auto vs_set(vertex_stage_t& vs, bound_resources_t const& brs) -> void        { vs.brs = brs; }
 
-			inline auto fs_set(fragment_stage_t& fs, fragment_shader_cptr const& fsh) -> void     { fs.fs = fsh; }
+			inline auto fs_set(fragment_stage_t& fs, fragment_shader_cptr const& fsh) -> void     { fs.fs  = fsh; }
 			inline auto fs_set(fragment_stage_t& fs, bound_constant_buffers_t const& cbs) -> void { fs.cbs = cbs; }
-			inline auto fs_set(fragment_stage_t& fs, bound_resources_t const& brs) -> void        { fs.brs = brs; }
+			inline auto fs_set(fragment_stage_t& fs, bound_input_views_t const& ivs) -> void      { fs.ivs = ivs; }
+			inline auto fs_set(fragment_stage_t& fs, bound_compute_views_t const& cvs) -> void    { fs.cvs = cvs; }
 		}
 
 		template <typename... Args>

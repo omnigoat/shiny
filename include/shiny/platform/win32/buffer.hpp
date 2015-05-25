@@ -28,16 +28,16 @@ namespace shiny
 		};
 	}
 
-	struct gen_default_read_view_t : detail::gen_view_t
+	struct gen_primary_input_view_t : detail::gen_view_t
 	{
-		gen_default_read_view_t(element_format_t ef = element_format_t::unknown, resource_subset_t rs = resource_subset_t::whole)
+		gen_primary_input_view_t(element_format_t ef = element_format_t::unknown, resource_subset_t rs = resource_subset_t::whole)
 			: detail::gen_view_t{true, gpu_access_t::read, ef, rs}
 		{}
 	};
 
-	struct gen_default_read_write_view_t : detail::gen_view_t
+	struct gen_primary_compute_view_t : detail::gen_view_t
 	{
-		gen_default_read_write_view_t(element_format_t ef = element_format_t::unknown, resource_subset_t const& rs = resource_subset_t::whole)
+		gen_primary_compute_view_t(element_format_t ef = element_format_t::unknown, resource_subset_t const& rs = resource_subset_t::whole)
 			: detail::gen_view_t{true, gpu_access_t::read_write, ef, rs}
 		{}
 	};
@@ -87,12 +87,11 @@ namespace shiny
 		virtual ~buffer_t();
 
 		auto buffer_usage() const -> resource_storage_t { return buffer_usage_; }
-		
-		auto default_read_view() const -> resource_view_ptr const& { return default_read_view_; }
-		auto default_read_write_view() const -> resource_view_ptr const& { return default_read_write_view_; }
+		auto primary_input_view() const -> resource_view_ptr const& { return primary_input_view_; }
+		auto primary_compute_view() const -> resource_view_ptr const& { return primary_compute_view_; }
 
-		auto bind(gen_default_read_view_t const&) -> void;
-		auto bind(gen_default_read_write_view_t const&) -> void;
+		auto bind(gen_primary_input_view_t const&) -> void;
+		auto bind(gen_primary_compute_view_t const&) -> void;
 
 		auto d3d_buffer() const -> platform::d3d_buffer_ptr const& { return d3d_buffer_; }
 		auto d3d_resource() const -> platform::d3d_resource_ptr override { return d3d_buffer_; }
@@ -100,8 +99,8 @@ namespace shiny
 	protected:
 		resource_storage_t buffer_usage_;
 
-		resource_view_ptr default_read_view_;
-		resource_view_ptr default_read_write_view_;
+		resource_view_ptr primary_input_view_;
+		resource_view_ptr primary_compute_view_;
 
 		platform::d3d_buffer_ptr d3d_buffer_;
 	};

@@ -375,10 +375,19 @@ auto context_t::immediate_fs_set_constant_buffers(bound_constant_buffers_t const
 	}
 }
 
-auto context_t::immediate_fs_set_resources(bound_resources_t const& rs) -> void
+auto context_t::immediate_fs_set_input_views(bound_input_views_t const& ivs) -> void
 {
-	for (auto const& x : rs) {
+	for (auto const& x : ivs.views) {
 		//d3d_immediate_context_->PSSetShaderResources(x.first, 1, &x.second->d3d_srv().get());
+		d3d_immediate_context_->PSSetShaderResources(x.idx, 1, (ID3D11ShaderResourceView* const*)&x.view->d3d_view().get());
+	}
+}
+
+auto context_t::immediate_fs_set_compute_views(bound_compute_views_t const& cvs) -> void
+{
+	for (auto const& x : cvs.views) {
+		UINT count = x.counter;
+		d3d_immediate_context_->CSSetUnorderedAccessViews(x.idx, 1, (ID3D11UnorderedAccessView* const*)&x.view->d3d_view().get(), &count);
 	}
 }
 

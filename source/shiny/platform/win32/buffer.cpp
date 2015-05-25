@@ -152,17 +152,23 @@ buffer_t::~buffer_t()
 {
 }
 
-auto buffer_t::bind(gen_default_read_view_t const& v) -> void
+auto buffer_t::bind(gen_primary_input_view_t const& v) -> void
 {
-	ATMA_ASSERT(!default_read_view_);
+	ATMA_ASSERT(!primary_input_view_);
 
-	//default_read_view_ = make_resource_view(shared_from_this<resource_t>(), gpu_access_t::read, v.element_format, v.subset);
+	primary_input_view_ = make_resource_view(shared_from_this<resource_t>(),
+		shiny::resource_view_type_t::input,
+		v.element_format,
+		v.subset);
 }
 
-auto buffer_t::bind(gen_default_read_write_view_t const& v) -> void
+auto buffer_t::bind(gen_primary_compute_view_t const& v) -> void
 {
-	ATMA_ASSERT(!default_read_write_view_);
+	ATMA_ASSERT(!primary_compute_view_);
 
-	//default_read_write_view_ = make_resource_view(shared_from_this<resource_t>(), gpu_access_t::read_write, v.element_format, v.subset);
+	primary_compute_view_ = make_resource_view(shared_from_this<resource_t>(),
+		shiny::resource_view_type_t::compute,
+		v.element_format,
+		v.subset);
 }
 
