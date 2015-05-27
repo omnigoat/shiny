@@ -32,10 +32,22 @@ resource_view_t::resource_view_t(resource_cptr const& rs, resource_view_type_t v
 	{
 		case resource_view_type_t::input:
 		{
-			auto desc = D3D11_SHADER_RESOURCE_VIEW_DESC{
-				fmt,
-				D3D11_SRV_DIMENSION_BUFFER,
-				D3D11_BUFFER_SRV{(UINT)subset_.offset, (UINT)subset_.count}};
+			auto desc = D3D11_SHADER_RESOURCE_VIEW_DESC{fmt};
+
+			switch (resource_->resource_type())
+			{
+				case resource_type_t::texturd3d:
+					desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE3D;
+					desc.Texture3D = D3D11_TEX3D_SRV{0, 1};
+					break;
+
+
+				case resource_type_t::structured_buffer:
+				case resource_type_t::generic_buffer:
+					desc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
+					desc.Buffer = D3D11_BUFFER_SRV{(UINT)subset_.offset, (UINT)subset_.count};
+					break;
+			}
 
 			ATMA_ENSURE_IS(S_OK, context()->d3d_device()->CreateShaderResourceView(resource_->d3d_resource().get(), &desc, d3d_srv_.assign()));
 			d3d_view_ = d3d_srv_;

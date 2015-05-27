@@ -27,17 +27,19 @@ vertex_shader_t::vertex_shader_t(context_ptr const& ctx, data_declaration_t cons
 	else
 	{
 		platform::d3d_blob_ptr errors;
+		char* errs = nullptr;
 		ATMA_ENSURE_IS(S_OK, D3DCompile(data, data_length, nullptr, nullptr, nullptr, entrypoint.raw_begin(), "vs_5_0", D3DCOMPILE_PREFER_FLOW_CONTROL | D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, d3d_blob_.assign(), errors.assign()));
 		if (errors)
 		{
-			auto errs = (char*)errors->GetBufferPointer();
+			errs = (char*)errors->GetBufferPointer();
 		}
 	}
 
 
 	// create vertex-shader
 	auto const& device = context_->d3d_device();
-	ATMA_ENSURE_IS(S_OK, device->CreateVertexShader(d3d_blob_->GetBufferPointer(), d3d_blob_->GetBufferSize(), nullptr, d3d_vs_.assign()));
+	auto size =  d3d_blob_->GetBufferSize();
+	ATMA_ENSURE_IS(S_OK, device->CreateVertexShader(d3d_blob_->GetBufferPointer(), size, nullptr, d3d_vs_.assign()));
 
 
 	// create input-layout

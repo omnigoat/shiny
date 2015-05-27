@@ -45,7 +45,8 @@ auto shiny::detail::generate_command(queue_t::batch_t& batch, context_ptr const&
 	batch.push([ctx, fs](){
 		ctx->immediate_fs_set_fragment_shader(fs.fs);
 		ctx->immediate_fs_set_constant_buffers(fs.cbs);
-		ctx->immediate_fs_set_resources(fs.brs);
+		ctx->immediate_fs_set_input_views(fs.ivs);
+		ctx->immediate_fs_set_compute_views(fs.cvs);
 	});
 }
 

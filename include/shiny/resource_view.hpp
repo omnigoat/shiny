@@ -10,6 +10,8 @@ namespace shiny
 {
 	struct bound_input_views_t
 	{
+		bound_input_views_t() {}
+
 		bound_input_views_t(std::initializer_list<bound_resource_view_t> list)
 			: views(list.begin(), list.end())
 		{
@@ -20,6 +22,8 @@ namespace shiny
 
 	struct bound_compute_views_t
 	{
+		bound_compute_views_t() {}
+
 		bound_compute_views_t(std::initializer_list<bound_resource_view_t> list)
 			: views(list.begin(), list.end())
 		{

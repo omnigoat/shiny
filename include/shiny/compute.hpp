@@ -1,6 +1,7 @@
 #pragma once
 
 #include <shiny/compute_shader.hpp>
+#include <shiny/resource_view.hpp>
 
 #include <atma/vector.hpp>
 #include <atma/thread/engine.hpp>

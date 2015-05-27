@@ -431,13 +431,14 @@ auto voxelization_plugin_t::setup_rendering() -> void
 
 
 	{
-		auto f = atma::filesystem::file_t("../../shaders/vs_voxels.cso");
+		auto f = atma::filesystem::file_t("../shiny/x64/Debug/vs_voxels.cso");
+		//auto f = atma::filesystem::file_t{"../../shaders/vs_voxels.hlsl"};
 		auto fm = f.read_into_memory();
 		vs_voxels = shiny::create_vertex_shader(ctx, dd, fm, true);
 	}
 
 	{
-		auto f = atma::filesystem::file_t("../../shaders/ps_voxels.cso");
+		auto f = atma::filesystem::file_t("../shiny/x64/Debug/ps_voxels.cso");
 		auto fm = f.read_into_memory();
 		fs_voxels = shiny::create_fragment_shader(ctx, fm, true);
 	}
@@ -461,8 +462,8 @@ auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
 		sdc::geometry_stage(gs),
 		sdc::fragment_stage(fs_flat()));
 #else
-	
-	shiny::signal_draw(ctx,
+	scene.draw(
+		sdc::input_assembly_stage(vb->data_declaration(), vb),
 		sdc::vertex_stage(vs_voxels),
 		sdc::fragment_stage(fs_voxels, shiny::bound_input_views_t{
 			{0, nodecache->primary_input_view()},
