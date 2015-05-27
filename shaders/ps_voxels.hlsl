@@ -22,19 +22,19 @@ struct ps_input_t
 //
 // Pixel Shader
 //
-struct node_item_t
+struct node_t
 {
 	uint child;
 	uint brick;
 };
 
-struct node_t
+struct tile_t
 {
-	node_item_t items[8];
+	node_t nodes[8];
 };
 
 // node pool
-StructuredBuffer<node_t> nodes : register(t0);
+StructuredBuffer<tile_t> nodes : register(t0);
 texture3D bricks : register(t1);
 
 SamplerState brick_sampler
@@ -154,13 +154,13 @@ uint brick_index(in aabb_t box, float3 pos, float size, out aabb_t leaf_box)
 	uint node_index = 0;
 	for (float volume = 1.f; volume > size; volume *= 0.5f)
 	{
-		node_t n = nodes[node_index];
+		tile_t n = nodes[node_index];
 		
 		uint aabb_child = leaf_box.child_index(pos);
-		result_brick = n.items[aabb_child].brick;
+		result_brick = n.nodes[aabb_child].brick;
 		leaf_box = child_aabb(leaf_box, aabb_child); 
 
-		node_index = n.items[aabb_child].child;
+		node_index = n.nodes[aabb_child].child;
 		if (node_index == 0)
 			break;
 	}
@@ -211,12 +211,11 @@ void brick_ray(in uint brick_id, in float3 near, in float3 far, inout float4 col
 
 float4 brick_path(float3 position, float3 normal, float ratio)
 {
-	aabb_t box ={-vdelta, -vdelta, -vdelta, 1.f + vdelta};
+	aabb_t box ={0.f, 0.f, 0.f, 1.f + vdelta};
 
 	float size = 0.005f; //* length(0.f - position);
 	float3 hit_enter, hit_exit;
 
-	aabb_t leaf_box;
 	if (box.contains(position))
 		hit_enter = position;
 	else if (!intersection(box, position, normal, hit_enter, hit_exit))

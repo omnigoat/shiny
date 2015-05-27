@@ -279,8 +279,10 @@ auto voxelization_plugin_t::setup_svo() -> void
 
 	auto nodes_required = (gridsize / brick_edge_size) * (gridsize / brick_edge_size) * (gridsize / brick_edge_size);
 	nodes_required += nodes_required / 3; // size for levels
+	auto const tiles_required = (7 + nodes_required) / 8;
 	auto const node_size = sizeof(node_t);
-	auto const fullsize = nodes_required * node_size;
+	auto const tile_size = node_size * 8;
+	auto const fullsize = tiles_required * tile_size;
 
 
 	auto cmem = atma::unique_memory_t{fullsize};
@@ -435,12 +437,15 @@ auto voxelization_plugin_t::setup_rendering() -> void
 		//auto f = atma::filesystem::file_t{"../../shaders/vs_voxels.hlsl"};
 		auto fm = f.read_into_memory();
 		vs_voxels = shiny::create_vertex_shader(ctx, dd, fm, true);
+		//auto fm = atma::unique_memory_t{};
+		//vs_voxels = shiny::create_vertex_shader(ctx, dd, fm, true, "../shiny/x64/Debug/vs_voxels.cso");
 	}
 
 	{
-		auto f = atma::filesystem::file_t("../shiny/x64/Debug/ps_voxels.cso");
+		//auto f = atma::filesystem::file_t("../shiny/x64/Debug/ps_voxels.cso");
+		auto f = atma::filesystem::file_t("../../shaders/ps_voxels.hlsl");
 		auto fm = f.read_into_memory();
-		fs_voxels = shiny::create_fragment_shader(ctx, fm, true);
+		fs_voxels = shiny::create_fragment_shader(ctx, fm, false);
 	}
 }
 

@@ -23,6 +23,12 @@ vertex_shader_t::vertex_shader_t(context_ptr const& ctx, data_declaration_t cons
 	{
 		ATMA_ENSURE_IS(S_OK, D3DCreateBlob(data_length, d3d_blob_.assign()));
 		memcpy(d3d_blob_->GetBufferPointer(), data, data_length);
+#if 0
+		wchar_t buf[1234]{};
+		auto s = mbstowcs(buf, entrypoint.c_str(), entrypoint.raw_size());
+		buf[s] = '\0';
+		auto hr = D3DReadFileToBlob(buf, d3d_blob_.assign());
+#endif
 	}
 	else
 	{
@@ -35,7 +41,7 @@ vertex_shader_t::vertex_shader_t(context_ptr const& ctx, data_declaration_t cons
 		}
 	}
 
-
+	
 	// create vertex-shader
 	auto const& device = context_->d3d_device();
 	auto size =  d3d_blob_->GetBufferSize();

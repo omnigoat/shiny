@@ -5,12 +5,6 @@ cbuffer buf_main : register(b0)
 	uint levels;
 }
 
-struct node_item_t
-{
-	uint child;
-	uint brick;
-};
-
 struct node_t
 {
 	// offset to an 8-wide array of children nodes. offsets are
@@ -22,11 +16,17 @@ struct node_t
 	uint brick_id;
 };
 
+struct tile_t
+{
+	node_t nodes[8];
+};
+
+
 // input-buffer. list of voxel-fragments, only morton number
 StructuredBuffer<uint> fragments : register(t0);
 
 // 
-RWStructuredBuffer<node_t> nodepool : register(u1);
+RWStructuredBuffer<tile_t> nodepool : register(u1);
 
 
 
@@ -79,7 +79,7 @@ void main(uint3 DTid : SV_DispatchThreadID)
 	uint child_idx = 0;
 	for (uint i = 0; i != level; ++i)
 	{
-		node_t node = nodepool.Load(offset * 8 + child_idx);
+		node_t node = nodepool.Load(offset).nodes[child_idx];
 
 		// get morton-code for this level, early out if zero?
 		uint morton = voxel / pow(2, levels - i);
@@ -90,5 +90,5 @@ void main(uint3 DTid : SV_DispatchThreadID)
 		child_idx = morton & 0x7;
 	}
 
-	InterlockedOr(nodepool[offset * 8 + child_idx].children_offset, 0x80000000);
+	InterlockedOr(nodepool[offset].nodes[child_idx].children_offset, 0x80000000);
 }

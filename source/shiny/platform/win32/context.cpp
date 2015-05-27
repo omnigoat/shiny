@@ -323,9 +323,16 @@ auto context_t::immediate_ia_set_vertex_buffer(vertex_buffer_cptr const& vb) -> 
 
 auto context_t::immediate_ia_set_index_buffer(index_buffer_cptr const& ib) -> void
 {
-	index_buffer_ = ib;
-	auto fmt = platform::dxgi_format_of(ib->index_format());
-	d3d_immediate_context_->IASetIndexBuffer(ib->d3d_buffer().get(), fmt, 0);
+	if (ib)
+	{
+		index_buffer_ = ib;
+		auto fmt = platform::dxgi_format_of(ib->index_format());
+		d3d_immediate_context_->IASetIndexBuffer(ib->d3d_buffer().get(), fmt, 0);
+	}
+	else
+	{
+		d3d_immediate_context_->IASetIndexBuffer(nullptr, DXGI_FORMAT_UNKNOWN, 0);
+	}
 }
 
 auto context_t::immediate_ia_set_topology(topology_t t) -> void
