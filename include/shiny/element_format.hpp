@@ -24,6 +24,7 @@ namespace shiny
 
 		// 2-component
 		u32x2,
+		f32x2,
 
 		// 1-component
 		g32, s32, u32,

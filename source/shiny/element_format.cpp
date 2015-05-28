@@ -24,6 +24,7 @@ auto shiny::element_count(shiny::element_format_t f) -> int
 
 		// 2-component
 		case ef::u32x2:
+		case ef::f32x2:
 			return 2;
 
 		// 1-component
@@ -46,6 +47,7 @@ auto shiny::element_size(element_format_t fmt) -> size_t
 		16,
 
 		// 2-component
+		8,
 		8,
 
 		// 1-component

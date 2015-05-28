@@ -5,12 +5,6 @@ cbuffer buf_main : register(b0)
 	uint levels;
 }
 
-struct node_item_t
-{
-	uint child;
-	uint brick;
-};
-
 struct node_t
 {
 	// offset to an 8-wide array of children nodes. offsets are
@@ -21,6 +15,12 @@ struct node_t
 
 	uint brick_id;
 };
+
+struct tile_t
+{
+	node_t nodes[8];
+};
+
 
 struct voxel_t
 {
@@ -36,8 +36,8 @@ static const uint tile_counter = 0;
 static const uint brick_counter = 1;
 RWStructuredBuffer<uint> countbuf : register(u0);
 
-RWStructuredBuffer<node_t> nodepool : register(u1);
-RWTexture3D<uint2> brickpool : register(u2);
+RWStructuredBuffer<tile_t> nodepool : register(u1);
+RWTexture3D<float2> brickpool : register(u2);
 
 
 
@@ -90,7 +90,7 @@ void main(uint3 DTid : SV_DispatchThreadID)
 	uint child_idx = 0;
 	for (uint i = 0; i != level; ++i)
 	{
-		node_t node = nodepool.Load(offset * 8 + child_idx);
+		node_t node = nodepool.Load(offset).nodes[child_idx];
 
 		// get morton-code for this level, early out if zero?
 		uint morton = voxel / pow(2, levels - i);
@@ -101,7 +101,7 @@ void main(uint3 DTid : SV_DispatchThreadID)
 		child_idx = morton & 0x7;
 	}
 
-	node_t node = nodepool.Load(offset * 8 + child_idx);
+	node_t node = nodepool.Load(offset).nodes[child_idx];
 
 	// brick position is in morton coordinates
 	uint brick_morton = node.brick_id;
@@ -117,5 +117,9 @@ void main(uint3 DTid : SV_DispatchThreadID)
 	// BLHABLHABLHK
 	uint3 coords = brick_coords + voxel_coords;
 
-	brickpool[coords] = uint2(0xffffffff, 0);
+
+	// encode color to f32
+
+
+	brickpool[coords] = float2(asfloat(0xffffffff), 0.f);
 }

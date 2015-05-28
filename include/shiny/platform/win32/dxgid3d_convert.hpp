@@ -12,6 +12,7 @@ namespace shiny { namespace platform {
 		template <typename T, size_t N, typename E>
 		inline auto lookup(T(&map)[N], E x) -> T
 		{
+			//static_assert(std::extent<E>::value == N, "differing number of entires");
 			ATMA_ASSERT((size_t)x < N);
 			return map[(uint)x];
 		}
@@ -32,6 +33,7 @@ namespace shiny { namespace platform {
 			DXGI_FORMAT_R32G32B32A32_FLOAT,
 
 			DXGI_FORMAT_R32G32_UINT,
+			DXGI_FORMAT_R32G32_FLOAT,
 
 			DXGI_FORMAT_R32_TYPELESS,
 			DXGI_FORMAT_R32_SINT,

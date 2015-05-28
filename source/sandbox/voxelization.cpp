@@ -319,8 +319,8 @@ auto voxelization_plugin_t::setup_svo() -> void
 		shiny::resource_type_t::structured_buffer,
 		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
 		shiny::resource_storage_t::persistant,
-		shiny::buffer_dimensions_t{node_size, nodes_required},
-		shiny::buffer_data_t{cmem.begin(), nodes_required},
+		shiny::buffer_dimensions_t{tile_size, tiles_required},
+		shiny::buffer_data_t{cmem.begin(), tiles_required},
 			shiny::gen_primary_input_view_t{},
 			shiny::gen_primary_compute_view_t{});
 
@@ -332,7 +332,7 @@ auto voxelization_plugin_t::setup_svo() -> void
 	brickcache = shiny::make_texture3d(ctx,
 		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
 		shiny::resource_storage_t::persistant,
-		shiny::texture3d_dimensions_t::cube(shiny::element_format_t::u32x2, 512, 1));
+		shiny::texture3d_dimensions_t::cube(shiny::element_format_t::f32x2, 512, 1));
 
 	brickcache_view = shiny::make_resource_view(brickcache,
 		shiny::resource_view_type_t::compute,
@@ -347,7 +347,7 @@ auto voxelization_plugin_t::setup_svo() -> void
 		shiny::resource_type_t::staging_buffer,
 		shiny::resource_usage_mask_t::none,
 		shiny::resource_storage_t::staging,
-		shiny::buffer_dimensions_t{node_size, nodes_required},
+		shiny::buffer_dimensions_t{tile_size, tiles_required},
 		shiny::buffer_data_t{});
 
 

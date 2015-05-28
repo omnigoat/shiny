@@ -5,12 +5,6 @@ cbuffer buf_main : register(b0)
 	uint levels;
 }
 
-struct node_item_t
-{
-	uint child;
-	uint brick;
-};
-
 struct node_t
 {
 	// offset to an 8-wide array of children nodes. offsets are
@@ -24,14 +18,19 @@ struct node_t
 };
 
 
+struct tile_t
+{
+	node_t nodes[8];
+};
+
+
 // atomic counters
 static const uint tile_counter = 0;
 static const uint brick_counter = 1;
 RWStructuredBuffer<uint> countbuf : register(u0);
 
 
-RWStructuredBuffer<node_t> nodepool : register(u1);
-RWTexture3D<uint> brickpool : register(u1);
+RWStructuredBuffer<tile_t> nodepool : register(u1);
 
 
 [numthreads(2, 2, 2)]
@@ -48,7 +47,7 @@ void main(uint3 gid : SV_GroupID, uint3 gtid : SV_GroupThreadID)
 		uint3 lgid      = gid / pow(2, level - i - 1) % 2;
 		uint  child_idx = (lgid.x << 2) | (lgid.y << 1) | lgid.z;
 
-		node_t node = nodepool.Load(offset * 8 + child_idx);
+		node_t node = nodepool.Load(offset).nodes[child_idx];
 		if (node.children_offset == 0)
 			return;
 
@@ -62,7 +61,7 @@ void main(uint3 gid : SV_GroupID, uint3 gtid : SV_GroupThreadID)
 	// use the group-thread-id to index into one of these 8 children.
 	uint lgtid = (gtid.x << 2) | (gtid.y << 1) | gtid.z;
 
-	node_t node = nodepool.Load(offset * 8 + lgtid);
+	node_t node = nodepool.Load(offset).nodes[lgtid];
 	if (node.children_offset & 0x80000000)
 	{
 		// if we're allocating tiles
@@ -72,7 +71,7 @@ void main(uint3 gid : SV_GroupID, uint3 gtid : SV_GroupThreadID)
 			uint tile;
 			InterlockedAdd(countbuf[tile_counter], 1, tile);
 
-			nodepool[offset * 8 + lgtid].children_offset = tile;
+			nodepool[offset].nodes[lgtid].children_offset = tile;
 		}
 		// if we're allocating bricks
 		else
@@ -80,8 +79,8 @@ void main(uint3 gid : SV_GroupID, uint3 gtid : SV_GroupThreadID)
 			uint brick;
 			InterlockedAdd(countbuf[brick_counter], 1, brick);
 
-			nodepool[offset * 8 + lgtid].children_offset = 0;
-			nodepool[offset * 8 + lgtid].brick_id = brick;
+			nodepool[offset].nodes[lgtid].children_offset = 0;
+			nodepool[offset].nodes[lgtid].brick_id = brick;
 		}
 	}
 }

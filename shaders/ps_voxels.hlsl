@@ -1,3 +1,17 @@
+
+// put this in a header some day
+float4 u32x1_to_f(uint x)
+{
+	return float4(
+		(x & 0xff) / 255.f,
+		((x >> 8) & 0xff) / 255.f,
+		((x >> 16) & 0xff) / 255.f,
+		((x >> 24) & 0xff) / 255.f
+	);
+}
+
+//float u8x4_to_f32x1 { }
+
 cbuffer buf_scene : register(b0)
 {
 	matrix view;
@@ -35,7 +49,7 @@ struct tile_t
 
 // node pool
 StructuredBuffer<tile_t> nodes : register(t0);
-texture3D bricks : register(t1);
+texture3D<float2> bricks : register(t1);
 
 SamplerState brick_sampler
 {
@@ -197,7 +211,8 @@ void brick_ray(in uint brick_id, in float3 near, in float3 far, inout float4 col
 	for (pos=steps*remainder; pos < 1.0; pos += steps)
 	{
 		float3 sample_loc = lerp(near, far, pos)*iCount;
-		float4 voxel = bricks.SampleLevel(brick_sampler, sample_loc + brick_pos, 0);
+		float2 voxelfull = bricks.SampleLevel(brick_sampler, sample_loc + brick_pos, 0);
+		float4 voxel = u32x1_to_f(asuint(voxelfull.x));
 		result.xyz += ((1.0-result.w)*(1.0-result.w) * voxel.xyz)/(1.0 - result.xyz * voxel.xyz);
 		result.w = result.w + (1.0-result.w) * voxel.w;
 		// result.xyz = result.xyz + (1.0-result.w) * voxel.xyz;
