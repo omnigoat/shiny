@@ -37,7 +37,7 @@ runtime_t::runtime_t()
 	ATMA_ASSERT(dxgi_factory_);
 
 	// get debug thing
-#if _DEBUG && 0
+#if _DEBUG && 1
 	{
 		auto hDll = LoadLibrary(L"dxgidebug.dll");
 		typedef HRESULT(__stdcall *fPtr)(REFIID, void**);
@@ -120,6 +120,11 @@ auto runtime_t::dxgi_output_of(platform::dxgi_adapter_ptr const& adapter, uint o
 	ATMA_ASSERT(output_index < i->second.size());
 
 	return i->second[output_index];
+}
+
+auto runtime_t::d3d_report_live_objects() -> void
+{
+	dxgi_debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_SUMMARY);
 }
 
 auto runtime_t::make_data_declaration(shiny::data_streams_t const& streams) -> data_declaration_t const*

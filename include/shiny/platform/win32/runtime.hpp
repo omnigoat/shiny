@@ -42,6 +42,7 @@ namespace shiny
 		// dxgi/d3d specific
 		auto dxgid3d_for_adapter(uint adapter_index) -> std::tuple<platform::dxgi_adapter_ptr, platform::d3d_device_ptr, platform::d3d_context_ptr>;
 		auto dxgi_output_of(platform::dxgi_adapter_ptr const&, uint output_index) -> platform::dxgi_output_ptr const&;
+		auto d3d_report_live_objects() -> void;
 
 	private:
 		auto enumerate_backbuffers(platform::dxgi_output_ptr const&) -> void;
