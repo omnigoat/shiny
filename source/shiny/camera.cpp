@@ -52,6 +52,18 @@ auto camera_t::fov() const -> float
 	return fov_;
 }
 
+auto camera_t::pitch() const -> float
+{
+	//return std::acos(aml::dot_product(aml::vector4f(view_dir_.x, 0.f, view_dir_.z), aml::vector4f(0.f, 0.f, 1.f)));
+	return std::atan2(view_dir_.x, view_dir_.y);
+}
+
+auto camera_t::yaw() const -> float
+{
+	//return std::acos(aml::dot_product(aml::vector4f(0.f, view_dir_.y, view_dir_.z), up_));
+	return std::atan2(view_dir_.x*view_dir_.x + view_dir_.y*view_dir_.y, view_dir_.z);
+}
+
 auto camera_t::move_to(aml::vector4f const& p) -> void
 {
 	eye_ = p;

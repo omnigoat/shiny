@@ -1,10 +1,10 @@
 #pragma once
-//======================================================================
-#include <atma/math/matrix4f.hpp>
-//======================================================================
-namespace shiny {
-//======================================================================
 
+#include <atma/math/matrix4f.hpp>
+
+
+namespace shiny
+{
 	struct camera_t
 	{
 		camera_t();
@@ -15,6 +15,9 @@ namespace shiny {
 		auto near_distance() const -> float;
 		auto far_distance() const -> float;
 		auto fov() const -> float;
+		auto pitch() const -> float;
+		auto yaw() const -> float;
+		auto position() const -> aml::vector4f const& { return eye_; }
 
 		auto move_to(atma::math::vector4f const&) -> void;
 		auto look_at(atma::math::vector4f const&) -> void;
@@ -30,16 +33,13 @@ namespace shiny {
 	private:
 		mutable atma::math::matrix4f view_, proj_;
 
-		// we have 64 bytes to play around with because of matrix alignment
 		atma::math::vector4f eye_, view_dir_, up_;
 		float fov_, aspect_, near_, far_;
+
 		mutable bool view_dirty_, proj_dirty_;
 	};
-
-//======================================================================
 }
-//======================================================================
-namespace shiny { using shiny::camera_t; }
+
 
 
 
