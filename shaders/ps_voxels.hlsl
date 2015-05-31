@@ -23,7 +23,7 @@ cbuffer buf_scene : register(b0)
 cbuffer buf_voxel : register(b2)
 {
 	float4 position;
-	float x, y;
+	float yaw, pitch;
 }
 
 struct ps_input_t
@@ -212,11 +212,13 @@ void brick_ray(in uint brick_id, in float3 near, in float3 far, inout float4 col
 	{
 		float3 sample_loc = lerp(near, far, pos)*iCount;
 		float2 voxelfull = bricks.SampleLevel(brick_sampler, sample_loc + brick_pos, 0);
-		float4 voxel = u32x1_to_f(asuint(voxelfull.x));
+		if (voxelfull.x > 0.f) {
+			result.xyz = float3(1.f, 1.f, 1.f);
+			break;
+		}
+		float4 voxel = voxelfull.xxxx;
 		result.xyz += ((1.0-result.w)*(1.0-result.w) * voxel.xyz)/(1.0 - result.xyz * voxel.xyz);
 		result.w = result.w + (1.0-result.w) * voxel.w;
-		// result.xyz = result.xyz + (1.0-result.w) * voxel.xyz;
-		// result.w = result.w + (1.0-result.w) * voxel.w;
 		if (result.w > 1.0)break;
 	}
 	remainder = (pos - 1.0) / steps;
@@ -240,7 +242,10 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 	uint reps = 0;
 	float4 color = {0.f, 0.f, 0.f, 0.f};
 	float rem = 0.f;
-	
+
+	// debug: hit-enter
+	//return float4(hit_enter, 1.f);
+
 	while (reps != 50 && color.w < 1.f && box.contains(hit_enter))
 	{
 		aabb_t leaf_box;
@@ -248,7 +253,8 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 		float3 leaf_exit;
 
 		uint brick_id = brick_index(box, hit_enter, size, leaf_box);
-		intersection(leaf_box, position, normal, leaf_enter, leaf_exit);
+		if (!intersection(leaf_box, position, normal, leaf_enter, leaf_exit))
+			break;
 		float len = length(leaf_exit - hit_enter);
 
 		if (brick_id != 0)
@@ -266,6 +272,7 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 		++reps;
 	} 
 
+	return float4(reps / 16.f, 0.f, 0.f, 1.f);
 #if 1
 	float3 n = normalize(color.xyz);
 
@@ -288,18 +295,20 @@ static const float pi = 3.14159265f;
 
 float4 main(ps_input_t input) : SV_Target
 {
-	//float4 pj_position = mul(inverse_vp, float4(0.f, 0.f, 0.f, 1.f));
-	//float3 position = pj_position.xyz / pj_position.w;
+	// debug: position
+	//return position;
 
-	float3 dir ={sin(x) * cos(y), sin(y), cos(x) * cos(y)};
-	float guessup = float3(0.f, 1.f, 0.f);
-	float3 right = cross(dir, float3(0.f, 1.f, 0.f));
-	float3 up = cross(right, dir);
+	// debug: pixel-delta
+	//return float4(input.pixel_delta.xy, 0.f, 1.f);
 
-	float yd = acos(position.y);
+	// debug: pitch/yaw
+	//return float4(x, y, 0.f, 1.f);
+	float yaw2 = yaw + input.pixel_delta.x;
+	float pitch2 = pitch + input.pixel_delta.y * 1.33333f;
+	float3 dir = {sin(yaw2) * cos(pitch2), sin(pitch2), cos(yaw2) * cos(pitch2)};
 	
-	float3 p = dir + up * input.pixel_delta.y + right * input.pixel_delta.x;
+	// debug: direction
+	//return float4(dir, 1.f);
 
-
-	return brick_path(position.xyz, p, 0.00001f);
+	return brick_path(position.xyz, dir, 0.00001f);
 }

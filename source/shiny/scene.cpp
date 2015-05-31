@@ -31,7 +31,7 @@ namespace
 
 
 scene_t::scene_t(context_ptr const& context, camera_t const& camera, rendertarget_clear_t const& fc)
-	: context_(context)
+	: context_(context), camera_(&camera)
 {
 	if (fc.clear_any())
 	{

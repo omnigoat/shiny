@@ -37,7 +37,7 @@ runtime_t::runtime_t()
 	ATMA_ASSERT(dxgi_factory_);
 
 	// get debug thing
-#if _DEBUG && 1
+#if _DEBUG && 0
 	{
 		auto hDll = LoadLibrary(L"dxgidebug.dll");
 		typedef HRESULT(__stdcall *fPtr)(REFIID, void**);
@@ -92,7 +92,7 @@ auto shiny::runtime_t::dxgid3d_for_adapter(uint32 adapter_index) -> std::tuple<d
 	}
 	else
 	{
-#if _DEBUG
+#if _DEBUG && 0
 #	define FLAG D3D11_CREATE_DEVICE_DEBUG
 #else
 #	define FLAG 0

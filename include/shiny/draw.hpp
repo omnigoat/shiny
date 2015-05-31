@@ -39,6 +39,11 @@ namespace shiny
 		bound_compute_views_t cvs;
 	};
 
+	struct output_merger_stage_t
+	{
+		blender_cptr b;
+	};
+
 	struct draw_range_t
 	{
 		draw_range_t()
@@ -75,6 +80,8 @@ namespace shiny
 			inline auto fs_set(fragment_stage_t& fs, bound_constant_buffers_t const& cbs) -> void { fs.cbs = cbs; }
 			inline auto fs_set(fragment_stage_t& fs, bound_input_views_t const& ivs) -> void      { fs.ivs = ivs; }
 			inline auto fs_set(fragment_stage_t& fs, bound_compute_views_t const& cvs) -> void    { fs.cvs = cvs; }
+
+			inline auto om_set(output_merger_stage_t& om, blender_cptr const& b) -> void { om.b = b; }
 		}
 
 		template <typename... Args>
@@ -109,6 +116,14 @@ namespace shiny
 			return fs;
 		}
 
+		template <typename... Args>
+		inline auto output_merger_stage(Args&&... args) -> output_merger_stage_t
+		{
+			output_merger_stage_t om;
+			std::make_tuple((detail::om_set(om, std::forward<Args>(args)), 0)...);
+			return om;
+		}
+
 		inline auto draw_range(uint offset, uint count) -> draw_range_t
 		{
 			return draw_range_t{0, 0, offset, count};
@@ -134,6 +149,7 @@ namespace shiny
 		auto generate_command(queue_t::batch_t&, context_ptr const&, geometry_stage_t const&) -> void;
 		auto generate_command(queue_t::batch_t&, context_ptr const&, vertex_stage_t const&) -> void;
 		auto generate_command(queue_t::batch_t&, context_ptr const&, fragment_stage_t const&) -> void;
+		auto generate_command(queue_t::batch_t&, context_ptr const&, output_merger_stage_t const&) -> void;
 		auto generate_command(queue_t::batch_t&, context_ptr const&, draw_range_t const&) -> void;
 	}
 

@@ -9,6 +9,7 @@
 #include <shiny/texture3d.hpp>
 #include <shiny/compute_shader.hpp>
 #include <shiny/constant_buffer.hpp>
+#include <shiny/camera.hpp>
 
 #include <shelf/file.hpp>
 
@@ -80,16 +81,7 @@ auto voxelization_plugin_t::gfx_setup(shiny::context_ptr const& ctx2) -> void
 	ctx = ctx2;
 }
 
-struct node_t
-{
-	node_t()
-		: children_offset{}
-		, brick_idx{}
-	{}
 
-	uint32 children_offset;
-	uint32 brick_idx;
-};
 
 struct level_t
 {
@@ -189,36 +181,6 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 		std::unique(fragments.begin(), fragments.end()),
 		fragments.end());
 
-	std::vector<aml::vector4f> vertices;
-	std::vector<uint32> indices;
-
-	if (false)
-	{
-		uint64 m = 0;
-		int fragidx = 0;
-		for (auto const& frag : fragments)
-		{
-			uint x, y, z;
-			moxi::morton_decoding32(frag.morton, x, y, z);
-
-			auto scale = aml::matrix4f::scale(0.1f);
-			auto translate = aml::matrix4f::translate(aml::vector4f{(float)x, (float)y, (float)z});
-			auto cmp = translate * scale;
-
-			for (int i = 0; i != 8; ++i)
-			{
-				auto v = aml::vector4f{cube_vertices()[i * 8 + 0], cube_vertices()[i * 8 + 1], cube_vertices()[i * 8 + 2], cube_vertices()[i * 8 + 3]};
-				vertices.push_back(v * cmp);
-			}
-
-			for (auto idx = cube_indices(); idx != cube_indices() + 36; ++idx)
-				indices.push_back(fragidx * 8 + *idx);
-			++fragidx;
-		}
-
-		this->vb = shiny::create_vertex_buffer(this->ctx, shiny::resource_storage_t::immutable, dd_position(), (uint)vertices.size(), &vertices[0]);
-		this->ib = shiny::create_index_buffer(ctx, shiny::resource_storage_t::immutable, shiny::index_format_t::index32, (uint)indices.size(), &indices[0]);
-	}
 
 	voxelbuf = shiny::make_buffer(ctx,
 		shiny::resource_type_t::structured_buffer,
@@ -232,6 +194,9 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 		shiny::element_format_t::unknown);
 
 #if 1
+	std::vector<aml::vector4f> vertices;
+	std::vector<uint32> indices;
+
 	// load .obj triangles into vb/ib so that we can see the original mesh
 	{
 		auto mi = atma::unique_memory_t{sizeof(uint32) * obj.faces().size() * 3};
@@ -332,7 +297,7 @@ auto voxelization_plugin_t::setup_svo() -> void
 	brickcache = shiny::make_texture3d(ctx,
 		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
 		shiny::resource_storage_t::persistant,
-		shiny::texture3d_dimensions_t::cube(shiny::element_format_t::f32x2, 512, 1));
+		shiny::texture3d_dimensions_t::cube(shiny::element_format_t::f32x2, 64, 1));
 
 	brickcache_view = shiny::make_resource_view(brickcache,
 		shiny::resource_view_type_t::compute,
@@ -340,7 +305,7 @@ auto voxelization_plugin_t::setup_svo() -> void
 
 	brickcache_input_view = shiny::make_resource_view(brickcache,
 		shiny::resource_view_type_t::input,
-		shiny::element_format_t::unknown);
+		shiny::element_format_t::f32x2);
 
 	// staging buffer
 	stb = shiny::make_buffer(ctx,
@@ -405,10 +370,189 @@ auto voxelization_plugin_t::setup_svo() -> void
 			scc::dispatch(cs_write_fragments, (uint)fragments.size() / 64, 1, 1));
 	}
 
+
+
+
+
+	auto fragments3d = std::vector<aml::vector4f>{};
+
+	// root tile
+	nodes.push_back(node_t{});
+	nodes.push_back(node_t{});
+	nodes.push_back(node_t{});
+	nodes.push_back(node_t{});
+	nodes.push_back(node_t{});
+	nodes.push_back(node_t{});
+	nodes.push_back(node_t{});
+	nodes.push_back(node_t{});
+
+
+	//
+	// sublevel_morton: the morton id of the item "below" us, for nodes > 0, this
+	// is a node N-1, for node0, this is a brick id
+	//
+	std::function<node_t&(int, uint64)> publish_node = [&](int level_idx, uint64 sublevel_morton) -> node_t&
+	{
+		uint64 level_morton = sublevel_morton >> 3;
+		auto self_morton = level_morton & 0x7;
+
+		if (level_idx == levels_required - 1)
+			return nodes[0];
+
+		auto* parent = &publish_node(level_idx + 1, level_morton);
+
+		if (parent->children_offset == 0)
+		{
+			parent->children_offset = (uint32)nodes.size() / 8;
+			node_t nds[8];
+			nodes.insert(nodes.end(), nds, nds + 8);
+			parent = &publish_node(level_idx + 1, level_morton);
+		}
+
+		auto& node = nodes[parent->children_offset * 8 + self_morton];
+
+		return node;
+	};
+
+	auto publish_brick = [&](fragments_t::const_iterator const& begin, fragments_t::const_iterator const& end) -> void
+	{
+		auto brick_morton = begin->morton / brick_morton_width;
+		auto& node = publish_node(0, brick_morton);
+
+		node.brick_idx = (uint32)brick_morton;
+	};
+
+
+	// node: node in octree, has 2x2x2 children, or a 
+	// node0: lowest-level node in our octree
+	// brick: an 8x8x8 collection of fragments
+	for (auto fragment_iter = fragments.begin(); fragment_iter != fragments.end();)
+	{
+		auto brick_morton = fragment_iter->morton / brick_morton_width;
+
+		// traverse all fragments in the brick
+		auto brick_end = fragment_iter;
+		while (brick_end != fragments.end() && brick_end->morton / brick_morton_width == brick_morton)
+			++brick_end;
+
+		publish_brick(fragment_iter, brick_end);
+		fragment_iter = brick_end;
+	}
+
+#if 1
+	std::vector<aml::vector4f> vertices;
+	std::vector<uint32> indices;
+
+	uint fragidx = 0;
+	std::function<void(node_t const*, aml::aabc_t const&)> render_block = [&](node_t const* x, aml::aabc_t const& box)
+	{
+		auto s = aml::matrix4f::scale(box.diameter());
+		auto t = aml::matrix4f::translate(box.center());
+
+		if (x->children_offset == 0 && x->brick_idx == 0)
+			return;
+
+		if (x->brick_idx != 0)
+		{
+			for (int i = 0; i != 8; ++i)
+			{
+				auto v = aml::vector4f{cube_vertices()[i * 8 + 0], cube_vertices()[i * 8 + 1], cube_vertices()[i * 8 + 2], cube_vertices()[i * 8 + 3]};
+				vertices.push_back(v * (s * t));
+				auto c = aml::vector4f{cube_vertices()[i * 8 + 4], cube_vertices()[i * 8 + 5], cube_vertices()[i * 8 + 6], cube_vertices()[i * 8 + 7]};
+				//c.w *= (1.f - box.diameter());
+				vertices.push_back(c);
+			}
+
+			for (auto idx = cube_indices(); idx != cube_indices() + 36; ++idx)
+				indices.push_back(fragidx * 8 + *idx);
+			++fragidx;
+		}
+
+		if (x->children_offset == 0) // x->brick_idx != 0)
+			return;
+		else
+		{
+			for (auto i = 0; i != 8; ++i)
+			{
+				render_block(nodes.data() + x->children_offset * 8 + i, box.octant_of(i));
+			}
+		}
+	};
+
+	render_block(nodes.data(), aml::aabc_t{0.f, 0.f, 0.f, 1.f});
+
+	this->vb = shiny::create_vertex_buffer(this->ctx, shiny::resource_storage_t::immutable, dd_position_color(), (uint)vertices.size() / 2, &vertices[0]);
+	this->ib = shiny::create_index_buffer(ctx, shiny::resource_storage_t::immutable, shiny::index_format_t::index32, (uint)indices.size(), &indices[0]);
+#endif
+
+
+
+
+
+
 #if _DEBUG
 	ctx->signal_copy_buffer(stb, nodecache);
-	ctx->signal_res_map(stb, 0, shiny::map_type_t::read, [](shiny::mapped_subresource_t& sr){
+	ctx->signal_res_map(stb, 0, shiny::map_type_t::read, [&](shiny::mapped_subresource_t& sr){
 		int breakpoint = 4;
+#if 0
+		std::vector<aml::vector4f> vertices;
+		std::vector<uint32> indices;
+
+		uint64 m = 0;
+		int fragidx = 0;
+		for (auto const& frag : fragments)
+		{
+			uint x, y, z;
+			moxi::morton_decoding32(frag.morton, x, y, z);
+
+			auto scale = aml::matrix4f::scale(0.1f);
+			auto translate = aml::matrix4f::translate(aml::vector4f{(float)x, (float)y, (float)z});
+			auto cmp = translate * scale;
+
+			for (int i = 0; i != 8; ++i)
+			{
+				auto v = aml::vector4f{cube_vertices()[i * 8 + 0], cube_vertices()[i * 8 + 1], cube_vertices()[i * 8 + 2], cube_vertices()[i * 8 + 3]};
+				vertices.push_back(v * cmp);
+			}
+
+			for (auto idx = cube_indices(); idx != cube_indices() + 36; ++idx)
+				indices.push_back(fragidx * 8 + *idx);
+			++fragidx;
+		}
+
+		this->vb = shiny::create_vertex_buffer(this->ctx, shiny::resource_storage_t::immutable, dd_position(), (uint)vertices.size(), &vertices[0]);
+		this->ib = shiny::create_index_buffer(ctx, shiny::resource_storage_t::immutable, shiny::index_format_t::index32, (uint)indices.size(), &indices[0]);
+#elif 0
+		std::vector<aml::vector4f> vertices;
+		std::vector<uint32> indices;
+
+		uint64 m = 0;
+		int fragidx = 0;
+		for (auto const& frag : fragments)
+		{
+			uint x, y, z;
+			moxi::morton_decoding32(frag.morton, x, y, z);
+
+			auto scale = aml::matrix4f::scale(0.1f);
+			auto translate = aml::matrix4f::translate(aml::vector4f{(float)x, (float)y, (float)z});
+			auto cmp = translate * scale;
+
+			for (int i = 0; i != 8; ++i)
+			{
+				auto v = aml::vector4f{cube_vertices()[i * 8 + 0], cube_vertices()[i * 8 + 1], cube_vertices()[i * 8 + 2], cube_vertices()[i * 8 + 3]};
+				vertices.push_back(v * cmp);
+				auto c = aml::vector4f{cube_vertices()[i * 8 + 4], cube_vertices()[i * 8 + 5], cube_vertices()[i * 8 + 6], cube_vertices()[i * 8 + 7]};
+				vertices.push_back(c);
+			}
+
+			for (auto idx = cube_indices(); idx != cube_indices() + 36; ++idx)
+				indices.push_back(fragidx * 8 + *idx);
+			++fragidx;
+		}
+
+		this->vb = shiny::create_vertex_buffer(this->ctx, shiny::resource_storage_t::immutable, dd_position_color(), (uint)vertices.size() / 2, &vertices[0]);
+		this->ib = shiny::create_index_buffer(ctx, shiny::resource_storage_t::immutable, shiny::index_format_t::index32, (uint)indices.size(), &indices[0]);
+#endif
 	});
 #endif
 }
@@ -434,18 +578,14 @@ auto voxelization_plugin_t::setup_rendering() -> void
 
 	{
 		auto f = atma::filesystem::file_t("../shiny/x64/Debug/vs_voxels.cso");
-		//auto f = atma::filesystem::file_t{"../../shaders/vs_voxels.hlsl"};
 		auto fm = f.read_into_memory();
 		vs_voxels = shiny::create_vertex_shader(ctx, dd, fm, true);
-		//auto fm = atma::unique_memory_t{};
-		//vs_voxels = shiny::create_vertex_shader(ctx, dd, fm, true, "../shiny/x64/Debug/vs_voxels.cso");
 	}
 
 	{
-		//auto f = atma::filesystem::file_t("../shiny/x64/Debug/ps_voxels.cso");
-		auto f = atma::filesystem::file_t("../../shaders/ps_voxels.hlsl");
+		auto f = atma::filesystem::file_t("../shiny/x64/Debug/ps_voxels.cso");
 		auto fm = f.read_into_memory();
-		fs_voxels = shiny::create_fragment_shader(ctx, fm, false);
+		fs_voxels = shiny::create_fragment_shader(ctx, fm, true);
 	}
 }
 
@@ -458,22 +598,44 @@ auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
 {
 	namespace sdc = shiny::draw_commands;
 
-#if 0
+	auto b = ctx->make_blender(shiny::blend_state_t::transparent());
+
+#if 1
 	scene.draw(
-		sdc::input_assembly_stage(dd_position(), vb, ib),
+		sdc::input_assembly_stage(dd_position_color(), vb, ib),
 		sdc::vertex_stage(vs_flat(), shiny::bound_constant_buffers_t{
 			{0, scene.scene_constant_buffer()}
 		}),
 		sdc::geometry_stage(gs),
-		sdc::fragment_stage(fs_flat()));
+		sdc::fragment_stage(fs_flat()),
+		sdc::output_merger_stage(b)
+		);
 #else
+	struct blah
+	{
+		aml::vector4f position;
+		float x, y;
+	};
+
+	auto cb = shiny::make_constant_buffer(scene.context(), blah{
+		scene.camera().position(),
+		scene.camera().yaw(), scene.camera().pitch()
+	});
+
 	scene.draw(
-		sdc::input_assembly_stage(vb->data_declaration(), vb),
+		sdc::input_assembly_stage(vb_quad->data_declaration(), vb_quad),
 		sdc::vertex_stage(vs_voxels),
-		sdc::fragment_stage(fs_voxels, shiny::bound_input_views_t{
-			{0, nodecache->primary_input_view()},
-			{1, brickcache_input_view}
-		})
+		sdc::fragment_stage(fs_voxels, 
+			shiny::bound_constant_buffers_t{
+				{0, scene.scene_constant_buffer()},
+				{2, cb}
+			},
+		
+			shiny::bound_input_views_t{
+				{0, nodecache->primary_input_view()},
+				{1, brickcache_input_view}
+			}
+		)
 	);
 #endif
 }

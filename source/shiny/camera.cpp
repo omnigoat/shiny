@@ -27,7 +27,8 @@ camera_t::camera_t(aml::matrix4f const& view, aml::matrix4f const& proj)
 
 auto camera_t::view() const -> aml::matrix4f const&
 {
-	if (view_dirty_) {
+	if (view_dirty_)
+	{
 		view_ = aml::look_along(eye_, view_dir_, up_);
 		proj_ = aml::perspective_fov(fov_, aspect_, near_, far_);
 		view_dirty_ = false;
@@ -38,7 +39,8 @@ auto camera_t::view() const -> aml::matrix4f const&
 
 auto camera_t::projection() const -> aml::matrix4f const&
 {
-	if (proj_dirty_) {
+	if (proj_dirty_)
+	{
 		view_ = aml::look_along(eye_, view_dir_, up_);
 		proj_ = aml::perspective_fov(fov_, aspect_, near_, far_);
 		proj_dirty_ = false;
@@ -54,14 +56,12 @@ auto camera_t::fov() const -> float
 
 auto camera_t::pitch() const -> float
 {
-	//return std::acos(aml::dot_product(aml::vector4f(view_dir_.x, 0.f, view_dir_.z), aml::vector4f(0.f, 0.f, 1.f)));
-	return std::atan2(view_dir_.x, view_dir_.y);
+	return std::asin(view_dir_.y);
 }
 
 auto camera_t::yaw() const -> float
 {
-	//return std::acos(aml::dot_product(aml::vector4f(0.f, view_dir_.y, view_dir_.z), up_));
-	return std::atan2(view_dir_.x*view_dir_.x + view_dir_.y*view_dir_.y, view_dir_.z);
+	return std::atan2(view_dir_.x, view_dir_.z);
 }
 
 auto camera_t::move_to(aml::vector4f const& p) -> void

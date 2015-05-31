@@ -310,12 +310,13 @@ auto context_t::immediate_draw_pipeline_reset() -> void
 
 auto context_t::immediate_ia_set_data_declaration(data_declaration_t const* dd) -> void
 {
-	data_declaration_ = dd;
+	ia_dd_ = dd;
 }
 
 auto context_t::immediate_ia_set_vertex_buffer(vertex_buffer_cptr const& vb) -> void
 {
-	ATMA_ASSERT(vb->data_declaration() == data_declaration_);
+	ATMA_ASSERT(vb->data_declaration() == ia_dd_);
+	ia_vb_ = vb;
 
 	UINT stride = (UINT)vb->data_declaration()->stride(), offset = 0;
 	d3d_immediate_context_->IASetVertexBuffers(0, 1, &vb->d3d_buffer().get(), &stride, &offset);
@@ -325,7 +326,7 @@ auto context_t::immediate_ia_set_index_buffer(index_buffer_cptr const& ib) -> vo
 {
 	if (ib)
 	{
-		index_buffer_ = ib;
+		ia_ib_ = ib;
 		auto fmt = platform::dxgi_format_of(ib->index_format());
 		d3d_immediate_context_->IASetIndexBuffer(ib->d3d_buffer().get(), fmt, 0);
 	}
@@ -352,7 +353,7 @@ auto context_t::immediate_gs_set_geometry_shader(geometry_shader_cptr const& gs)
 
 auto context_t::immediate_vs_set_vertex_shader(vertex_shader_cptr const& vs) -> void
 {
-	vertex_shader_ = vs;
+	vs_shader_ = vs;
 	d3d_immediate_context_->VSSetShader(vs->d3d_vs().get(), nullptr, 0);
 }
 
@@ -377,15 +378,12 @@ auto context_t::immediate_fs_set_fragment_shader(fragment_shader_cptr const& fs)
 
 auto context_t::immediate_fs_set_constant_buffers(bound_constant_buffers_t const& cbs) -> void
 {
-	for (auto const& x : cbs) {
-		d3d_immediate_context_->PSSetConstantBuffers(x.first, 1, &x.second->d3d_buffer().get());
-	}
+	fs_cbs_ = cbs;
 }
 
 auto context_t::immediate_fs_set_input_views(bound_input_views_t const& ivs) -> void
 {
 	for (auto const& x : ivs.views) {
-		//d3d_immediate_context_->PSSetShaderResources(x.first, 1, &x.second->d3d_srv().get());
 		d3d_immediate_context_->PSSetShaderResources(x.idx, 1, (ID3D11ShaderResourceView* const*)&x.view->d3d_view().get());
 	}
 }
@@ -393,8 +391,8 @@ auto context_t::immediate_fs_set_input_views(bound_input_views_t const& ivs) -> 
 auto context_t::immediate_fs_set_compute_views(bound_compute_views_t const& cvs) -> void
 {
 	for (auto const& x : cvs.views) {
-		UINT count = x.counter;
-		d3d_immediate_context_->CSSetUnorderedAccessViews(x.idx, 1, (ID3D11UnorderedAccessView* const*)&x.view->d3d_view().get(), &count);
+		//UINT count = x.counter;
+		//d3d_immediate_context_->PSSet(x.idx, 1, (ID3D11UnorderedAccessView* const*)&x.view->d3d_view().get(), &count);
 	}
 }
 
@@ -410,25 +408,43 @@ auto context_t::immediate_om_set_blending(blender_cptr const& b) -> void
 
 auto context_t::immediate_draw() -> void
 {
-	auto ILkey = std::make_tuple(vertex_shader_, data_declaration_);
+	auto ILkey = std::make_tuple(vs_shader_, ia_dd_);
 	auto IL = cached_input_layouts_.find(ILkey);
 	if (IL == cached_input_layouts_.end()) {
-		IL = cached_input_layouts_.insert(std::make_pair(ILkey, create_d3d_input_layout(vertex_shader_, data_declaration_))).first;
+		IL = cached_input_layouts_.insert(std::make_pair(ILkey, create_d3d_input_layout(vs_shader_, ia_dd_))).first;
 	}
 
 	d3d_immediate_context_->IASetInputLayout(IL->second.get());
 
-	if (index_buffer_)
+	auto blah = D3D11_DEPTH_STENCIL_DESC{false};
+	atma::com_ptr<ID3D11DepthStencilState> ds;
+	d3d_device_->CreateDepthStencilState(&blah, ds.assign());
+	d3d_immediate_context_->OMSetDepthStencilState(ds.get(), 0);
+
+	// constant-buffers
+	ID3D11Buffer* d3d_fs_cbs[D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT]{};
+	for (auto const& cb : fs_cbs_)
+		d3d_fs_cbs[cb.first] = cb.second->d3d_buffer().get();
+	d3d_immediate_context_->PSSetConstantBuffers(0, D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT, d3d_fs_cbs);
+
+	if (ia_ib_)
 	{
 		if (draw_range_.index_count == 0)
-			draw_range_.index_count = index_buffer_->index_count();
+			draw_range_.index_count = ia_ib_->index_count();
 
 		d3d_immediate_context_->DrawIndexed(draw_range_.index_count, draw_range_.index_offset, draw_range_.vertex_offset);
 	}
 	else
 	{
+		if (draw_range_.vertex_count == 0)
+			draw_range_.vertex_count = ia_vb_->vertex_count();
+
 		d3d_immediate_context_->Draw(draw_range_.vertex_count, draw_range_.vertex_offset);
 	}
+
+	ia_ib_ = index_buffer_cptr::null;
+	draw_range_ = draw_range_t{};
+	//runtime_.d3d_report_live_objects();
 }
 
 auto context_t::immediate_compute_pipeline_reset() -> void

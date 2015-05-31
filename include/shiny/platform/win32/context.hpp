@@ -157,6 +157,17 @@ namespace shiny
 		bound_resource_views_t cs_srvs_;
 		compute_shader_cptr cs_shader_;
 
+		// draw pipeline
+		data_declaration_t const* ia_dd_;
+		index_buffer_cptr         ia_ib_;
+		vertex_buffer_cptr        ia_vb_;
+		vertex_shader_cptr        vs_shader_;
+		fragment_shader_cptr      fs_shader_;
+		bound_constant_buffers_t  fs_cbs_;
+		bound_resource_views_t    fs_srvs_;
+		bound_resource_views_t    fs_uavs_;
+		draw_range_t              draw_range_;
+
 	private:
 		atma::thread::engine_t engine_;
 		runtime_t& runtime_;
@@ -170,11 +181,6 @@ namespace shiny
 		platform::d3d_render_target_view_ptr d3d_render_target_;
 		platform::d3d_depth_stencil_buffer_ptr d3d_depth_stencil_;
 		platform::d3d_texture2d_ptr d3d_depth_stencil_buffer_;
-
-		data_declaration_t const* data_declaration_;
-		index_buffer_cptr index_buffer_;
-		vertex_shader_cptr vertex_shader_;
-		draw_range_t draw_range_;
 
 		// fooey
 		fooey::window_ptr window_;

@@ -121,5 +121,5 @@ void main(uint3 DTid : SV_DispatchThreadID)
 	// encode color to f32
 
 
-	brickpool[coords] = float2(asfloat(0xffffffff), 0.f);
+	brickpool[coords] = float2(1.f, 0.f);
 }

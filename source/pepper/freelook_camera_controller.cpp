@@ -10,7 +10,7 @@ using pepper::freelook_camera_controller_t;
 freelook_camera_controller_t::freelook_camera_controller_t(fooey::window_ptr const& window)
 	: window_(window)
 	, require_mousedown_()
-	, position_(0.f, 0.f, -1.f, 1.f)
+	, position_(0.f, 0.f, -2.f, 1.f)
 	, walk_direction_(0.f, 0.f, 1.f, 0.f)
 	, strafe_direction_(1.f, 0.f, 0.f, 0.f)
 	, phi_(), theta_()
@@ -85,14 +85,14 @@ auto freelook_camera_controller_t::update(uint timestep_in_ms) -> void
 			theta_ = -aml::pi_over_two + 0.1f;
 	}
 
-	auto const walk_speed = 0.2f;
-	if (WASD_[0]) position_ += walk_direction_ * walk_speed;
-	if (WASD_[1]) position_ += strafe_direction_ * walk_speed;
-	if (WASD_[2]) position_ -= walk_direction_ * walk_speed;
-	if (WASD_[3]) position_ -= strafe_direction_ * walk_speed;
-
 	walk_direction_ = aml::vector4f(sin(phi_) * cos(theta_), sin(theta_), cos(phi_) * cos(theta_), 0.f);
-	strafe_direction_ = aml::cross_product(walk_direction_, aml::vector4f(0.f, 1.f, 0.f, 0.f));
+	strafe_direction_ = aml::cross_product(aml::vector4f(0.f, 1.f, 0.f, 0.f), walk_direction_);
+
+	auto const walk_speed = 0.02f;
+	if (WASD_[0]) position_ += walk_direction_ * walk_speed;
+	if (WASD_[1]) position_ -= strafe_direction_ * walk_speed;
+	if (WASD_[2]) position_ -= walk_direction_ * walk_speed;
+	if (WASD_[3]) position_ += strafe_direction_ * walk_speed;
 
 	camera_ = shiny::camera_t(
 		aml::look_at(position_, position_ + walk_direction_, aml::vector4f{0.f, 1.f, 0.f, 0.f}),

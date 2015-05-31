@@ -41,14 +41,14 @@ using sandbox::application_t;
 
 float application_t::cube_vertices[] =
 {
-	0.5f, 0.5f, 0.5f, 1.f, 1.f, 0.f, 0.f, 1.f,
-	0.5f, 0.5f, -0.5f, 1.f, 0.f, 1.f, 0.f, 1.f,
-	0.5f, -0.5f, 0.5f, 1.f, 0.f, 0.f, 1.f, 1.f,
-	0.5f, -0.5f, -0.5f, 1.f, 1.f, 1.f, 0.f, 1.f,
-	-0.5f, 0.5f, 0.5f, 1.f, 1.f, 0.f, 1.f, 1.f,
-	-0.5f, 0.5f, -0.5f, 1.f, 0.f, 1.f, 1.f, 1.f,
-	-0.5f, -0.5f, 0.5f, 1.f, 1.f, 1.f, 1.f, 1.f,
-	-0.5f, -0.5f, -0.5f, 1.f, 1.f, 0.f, 0.f, 1.f,
+	0.5f, 0.5f, 0.5f, 1.f,    1.f, 0.f, 0.f, 0.2f,
+	0.5f, 0.5f, -0.5f, 1.f,   0.f, 1.f, 0.f, 0.2f,
+	0.5f, -0.5f, 0.5f, 1.f,   0.f, 0.f, 1.f, 0.2f,
+	0.5f, -0.5f, -0.5f, 1.f,  1.f, 1.f, 0.f, 0.2f,
+	-0.5f, 0.5f, 0.5f, 1.f,   1.f, 0.f, 1.f, 0.2f,
+	-0.5f, 0.5f, -0.5f, 1.f,  0.f, 1.f, 1.f, 0.2f,
+	-0.5f, -0.5f, 0.5f, 1.f,  1.f, 1.f, 1.f, 0.2f,
+	-0.5f, -0.5f, -0.5f, 1.f, 1.f, 0.f, 0.f, 0.2f,
 };
 
 uint16 application_t::cube_indices[] =
@@ -86,7 +86,7 @@ application_t::application_t()
 	// shaders
 	auto vs_basic_file = atma::filesystem::file_t("../../shaders/vs_basic.hlsl");
 	auto vs_basic_mem = vs_basic_file.read_into_memory();
-	vs_flat = shiny::create_vertex_shader(ctx, dd_position, vs_basic_mem, false);
+	vs_flat = shiny::create_vertex_shader(ctx, dd_position_color, vs_basic_mem, false);
 
 	auto ps_basic_file = atma::filesystem::file_t("../../shaders/ps_basic.hlsl");
 	auto ps_basic_mem = ps_basic_file.read_into_memory();

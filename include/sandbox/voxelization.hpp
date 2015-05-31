@@ -11,6 +11,18 @@ namespace sandbox
 		uint32 morton;
 	};
 
+	struct node_t
+	{
+		node_t()
+			: children_offset{}
+			, brick_idx{}
+		{
+		}
+
+		uint32 children_offset;
+		uint32 brick_idx;
+	};
+
 	inline auto operator < (voxel_t const& lhs, voxel_t const& rhs) -> bool
 	{
 		return lhs.morton < rhs.morton;
@@ -56,6 +68,8 @@ namespace sandbox
 		shiny::resource_view_ptr voxelbuf_view;
 
 		// svo
+		using nodes_t = std::vector<node_t>;
+		nodes_t nodes;
 		shiny::texture3d_ptr brickcache;
 		shiny::buffer_ptr nodecache, countbuf;
 		shiny::resource_view_ptr brickcache_view, nodecache_view, countbuf_view;
