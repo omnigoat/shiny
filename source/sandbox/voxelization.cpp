@@ -374,7 +374,7 @@ auto voxelization_plugin_t::setup_svo() -> void
 
 
 
-	auto fragments3d = std::vector<aml::vector4f>{};
+	auto fragments3d = std::vector<uint32[8 * 8 * 8]>{16 * 16 * 16};
 
 	// root tile
 	nodes.push_back(node_t{});
@@ -388,38 +388,53 @@ auto voxelization_plugin_t::setup_svo() -> void
 
 
 	//
-	// sublevel_morton: the morton id of the item "below" us, for nodes > 0, this
-	// is a node N-1, for node0, this is a brick id
+	// node_morton: morton-number for this node
 	//
-	std::function<node_t&(int, uint64)> publish_node = [&](int level_idx, uint64 sublevel_morton) -> node_t&
+	std::function<node_t&(int, uint32)> publish_node = [&](int level_idx, uint32 node_morton) -> node_t&
 	{
-		uint64 level_morton = sublevel_morton >> 3;
-		auto self_morton = level_morton & 0x7;
-
-		if (level_idx == levels_required - 1)
+		if (level_idx == levels_required)
 			return nodes[0];
 
-		auto* parent = &publish_node(level_idx + 1, level_morton);
+		// level-morton: the morton number of this node in this level
+		auto* parent = &publish_node(level_idx + 1, node_morton >> 3);
 
 		if (parent->children_offset == 0)
 		{
 			parent->children_offset = (uint32)nodes.size() / 8;
 			node_t nds[8];
 			nodes.insert(nodes.end(), nds, nds + 8);
-			parent = &publish_node(level_idx + 1, level_morton);
+			parent = &publish_node(level_idx + 1, node_morton >> 3);
 		}
 
+		// self-morton: our 3-bit index inside our parent node
+		auto self_morton = node_morton & 0x7;
 		auto& node = nodes[parent->children_offset * 8 + self_morton];
 
 		return node;
 	};
 
+	uint bricks = 1;
 	auto publish_brick = [&](fragments_t::const_iterator const& begin, fragments_t::const_iterator const& end) -> void
 	{
 		auto brick_morton = begin->morton / brick_morton_width;
 		auto& node = publish_node(0, brick_morton);
 
-		node.brick_idx = (uint32)brick_morton;
+		auto& fs = fragments3d[bricks];
+
+		for (auto i = begin; i != end; ++i)
+		{
+			auto frag_morton = i->morton & (brick_morton_width - 1);
+			fs[frag_morton] = i->morton; // aml::vector4f(1.f, 1.f, 1.f, 1.f);
+		}
+		if (node.brick_idx == 0)
+		{
+			node.brick_idx = bricks;
+			++bricks;
+		}
+		else
+		{
+			int breakpoint = 4;
+		}
 	};
 
 
@@ -439,6 +454,14 @@ auto voxelization_plugin_t::setup_svo() -> void
 		fragment_iter = brick_end;
 	}
 
+	uint goodfrags = 0;
+	for (auto const& x : fragments3d)
+	{
+		for (int i = 0; i != 512; ++i)
+			if (x[i] != 0)
+				++goodfrags;
+	}
+
 #if 1
 	std::vector<aml::vector4f> vertices;
 	std::vector<uint32> indices;
@@ -446,31 +469,38 @@ auto voxelization_plugin_t::setup_svo() -> void
 	uint fragidx = 0;
 	std::function<void(node_t const*, aml::aabc_t const&)> render_block = [&](node_t const* x, aml::aabc_t const& box)
 	{
-		auto s = aml::matrix4f::scale(box.diameter());
-		auto t = aml::matrix4f::translate(box.center());
-
-		if (x->children_offset == 0 && x->brick_idx == 0)
-			return;
-
 		if (x->brick_idx != 0)
 		{
-			for (int i = 0; i != 8; ++i)
+			auto s = aml::matrix4f::scale(box.diameter());
+			auto const& fragments = fragments3d[x->brick_idx];
+
+
+			for (int i = 0; i != 8 * 8 * 8; ++i)
 			{
-				auto v = aml::vector4f{cube_vertices()[i * 8 + 0], cube_vertices()[i * 8 + 1], cube_vertices()[i * 8 + 2], cube_vertices()[i * 8 + 3]};
-				vertices.push_back(v * (s * t));
-				auto c = aml::vector4f{cube_vertices()[i * 8 + 4], cube_vertices()[i * 8 + 5], cube_vertices()[i * 8 + 6], cube_vertices()[i * 8 + 7]};
-				//c.w *= (1.f - box.diameter());
-				vertices.push_back(c);
+				if (fragments[i] == 0)
+					continue;
+
+				uint x, y, z;
+				moxi::morton_decoding32(fragments[i], x, y, z);
+				auto t = aml::matrix4f::translate(box.center());
+				auto s2 = aml::matrix4f::scale(1.f / 128.f);
+				auto t2 = aml::matrix4f::translate(aml::vector4f(x, y, z));
+				for (auto vert = 0; vert != 8; ++vert)
+				{
+					auto v = aml::vector4f{cube_vertices()[vert * 8 + 0], cube_vertices()[vert * 8 + 1], cube_vertices()[vert * 8 + 2], cube_vertices()[vert * 8 + 3]};
+					auto c = aml::vector4f{cube_vertices()[vert * 8 + 4], cube_vertices()[vert * 8 + 5], cube_vertices()[vert * 8 + 6], cube_vertices()[vert * 8 + 7]};
+					vertices.push_back(v * t2 * s2);
+					vertices.push_back(c);
+				}
+				
+				for (auto idx = cube_indices(); idx != cube_indices() + 36; ++idx)
+					indices.push_back(fragidx * 8 + *idx);
+
+				++fragidx;
 			}
-
-			for (auto idx = cube_indices(); idx != cube_indices() + 36; ++idx)
-				indices.push_back(fragidx * 8 + *idx);
-			++fragidx;
+			
 		}
-
-		if (x->children_offset == 0) // x->brick_idx != 0)
-			return;
-		else
+		else if (x->children_offset != 0)
 		{
 			for (auto i = 0; i != 8; ++i)
 			{
@@ -505,35 +535,7 @@ auto voxelization_plugin_t::setup_svo() -> void
 			uint x, y, z;
 			moxi::morton_decoding32(frag.morton, x, y, z);
 
-			auto scale = aml::matrix4f::scale(0.1f);
-			auto translate = aml::matrix4f::translate(aml::vector4f{(float)x, (float)y, (float)z});
-			auto cmp = translate * scale;
-
-			for (int i = 0; i != 8; ++i)
-			{
-				auto v = aml::vector4f{cube_vertices()[i * 8 + 0], cube_vertices()[i * 8 + 1], cube_vertices()[i * 8 + 2], cube_vertices()[i * 8 + 3]};
-				vertices.push_back(v * cmp);
-			}
-
-			for (auto idx = cube_indices(); idx != cube_indices() + 36; ++idx)
-				indices.push_back(fragidx * 8 + *idx);
-			++fragidx;
-		}
-
-		this->vb = shiny::create_vertex_buffer(this->ctx, shiny::resource_storage_t::immutable, dd_position(), (uint)vertices.size(), &vertices[0]);
-		this->ib = shiny::create_index_buffer(ctx, shiny::resource_storage_t::immutable, shiny::index_format_t::index32, (uint)indices.size(), &indices[0]);
-#elif 0
-		std::vector<aml::vector4f> vertices;
-		std::vector<uint32> indices;
-
-		uint64 m = 0;
-		int fragidx = 0;
-		for (auto const& frag : fragments)
-		{
-			uint x, y, z;
-			moxi::morton_decoding32(frag.morton, x, y, z);
-
-			auto scale = aml::matrix4f::scale(0.1f);
+			auto scale = aml::matrix4f::scale(1 / 128.f);
 			auto translate = aml::matrix4f::translate(aml::vector4f{(float)x, (float)y, (float)z});
 			auto cmp = translate * scale;
 
