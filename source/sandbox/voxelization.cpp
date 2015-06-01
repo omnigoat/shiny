@@ -307,6 +307,28 @@ auto voxelization_plugin_t::setup_svo() -> void
 		shiny::resource_view_type_t::input,
 		shiny::element_format_t::f32x2);
 
+	auto brick_readback = shiny::make_buffer(ctx,
+		shiny::resource_type_t::staging_buffer,
+		shiny::resource_usage_mask_t::none,
+		shiny::resource_storage_t::staging,
+		shiny::buffer_dimensions_t{sizeof(float)*2, 64*64*64},
+		shiny::buffer_data_t{});
+
+	ctx->signal_copy_buffer(brick_readback, brickcache);
+
+	struct frag_t
+	{
+		float thing;
+		uint32 morton;
+	};
+	auto svof = atma::vector<frag_t[8*8*8]>{8*8*8, 8*8*8};
+
+	ctx->signal_res_map(brick_readback, 0, shiny::map_type_t::read, [&](shiny::mapped_subresource_t& sr)
+	{
+		memcpy(svof.data(), sr.data, 64*64*64*2*sizeof(float));
+	});
+
+
 	// staging buffer
 	stb = shiny::make_buffer(ctx,
 		shiny::resource_type_t::staging_buffer,
@@ -462,9 +484,11 @@ auto voxelization_plugin_t::setup_svo() -> void
 				++goodfrags;
 	}
 
-#if 1
+	
+
 	std::vector<aml::vector4f> vertices;
 	std::vector<uint32> indices;
+
 
 	uint fragidx = 0;
 	std::function<void(node_t const*, aml::aabc_t const&)> render_block = [&](node_t const* x, aml::aabc_t const& box)
@@ -472,16 +496,16 @@ auto voxelization_plugin_t::setup_svo() -> void
 		if (x->brick_idx != 0)
 		{
 			auto s = aml::matrix4f::scale(box.diameter());
-			auto const& fragments = fragments3d[x->brick_idx];
+			auto const& fragments = svof[x->brick_idx];
 
 
 			for (int i = 0; i != 8 * 8 * 8; ++i)
 			{
-				if (fragments[i] == 0)
+				if (fragments[i].morton == 0)
 					continue;
 
 				uint x, y, z;
-				moxi::morton_decoding32(fragments[i], x, y, z);
+				moxi::morton_decoding32(fragments[i].morton, x, y, z);
 				auto t = aml::matrix4f::translate(box.center());
 				auto s2 = aml::matrix4f::scale(1.f / 128.f);
 				auto t2 = aml::matrix4f::translate(aml::vector4f(x, y, z));
@@ -509,6 +533,7 @@ auto voxelization_plugin_t::setup_svo() -> void
 		}
 	};
 
+#if 0
 	render_block(nodes.data(), aml::aabc_t{0.f, 0.f, 0.f, 1.f});
 
 	this->vb = shiny::create_vertex_buffer(this->ctx, shiny::resource_storage_t::immutable, dd_position_color(), (uint)vertices.size() / 2, &vertices[0]);
@@ -521,9 +546,23 @@ auto voxelization_plugin_t::setup_svo() -> void
 
 
 #if _DEBUG
+	
 	ctx->signal_copy_buffer(stb, nodecache);
-	ctx->signal_res_map(stb, 0, shiny::map_type_t::read, [&](shiny::mapped_subresource_t& sr){
+	ctx->signal_res_map(stb, 0, shiny::map_type_t::read, [&](shiny::mapped_subresource_t& sr)
+	{
+		auto const& nn = nodes;
+		auto const& ff = svof;
+		//nodes_t n2;
+		//n2.resize(nodes_required);
+		//memcpy(n2.data(), sr.data, fullsize);
 		int breakpoint = 4;
+
+#if 1
+		render_block((node_t*)sr.data, aml::aabc_t{0.f, 0.f, 0.f, 1.f});
+
+		this->vb = shiny::create_vertex_buffer(this->ctx, shiny::resource_storage_t::immutable, dd_position_color(), (uint)vertices.size() / 2, &vertices[0]);
+		this->ib = shiny::create_index_buffer(ctx, shiny::resource_storage_t::immutable, shiny::index_format_t::index32, (uint)indices.size(), &indices[0]);
+#endif
 #if 0
 		std::vector<aml::vector4f> vertices;
 		std::vector<uint32> indices;
@@ -538,7 +577,7 @@ auto voxelization_plugin_t::setup_svo() -> void
 			auto scale = aml::matrix4f::scale(1 / 128.f);
 			auto translate = aml::matrix4f::translate(aml::vector4f{(float)x, (float)y, (float)z});
 			auto cmp = translate * scale;
-
+			&
 			for (int i = 0; i != 8; ++i)
 			{
 				auto v = aml::vector4f{cube_vertices()[i * 8 + 0], cube_vertices()[i * 8 + 1], cube_vertices()[i * 8 + 2], cube_vertices()[i * 8 + 3]};
@@ -556,6 +595,7 @@ auto voxelization_plugin_t::setup_svo() -> void
 		this->ib = shiny::create_index_buffer(ctx, shiny::resource_storage_t::immutable, shiny::index_format_t::index32, (uint)indices.size(), &indices[0]);
 #endif
 	});
+	ctx->signal_block();
 #endif
 }
 

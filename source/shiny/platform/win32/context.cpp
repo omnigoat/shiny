@@ -315,6 +315,7 @@ auto context_t::immediate_ia_set_data_declaration(data_declaration_t const* dd) 
 
 auto context_t::immediate_ia_set_vertex_buffer(vertex_buffer_cptr const& vb) -> void
 {
+	ATMA_ASSERT(vb);
 	ATMA_ASSERT(vb->data_declaration() == ia_dd_);
 	ia_vb_ = vb;
 
