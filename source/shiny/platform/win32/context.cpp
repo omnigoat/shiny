@@ -325,6 +325,9 @@ auto context_t::immediate_ia_set_vertex_buffer(vertex_buffer_cptr const& vb) -> 
 
 auto context_t::immediate_ia_set_index_buffer(index_buffer_cptr const& ib) -> void
 {
+	ia_ib_ = ib;
+
+#if 0
 	if (ib)
 	{
 		ia_ib_ = ib;
@@ -335,6 +338,7 @@ auto context_t::immediate_ia_set_index_buffer(index_buffer_cptr const& ib) -> vo
 	{
 		d3d_immediate_context_->IASetIndexBuffer(nullptr, DXGI_FORMAT_UNKNOWN, 0);
 	}
+#endif
 }
 
 auto context_t::immediate_ia_set_topology(topology_t t) -> void
@@ -417,16 +421,78 @@ auto context_t::immediate_draw() -> void
 
 	d3d_immediate_context_->IASetInputLayout(IL->second.get());
 
-	auto blah = D3D11_DEPTH_STENCIL_DESC{false};
-	atma::com_ptr<ID3D11DepthStencilState> ds;
-	d3d_device_->CreateDepthStencilState(&blah, ds.assign());
-	d3d_immediate_context_->OMSetDepthStencilState(ds.get(), 0);
+	// input-assembly-stage
+	{
+		// vertex-buffer required
+		ATMA_ENSURE(ia_vb_);
+		UINT stride = (UINT)ia_vb_->data_declaration()->stride(), offset = 0;
+		d3d_immediate_context_->IASetVertexBuffers(0, 1, &ia_vb_->d3d_buffer().get(), &stride, &offset);
 
-	// constant-buffers
-	ID3D11Buffer* d3d_fs_cbs[D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT]{};
-	for (auto const& cb : fs_cbs_)
-		d3d_fs_cbs[cb.first] = cb.second->d3d_buffer().get();
-	d3d_immediate_context_->PSSetConstantBuffers(0, D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT, d3d_fs_cbs);
+		if (ia_ib_)
+		{
+			auto fmt = platform::dxgi_format_of(ia_ib_->index_format());
+			d3d_immediate_context_->IASetIndexBuffer(ia_ib_->d3d_buffer().get(), fmt, 0);
+		}
+		else
+		{
+			d3d_immediate_context_->IASetIndexBuffer(nullptr, DXGI_FORMAT_UNKNOWN, 0);
+		}
+	}
+
+	// vertex-stage
+	{
+		ATMA_ENSURE(vs_shader_);
+		ATMA_ENSURE(vs_shader_->data_declaration() == ia_vb_->data_declaration());
+		d3d_immediate_context_->VSSetShader(vs_shader_->d3d_vs().get(), nullptr, 0);
+
+
+		ID3D11Buffer* cbs[D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT]{};
+		for (auto const& cb : vs_cbs_)
+			cbs[cb.first] = cb.second->d3d_buffer().get();
+		d3d_immediate_context_->VSSetConstantBuffers(0, D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT, cbs);
+	}
+
+	// fragment-stage
+	{
+		ATMA_ENSURE(fs_shader_);
+		d3d_immediate_context_->PSSetShader(fs_shader_->d3d_fs().get(), nullptr, 0);
+
+
+		ID3D11Buffer* cbs[D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT]{};
+		for (auto const& cb : fs_cbs_)
+			cbs[cb.first] = cb.second->d3d_buffer().get();
+		d3d_immediate_context_->PSSetConstantBuffers(0, D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT, cbs);
+
+
+		ID3D11ShaderResourceView* srvs[D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT]{};
+		for (auto const& x : fs_srvs_)
+			srvs[x.idx] = (ID3D11ShaderResourceView*)x.view->d3d_view().get();
+		d3d_immediate_context_->PSSetShaderResources(0, D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT, srvs);
+
+		// fs-uavs are bound in the output-merger stage
+	}
+
+	// output-merger-stage
+	//if (false)
+	{
+		auto blah = D3D11_DEPTH_STENCIL_DESC{false};
+		atma::com_ptr<ID3D11DepthStencilState> ds;
+		d3d_device_->CreateDepthStencilState(&blah, ds.assign());
+		d3d_immediate_context_->OMSetDepthStencilState(ds.get(), 0);
+
+		ID3D11UnorderedAccessView* uavs[D3D11_PS_CS_UAV_REGISTER_COUNT - 1]{};
+		UINT atomic_counters[D3D11_PS_CS_UAV_REGISTER_COUNT - 1];
+		memset(atomic_counters, -1, sizeof(atomic_counters));
+		for (auto const& x : fs_uavs_) {
+			uavs[x.idx] = (ID3D11UnorderedAccessView*)x.view->d3d_view().get();
+			atomic_counters[x.idx] = (UINT)x.counter;
+		}
+		d3d_immediate_context_->OMSetRenderTargetsAndUnorderedAccessViews(
+			D3D11_KEEP_RENDER_TARGETS_AND_DEPTH_STENCIL, nullptr, nullptr,
+			1, D3D11_PS_CS_UAV_REGISTER_COUNT - 1, uavs, atomic_counters);
+	}
+	
+	
 
 	if (ia_ib_)
 	{

@@ -162,10 +162,12 @@ namespace shiny
 		index_buffer_cptr         ia_ib_;
 		vertex_buffer_cptr        ia_vb_;
 		vertex_shader_cptr        vs_shader_;
+		bound_constant_buffers_t  vs_cbs_;
 		fragment_shader_cptr      fs_shader_;
 		bound_constant_buffers_t  fs_cbs_;
 		bound_resource_views_t    fs_srvs_;
 		bound_resource_views_t    fs_uavs_;
+		bound_resource_views_t    om_rtvs_;
 		draw_range_t              draw_range_;
 
 	private:
