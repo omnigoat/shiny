@@ -272,8 +272,8 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 		++reps;
 	} 
 
-	return float4(reps / 16.f, 0.f, 0.f, 1.f);
-#if 1
+	//return float4(reps / 16.f, 0.f, 0.f, 1.f);
+#if 0
 	float3 n = normalize(color.xyz);
 
 	float3 lamb = (0.4);

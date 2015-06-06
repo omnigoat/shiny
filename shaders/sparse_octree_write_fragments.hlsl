@@ -1,25 +1,11 @@
+#include "svo_traversal.hlsli"
+
 cbuffer buf_main : register(b0)
 {
 	uint fragment_count;
-	uint level;
 	uint levels;
+	uint level;
 }
-
-struct node_t
-{
-	// offset to an 8-wide array of children nodes. offsets are
-	// stored for 8-blocks of nodes, and the root node has 7
-	// empty trailing children after it, so that a node-group is
-	// always located at offset*8
-	uint children_offset;
-
-	uint brick_id;
-};
-
-struct tile_t
-{
-	node_t nodes[8];
-};
 
 
 struct voxel_t
@@ -36,7 +22,6 @@ static const uint tile_counter = 0;
 static const uint brick_counter = 1;
 
 RWStructuredBuffer<uint> countbuf : register(u0);
-RWStructuredBuffer<tile_t> nodepool : register(u1);
 RWTexture3D<float2> brickpool : register(u2);
 
 
@@ -86,21 +71,10 @@ void main(uint3 DTid : SV_DispatchThreadID)
 
 	uint voxel = fragments.Load(idx);
 
-	uint offset = 0;
-	uint child_idx = 0;
-	for (uint i = 0; i != level; ++i)
-	{
-		// get morton-code for this level, early out if zero?
-		uint morton = voxel / pow(2, levels - i);
-		if (morton == 0)
-			return;
+	uint fragment_morton = fragments.Load(idx);
 
-		node_t node = nodepool.Load(offset).nodes[child_idx];
-		offset = node.children_offset;
-		child_idx = morton & 0x7;
-	}
-
-	node_t node = nodepool.Load(offset).nodes[child_idx];
+	uint2 node_idx = svo_traversal_from_fragment(levels, level, fragment_morton);
+	node_t node = nodepool[node_idx.x].nodes[node_idx.y];
 
 	// brick position is in morton coordinates
 	uint brick_morton = node.brick_id;
@@ -118,5 +92,5 @@ void main(uint3 DTid : SV_DispatchThreadID)
 
 
 	// encode color to f32
-	brickpool[coords] = float2(0.f, asfloat(voxel));
+	brickpool[coords] = float2(DTid.x, asfloat(voxel));
 }

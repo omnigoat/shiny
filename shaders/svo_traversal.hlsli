@@ -49,7 +49,7 @@ uint2 svo_traversal(uint levels, uint level, uint brick_morton)
 
 	uint offset = 0;
 	uint child_idx = 0;
-	for (uint i = levels - 1; i > levels - level - 1; --i)
+	for (uint i = levels; i > levels - level; --i)
 	{
 		node_t node = nodepool[offset].nodes[child_idx];
 		offset = node.children_offset;

@@ -27,9 +27,8 @@ struct tile_t
 // atomic counters
 static const uint tile_counter = 0;
 static const uint brick_counter = 1;
+
 RWStructuredBuffer<uint> countbuf : register(u0);
-
-
 RWStructuredBuffer<tile_t> nodepool : register(u1);
 
 

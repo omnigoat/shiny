@@ -382,6 +382,12 @@ auto voxelization_plugin_t::setup_svo() -> void
 			scc::dispatch(cs_mark, (uint)fragments.size() / 64, 1, 1),
 			scc::dispatch(cs_allocate, dim, dim, dim),
 			scc::dispatch(cs_write_fragments, (uint)fragments.size() / 64, 1, 1));
+
+		ctx->signal_copy_buffer(stb, nodecache);
+		ctx->signal_res_map(stb, 0, shiny::map_type_t::read, [&](shiny::mapped_subresource_t& sr)
+		{
+			int breakpoint = 4;
+		});
 	}
 
 	ctx->signal_copy_buffer(brick_readback, brickcache);
@@ -392,7 +398,7 @@ auto voxelization_plugin_t::setup_svo() -> void
 		uint32 morton;
 	};
 
-	auto svof = atma::vector<frag_t[8*8*8]>{8*8*8, 8*8*8};
+	auto svof = atma::vector<frag_t[8*8*8]>{16*16*16, 16*16*16};
 
 	ctx->signal_res_map(brick_readback, 0, shiny::map_type_t::read, [&](shiny::mapped_subresource_t& sr)
 	{
@@ -510,7 +516,7 @@ auto voxelization_plugin_t::setup_svo() -> void
 	{
 		if (x->brick_idx != 0)
 		{
-			
+// visualization of svo nodes
 #if 0
 			auto s = aml::matrix4f::scale(box.diameter());
 			auto t = aml::matrix4f::translate(box.center());
@@ -528,7 +534,34 @@ auto voxelization_plugin_t::setup_svo() -> void
 				indices.push_back(fragidx * 8 + *idx);
 
 			++fragidx;
+#elif 1 // visualization of svo-fragments via svo-nodes
+			auto const& frags = svof[x->brick_idx];
+			auto blam = x->brick_idx;
+			auto s2 = aml::matrix4f::scale(1.f / 128.f);
 
+			for (int i = 0; i != 8 * 8 * 8; ++i)
+			{
+				if (frags[i].morton == 0)
+					continue;
+
+				uint x2, y, z;
+				moxi::morton_decoding32(frags[i].morton, x2, y, z);
+
+				auto t2 = aml::matrix4f::translate(aml::vector4f((float)x2, (float)y, (float)z));
+
+				for (auto vert = 0; vert != 8; ++vert)
+				{
+					auto v = aml::vector4f{cube_vertices()[vert * 8 + 0], cube_vertices()[vert * 8 + 1], cube_vertices()[vert * 8 + 2], cube_vertices()[vert * 8 + 3]};
+					auto c = aml::vector4f{cube_vertices()[vert * 8 + 4], cube_vertices()[vert * 8 + 5], cube_vertices()[vert * 8 + 6], cube_vertices()[vert * 8 + 7]};
+					vertices.push_back(v * t2 * s2);
+					vertices.push_back(c);
+				}
+
+				for (auto idx = cube_indices(); idx != cube_indices() + 36; ++idx)
+					indices.push_back(fragidx * 8 + *idx);
+
+				++fragidx;
+			}
 #else
 			auto const& frags = fragments3d[x->brick_idx];
 			auto s2 = aml::matrix4f::scale(1.f / 128.f);
@@ -683,7 +716,7 @@ auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
 		sdc::vertex_stage(vs_flat(), shiny::bound_constant_buffers_t{
 			{0, scene.scene_constant_buffer()}
 		}),
-		sdc::geometry_stage(gs),
+		//sdc::geometry_stage(gs),
 		sdc::fragment_stage(fs_flat()),
 		sdc::output_merger_stage(b)
 		);

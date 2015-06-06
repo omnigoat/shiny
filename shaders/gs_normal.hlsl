@@ -8,8 +8,9 @@ struct VSOutput
 struct GSOutput
 {
 	float4 position : SV_Position;
-	float4 world_position : Position;
-	float3 normal : Normal;
+	//float4 world_position : Position;
+	//float3 normal : Normal;
+	float4 color : Color;
 };
 
 [maxvertexcount(3)]
@@ -21,8 +22,9 @@ void main(triangle VSOutput input[3], inout TriangleStream<GSOutput> output)
 	{
 		GSOutput element;
 		element.position = input[i].position;
-		element.world_position = input[i].world_position;
-		element.normal = normal;
+		//element.world_position = input[i].world_position;
+		//element.normal = normal;
+		element.color = float4(0.f, 0.f, 0.f, 1.f);
 		output.Append(element);
 	}
 }
