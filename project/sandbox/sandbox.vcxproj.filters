@@ -39,9 +39,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="..\..\shaders\sparse_octree_mark_cs.hlsl">
-      <Filter>shaders</Filter>
-    </FxCompile>
     <FxCompile Include="..\..\shaders\sparse_octree_allocate.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
@@ -51,5 +48,13 @@
     <FxCompile Include="..\..\shaders\sparse_octree_write_fragments.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
+    <FxCompile Include="..\..\shaders\sparse_octree_mark.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\shaders\svo_traversal.hlsli">
+      <Filter>shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

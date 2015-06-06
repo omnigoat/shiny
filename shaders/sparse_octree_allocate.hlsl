@@ -1,8 +1,8 @@
 cbuffer buf_main : register(b0)
 {
 	uint fragment_count;
-	uint level;
 	uint levels;
+	uint level;
 }
 
 struct node_t

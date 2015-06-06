@@ -34,8 +34,8 @@ StructuredBuffer<uint> fragments : register(t0);
 // atomic counters
 static const uint tile_counter = 0;
 static const uint brick_counter = 1;
-RWStructuredBuffer<uint> countbuf : register(u0);
 
+RWStructuredBuffer<uint> countbuf : register(u0);
 RWStructuredBuffer<tile_t> nodepool : register(u1);
 RWTexture3D<float2> brickpool : register(u2);
 
@@ -90,13 +90,12 @@ void main(uint3 DTid : SV_DispatchThreadID)
 	uint child_idx = 0;
 	for (uint i = 0; i != level; ++i)
 	{
-		node_t node = nodepool.Load(offset).nodes[child_idx];
-
 		// get morton-code for this level, early out if zero?
 		uint morton = voxel / pow(2, levels - i);
 		if (morton == 0)
 			return;
 
+		node_t node = nodepool.Load(offset).nodes[child_idx];
 		offset = node.children_offset;
 		child_idx = morton & 0x7;
 	}
@@ -109,8 +108,8 @@ void main(uint3 DTid : SV_DispatchThreadID)
 	morton_decoding32(brick_morton, brick_coords.x, brick_coords.y, brick_coords.z);
 	brick_coords *= 8;
 
-	// voxel coords within brick
-	uint voxel_morton = voxel & 0x7;
+	// voxel coords within brick (lowest 9 bits == 8*8*8)
+	uint voxel_morton = voxel & 0x1ff;
 	uint3 voxel_coords;
 	morton_decoding32(voxel_morton, voxel_coords.x, voxel_coords.y, voxel_coords.z);
 
@@ -119,7 +118,5 @@ void main(uint3 DTid : SV_DispatchThreadID)
 
 
 	// encode color to f32
-
-
-	brickpool[coords] = float2(1.f, asfloat(voxel));
+	brickpool[coords] = float2(0.f, asfloat(voxel));
 }

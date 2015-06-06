@@ -65,7 +65,6 @@ resource_view_t::resource_view_t(resource_cptr const& rs, resource_view_type_t v
 					desc.Texture3D = D3D11_TEX3D_UAV{0, 0, (UINT)atma::ptr_cast_static<texture3d_t const>(resource_)->depth()};
 					break;
 
-
 				case resource_type_t::structured_buffer:
 				case resource_type_t::generic_buffer:
 					desc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;

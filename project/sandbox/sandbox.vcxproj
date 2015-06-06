@@ -203,7 +203,7 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
     </FxCompile>
-    <FxCompile Include="..\..\shaders\sparse_octree_mark_cs.hlsl">
+    <FxCompile Include="..\..\shaders\sparse_octree_mark.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
@@ -224,6 +224,9 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\shaders\svo_traversal.hlsli" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

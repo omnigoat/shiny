@@ -50,6 +50,10 @@ texture3d_t::texture3d_t(context_ptr const& ctx, resource_usage_mask_t ru, resou
 		d3dusage = D3D11_USAGE_DYNAMIC;
 		d3dcpu = D3D11_CPU_ACCESS_WRITE;
 	}
+	else if (rs == resource_storage_t::staging) {
+		d3dusage = D3D11_USAGE_STAGING;
+		d3dcpu = D3D11_CPU_ACCESS_READ;
+	}
 
 	auto desc = D3D11_TEXTURE3D_DESC{
 		(UINT)width_, (UINT)height_, (UINT)depth_, mips_,
