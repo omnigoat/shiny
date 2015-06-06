@@ -84,13 +84,21 @@ void main(uint3 DTid : SV_DispatchThreadID)
 
 	// voxel coords within brick (lowest 9 bits == 8*8*8)
 	uint voxel_morton = voxel & 0x1ff;
-	uint3 voxel_coords;
-	morton_decoding32(voxel_morton, voxel_coords.x, voxel_coords.y, voxel_coords.z);
+	uint3 fragment_coords;
+	morton_decoding32(voxel_morton, fragment_coords.x, fragment_coords.y, fragment_coords.z);
 
-	// BLHABLHABLHK
-	uint3 coords = brick_coords + voxel_coords;
+	// exact coordinates inside texture3d
+	uint3 coords = brick_coords + fragment_coords;
+
+	
+	
+	uint3 thing;
+	morton_decoding32(voxel >> 9, thing.x, thing.y, thing.z);
+	thing *= 8;
+	uint cc = (thing.x & 0xff) | ((thing.y & 0xff) << 8) | ((thing.z & 0xff) << 16);
+
 
 
 	// encode color to f32
-	brickpool[coords] = float2(DTid.x, asfloat(voxel));
+	brickpool[coords] = float2(asfloat(cc), asfloat(voxel));
 }

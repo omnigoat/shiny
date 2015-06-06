@@ -44,7 +44,7 @@ void main(uint3 gid : SV_GroupID, uint3 gtid : SV_GroupThreadID)
 	for (uint i = 0; i != level; ++i)
 	{
 		uint3 lgid      = gid / pow(2, level - i - 1) % 2;
-		uint  child_idx = (lgid.x << 2) | (lgid.y << 1) | lgid.z;
+		uint  child_idx = (lgid.z << 2) | (lgid.y << 1) | lgid.x;
 
 		node_t node = nodepool.Load(offset).nodes[child_idx];
 		if (node.children_offset == 0)
@@ -58,7 +58,7 @@ void main(uint3 gid : SV_GroupID, uint3 gtid : SV_GroupThreadID)
 	// 8 tiles pointed at by the 8 children of the root node.
 	//
 	// use the group-thread-id to index into one of these 8 children.
-	uint lgtid = (gtid.x << 2) | (gtid.y << 1) | gtid.z;
+	uint lgtid = (gtid.z << 2) | (gtid.y << 1) | gtid.x;
 
 	node_t node = nodepool.Load(offset).nodes[lgtid];
 	if (node.children_offset & 0x80000000)
