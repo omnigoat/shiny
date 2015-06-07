@@ -48,7 +48,7 @@ struct tile_t
 };
 
 // node pool
-StructuredBuffer<tile_t> nodes : register(t0);
+StructuredBuffer<tile_t> nodepool : register(t0);
 texture3D<float2> bricks : register(t1);
 
 SamplerState brick_sampler
@@ -61,7 +61,7 @@ SamplerState brick_sampler
 
 
 // volume delta, because floating-point
-static const float vdelta = 0.0000001f;
+static const float vdelta = 0.000001f;
 
 static const float3 axis_lookup[] = {
 	float3(-1.f, -1.f, -1.f),
@@ -131,20 +131,20 @@ static const aabb_t box = {0.f, 0.f, 0.f, 1.f};
 
 bool intersection(in aabb_t box, in float3 position, in float3 dir, out float3 enter, out float3 exit)
 {
-	float3 inv_dir = float3(1.f / dir.x, 1.f / dir.y, 1.f / dir.z);
+	float3 inv_dir = 1.f / dir;
 
 	float tx1 = (box.min().x - position.x) * inv_dir.x;
-	float tx2 = (box.center().x + box.radius() - position.x) * inv_dir.x;
+	float tx2 = (box.max().x - position.x) * inv_dir.x;
 	float tx_min = min(tx1, tx2);
 	float tx_max = max(tx1, tx2);
 
 	float ty1 = (box.min().y - position.y) * inv_dir.y;
-	float ty2 = (box.center().y + box.radius() - position.y) * inv_dir.y;
+	float ty2 = (box.max().y - position.y) * inv_dir.y;
 	float ty_min = min(ty1, ty2);
 	float ty_max = max(ty1, ty2);
 
 	float tz1 = (box.min().z - position.z) * inv_dir.z;
-	float tz2 = (box.center().z + box.radius() - position.z) * inv_dir.z;
+	float tz2 = (box.max().z - position.z) * inv_dir.z;
 	float tz_min = min(tz1, tz2);
 	float tz_max = max(tz1, tz2);
 
@@ -159,21 +159,25 @@ bool intersection(in aabb_t box, in float3 position, in float3 dir, out float3 e
 
 uint brick_index(in aabb_t box, float3 pos, float size, out aabb_t leaf_box)
 {
-	uint result_brick = 0;
 	leaf_box = box;
 
-	uint node_index = 0;
+	uint result_brick = 0;
+	uint tile = 0;
+	uint child_offset = 0;
+
 	for (float volume = 1.f; volume > size; volume *= 0.5f)
 	{
-		tile_t n = nodes[node_index];
-		
-		uint aabb_child = leaf_box.child_index(pos);
-		result_brick = n.nodes[aabb_child].brick;
-		leaf_box = child_aabb(leaf_box, aabb_child); 
+		node_t n = nodepool[tile].nodes[child_offset];
 
-		node_index = n.nodes[aabb_child].child;
-		if (node_index == 0)
+		tile         = n.child;
+		child_offset = leaf_box.child_index(pos);
+
+		result_brick = n.brick;
+
+		if (tile == 0)
 			break;
+
+		leaf_box     = child_aabb(leaf_box, child_offset);
 	}
 
 	return result_brick;
@@ -220,33 +224,45 @@ float3 brick_origin(uint brick_id)
 {
 	float3 r;
 	morton_decoding32(brick_id, r.x, r.y, r.z);
-	return r * (float)brick_size / brickcache_width;
+	return r / brickcache_width;
 }
 
 
 //
 //  brick_ray
 //  -----------
-//    brick_enter/brick_exit: [0.f, 8.f) coordinates of enter/exit positions
+//    brick_enter/brick_exit: [0.f, 1.f) coordinates of enter/exit positions.
+//    there are in relation to the brick itself
+//
 void brick_ray(in uint brick_id, in float3 brick_enter, in float3 brick_exit, inout float4 colour, inout float remainder)
 {
 	float4 result = colour;
 
+	//brick_enter *= 8.f;
+	//brick_exit *= 8.f;
+
+	// debug: brick_enter
+	//colour = float4(brick_enter, 1.f);
+	//return;
+
 	float  inv_brick_size       = 1.f / brick_size;
 	float  inv_brickcache_width = 1.f / brickcache_width;
-	float  half_size            = inv_brick_size * 0.5;
+	float  half_size            = inv_brick_size * .5f;
 	float3 half_size_xyz        = float3(half_size, half_size, half_size);
-	float3 brick_multi          = inv_brick_size * (brick_size-1);
+	float3 brick_multi          = (brick_size - 1.f) / brick_size;
 	float3 brick_position       = brick_origin(brick_id);
 
-	// take coordinates into [0.5f, 7.5f) range, then squash into [0.0625f, 0.9375f),
-	// so that the edges of our sample ranges (0.f, and 1.f), sample the middle of the
-	// outermost voxels
+	// take coordinates into [0.0625f, 0.9375f) range, so that the edges of our
+	// sample ranges (0.f, and 1.f), sample the middle of the outermost voxels
 	float3 fragment_enter  = brick_enter * brick_multi + half_size_xyz;
 	float3 fragment_exit   = brick_exit  * brick_multi + half_size_xyz;
 	float  fragment_length = length(fragment_exit - fragment_enter);
 
-	// I'm not sure what this's for
+	// debug: fragment_enter
+	//colour = float4(fragment_enter, 1.f);
+	//return;
+
+	// DON'T REMOVE THIS IT WILL KILL COMPUTERS
 	if (fragment_length < 0.1)
 		return;
 
@@ -255,11 +271,10 @@ void brick_ray(in uint brick_id, in float3 brick_enter, in float3 brick_exit, in
 	// x/(y/(z/w)) === x/(wy/z) === xz/wy
 
 	// length of vector in fragment-space
-	//float steps = 1.f / (len * brick_size);
 	float steps = fragment_length * inv_brick_size;
 
 	float pos;
-	for (pos = steps*remainder; pos < 1.f && result.w < 1.f; pos += steps)
+	for (pos = steps; pos < 1.f && result.w < 1.f; pos += steps)
 	{
 		float3 fragment_position = lerp(fragment_enter, fragment_exit, pos) * inv_brickcache_width;
 		float2 voxelfull = bricks.SampleLevel(brick_sampler, brick_position + fragment_position, 0);
@@ -274,6 +289,7 @@ void brick_ray(in uint brick_id, in float3 brick_enter, in float3 brick_exit, in
 				((c >> 16) & 0xff) / 255.f,
 				1.f);
 
+			result.xyz = brick_position;
 			break;
 		}
 
@@ -288,7 +304,7 @@ void brick_ray(in uint brick_id, in float3 brick_enter, in float3 brick_exit, in
 
 float4 brick_path(float3 position, float3 normal, float ratio)
 {
-	aabb_t box = {0.f, 0.f, 0.f, 1.f + vdelta};
+	aabb_t box = {0.f, 0.f, 0.f, 1.f};
 
 	float size = 0.005f; //* length(0.f - position);
 	float3 hit_enter, hit_exit;
@@ -298,15 +314,18 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 	else if (!intersection(box, position, normal, hit_enter, hit_exit))
 		discard;
 
+	// debug: hit-enter
+	//return float4(hit_enter, 1.f);
+
+	// debug: hit-exit
+	//return float4(hit_exit, 1.f);
+
 	float len = length(hit_enter - position);
 	uint reps = 0;
 	float4 color = {0.f, 0.f, 0.f, 0.f};
 	float rem = 0.f;
 
-	// debug: hit-enter
-	//return float4(hit_enter, 1.f);
-
-	while (reps != 50 && color.w < 1.f && box.contains(hit_enter))
+	while (reps != 64 && color.w < 1.f && box.contains(hit_enter))
 	{
 		aabb_t leaf_box;
 		float3 leaf_enter;
@@ -320,7 +339,7 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 		if (brick_id != 0)
 		{
 			float3 brick_enter = (leaf_enter - leaf_box.min()) / leaf_box.width();
-			float3 brick_exit = (leaf_exit - leaf_box.min()) / leaf_box.width();
+			float3 brick_exit  = (leaf_exit  - leaf_box.min()) / leaf_box.width();
 			brick_ray(brick_id, brick_enter, brick_exit, color, rem);
 		}
 		else
@@ -367,11 +386,16 @@ float4 main(ps_input_t input) : SV_Target
 	// debug: pitch/yaw
 	//return float4(x, y, 0.f, 1.f);
 	float yaw2 = yaw + input.pixel_delta.x;
-	float pitch2 = pitch + input.pixel_delta.y * 1.33333f;
+	float pitch2 = pitch + input.pixel_delta.y; // * 0.33333f;
 	float3 dir = {sin(yaw2) * cos(pitch2), sin(pitch2), cos(yaw2) * cos(pitch2)};
-	
+	//dir = float3(input.pixel_delta.x, input.pixel_delta.y, 1.f);
+	//float3 dir = float3(input.pixel_delta.xy, 0.75f);
+	//dir = normalize(dir);
+
 	// debug: direction
 	//return float4(dir, 1.f);
+
+	//float3 pos = float3(input.pixel_delta.xy, position.z);
 
 	return brick_path(position.xyz, dir, 0.00001f);
 }

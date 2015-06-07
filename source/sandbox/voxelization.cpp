@@ -239,7 +239,7 @@ auto voxelization_plugin_t::setup_svo() -> void
 	auto const gridsize = 128;
 	auto const brick_edge_size = 8u;
 	auto const brick_morton_width = brick_edge_size * brick_edge_size * brick_edge_size;
-	auto const levels_required = aml::log2(gridsize / brick_edge_size) + 1;
+	auto const levels_required = aml::log2(gridsize / brick_edge_size);
 	auto const empty = std::numeric_limits<uint64>::max();
 
 	auto nodes_required = (gridsize / brick_edge_size) * (gridsize / brick_edge_size) * (gridsize / brick_edge_size);
@@ -297,7 +297,7 @@ auto voxelization_plugin_t::setup_svo() -> void
 	brickcache = shiny::make_texture3d(ctx,
 		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
 		shiny::resource_storage_t::persistant,
-		shiny::texture3d_dimensions_t::cube(shiny::element_format_t::f32x2, 128, 1));
+		shiny::texture3d_dimensions_t::cube(shiny::element_format_t::f32x2, gridsize, 1));
 
 	brickcache_view = shiny::make_resource_view(brickcache,
 		shiny::resource_view_type_t::compute,
@@ -759,7 +759,7 @@ auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
 	auto cb = shiny::make_constant_buffer(scene.context(), blah{
 		scene.camera().position(),
 		scene.camera().yaw(), scene.camera().pitch(),
-		(uint32)brickcache->width(), 8
+		(uint32)brickcache->width() / 8, 8
 	});
 
 	scene.draw(
