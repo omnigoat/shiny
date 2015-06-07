@@ -738,7 +738,7 @@ auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
 
 	auto b = ctx->make_blender(shiny::blend_state_t::transparent());
 
-#if 1
+#if 0
 	scene.draw(
 		sdc::input_assembly_stage(dd_position_color(), vb, ib),
 		sdc::vertex_stage(vs_flat(), shiny::bound_constant_buffers_t{
@@ -753,11 +753,13 @@ auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
 	{
 		aml::vector4f position;
 		float x, y;
+		uint32 brickcache_width, brick_size;
 	};
 
 	auto cb = shiny::make_constant_buffer(scene.context(), blah{
 		scene.camera().position(),
-		scene.camera().yaw(), scene.camera().pitch()
+		scene.camera().yaw(), scene.camera().pitch(),
+		(uint32)brickcache->width(), 8
 	});
 
 	scene.draw(

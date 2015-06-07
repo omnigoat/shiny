@@ -10,8 +10,6 @@ float4 u32x1_to_f(uint x)
 	);
 }
 
-//float u8x4_to_f32x1 { }
-
 cbuffer buf_scene : register(b0)
 {
 	matrix view;
@@ -24,6 +22,8 @@ cbuffer buf_voxel : register(b2)
 {
 	float4 position;
 	float yaw, pitch;
+	uint brickcache_width;
+	uint brick_size;
 }
 
 struct ps_input_t
@@ -127,10 +127,7 @@ aabb_t child_aabb(in aabb_t box, uint index)
 
 static const aabb_t box = {0.f, 0.f, 0.f, 1.f};
 
-static const uint brick_size = 8;
-static const float brick_sizef = 8.f;
-static const uint brick_count = 30;
-static const float inv_brick_countf = 1.f / brick_count;
+//static const float inv_brick_countf = 1.f / brickcache_width;
 
 bool intersection(in aabb_t box, in float3 position, in float3 dir, out float3 enter, out float3 exit)
 {
@@ -182,53 +179,116 @@ uint brick_index(in aabb_t box, float3 pos, float size, out aabb_t leaf_box)
 	return result_brick;
 }
 
-float3 brick_origin(uint brick_id)
+
+void morton_decoding32(uint morton, out uint x, out uint y, out uint z)
 {
-	return float3(
-		inv_brick_countf * (float)((brick_id) % brick_count),
-		inv_brick_countf * (float)((brick_id / brick_count) % brick_count),
-		inv_brick_countf * (float)((brick_id / (brick_count * brick_count)) % brick_count)
-	);
+	x = morton;
+	y = morton >> 1;
+	z = morton >> 2;
+	x &= 0x09249249;
+	y &= 0x09249249;
+	z &= 0x09249249;
+	x |= (x >> 2);
+	y |= (y >> 2);
+	z |= (z >> 2);
+	x &= 0x030c30c3;
+	y &= 0x030c30c3;
+	z &= 0x030c30c3;
+	x |= (x >> 4);
+	y |= (y >> 4);
+	z |= (z >> 4);
+	x &= 0x0300f00f;
+	y &= 0x0300f00f;
+	z &= 0x0300f00f;
+	x |= (x >> 8);
+	y |= (y >> 8);
+	z |= (z >> 8);
+	x &= 0x030000ff;
+	y &= 0x030000ff;
+	z &= 0x030000ff;
+	x |= (x >> 16);
+	y |= (y >> 16);
+	z |= (z >> 16);
+	x &= 0x000003ff;
+	y &= 0x000003ff;
+	z &= 0x000003ff;
 }
 
-void brick_ray(in uint brick_id, in float3 near, in float3 far, inout float4 colour, inout float remainder)
+
+
+float3 brick_origin(uint brick_id)
 {
-	// float3 delta = far - near;
-	float iSize = 1.0 / float(brick_size);
-	float iCount = 1.0 / float(brick_count);
-	float hs = iSize * 0.5;
-	near = near * (iSize * (brick_size-1)) + float3(hs, hs, hs);
-	far = far * (iSize * (brick_size-1)) + float3(hs, hs, hs);
-	float len = length(far - near);
-	float3 brick_pos = brick_origin(brick_id);
+	float3 r;
+	morton_decoding32(brick_id, r.x, r.y, r.z);
+	return r * (float)brick_size / brickcache_width;
+}
+
+
+//
+//  brick_ray
+//  -----------
+//    brick_enter/brick_exit: [0.f, 8.f) coordinates of enter/exit positions
+void brick_ray(in uint brick_id, in float3 brick_enter, in float3 brick_exit, inout float4 colour, inout float remainder)
+{
 	float4 result = colour;
 
-	if (len < 0.1)return;
+	float  inv_brick_size       = 1.f / brick_size;
+	float  inv_brickcache_width = 1.f / brickcache_width;
+	float  half_size            = inv_brick_size * 0.5;
+	float3 half_size_xyz        = float3(half_size, half_size, half_size);
+	float3 brick_multi          = inv_brick_size * (brick_size-1);
+	float3 brick_position       = brick_origin(brick_id);
 
-	float steps = 1.0/(len / iSize);
+	// take coordinates into [0.5f, 7.5f) range, then squash into [0.0625f, 0.9375f),
+	// so that the edges of our sample ranges (0.f, and 1.f), sample the middle of the
+	// outermost voxels
+	float3 fragment_enter  = brick_enter * brick_multi + half_size_xyz;
+	float3 fragment_exit   = brick_exit  * brick_multi + half_size_xyz;
+	float  fragment_length = length(fragment_exit - fragment_enter);
+
+	// I'm not sure what this's for
+	if (fragment_length < 0.1)
+		return;
+
+
+	// x/(y/z) === (xz)/y
+	// x/(y/(z/w)) === x/(wy/z) === xz/wy
+
+	// length of vector in fragment-space
+	//float steps = 1.f / (len * brick_size);
+	float steps = fragment_length * inv_brick_size;
 
 	float pos;
-	for (pos=steps*remainder; pos < 1.0; pos += steps)
+	for (pos = steps*remainder; pos < 1.f && result.w < 1.f; pos += steps)
 	{
-		float3 sample_loc = lerp(near, far, pos)*iCount;
-		float2 voxelfull = bricks.SampleLevel(brick_sampler, sample_loc + brick_pos, 0);
-		if (voxelfull.x > 0.f) {
-			result.xyz = float3(1.f, 1.f, 1.f);
+		float3 fragment_position = lerp(fragment_enter, fragment_exit, pos) * inv_brickcache_width;
+		float2 voxelfull = bricks.SampleLevel(brick_sampler, brick_position + fragment_position, 0);
+
+		uint c = asuint(voxelfull.x);
+
+		if (c != 0)
+		{
+			result = float4(
+				((c >> 0)  & 0xff) / 255.f,
+				((c >> 8)  & 0xff) / 255.f,
+				((c >> 16) & 0xff) / 255.f,
+				1.f);
+
 			break;
 		}
+
 		float4 voxel = voxelfull.xxxx;
 		result.xyz += ((1.0-result.w)*(1.0-result.w) * voxel.xyz)/(1.0 - result.xyz * voxel.xyz);
 		result.w = result.w + (1.0-result.w) * voxel.w;
-		if (result.w > 1.0)break;
 	}
-	remainder = (pos - 1.0) / steps;
+
+	remainder = (pos - 1.f) / steps;
 	colour = result;
-	// TODO: interpolate between different resolutions
 }
 
 float4 brick_path(float3 position, float3 normal, float ratio)
 {
-	aabb_t box ={0.f, 0.f, 0.f, 1.f + vdelta};
+	aabb_t box = {0.f, 0.f, 0.f, 1.f + vdelta};
 
 	float size = 0.005f; //* length(0.f - position);
 	float3 hit_enter, hit_exit;
@@ -271,8 +331,11 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 		hit_enter = hit_enter + len * normal * 1.01f;
 		++reps;
 	} 
+	color.w = 1.f;
 
+	// debug: number of nodes traversed
 	//return float4(reps / 16.f, 0.f, 0.f, 1.f);
+
 #if 0
 	float3 n = normalize(color.xyz);
 
