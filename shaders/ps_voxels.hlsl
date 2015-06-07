@@ -234,7 +234,7 @@ float3 brick_origin(uint brick_id)
 //    brick_enter/brick_exit: [0.f, 1.f) coordinates of enter/exit positions.
 //    there are in relation to the brick itself
 //
-void brick_ray(in uint brick_id, in float3 brick_enter, in float3 brick_exit, inout float4 colour, inout float remainder)
+void brick_ray(in uint brick_id, in float3 brick_enter, in float3 brick_exit, inout float4 colour, inout float remainder, in float3 yay)
 {
 	float4 result = colour;
 
@@ -274,7 +274,7 @@ void brick_ray(in uint brick_id, in float3 brick_enter, in float3 brick_exit, in
 	float steps = fragment_length * inv_brick_size;
 
 	float pos;
-	for (pos = steps; pos < 1.f && result.w < 1.f; pos += steps)
+	for (pos = steps*remainder; pos < 1.f && result.w < 1.f; pos += steps)
 	{
 		float3 fragment_position = lerp(fragment_enter, fragment_exit, pos) * inv_brickcache_width;
 		float2 voxelfull = bricks.SampleLevel(brick_sampler, brick_position + fragment_position, 0);
@@ -289,7 +289,7 @@ void brick_ray(in uint brick_id, in float3 brick_enter, in float3 brick_exit, in
 				((c >> 16) & 0xff) / 255.f,
 				1.f);
 
-			result.xyz = brick_position;
+			result.xyzw = float4(yay, 1.f);
 			break;
 		}
 
@@ -340,7 +340,7 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 		{
 			float3 brick_enter = (leaf_enter - leaf_box.min()) / leaf_box.width();
 			float3 brick_exit  = (leaf_exit  - leaf_box.min()) / leaf_box.width();
-			brick_ray(brick_id, brick_enter, brick_exit, color, rem);
+			brick_ray(brick_id, brick_enter, brick_exit, color, rem, hit_enter * 0.5f + 0.5f);
 		}
 		else
 		{
