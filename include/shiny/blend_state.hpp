@@ -1,5 +1,8 @@
 #pragma once
 
+#include <atma/hash.hpp>
+
+
 namespace shiny
 {
 	enum class blending_t : uint
@@ -50,15 +53,17 @@ namespace shiny
 			rendertarget[0].src_blend_alpha = src_blend_alpha;
 		}
 
-		static auto opaque() -> blend_state_t
-		{
-			return blend_state_t{blending_t::one_minus_src_alpha, blending_t::zero, blending_t::src_alpha, blending_t::zero};
-		}
+		static blend_state_t opaque;
+		static blend_state_t nonopaque;
+		//static auto opaque() -> blend_state_t
+		//{
+			//return blend_state_t{blending_t::one_minus_src_alpha, blending_t::zero, blending_t::src_alpha, blending_t::zero};
+		//}
 
-		static auto transparent() -> blend_state_t
-		{
-			return blend_state_t{blending_t::one_minus_src_alpha, blending_t::zero, blending_t::src_alpha, blending_t::one};
-		}
+		//static auto transparent() -> blend_state_t
+		//{
+		//	return blend_state_t{blending_t::one_minus_src_alpha, blending_t::zero, blending_t::src_alpha, blending_t::one};
+		//}
 
 		// all targets use first target's properties
 		bool multitarget_collapse = false;
@@ -80,4 +85,23 @@ namespace shiny
 	}
 }
 
+namespace atma
+{
+	template <>
+	struct hash_t<shiny::blend_state_t>
+	{
+		auto operator()(hasher_t& hsh, shiny::blend_state_t const& x) const -> void
+		{
+			hsh(x.multitarget_collapse);
 
+			hsh(rendertarget[0]);
+			hsh(rendertarget[1]);
+			hsh(rendertarget[2]);
+			hsh(rendertarget[3]);
+			hsh(rendertarget[4]);
+			hsh(rendertarget[5]);
+			hsh(rendertarget[6]);
+			hsh(rendertarget[7]);
+		}
+	};
+}

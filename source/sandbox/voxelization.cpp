@@ -736,7 +736,8 @@ auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
 {
 	namespace sdc = shiny::draw_commands;
 
-	auto b = ctx->make_blender(shiny::blend_state_t::transparent());
+	//auto b = ctx->make_blender(shiny::blend_state_t::transparent());
+	auto oms = shiny::output_merger_state_t{shiny::blend_state_t::opaque, shiny::depth_state_t::depth_on};
 
 #if 0
 	scene.draw(
@@ -746,8 +747,8 @@ auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
 		}),
 		//sdc::geometry_stage(gs),
 		sdc::fragment_stage(fs_flat()),
-		sdc::output_merger_stage(b)
-		);
+		sdc::output_merger_stage(shiny::blend_state_t::opaque)
+	);
 #else
 	struct blah
 	{
