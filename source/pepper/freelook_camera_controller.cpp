@@ -85,8 +85,9 @@ auto freelook_camera_controller_t::update(uint timestep_in_ms) -> void
 			theta_ = -aml::pi_over_two + 0.1f;
 	}
 
-	walk_direction_ = aml::vector4f(sin(phi_) * cos(theta_), sin(theta_), cos(phi_) * cos(theta_), 0.f);
+	walk_direction_ = aml::normalize(aml::vector4f(sin(phi_) * cos(theta_), sin(theta_), cos(phi_) * cos(theta_), 0.f));
 	strafe_direction_ = aml::cross_product(aml::vector4f(0.f, 1.f, 0.f, 0.f), walk_direction_);
+	auto up = aml::cross_product(walk_direction_, strafe_direction_);
 
 	auto const walk_speed = 0.02f;
 	if (WASD_[0]) position_ += walk_direction_ * walk_speed;
@@ -95,7 +96,7 @@ auto freelook_camera_controller_t::update(uint timestep_in_ms) -> void
 	if (WASD_[3]) position_ += strafe_direction_ * walk_speed;
 
 	camera_ = shiny::camera_t(
-		aml::look_at(position_, position_ + walk_direction_, aml::vector4f{0.f, 1.f, 0.f, 0.f}),
+		aml::look_at(position_, position_ + walk_direction_, up),
 		aml::perspective_fov(aml::pi_over_two, (float)window_->height() / window_->width(), 0.001f, 100.f));
 }
 

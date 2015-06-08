@@ -9,6 +9,7 @@ namespace sandbox
 	struct voxel_t
 	{
 		uint32 morton;
+
 	};
 
 	struct node_t

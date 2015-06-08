@@ -21,6 +21,7 @@ namespace
 	struct scene_data_t
 	{
 		atma::math::matrix4f view;
+		atma::math::matrix4f inv_view;
 		atma::math::matrix4f proj;
 		atma::math::matrix4f inv_viewproj;
 		float time;
@@ -42,8 +43,9 @@ scene_t::scene_t(context_ptr const& context, camera_t const& camera, rendertarge
 
 	scene_constant_buffer_ = shiny::make_constant_buffer(context_, scene_data_t{
 		camera.view(),
+		camera.inverse_view(),
 		camera.projection(),
-		invert(camera.projection() * camera.view()),
+		invert(camera.view() * camera.projection()),
 		0.f
 	});
 }

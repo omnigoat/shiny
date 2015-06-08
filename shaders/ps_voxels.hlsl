@@ -13,6 +13,7 @@ float4 u32x1_to_f(uint x)
 cbuffer buf_scene : register(b0)
 {
 	matrix view;
+	matrix inverse_view;
 	matrix proj;
 	matrix inverse_vp;
 	float time;
@@ -377,25 +378,19 @@ static const float pi = 3.14159265f;
 
 float4 main(ps_input_t input) : SV_Target
 {
-	// debug: position
-	//return position;
+#if 0
+	float3 view_dir = normalize(float3(inverse_view[2][0], inverse_view[2][1], inverse_view[2][2]) / inverse_view[3][3]);
+#else
+	float3 view_dir = {sin(yaw) * cos(pitch), sin(pitch), cos(pitch) * cos(yaw)};
+#endif
 
-	// debug: pixel-delta
-	//return float4(input.pixel_delta.xy, 0.f, 1.f);
+	float3 across = cross(view_dir, float3(0.f, 1.f, 0.f));
+	float3 up = cross(view_dir, across);
 
-	// debug: pitch/yaw
-	//return float4(x, y, 0.f, 1.f);
-	float yaw2 = yaw + input.pixel_delta.x;
-	float pitch2 = pitch + input.pixel_delta.y; // * 0.33333f;
-	float3 dir = {sin(yaw2) * cos(pitch2), sin(pitch2), cos(yaw2) * cos(pitch2)};
-	//dir = float3(input.pixel_delta.x, input.pixel_delta.y, 1.f);
-	//float3 dir = float3(input.pixel_delta.xy, 0.75f);
-	//dir = normalize(dir);
+	float3 t = normalize(view_dir + up * input.pixel_delta.y + across * input.pixel_delta.x);
 
 	// debug: direction
-	//return float4(dir, 1.f);
+	//return float4(t, 1.f);
 
-	//float3 pos = float3(input.pixel_delta.xy, position.z);
-
-	return brick_path(position.xyz, dir, 0.00001f);
+	return brick_path(position.xyz, t, 0.00001f);
 }

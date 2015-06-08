@@ -14,13 +14,15 @@ camera_t::camera_t()
 }
 
 camera_t::camera_t(aml::matrix4f const& view, aml::matrix4f const& proj)
-	: view_(view), proj_(proj), view_dirty_(), proj_dirty_()
+	: view_(view), proj_(proj)
+	, inverse_view_(aml::invert(view))
+	, view_dirty_(), proj_dirty_()
 {
 	// decompose view
-	auto m = aml::invert(view);
-	eye_ = aml::vector4f(m[3][0], m[3][1], m[3][2], 1.f);
-	view_dir_ = aml::vector4f(m[2][0], m[2][1], m[2][2], 0.f);
-	up_ = aml::vector4f(m[1][0], m[1][1], m[1][2], 0.f);
+	auto const& m = inverse_view_;
+	eye_ = aml::vector4f(m[3][0], m[3][1], m[3][2], m[3][3]) / m[3][3];
+	view_dir_ = aml::normalize(aml::vector4f(m[2][0], m[2][1], m[2][2], 0.f) / m[3][3]);
+	up_ = aml::vector4f(m[1][0], m[1][1], m[1][2], 0.f) / m[3][3];
 
 	decompose_projection(fov_, aspect_, near_, far_);
 }
@@ -30,18 +32,29 @@ auto camera_t::view() const -> aml::matrix4f const&
 	if (view_dirty_)
 	{
 		view_ = aml::look_along(eye_, view_dir_, up_);
-		proj_ = aml::perspective_fov(fov_, aspect_, near_, far_);
+		//proj_ = aml::perspective_fov(fov_, aspect_, near_, far_);
 		view_dirty_ = false;
 	}
 
 	return view_;
 }
 
+auto camera_t::inverse_view() const -> aml::matrix4f const&
+{
+	if (view_dirty_)
+	{
+		view();
+		inverse_view_ = aml::invert(view_);
+	}
+
+	return inverse_view_;
+}
+
 auto camera_t::projection() const -> aml::matrix4f const&
 {
 	if (proj_dirty_)
 	{
-		view_ = aml::look_along(eye_, view_dir_, up_);
+		//view_ = aml::look_along(eye_, view_dir_, up_);
 		proj_ = aml::perspective_fov(fov_, aspect_, near_, far_);
 		proj_dirty_ = false;
 	}
