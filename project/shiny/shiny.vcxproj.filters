@@ -170,6 +170,9 @@
     <ClCompile Include="..\..\source\shiny\compute.cpp">
       <Filter>source\shiny</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\source\shiny\function.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\shiny\context.hpp">

@@ -61,11 +61,15 @@ uint16 application_t::cube_indices[] =
 	6, 2, 0, 0, 4, 6, // +z plane
 };
 
+extern int function_main();
+
 application_t::application_t()
 	: window_renderer(fooey::system_renderer())
 	, window(fooey::window("Excitement!", 640, 480))
 	, runtime{}
 {
+	function_main();
+
 	window_renderer->add_window(window);
 	ctx = shiny::create_context(runtime, window, shiny::primary_adapter);
 

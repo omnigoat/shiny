@@ -94,14 +94,14 @@ namespace atma
 		{
 			hsh(x.multitarget_collapse);
 
-			hsh(rendertarget[0]);
-			hsh(rendertarget[1]);
-			hsh(rendertarget[2]);
-			hsh(rendertarget[3]);
-			hsh(rendertarget[4]);
-			hsh(rendertarget[5]);
-			hsh(rendertarget[6]);
-			hsh(rendertarget[7]);
+			hsh(x.rendertarget[0]);
+			hsh(x.rendertarget[1]);
+			hsh(x.rendertarget[2]);
+			hsh(x.rendertarget[3]);
+			hsh(x.rendertarget[4]);
+			hsh(x.rendertarget[5]);
+			hsh(x.rendertarget[6]);
+			hsh(x.rendertarget[7]);
 		}
 	};
 }
