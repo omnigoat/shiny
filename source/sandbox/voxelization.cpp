@@ -104,7 +104,7 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 	auto obj = obj_model_t{sf};
 
 	// try for 128^3 grid
-	auto const gridsize = 128;
+	auto const gridsize = 64;
 	
 	auto numbers = atma::vector<int>{1, 2, 3, 4, 5};
 	auto numbers2 = atma::vector<int>{};
@@ -236,7 +236,7 @@ auto voxelization_plugin_t::setup_svo() -> void
 	cs_write_fragments = cs_from_file("x64/Debug/sparse_octree_write_fragments.cso");
 
 
-	auto const gridsize = 128;
+	auto const gridsize = 64;
 	auto const brick_edge_size = 8u;
 	auto const brick_morton_width = brick_edge_size * brick_edge_size * brick_edge_size;
 	auto const levels_required = aml::log2(gridsize / brick_edge_size);
@@ -550,7 +550,7 @@ auto voxelization_plugin_t::setup_svo() -> void
 			//auto const* frags = svof.data() + x->brick_idx * 8*8*8; // fx * t3d_slice + fy * t3d_height + fx * 8;
 			auto const* frags = svof.data() + fx*8 + fy * 8*t3d_height + fz * 8*t3d_slice;
 			auto blam = x->brick_idx;
-			auto s2 = aml::matrix4f::scale(1.f / 128.f);
+			auto s2 = aml::matrix4f::scale(1.f / 256.f);
 
 			for (int i = 0; i != 8 * 8 * 8; ++i)
 			{

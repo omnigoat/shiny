@@ -371,15 +371,16 @@ auto context_t::immediate_vs_set_constant_buffers(bound_constant_buffers_t const
 
 auto context_t::immediate_vs_set_resources(bound_resources_t const& rs) -> void
 {
-	for (auto const& x : rs) {
-		//d3d_immediate_context_->VSSetShaderResources(x.first, 1, &x.second->d3d_srv().get());
-	}
+	
 }
 
 auto context_t::immediate_fs_set_fragment_shader(fragment_shader_cptr const& fs) -> void
 {
 	fs_shader_ = fs;
+<<<<<<< Updated upstream
 	//d3d_immediate_context_->PSSetShader(fs->d3d_fs().get(), nullptr, 0);
+=======
+>>>>>>> Stashed changes
 }
 
 auto context_t::immediate_fs_set_constant_buffers(bound_constant_buffers_t const& cbs) -> void
@@ -390,17 +391,17 @@ auto context_t::immediate_fs_set_constant_buffers(bound_constant_buffers_t const
 auto context_t::immediate_fs_set_input_views(bound_input_views_t const& ivs) -> void
 {
 	fs_srvs_ = ivs.views;
+<<<<<<< Updated upstream
 	for (auto const& x : ivs.views) {
 		d3d_immediate_context_->PSSetShaderResources(x.idx, 1, (ID3D11ShaderResourceView* const*)&x.view->d3d_view().get());
 	}
+=======
+>>>>>>> Stashed changes
 }
 
 auto context_t::immediate_fs_set_compute_views(bound_compute_views_t const& cvs) -> void
 {
-	for (auto const& x : cvs.views) {
-		//UINT count = x.counter;
-		//d3d_immediate_context_->PSSet(x.idx, 1, (ID3D11UnorderedAccessView* const*)&x.view->d3d_view().get(), &count);
-	}
+	fs_uavs_ = cvs.views;
 }
 
 auto context_t::immediate_draw_set_range(draw_range_t const& dr) -> void
@@ -477,6 +478,7 @@ auto context_t::immediate_draw() -> void
 	// output-merger-stage
 	//if (false)
 	{
+#if 0
 		auto blah = D3D11_DEPTH_STENCIL_DESC{false};
 		atma::com_ptr<ID3D11DepthStencilState> ds;
 		d3d_device_->CreateDepthStencilState(&blah, ds.assign());
@@ -492,6 +494,7 @@ auto context_t::immediate_draw() -> void
 		d3d_immediate_context_->OMSetRenderTargetsAndUnorderedAccessViews(
 			D3D11_KEEP_RENDER_TARGETS_AND_DEPTH_STENCIL, nullptr, nullptr,
 			1, D3D11_PS_CS_UAV_REGISTER_COUNT - 1, uavs, atomic_counters);
+#endif
 	}
 	
 	
