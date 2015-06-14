@@ -749,7 +749,7 @@ namespace detail
 	template <typename R, typename... Params, typename... RParams>
 	struct functor_vtable_call_partial_t<R, std::tuple<Params...>, std::tuple<RParams...>>
 	{
-		auto call(dispatch_fnptr_t<R, Params..., RParams...>, functor_buf_t&, Params...) -> fn_t<R(RParams...)>;
+		auto call(dispatch_fnptr_t<R, Params..., RParams...>, functor_buf_t&, Params...) const -> fn_t<R(RParams...)>;
 	};
 
 
@@ -761,7 +761,9 @@ namespace detail
 	struct functor_vtable_call_t<S, S, R, std::tuple<Params...>>
 		: functor_vtable_call_t<S, S - 1, R, std::tuple<Params...>>
 	{
-		auto call(dispatch_fnptr_t<R, Params...>, functor_buf_t&, Params...) -> R;
+		using functor_vtable_call_t<S, S - 1, R, std::tuple<Params...>>::call;
+
+		auto call(dispatch_fnptr_t<R, Params...>, functor_buf_t&, Params...) const -> R;
 	};
 
 	// partial call
@@ -769,16 +771,79 @@ namespace detail
 	struct functor_vtable_call_t<PS, S, R, std::tuple<Params...>>
 		: functor_vtable_call_t<PS, S - 1, R, std::tuple<Params...>>
 		, functor_vtable_call_partial_t<R,
-			atma::tuple_select_t<atma::idxs_range_t<S, PS>, std::tuple<Params...>>,
-			atma::tuple_select_t<atma::idxs_list_t<S>, std::tuple<Params...>>
+			atma::tuple_select_t<atma::idxs_list_t<S>, std::tuple<Params...>>,
+			atma::tuple_select_t<atma::idxs_range_t<S, PS>, std::tuple<Params...>>
 		>
 	{
+		using functor_vtable_call_partial_t<R,
+		atma::tuple_select_t<atma::idxs_list_t<S>, std::tuple<Params...>>,
+		atma::tuple_select_t<atma::idxs_range_t<S, PS>, std::tuple<Params...>>
+		>::call;
 	};
 
 	// terminate
 	template <size_t PS, typename R, typename... Params>
 	struct functor_vtable_call_t<PS, 0, R, std::tuple<Params...>>
+		: functor_vtable_call_partial_t<R,
+			std::tuple<>,
+			atma::tuple_select_t<atma::idxs_range_t<0, PS>, std::tuple<Params...>>
+		>
 	{};
+
+
+
+
+	template <typename R, typename ParamsTuple, typename ResultParamTuple>
+	struct dispatcher_partial_t;
+
+	template <typename R, typename... Params, typename... RParams>
+	struct dispatcher_partial_t<R, std::tuple<Params...>, std::tuple<RParams...>>
+	{
+		static auto call(dispatch_fnptr_t<R, Params..., RParams...>, functor_buf_t const&, Params...) -> fn_t<R(RParams...)>;
+	};
+
+	template <size_t, size_t, typename R, typename ParamsTuple>
+	struct dispatcher_t;
+
+	// full-call: do nothing, handled by fn_t itself
+	template <size_t S, typename R, typename... Params>
+	struct dispatcher_t<S, S, R, std::tuple<Params...>>
+		: dispatcher_t<S, S - 1, R, std::tuple<Params...>>
+	{
+		using dispatcher_t<S, S - 1, R, std::tuple<Params...>>::call;
+
+		static auto call(dispatch_fnptr_t<R, Params...>, functor_buf_t const&, Params...) -> R;
+	};
+
+	// partial call
+	template <size_t PS, size_t S, typename R, typename... Params>
+	struct dispatcher_t<PS, S, R, std::tuple<Params...>>
+		: dispatcher_t<PS, S - 1, R, std::tuple<Params...>>
+		, dispatcher_partial_t<R,
+			atma::tuple_select_t<atma::idxs_list_t<S>, std::tuple<Params...>>,
+			atma::tuple_select_t<atma::idxs_range_t<S, PS>, std::tuple<Params...>>
+		>
+	{
+		using dispatcher_partial_t<R,
+		atma::tuple_select_t<atma::idxs_list_t<S>, std::tuple<Params...>>,
+		atma::tuple_select_t<atma::idxs_range_t<S, PS>, std::tuple<Params...>>
+		>::call;
+	};
+
+	// terminate
+	template <size_t PS, typename R, typename... Params>
+	struct dispatcher_t<PS, 0, R, std::tuple<Params...>>
+		: dispatcher_partial_t<R,
+			std::tuple<>,
+			atma::tuple_select_t<atma::idxs_range_t<0, PS>, std::tuple<Params...>>
+		>
+	{};
+
+
+
+
+
+
 
 	template <typename R, typename... Params>
 	struct functor_vtable_t
@@ -803,6 +868,11 @@ namespace detail
 			: vtable_(), buf_{}
 		{}
 
+		functor_wrapper_t(functor_wrapper_t&& rhs)
+		{
+			move_into(std::move(rhs));
+		}
+
 		template <typename FN>
 		functor_wrapper_t(FN&& fn)
 			: vtable_(generate_vtable<FN, R, Params...>()), buf_{}
@@ -812,15 +882,6 @@ namespace detail
 
 		~functor_wrapper_t()
 		{
-			//if (vtable_)
-				//vtable_->destruct(buf_);
-		}
-
-		template <typename... Args>
-		auto call(dispatch_fnptr_t<R, Params...> fn, Args&&... args) -> 
-		decltype(vtable_->functor_vtable_call_t<sizeof...(Params), sizeof...(Args), R, std::tuple<Params...>>::call(fn, buf_, std::forward<Args>(args)...))
-		{
-			return vtable_->functor_vtable_call_t<sizeof...(Params), sizeof...(Args), R, std::tuple<Params...>>::call(fn, buf_, std::forward<Args>(args)...);
 		}
 
 		auto move_into(functor_wrapper_t& rhs) -> void
@@ -831,10 +892,15 @@ namespace detail
 			vtable_->destruct(buf_);
 		}
 
+		auto destroy() -> void
+		{
+			vtable_->destruct(buf_);
+		}
+
 		auto buf() const -> functor_buf_t const& { return buf_; }
 
 	public:
-		functor_vtable_t<R, Params...>* vtable_;
+		functor_vtable_t<R, Params...> const* vtable_;
 		functor_buf_t buf_;
 	};
 
@@ -874,27 +940,27 @@ namespace detail
 template <typename R, typename... Params>
 struct fn_t<R(Params...)>
 {
-	using dispatch_fntype = auto (*)(detail::functor_buf_t&, Params...) -> R;
-
-
 	template <typename FN>
 	fn_t(FN&& fn)
 	{
 		functor_init(detail::functorize(std::forward<FN>(fn)));
 	}
 
-#if 0
+	~fn_t()
+	{
+		wrapper_.destroy();
+	}
+
 	auto operator()(Params... args) const -> R
 	{
 		return dispatch_(wrapper_.buf_, args...);
 	}
-#endif
+
 	template <typename... Args>
-	auto operator ()(Args&&... args)
-	-> decltype(wrapper_.call(dispatch_, std::forward<Args>(args)...))
-	//-> decltype(wrapper_.vtable_->functor_vtable_call_t<sizeof...(Params), sizeof...(Args), R, std::tuple<Params...>>::template call(fn, buf_, std::forward<Args>(args)...))
+	auto operator ()(Args&&... args) const
+		-> decltype(detail::dispatcher_t<sizeof...(Params), sizeof...(Args), R, std::tuple<Params...>>::call(dispatch_, wrapper_.buf_, std::forward<Args>(args)...))
 	{
-		return wrapper_.call(dispatch_, std::forward<Args>(args)...);
+		return detail::dispatcher_t<sizeof...(Params), sizeof...(Args), R, std::tuple<Params...>>::call(dispatch_, wrapper_.buf_, std::forward<Args>(args)...);
 	}
 
 	auto swap(fn_t& rhs) -> void
@@ -910,7 +976,7 @@ private:
 	auto functor_init(FN&& fn) -> void
 	{
 		dispatch_ = &detail::dispatch_central_t<FN>::template call<R, Params...>;
-		wrapper_ = detail::functor_wrapper_t<R, Params...>{std::forward<FN>(fn)};
+		wrapper_ = std::move(detail::functor_wrapper_t<R, Params...>{std::forward<FN>(fn)});
 	}
 
 public:
@@ -920,21 +986,40 @@ public:
 
 template <typename R, typename... Params, typename... RParams>
 auto detail::functor_vtable_call_partial_t<R, std::tuple<Params...>, std::tuple<RParams...>>
-	::call(dispatch_fnptr_t<R, Params..., RParams...> dispatch, functor_buf_t& buf, Params... args) -> ::fn_t<R(RParams...)>
+	::call(dispatch_fnptr_t<R, Params..., RParams...> dispatch, functor_buf_t& buf, Params... args) const
+	-> fn_t<R(RParams...)>
 {
 	return atma::curry(dispatch, buf, args...);
 }
 
 template <size_t S, typename R, typename... Params>
-auto detail::functor_vtable_call_t<S, S, R, std::tuple<Params...>>::call(dispatch_fnptr_t<R, Params...> dispatch, functor_buf_t& buf, Params... args) -> R
+auto detail::functor_vtable_call_t<S, S, R, std::tuple<Params...>>::call(dispatch_fnptr_t<R, Params...> dispatch, functor_buf_t& buf, Params... args) const -> R
 {
 	return dispatch(buf, args...);
 }
 
 
-auto multiplus(int a, int b, int c) -> int
+
+template <typename R, typename... Params, typename... RParams>
+auto detail::dispatcher_partial_t<R, std::tuple<Params...>, std::tuple<RParams...>>
+::call(dispatch_fnptr_t<R, Params..., RParams...> dispatch, functor_buf_t const& buf, Params... args)
+-> fn_t<R(RParams...)>
 {
-	return a + b + c;
+	return atma::curry(dispatch, buf, args...);
+}
+
+template <size_t S, typename R, typename... Params>
+auto detail::dispatcher_t<S, S, R, std::tuple<Params...>>::call(dispatch_fnptr_t<R, Params...> dispatch, functor_buf_t const& buf, Params... args)
+-> R
+{
+	return dispatch(buf, args...);
+}
+
+
+
+auto multiplus(int a, float b, char c) -> int
+{
+	return (int)(a + b + c);
 }
 
 uint64 plus(uint64 a, uint64 b) { return a + b; }
@@ -979,14 +1064,13 @@ int function_main()
 	auto atmafn = fn_t<uint64(uint64, uint64)>(atma::curry(&dragon_t::plus, &d));
 #endif
 
-	auto af1 = fn_t<int(int, int, int)>{&multiplus};
-	//auto af2 = af1(4, 5);
-	//auto af2 = af1.wrapper_.call(af1.dispatch_, 4, 5);
-	//af1.wrapper_.vtable_->functor_vtable_call_partial_t<int, std::tuple<int, int>, std::tuple<int>>::call(af1.dispatch_, af1.wrapper_.buf_, 4, 5);
-	af1.wrapper_.vtable_->call(af1.dispatch_, af1.wrapper_.buf_, 4, 5);
-	//auto af3 = af2(5);
-	//auto af4 = af3(6);
-
+	auto af1 = fn_t<int(int, float, char)>{&multiplus};
+	auto af2 = af1(4, 5.f);
+	//auto af2 = af1.wrapper_.call(af1.dispatch_, 4, 5.f);
+	//auto af21 = af1.wrapper_.vtable_->call(af1.dispatch_, af1.wrapper_.buf_, 4, 5.f);
+	auto r = af2(5);
+	auto r2 = af1(1, 2.f, 'A');
+	
 #if 1
 	{
 		auto s = clock.now();

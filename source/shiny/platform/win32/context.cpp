@@ -377,10 +377,6 @@ auto context_t::immediate_vs_set_resources(bound_resources_t const& rs) -> void
 auto context_t::immediate_fs_set_fragment_shader(fragment_shader_cptr const& fs) -> void
 {
 	fs_shader_ = fs;
-<<<<<<< Updated upstream
-	//d3d_immediate_context_->PSSetShader(fs->d3d_fs().get(), nullptr, 0);
-=======
->>>>>>> Stashed changes
 }
 
 auto context_t::immediate_fs_set_constant_buffers(bound_constant_buffers_t const& cbs) -> void
@@ -391,12 +387,6 @@ auto context_t::immediate_fs_set_constant_buffers(bound_constant_buffers_t const
 auto context_t::immediate_fs_set_input_views(bound_input_views_t const& ivs) -> void
 {
 	fs_srvs_ = ivs.views;
-<<<<<<< Updated upstream
-	for (auto const& x : ivs.views) {
-		d3d_immediate_context_->PSSetShaderResources(x.idx, 1, (ID3D11ShaderResourceView* const*)&x.view->d3d_view().get());
-	}
-=======
->>>>>>> Stashed changes
 }
 
 auto context_t::immediate_fs_set_compute_views(bound_compute_views_t const& cvs) -> void
