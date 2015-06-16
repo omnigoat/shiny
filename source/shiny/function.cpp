@@ -744,7 +744,8 @@ namespace detail
 
 		static auto destruct(functor_buf_t& buf) -> void
 		{
-			delete reinterpret_cast<FN*&>(buf);
+			auto&& tbuf = reinterpret_cast<FN*&>(buf);
+			delete tbuf;
 		}
 
 		template <typename R, typename... Args>
@@ -920,10 +921,6 @@ struct fn_t<R(Params...)>
 		, wrapper_(rhs.wrapper_)
 	{}
 
-	~fn_t()
-	{
-	}
-
 	auto operator()(Params... args) const -> R
 	{
 		return dispatch_(wrapper_.buf_, args...);
@@ -952,7 +949,22 @@ private:
 	}
 
 	template <typename FN>
-	auto init_fn(FN&& fn) -> void
+	auto init_fn(FN&& fn)
+#if 1
+		-> void
+#else
+		-> typename  std::enable_if<
+			std::is_same<
+				R,
+				typename atma::function_traits<FN>::result_type
+			>::value
+			&&
+			std::is_same<
+				std::tuple<Params...>,
+				typename atma::function_traits<FN>::tupled_args_type
+			>::value
+		>::type
+#endif
 	{
 		dispatch_ = &detail::vtable_impl_t<FN>::template call<R, Params...>;
 		new (&wrapper_) detail::functor_wrapper_t<R, Params...>{std::forward<FN>(fn)};
@@ -1029,18 +1041,22 @@ int function_main()
 	auto atmafn = fn_t<uint64(uint64, uint64)>(atma::curry(&dragon_t::plus, &d));
 #endif
 
-	auto bf1 = fn_t<int(char)>{atma::curry(&multiplus, 1, 2.f)};
-	auto bf1m = fn_t<int(char)>{std::move(bf1)};
-	auto bf1c = bf1m;
+	{
+		//auto cf1 = fn_t<int(float, char)>{atma::curry(&multiplus, 1)};
 
-	auto af1i = fn_t<int(int, float, char)>{&multiplus};
-	auto af1 = fn_t<int(int, float, char)>{std::move(af1i)};
-	auto af1c = af1;
-	auto af2 = af1(4, 5.f);
-	//auto af2 = af1.wrapper_.call(af1.dispatch_, 4, 5.f);
-	//auto af21 = af1.wrapper_.vtable_->call(af1.dispatch_, af1.wrapper_.buf_, 4, 5.f);
-	auto r = af2(5);
-	auto r2 = af1(1, 2.f, 'A');
+		auto bf1 = fn_t<int(int, float, char)>{atma::curry(&multiplus, 1, 2.f)};
+		//auto bf1m = fn_t<int(char)>{std::move(bf1)};
+		//auto bf1c = bf1m;
+
+		auto af1i = fn_t<int(int, float, char)>{&multiplus};
+		auto af1 = fn_t<int(int, float, char)>{std::move(af1i)};
+		auto af1c = af1;
+		auto af2 = af1(4, 5.f);
+		//auto af2 = af1.wrapper_.call(af1.dispatch_, 4, 5.f);
+		//auto af21 = af1.wrapper_.vtable_->call(af1.dispatch_, af1.wrapper_.buf_, 4, 5.f);
+		auto r = af2(5);
+		auto r2 = af1(1, 2.f, 'A');
+	}
 	
 #if 1
 	{
