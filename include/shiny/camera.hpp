@@ -29,7 +29,7 @@ namespace shiny
 		auto set_fov(float radians) -> void;
 		auto set_clipping(float near_plane, float far_plane) -> void;
 		
-		auto decompose_projection(float& fov, float& aspect, float& near_plane, float& far_plane) -> void;
+		auto decompose_projection(float& fov, float& aspect, float& near_plane, float& far_plane) const -> void;
 
 	private:
 		mutable aml::matrix4f view_, proj_;

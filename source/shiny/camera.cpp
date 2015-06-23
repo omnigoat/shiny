@@ -108,7 +108,7 @@ auto camera_t::set_fov(float r) -> void
 	proj_dirty_ = true;
 }
 
-auto camera_t::decompose_projection(float& fov, float& aspect, float& near_plane, float& far_plane) -> void
+auto camera_t::decompose_projection(float& fov, float& aspect, float& near_plane, float& far_plane) const -> void
 {
 	fov = atan(1.f / proj_[0][0]) * 2.f;
 	aspect = proj_[1][1] / proj_[0][0];
