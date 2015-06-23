@@ -175,14 +175,18 @@ namespace shiny
 		runtime_t& runtime_;
 
 		platform::dxgi_adapter_ptr dxgi_adapter_;
-		platform::dxgi_swap_chain_ptr dxgi_swap_chain_;
-		platform::dxgi_output_ptr dxgi_output_;
+		platform::d3d_device_ptr   d3d_device_;
+		platform::d3d_context_ptr  d3d_immediate_context_;
 
-		platform::d3d_device_ptr d3d_device_;
-		platform::d3d_context_ptr d3d_immediate_context_;
-		platform::d3d_render_target_view_ptr d3d_render_target_;
+
+	private:
+		// swap-chain
+		platform::dxgi_output_ptr              dxgi_output_;
+		platform::dxgi_swap_chain_ptr          dxgi_swap_chain_;
+		platform::d3d_render_target_view_ptr   d3d_render_target_;
 		platform::d3d_depth_stencil_buffer_ptr d3d_depth_stencil_;
-		platform::d3d_texture2d_ptr d3d_depth_stencil_buffer_;
+		platform::d3d_texture2d_ptr            d3d_backbuffer_;
+		platform::d3d_texture2d_ptr            d3d_depth_stencil_buffer_;
 
 		// fooey
 		fooey::window_ptr window_;

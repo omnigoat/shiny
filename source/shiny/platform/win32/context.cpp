@@ -114,27 +114,29 @@ auto context_t::setup_rendertarget(uint width, uint height) -> void
 	// remove reference to old render-target
 	d3d_immediate_context_->OMSetRenderTargets(0, nullptr, nullptr);
 
-	// create render-target
-	atma::com_ptr<ID3D11Texture2D> backbuffer;
-	ATMA_ENSURE_IS(S_OK, dxgi_swap_chain_->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)backbuffer.assign()));
-	ATMA_ENSURE_IS(S_OK, d3d_device_->CreateRenderTargetView(backbuffer.get(), nullptr, d3d_render_target_.assign()));
+	// grab backbuffer from swap-chain and it's desc
+	ATMA_ENSURE_IS(S_OK, dxgi_swap_chain_->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)d3d_backbuffer_.assign()));
+	ATMA_ENSURE_IS(S_OK, d3d_device_->CreateRenderTargetView(d3d_backbuffer_.get(), nullptr, d3d_render_target_.assign()));
+	auto backbuffer_desc = D3D11_TEXTURE2D_DESC{};
+	d3d_backbuffer_->GetDesc(&backbuffer_desc);
 	
-	// create depth-stencil buffer & depth-stencil
-	D3D11_TEXTURE2D_DESC texdesc{width, height, 1, 1, DXGI_FORMAT_D24_UNORM_S8_UINT, {1, 0}, D3D11_USAGE_DEFAULT, D3D11_BIND_DEPTH_STENCIL, 0, 0};
+	// create depth-stencil buffer & depth-stencil-view
+	auto texdesc = D3D11_TEXTURE2D_DESC{backbuffer_desc.Width, backbuffer_desc.Height, 1, 1, DXGI_FORMAT_D24_UNORM_S8_UINT, {1, 0}, D3D11_USAGE_DEFAULT, D3D11_BIND_DEPTH_STENCIL, 0, 0};
 	ATMA_ENSURE_IS(S_OK, d3d_device_->CreateTexture2D(&texdesc, nullptr, d3d_depth_stencil_buffer_.assign()));
-	D3D11_DEPTH_STENCIL_VIEW_DESC depthdesc{texdesc.Format, D3D11_DSV_DIMENSION_TEXTURE2D, {0}};
+	auto depthdesc = D3D11_DEPTH_STENCIL_VIEW_DESC{texdesc.Format, D3D11_DSV_DIMENSION_TEXTURE2D, 0u, {0}};
 	ATMA_ENSURE_IS(S_OK, d3d_device_->CreateDepthStencilView(d3d_depth_stencil_buffer_.get(), &depthdesc, d3d_depth_stencil_.assign()));
 
 	// set render targets
 	d3d_immediate_context_->OMSetRenderTargets(1, &d3d_render_target_.get(), d3d_depth_stencil_.get());
 
 	// create viewport
-	D3D11_VIEWPORT vp{0, 0, (float)width, (float)height, 0, 1.f};
+	auto vp = D3D11_VIEWPORT{0, 0, (float)backbuffer_desc.Width, (float)backbuffer_desc.Height, 0, 1.f};
 	d3d_immediate_context_->RSSetViewports(1, &vp);
 }
 
 auto context_t::recreate_backbuffer() -> void
 {
+	d3d_backbuffer_.reset();
 	d3d_render_target_.reset();
 
 	ATMA_ENSURE_IS(S_OK, dxgi_swap_chain_->ResizeBuffers(1, 0, 0, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH));
@@ -145,7 +147,7 @@ auto context_t::update_display_mode() -> void
 	if (!requested_display_mode_)
 		return;
 
-	
+
 	// transition to fullscreen
 	if (current_display_mode_ == &windowed_display_mode_ && requested_display_mode_ == &requested_fullscreen_display_mode_)
 	{
