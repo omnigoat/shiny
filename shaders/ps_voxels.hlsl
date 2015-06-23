@@ -386,11 +386,8 @@ float4 main(ps_input_t input) : SV_Target
 
 	float3 across = cross(view_dir, float3(0.f, 1.f, 0.f));
 	float3 up = cross(view_dir, across);
-
-	float3 t = normalize(view_dir + up * input.pixel_delta.y + across * input.pixel_delta.x);
-
-	// debug: direction
-	//return float4(t, 1.f);
+	float aspect = proj[1][1] / proj[0][0];
+	float3 t = normalize(view_dir + up * input.pixel_delta.y + across * input.pixel_delta.x * aspect);
 
 	return brick_path(position.xyz, t, 0.00001f);
 }
