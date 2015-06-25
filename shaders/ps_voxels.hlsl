@@ -54,7 +54,7 @@ texture3D<float2> bricks : register(t1);
 
 SamplerState brick_sampler
 {
-	Filter = MIN_MAG_MIP_LINEAR;
+	Filter = MIN_MAG_MIP_POINT;
 	AddressU = Clamp;
 	AddressV = Clamp;
 	AddressW = Clamp;
@@ -62,7 +62,7 @@ SamplerState brick_sampler
 
 
 // volume delta, because floating-point
-static const float vdelta = 0.000001f;
+static const float vdelta = 0.00001f;
 
 static const float3 axis_lookup[] = {
 	float3(-1.f, -1.f, -1.f),
@@ -112,17 +112,9 @@ class aabb_t
 };
 
 
-aabb_t child_aabb(in aabb_t box, float3 pos)
-{
-	//uint index = child_index(pos);
-	uint index = 0;
-	aabb_t r ={box.data.xyz + axis_lookup[index] * box.data.w * .25f, box.data.w * .5f};
-	return r;
-}
-
 aabb_t child_aabb(in aabb_t box, uint index)
 {
-	aabb_t r ={box.data.xyz + axis_lookup[index] * box.data.w * .25f, box.data.w * .5f};
+	aabb_t r = {box.data.xyz + axis_lookup[index] * box.data.w * .25f, box.data.w * .5f};
 	return r;
 }
 
@@ -168,6 +160,7 @@ uint brick_index(in aabb_t box, float3 pos, float size, out aabb_t leaf_box)
 
 	for (float volume = 1.f; volume > size; volume *= 0.5f)
 	{
+		//leaf_box.data.w *= 1.0001f;
 		node_t n = nodepool[tile].nodes[child_offset];
 
 		tile         = n.child;
@@ -271,10 +264,10 @@ void brick_ray(in uint brick_id, in float3 brick_enter, in float3 brick_exit, in
 	// x/(y/(z/w)) === x/(wy/z) === xz/wy
 
 	// length of vector in fragment-space
-	float step = fragment_length * inv_brick_size;
+	float step = 0.5f * fragment_length / brick_size; // * inv_brick_size;
 
 	float pos;
-	for (pos = step*remainder; pos < 1.f && result.w < 1.f; pos += step)
+	for (pos = step * remainder; pos < 1.f; pos += step)
 	{
 		float3 fragment_position = lerp(fragment_enter, fragment_exit, pos) * inv_brickcache_width;
 		float2 voxelfull = bricks.SampleLevel(brick_sampler, brick_position + fragment_position, 0);
@@ -283,13 +276,20 @@ void brick_ray(in uint brick_id, in float3 brick_enter, in float3 brick_exit, in
 
 		if (c != 0)
 		{
+		/*
 			result = float4(
 				((c >> 0)  & 0xff) / 255.f,
 				((c >> 8)  & 0xff) / 255.f,
 				((c >> 16) & 0xff) / 255.f,
 				1.f);
-
-			result.xyzw = float4(yay, 1.f);
+		*/
+			result = float4(
+				((c & 0xff) / 255.f),
+				((c & 0xff00) >> 8) / 255.f,
+				((c & 0xff0000) >> 16) / 255.f,
+				1.f);
+			//result = float4(0.1f, 0.1f, 0.1f, 1.f);
+			//result.xyzw = float4(yay, 1.f);
 			break;
 		}
 
