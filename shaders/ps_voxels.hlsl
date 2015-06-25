@@ -235,12 +235,11 @@ float3 brick_origin(uint brick_id)
 //    brick_enter/brick_exit: [0.f, 1.f) coordinates of enter/exit positions.
 //    there are in relation to the brick itself
 //
+//    remainder: the percentage of a step we "overstepped"
+//
 void brick_ray(in uint brick_id, in float3 brick_enter, in float3 brick_exit, inout float4 colour, inout float remainder, in float3 yay)
 {
 	float4 result = colour;
-
-	//brick_enter *= 8.f;
-	//brick_exit *= 8.f;
 
 	// debug: brick_enter
 	//colour = float4(brick_enter, 1.f);
@@ -272,10 +271,10 @@ void brick_ray(in uint brick_id, in float3 brick_enter, in float3 brick_exit, in
 	// x/(y/(z/w)) === x/(wy/z) === xz/wy
 
 	// length of vector in fragment-space
-	float steps = fragment_length * inv_brick_size;
+	float step = fragment_length * inv_brick_size;
 
 	float pos;
-	for (pos = steps*remainder; pos < 1.f && result.w < 1.f; pos += steps)
+	for (pos = step*remainder; pos < 1.f && result.w < 1.f; pos += step)
 	{
 		float3 fragment_position = lerp(fragment_enter, fragment_exit, pos) * inv_brickcache_width;
 		float2 voxelfull = bricks.SampleLevel(brick_sampler, brick_position + fragment_position, 0);
@@ -299,7 +298,7 @@ void brick_ray(in uint brick_id, in float3 brick_enter, in float3 brick_exit, in
 		result.w = result.w + (1.0-result.w) * voxel.w;
 	}
 
-	remainder = (pos - 1.f) / steps;
+	remainder = (pos - 1.f) / step;
 	colour = result;
 }
 
@@ -378,16 +377,19 @@ static const float pi = 3.14159265f;
 
 float4 main(ps_input_t input) : SV_Target
 {
+	float p = pitch;
 #if 0
 	float3 view_dir = normalize(float3(inverse_view[2][0], inverse_view[2][1], inverse_view[2][2]) / inverse_view[3][3]);
 #else
-	float3 view_dir = {sin(yaw) * cos(pitch), sin(pitch), cos(pitch) * cos(yaw)};
+	float3 view_dir = {sin(yaw) * cos(p), -sin(p), cos(p) * cos(yaw)};
 #endif
 
-	float3 across = cross(view_dir, float3(0.f, 1.f, 0.f));
-	float3 up = cross(view_dir, across);
+	float hpi = 3.1415 * 0.5f;
+
+	float3 up    = {sin(yaw) * cos(p - hpi), -sin(p - hpi), cos(p - hpi) * cos(yaw)};
+	float3 right  = cross(up, view_dir);
 	float aspect = proj[1][1] / proj[0][0];
-	float3 t = normalize(view_dir + up * input.pixel_delta.y + across * input.pixel_delta.x * aspect);
+	float3 t = normalize(view_dir + up * input.pixel_delta.y * 0.5f + right * input.pixel_delta.x * aspect * 0.5f);
 
 	return brick_path(position.xyz, t, 0.00001f);
 }

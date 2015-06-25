@@ -98,13 +98,12 @@ auto voxelization_plugin_t::main_setup() -> void
 	setup_rendering();
 }
 
+auto const gridsize = 128;
+
 auto voxelization_plugin_t::setup_voxelization() -> void
 {
 	auto sf = shelf::file_t{"../../data/dragon.obj"};
 	auto obj = obj_model_t{sf};
-
-	// try for 128^3 grid
-	auto const gridsize = 64;
 	
 	auto numbers = atma::vector<int>{1, 2, 3, 4, 5};
 	auto numbers2 = atma::vector<int>{};
@@ -236,7 +235,6 @@ auto voxelization_plugin_t::setup_svo() -> void
 	cs_write_fragments = cs_from_file("x64/Debug/sparse_octree_write_fragments.cso");
 
 
-	auto const gridsize = 64;
 	auto const brick_edge_size = 8u;
 	auto const brick_morton_width = brick_edge_size * brick_edge_size * brick_edge_size;
 	auto const levels_required = aml::log2(gridsize / brick_edge_size);

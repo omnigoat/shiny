@@ -69,7 +69,7 @@ auto camera_t::fov() const -> float
 
 auto camera_t::pitch() const -> float
 {
-	return std::asin(view_dir_.y);
+	return std::asin(-view_dir_.y);
 }
 
 auto camera_t::yaw() const -> float

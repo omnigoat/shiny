@@ -16,7 +16,7 @@ ps_input_t main(in vs_input_t input)
 {
 	ps_input_t output = {
 		input.position,
-		float3(-input.position.xy, 0.5f)
+		float3(input.position.xy, 0.5f)
 	};
 
 	return output;
