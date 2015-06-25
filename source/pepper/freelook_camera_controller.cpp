@@ -16,6 +16,7 @@ freelook_camera_controller_t::freelook_camera_controller_t(fooey::window_ptr con
 	, phi_(), theta_()
 	, WASD_{}
 	, MB_()
+	, ctrl_()
 	, old_x_(-1), old_y_(-1)
 {
 	window_->on({
@@ -39,7 +40,9 @@ freelook_camera_controller_t::freelook_camera_controller_t(fooey::window_ptr con
 			old_y_ = e.y();
 		}},
 
-		{"mouse-down.left", [&]{
+		{"mouse-down.left", [&](fooey::events::mouse_t const& e) {
+			old_x_ = e.x();
+			old_y_ = e.y();
 			MB_ = true;
 		}},
 
@@ -57,17 +60,13 @@ freelook_camera_controller_t::freelook_camera_controller_t(fooey::window_ptr con
 	window->key_state.on_key_down(fooey::key_t::A, [&] { WASD_[1] = true; });
 	window->key_state.on_key_down(fooey::key_t::S, [&] { WASD_[2] = true; });
 	window->key_state.on_key_down(fooey::key_t::D, [&] { WASD_[3] = true; });
+	window->key_state.on_key_down(fooey::key_t::Ctrl, [&] { ctrl_ = true; });
 
 	window->key_state.on_key_up(fooey::key_t::W, [&] { WASD_[0] = false; });
 	window->key_state.on_key_up(fooey::key_t::A, [&] { WASD_[1] = false; });
 	window->key_state.on_key_up(fooey::key_t::S, [&] { WASD_[2] = false; });
 	window->key_state.on_key_up(fooey::key_t::D, [&] { WASD_[3] = false; });
-
-#if 0
-	camera_ = shiny::camera_t(
-		aml::look_at(position_, position_ + walk_direction_, aml::vector4f {0.f, 1.f, 0.f, 0.f}),
-		aml::perspective_fov(aml::pi_over_two, (float)window_->height() / window_->width(), 0.001f, 100.f));
-#endif
+	window->key_state.on_key_up(fooey::key_t::Ctrl, [&] { ctrl_ = false; });
 }
 
 auto freelook_camera_controller_t::camera() const -> shiny::camera_t const&
@@ -89,7 +88,10 @@ auto freelook_camera_controller_t::update(uint timestep_in_ms) -> void
 	strafe_direction_ = aml::cross_product(aml::vector4f(0.f, 1.f, 0.f, 0.f), walk_direction_);
 	auto up = aml::cross_product(walk_direction_, strafe_direction_);
 
-	auto const walk_speed = 0.02f;
+	auto walk_speed = 0.02f;
+	if (ctrl_)
+		walk_speed *= 0.1f;
+
 	if (WASD_[0]) position_ += walk_direction_ * walk_speed;
 	if (WASD_[1]) position_ -= strafe_direction_ * walk_speed;
 	if (WASD_[2]) position_ -= walk_direction_ * walk_speed;

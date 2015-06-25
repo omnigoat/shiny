@@ -25,7 +25,8 @@ namespace pepper
 		std::atomic<bool> MB_;
 		float phi_, theta_;
 		int old_x_, old_y_;
-		
+		bool ctrl_;
+
 		aml::vector4f position_;
 		aml::vector4f walk_direction_;
 		aml::vector4f strafe_direction_;
