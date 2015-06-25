@@ -48,6 +48,28 @@ context_t::context_t(runtime_t& runtime, fooey::window_ptr const& window, uint a
 	setup_rendertarget(window->drawcontext_width(), window->drawcontext_height());
 
 	bind_events(window);
+
+
+
+
+	// SERIOUSLY, we need to think of a better way to deal with default samplers
+	{
+		// samplers
+		ID3D11SamplerState* samplers[D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT];
+		for (auto i = 0; i != D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT; ++i)
+		{
+			auto desc = D3D11_SAMPLER_DESC{
+				D3D11_FILTER_MIN_MAG_MIP_LINEAR,
+				D3D11_TEXTURE_ADDRESS_CLAMP, D3D11_TEXTURE_ADDRESS_CLAMP, D3D11_TEXTURE_ADDRESS_CLAMP,
+				0.f, 1, D3D11_COMPARISON_NEVER, {0.f, 0.f, 0.f, 0.f}, -FLT_MAX, FLT_MAX};
+			d3d_device_->CreateSamplerState(&desc, &samplers[i]);
+		}
+
+		d3d_immediate_context_->PSSetSamplers(0, D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT, samplers);
+
+		for (auto i = 0; i != D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT; ++i)
+			samplers[i]->Release();
+	}
 }
 
 context_t::~context_t()
