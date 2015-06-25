@@ -59,7 +59,7 @@ context_t::context_t(runtime_t& runtime, fooey::window_ptr const& window, uint a
 		for (auto i = 0; i != D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT; ++i)
 		{
 			auto desc = D3D11_SAMPLER_DESC{
-				D3D11_FILTER_MIN_MAG_MIP_LINEAR,
+				D3D11_FILTER_MIN_MAG_MIP_POINT,
 				D3D11_TEXTURE_ADDRESS_CLAMP, D3D11_TEXTURE_ADDRESS_CLAMP, D3D11_TEXTURE_ADDRESS_CLAMP,
 				0.f, 1, D3D11_COMPARISON_NEVER, {0.f, 0.f, 0.f, 0.f}, -FLT_MAX, FLT_MAX};
 			d3d_device_->CreateSamplerState(&desc, &samplers[i]);
