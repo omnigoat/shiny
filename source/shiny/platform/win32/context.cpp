@@ -388,9 +388,7 @@ auto context_t::immediate_vs_set_vertex_shader(vertex_shader_cptr const& vs) -> 
 
 auto context_t::immediate_vs_set_constant_buffers(bound_constant_buffers_t const& cbs) -> void
 {
-	for (auto const& x : cbs) {
-		d3d_immediate_context_->VSSetConstantBuffers(x.first, 1, &x.second->d3d_buffer().get());
-	}
+	vs_cbs_ = cbs;
 }
 
 auto context_t::immediate_vs_set_resources(bound_resources_t const& rs) -> void
