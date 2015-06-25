@@ -763,7 +763,13 @@ auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
 
 	scene.draw(
 		sdc::input_assembly_stage(vb_quad->data_declaration(), vb_quad),
-		sdc::vertex_stage(vs_voxels),
+		sdc::vertex_stage(vs_voxels,
+			shiny::bound_constant_buffers_t{
+				{0, scene.scene_constant_buffer()},
+				{2, cb}
+			}
+		),
+
 		sdc::fragment_stage(fs_voxels, 
 			shiny::bound_constant_buffers_t{
 				{0, scene.scene_constant_buffer()},

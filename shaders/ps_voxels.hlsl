@@ -30,7 +30,7 @@ cbuffer buf_voxel : register(b2)
 struct ps_input_t
 {
 	float4 blah : SV_Position;
-	float3 pixel_delta : PixelDelta;
+	float3 view_dir : ViewDirection;
 };
 
 
@@ -377,15 +377,5 @@ static const float pi = 3.14159265f;
 
 float4 main(ps_input_t input) : SV_Target
 {
-	float up_pitch = pitch - 3.1415 * 0.5f;
-
-	float3 view_dir = {sin(yaw) * cos(pitch), -sin(pitch), cos(pitch) * cos(yaw)};
-	float3 up       = {sin(yaw) * cos(up_pitch), -sin(up_pitch), cos(up_pitch) * cos(yaw)};
-	float3 right    = cross(up, view_dir);
-
-	float aspect  = proj[1][1] / proj[0][0];
-	float inv_fov = 1.f / (atan(1.f / proj[0][0]) * 2.f);
-	float3 t = normalize(view_dir + up * input.pixel_delta.y * inv_fov + right * input.pixel_delta.x * aspect * inv_fov);
-
-	return brick_path(position.xyz, t, 0.00001f);
+	return brick_path(position.xyz, normalize(input.view_dir), 0.00001f);
 }
