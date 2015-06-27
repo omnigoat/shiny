@@ -126,28 +126,17 @@ bool intersection(in aabb_t box, in float3 position, in float3 dir, out float3 e
 {
 	float3 inv_dir = 1.f / dir;
 
-	float tx1 = (box.min().x - position.x) * inv_dir.x;
-	float tx2 = (box.max().x - position.x) * inv_dir.x;
-	float tx_min = min(tx1, tx2);
-	float tx_max = max(tx1, tx2);
+	float3 near = (box.min() - position) * inv_dir;
+	float3 far  = (box.max() - position) * inv_dir;
+	float3 tmin = min(near, far);
+	float3 tmax = max(near, far);
+	float rmin = max(tmin.x, max(tmin.y, tmin.z));
+	float rmax = min(tmax.x, min(tmax.y, tmax.z));
 
-	float ty1 = (box.min().y - position.y) * inv_dir.y;
-	float ty2 = (box.max().y - position.y) * inv_dir.y;
-	float ty_min = min(ty1, ty2);
-	float ty_max = max(ty1, ty2);
+	enter = position + dir * rmin;
+	exit  = position + dir * rmax;
 
-	float tz1 = (box.min().z - position.z) * inv_dir.z;
-	float tz2 = (box.max().z - position.z) * inv_dir.z;
-	float tz_min = min(tz1, tz2);
-	float tz_max = max(tz1, tz2);
-
-	float tmin = max(tx_min, max(ty_min, tz_min));
-	float tmax = min(tx_max, min(ty_max, tz_max));
-
-	enter = position + dir * tmin;
-	exit  = position + dir * tmax;
-
-	return tmin < tmax && 0.f < tmax;
+	return rmin < rmax && 0.f < rmax;
 }
 
 uint brick_index(in aabb_t box, float3 pos, float size, out aabb_t leaf_box)
