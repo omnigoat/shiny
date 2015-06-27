@@ -118,10 +118,6 @@ aabb_t child_aabb(in aabb_t box, uint index)
 	return r;
 }
 
-static const aabb_t box = {0.f, 0.f, 0.f, 1.f};
-
-//static const float inv_brick_countf = 1.f / brickcache_width;
-
 bool intersection(in aabb_t box, in float3 position, in float3 dir, out float3 enter, out float3 exit)
 {
 	float3 inv_dir = 1.f / dir;
@@ -149,7 +145,6 @@ uint brick_index(in aabb_t box, float3 pos, float size, out aabb_t leaf_box)
 
 	for (float volume = 1.f; volume > size; volume *= 0.5f)
 	{
-		//leaf_box.data.w *= 1.0001f;
 		node_t n = nodepool[tile].nodes[child_offset];
 
 		tile         = n.child;
@@ -219,7 +214,7 @@ float3 brick_origin(uint brick_id)
 //
 //    remainder: the percentage of a step we "overstepped"
 //
-void brick_ray(in uint brick_id, in float3 brick_enter, in float3 brick_exit, inout float4 colour, inout float remainder, in float3 yay)
+void brick_ray(in uint brick_id, in float3 brick_enter, in float3 brick_exit, inout float4 colour)
 {
 	float4 result = colour;
 
@@ -244,19 +239,19 @@ void brick_ray(in uint brick_id, in float3 brick_enter, in float3 brick_exit, in
 	//colour = float4(fragment_enter, 1.f);
 	//return;
 
-	// DON'T REMOVE THIS IT WILL KILL COMPUTERS
-	if (fragment_length < 0.1)
-		return;
+	// STEPPING
+	// ----------
+	//   : 1/(3 * brick-size) is a nice step for isotropic voxels.
+	//   : we take less steps when we intersect less of the brick
+	//   : everything is over 1.f, because we need to lerp between our fragment enter & exit
+	//
+	float stepping_percentage = fragment_length / (1.4142f * brick_multi.x);
 
-
-	// x/(y/z) === (xz)/y
-	// x/(y/(z/w)) === x/(wy/z) === xz/wy
-
-	// length of vector in fragment-space
-	float step = 0.5f * fragment_length / brick_size; // * inv_brick_size;
-
-	float pos;
-	for (pos = step * remainder; pos < 1.f; pos += step)
+	float step = 1.f / (3 * brick_size * stepping_percentage);
+	
+	
+	float pos = 0.f;
+	for ( ; pos < 1.f; pos += step)
 	{
 		float3 fragment_position = lerp(fragment_enter, fragment_exit, pos) * inv_brickcache_width;
 		float2 voxelfull = bricks.SampleLevel(brick_sampler, brick_position + fragment_position, 0);
@@ -265,29 +260,16 @@ void brick_ray(in uint brick_id, in float3 brick_enter, in float3 brick_exit, in
 
 		if (c != 0)
 		{
-		/*
 			result = float4(
 				((c >> 0)  & 0xff) / 255.f,
 				((c >> 8)  & 0xff) / 255.f,
 				((c >> 16) & 0xff) / 255.f,
 				1.f);
-		*/
-			result = float4(
-				((c & 0xff) / 255.f),
-				((c & 0xff00) >> 8) / 255.f,
-				((c & 0xff0000) >> 16) / 255.f,
-				1.f);
-			//result = float4(0.1f, 0.1f, 0.1f, 1.f);
-			//result.xyzw = float4(yay, 1.f);
+
 			break;
 		}
-
-		float4 voxel = voxelfull.xxxx;
-		result.xyz += ((1.0-result.w)*(1.0-result.w) * voxel.xyz)/(1.0 - result.xyz * voxel.xyz);
-		result.w = result.w + (1.0-result.w) * voxel.w;
 	}
 
-	remainder = (pos - 1.f) / step;
 	colour = result;
 }
 
@@ -298,9 +280,7 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 	float size = 0.005f; //* length(0.f - position);
 	float3 hit_enter, hit_exit;
 
-	if (box.contains(position))
-		hit_enter = position;
-	else if (!intersection(box, position, normal, hit_enter, hit_exit))
+	if (!intersection(box, position, normal, hit_enter, hit_exit))
 		discard;
 
 	// debug: hit-enter
@@ -309,12 +289,10 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 	// debug: hit-exit
 	//return float4(hit_exit, 1.f);
 
-	float len = length(hit_enter - position);
-	uint reps = 0;
 	float4 color = {0.f, 0.f, 0.f, 0.f};
-	float rem = 0.f;
 
-	while (reps != 64 && color.w < 1.f && box.contains(hit_enter))
+	uint reps = 0;
+	for ( ; reps != 64 && color.w < 1.f && box.contains(hit_enter); ++reps)
 	{
 		aabb_t leaf_box;
 		float3 leaf_enter;
@@ -323,23 +301,18 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 		uint brick_id = brick_index(box, hit_enter, size, leaf_box);
 		if (!intersection(leaf_box, position, normal, leaf_enter, leaf_exit))
 			break;
+
 		float len = length(leaf_exit - hit_enter);
 
-		if (brick_id != 0)
+		if (brick_id != 0 /*&& !leaf_box.contains(position)*/)
 		{
 			float3 brick_enter = (leaf_enter - leaf_box.min()) / leaf_box.width();
 			float3 brick_exit  = (leaf_exit  - leaf_box.min()) / leaf_box.width();
-			brick_ray(brick_id, brick_enter, brick_exit, color, rem, hit_enter * 0.5f + 0.5f);
-		}
-		else
-		{
-			rem = 0.f;
+			brick_ray(brick_id, brick_enter, brick_exit, color);
 		}
 
 		hit_enter = hit_enter + len * normal * 1.01f;
-		++reps;
-	} 
-	color.w = 1.f;
+	}
 
 	// debug: number of nodes traversed
 	//return float4(reps / 16.f, 0.f, 0.f, 1.f);
