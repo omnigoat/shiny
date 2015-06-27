@@ -133,8 +133,8 @@ bool intersection(in aabb_t box, in float3 position, in float3 dir, out float3 e
 	float rmin = max(tmin.x, max(tmin.y, tmin.z));
 	float rmax = min(tmax.x, min(tmax.y, tmax.z));
 
-	enter = position + dir * rmin;
-	exit  = position + dir * rmax;
+	enter = position + dir * max(rmin, 0.f);
+	exit  = position + dir * max(rmax, 0.f);
 
 	return rmin < rmax && 0.f < rmax;
 }
