@@ -53,20 +53,10 @@ namespace shiny
 			rendertarget[0].src_blend_alpha = src_blend_alpha;
 		}
 
-		static blend_state_t opaque;
-		static blend_state_t nonopaque;
-		//static auto opaque() -> blend_state_t
-		//{
-			//return blend_state_t{blending_t::one_minus_src_alpha, blending_t::zero, blending_t::src_alpha, blending_t::zero};
-		//}
-
-		//static auto transparent() -> blend_state_t
-		//{
-		//	return blend_state_t{blending_t::one_minus_src_alpha, blending_t::zero, blending_t::src_alpha, blending_t::one};
-		//}
+		static blend_state_t const opaque;
 
 		// all targets use first target's properties
-		bool multitarget_collapse = false;
+		bool multitarget_collapse;
 
 		rendertarget_blend_state_t rendertarget[8];
 	};

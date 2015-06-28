@@ -53,6 +53,7 @@ context_t::context_t(runtime_t& runtime, fooey::window_ptr const& window, uint a
 
 
 	// SERIOUSLY, we need to think of a better way to deal with default samplers
+	//if (false)
 	{
 		// samplers
 		ID3D11SamplerState* samplers[D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT];
@@ -343,26 +344,13 @@ auto context_t::immediate_ia_set_vertex_buffer(vertex_buffer_cptr const& vb) -> 
 	ATMA_ASSERT(vb->data_declaration() == ia_dd_);
 	ia_vb_ = vb;
 
-	UINT stride = (UINT)vb->data_declaration()->stride(), offset = 0;
-	d3d_immediate_context_->IASetVertexBuffers(0, 1, &vb->d3d_buffer().get(), &stride, &offset);
+	//UINT stride = (UINT)vb->data_declaration()->stride(), offset = 0;
+	//d3d_immediate_context_->IASetVertexBuffers(0, 1, &vb->d3d_buffer().get(), &stride, &offset);
 }
 
 auto context_t::immediate_ia_set_index_buffer(index_buffer_cptr const& ib) -> void
 {
 	ia_ib_ = ib;
-
-#if 0
-	if (ib)
-	{
-		ia_ib_ = ib;
-		auto fmt = platform::dxgi_format_of(ib->index_format());
-		d3d_immediate_context_->IASetIndexBuffer(ib->d3d_buffer().get(), fmt, 0);
-	}
-	else
-	{
-		d3d_immediate_context_->IASetIndexBuffer(nullptr, DXGI_FORMAT_UNKNOWN, 0);
-	}
-#endif
 }
 
 auto context_t::immediate_ia_set_topology(topology_t t) -> void
@@ -459,7 +447,7 @@ auto context_t::immediate_draw() -> void
 		ATMA_ENSURE(vs_shader_);
 		ATMA_ENSURE(vs_shader_->data_declaration() == ia_vb_->data_declaration());
 		d3d_immediate_context_->VSSetShader(vs_shader_->d3d_vs().get(), nullptr, 0);
-
+		//d3d_immeidate_context_->
 
 		ID3D11Buffer* cbs[D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT]{};
 		for (auto const& cb : vs_cbs_)
@@ -710,4 +698,8 @@ auto context_t::signal_rs_constant_buffer_upload(constant_buffer_ptr const& res,
 		memcpy(sr.data, mem.begin(), mem.size());
 	});
 }
+
+
+shiny::blend_state_t const shiny::blend_state_t::opaque = shiny::blend_state_t{blending_t::one_minus_src_alpha, blending_t::zero, blending_t::src_alpha, blending_t::zero};
+
 
