@@ -57,7 +57,7 @@ obj_model_t::obj_model_t(shelf::file_t& file)
 			case 'v': {
 				float x, y, z;
 				sscanf(str, "v %f %f %f", &x, &y, &z);
-				verts_.push_back(aml::point4f(x, y, -z)); // reflect z because RH -> LH
+				verts_.push_back(aml::point4f(x, y, z)); // reflect z because RH -> LH
 				break;
 			}
 
@@ -98,20 +98,13 @@ auto voxelization_plugin_t::main_setup() -> void
 	setup_rendering();
 }
 
-auto const gridsize = 128;
+auto const gridsize = 256;
 
 auto voxelization_plugin_t::setup_voxelization() -> void
 {
 	auto sf = shelf::file_t{"../../data/dragon.obj"};
 	auto obj = obj_model_t{sf};
 	
-	auto numbers = atma::vector<int>{1, 2, 3, 4, 5};
-	auto numbers2 = atma::vector<int>{};
-	numbers2.attach_buffer(numbers.detach_buffer());
-	auto mem = atma::unique_memory_t{};
-	mem = numbers2.detach_buffer();
-
-
 	// get the real-world bounding box of the model
 	auto bbmin = aml::point4f(FLT_MAX, FLT_MAX, FLT_MAX), bbmax = aml::point4f(-FLT_MAX, -FLT_MAX, -FLT_MAX);
 
@@ -193,9 +186,6 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 		shiny::element_format_t::unknown);
 
 #if 1
-	std::vector<aml::vector4f> vertices;
-	std::vector<uint32> indices;
-
 	// load .obj triangles into vb/ib so that we can see the original mesh
 	{
 		auto mi = atma::unique_memory_t{sizeof(uint32) * obj.faces().size() * 3};
@@ -204,9 +194,9 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 		size_t i = 0;
 		for (auto const& f : obj.faces())
 		{
-			tmi[i * 3 + 2] = f.x;
+			tmi[i * 3 + 0] = f.x;
 			tmi[i * 3 + 1] = f.y;
-			tmi[i * 3 + 0] = f.z;
+			tmi[i * 3 + 2] = f.z;
 			++i;
 		}
 
@@ -353,13 +343,13 @@ auto voxelization_plugin_t::setup_svo() -> void
 			scc::dispatch(cs_mark, (uint)fragments.size() / 64, 1, 1),
 			scc::dispatch(cs_allocate, d, d, d));
 
-
+#if 0
 		ctx->signal_copy_buffer(stb, nodecache);
 		ctx->signal_res_map(stb, 0, shiny::map_type_t::read, [&](shiny::mapped_subresource_t& sr)
 		{
 			int breakpoint = 4;
 		});
-			
+#endif
 	}
 
 	// 1) mark nodes' brick_ids
@@ -381,13 +371,16 @@ auto voxelization_plugin_t::setup_svo() -> void
 			scc::dispatch(cs_allocate, dim, dim, dim),
 			scc::dispatch(cs_write_fragments, (uint)fragments.size() / 64, 1, 1));
 
+#if 0
 		ctx->signal_copy_buffer(stb, nodecache);
 		ctx->signal_res_map(stb, 0, shiny::map_type_t::read, [&](shiny::mapped_subresource_t& sr)
 		{
 			int breakpoint = 4;
 		});
+#endif
 	}
 
+#if 0
 	ctx->signal_copy_buffer(brick_readback, brickcache);
 
 	struct frag_t
@@ -413,7 +406,7 @@ auto voxelization_plugin_t::setup_svo() -> void
 
 		int breakpoint = 4;
 	});
-
+#endif
 
 #if 0
 	auto fragments3d = std::vector<uint32[8 * 8 * 8]>{16 * 16 * 16};
@@ -536,7 +529,7 @@ auto voxelization_plugin_t::setup_svo() -> void
 				indices.push_back(fragidx * 8 + *idx);
 
 			++fragidx;
-#elif 1 // visualization of svo-fragments via svo-nodes
+#elif 0 // visualization of svo-fragments via svo-nodes
 			auto t3d_width = brickcache->width();
 			auto t3d_height = brickcache->height();
 			auto t3d_slice = t3d_width * t3d_height;
@@ -588,7 +581,7 @@ auto voxelization_plugin_t::setup_svo() -> void
 
 				++fragidx;
 			}
-#else
+#elif 0
 			auto const& frags = fragments3d[x->brick_idx];
 			auto s2 = aml::matrix4f::scale(1.f / 128.f);
 
@@ -639,7 +632,7 @@ auto voxelization_plugin_t::setup_svo() -> void
 
 
 
-#if _DEBUG
+#if 0
 	
 	ctx->signal_copy_buffer(stb, nodecache);
 	ctx->signal_res_map(stb, 0, shiny::map_type_t::read, [&](shiny::mapped_subresource_t& sr)
@@ -651,7 +644,7 @@ auto voxelization_plugin_t::setup_svo() -> void
 		//memcpy(n2.data(), sr.data, fullsize);
 		int breakpoint = 4;
 
-#if 1
+#if 0
 		render_block((node_t*)sr.data, 0, aml::aabc_t{0.f, 0.f, 0.f, 1.f});
 
 		this->vb = shiny::create_vertex_buffer(this->ctx, shiny::resource_storage_t::immutable, dd_position_color(), (uint)vertices.size() / 2, &vertices[0]);
@@ -671,7 +664,7 @@ auto voxelization_plugin_t::setup_svo() -> void
 			auto scale = aml::matrix4f::scale(1 / 128.f);
 			auto translate = aml::matrix4f::translate(aml::vector4f{(float)x, (float)y, (float)z});
 			auto cmp = translate * scale;
-			&
+
 			for (int i = 0; i != 8; ++i)
 			{
 				auto v = aml::vector4f{cube_vertices()[i * 8 + 0], cube_vertices()[i * 8 + 1], cube_vertices()[i * 8 + 2], cube_vertices()[i * 8 + 3]};
@@ -734,18 +727,18 @@ auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
 {
 	namespace sdc = shiny::draw_commands;
 
-	//auto b = ctx->make_blender(shiny::blend_state_t::transparent());
+	auto b = ctx->make_blender(shiny::blend_state_t::opaque);
 	//auto oms = shiny::output_merger_state_t{shiny::blend_state_t::opaque, shiny::depth_state_t::depth_on};
 
-#if 0
+#if 1
 	scene.draw(
-		sdc::input_assembly_stage(dd_position_color(), vb, ib),
+		sdc::input_assembly_stage(vb->data_declaration(), vb, ib),
 		sdc::vertex_stage(vs_flat(), shiny::bound_constant_buffers_t{
 			{0, scene.scene_constant_buffer()}
 		}),
-		//sdc::geometry_stage(gs),
-		sdc::fragment_stage(fs_flat()),
-		sdc::output_merger_stage(shiny::blend_state_t::opaque)
+		sdc::geometry_stage(gs),
+		sdc::fragment_stage(fs_flat())
+		//, sdc::output_merger_stage(b)
 	);
 #else
 	struct blah
