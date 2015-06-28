@@ -94,7 +94,7 @@ void main(uint3 DTid : SV_DispatchThreadID)
 	
 	uint3 thing;
 	morton_decoding32(voxel, thing.x, thing.y, thing.z);
-	//thing *= 2.f;
+	thing *= 0.5f;
 	uint cc = (thing.x & 0xff) | ((thing.y & 0xff) << 8) | ((thing.z & 0xff) << 16) | (0xff << 24);
 
 	// encode color to f32

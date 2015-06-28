@@ -378,6 +378,9 @@
     <FxCompile Include="..\..\shaders\gs_normal.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
+    <FxCompile Include="..\..\shaders\gs_voxelization.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\.gitignore" />
