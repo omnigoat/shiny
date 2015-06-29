@@ -99,7 +99,7 @@ auto voxelization_plugin_t::main_setup() -> void
 	setup_rendering();
 }
 
-auto const gridsize = 512;
+auto const gridsize = 256;
 
 auto voxelization_plugin_t::setup_voxelization() -> void
 {
@@ -126,13 +126,21 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 
 	// expand to a cube
 	auto gridwidth = std::max({tri_dp.x, tri_dp.y, tri_dp.z});
-	auto halfgridwidth = gridwidth / 2.f;
-
-	auto voxelwidth = gridwidth / gridsize;
+	auto voxelwidth = (gridwidth / gridsize);
+	auto voxel_halfwidth = std::sqrtf(voxelwidth * voxelwidth) / 0.5f;
 
 	for (auto const& f : obj.faces())
 	{
 		auto t = obj.triangle_of(f);
+
+		// expand triangle edges by half voxel-width
+#if 1
+		auto tmid = (t.v0 + t.v1 + t.v2) / 3.f;
+		t.v0 = tmid + (t.v0 - tmid) * (1.f + voxel_halfwidth);
+		t.v1 = tmid + (t.v1 - tmid) * (1.f + voxel_halfwidth);
+		t.v2 = tmid + (t.v2 - tmid) * (1.f + voxel_halfwidth);
+#endif
+
 		auto tbb = t.aabb();
 		auto info = aml::aabb_triangle_intersection_info_t{aml::vector4f{voxelwidth, voxelwidth, voxelwidth}, t.v0, t.v1, t.v2};
 
@@ -160,7 +168,8 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 						bbmin.z + z * voxelwidth + voxelwidth / 2.f,
 						voxelwidth};
 
-					if (aml::intersect_aabb_triangle(aabc, info))
+					// bounding-box test
+					if (intersect_aabbs(aabc, t.aabb()) || aml::intersect_aabb_triangle(aabc, info))
 						fragments.push_back({moxi::morton_encoding32(x, y, z)});
 				}
 			}
@@ -285,7 +294,7 @@ auto voxelization_plugin_t::setup_svo() -> void
 	brickcache = shiny::make_texture3d(ctx,
 		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
 		shiny::resource_storage_t::persistant,
-		shiny::texture3d_dimensions_t::cube(shiny::element_format_t::f32x2, gridsize, 1));
+		shiny::texture3d_dimensions_t::cube(shiny::element_format_t::f32x2, gridsize / 2, 1));
 
 	brickcache_view = shiny::make_resource_view(brickcache,
 		shiny::resource_view_type_t::compute,
@@ -398,7 +407,7 @@ auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
 {
 	namespace sdc = shiny::draw_commands;
 
-#if 1
+#if 0
 	scene.draw(
 		sdc::input_assembly_stage(vb->data_declaration(), vb, ib),
 		sdc::vertex_stage(vs_flat(), shiny::bound_constant_buffers_t{
@@ -407,7 +416,8 @@ auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
 		sdc::geometry_stage(gs),
 		sdc::fragment_stage(fs_flat())
 	);
-#else
+#endif
+
 	struct blah
 	{
 		aml::vector4f position;
@@ -442,5 +452,5 @@ auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
 			}
 		)
 	);
-#endif
+
 }
