@@ -67,6 +67,11 @@ namespace sandbox
 		fragments_t fragments;
 		shiny::buffer_ptr voxelbuf;
 		shiny::resource_view_ptr voxelbuf_view;
+		shiny::buffer_ptr fragments_buf;
+		shiny::resource_view_ptr fragments_view;
+		shiny::vertex_shader_ptr vs_voxelize;
+		shiny::geometry_shader_ptr gs_voxelize;
+		shiny::fragment_shader_ptr fs_voxelize;
 
 		// svo
 		using nodes_t = std::vector<node_t>;

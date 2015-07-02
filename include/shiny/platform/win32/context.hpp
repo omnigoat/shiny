@@ -92,6 +92,9 @@ namespace shiny
 
 		// geometry-stage
 		auto immediate_gs_set_geometry_shader(geometry_shader_cptr const&) -> void;
+		auto immediate_gs_set_constant_buffers(bound_constant_buffers_t const&) -> void;
+		auto immediate_gs_set_input_views(bound_input_views_t const&) -> void;
+		auto immediate_gs_set_compute_views(bound_compute_views_t const&) -> void;
 
 		// vertex-stage
 		auto immediate_vs_set_vertex_shader(vertex_shader_cptr const&) -> void;
@@ -101,7 +104,6 @@ namespace shiny
 		// fragment-stage
 		auto immediate_fs_set_fragment_shader(fragment_shader_cptr const&) -> void;
 		auto immediate_fs_set_constant_buffers(bound_constant_buffers_t const&) -> void;
-		//auto immediate_fs_set_resources(bound_resources_t const&) -> void;
 		auto immediate_fs_set_input_views(bound_input_views_t const&) -> void;
 		auto immediate_fs_set_compute_views(bound_compute_views_t const&) -> void;
 

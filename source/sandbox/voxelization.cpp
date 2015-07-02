@@ -106,6 +106,84 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 	auto sf = shelf::file_t{"../../data/dragon.obj"};
 	auto obj = obj_model_t{sf};
 	
+	{
+		auto mi = atma::unique_memory_t{sizeof(uint32) * obj.faces().size() * 3};
+		auto tmi = atma::memory_view_t<decltype(mi), uint32>{mi};
+
+		size_t i = 0;
+		for (auto const& f : obj.faces())
+		{
+			tmi[i * 3 + 0] = f.x;
+			tmi[i * 3 + 1] = f.y;
+			tmi[i * 3 + 2] = f.z;
+			++i;
+		}
+
+		vb = shiny::create_vertex_buffer(ctx, shiny::resource_storage_t::immutable, dd_position(), (uint)obj.vertices().size(), &obj.vertices()[0]);
+		ib = shiny::create_index_buffer(ctx, shiny::resource_storage_t::immutable, shiny::index_format_t::index32, (uint)obj.faces().size() * 3, mi.begin());
+
+
+
+
+		auto gs_from_file = [&](atma::string const& filename)
+		{
+			auto f = atma::filesystem::file_t(filename.c_str());
+			auto fmem = f.read_into_memory();
+			return shiny::create_geometry_shader(ctx, fmem, true);
+		};
+
+		// vertex-shader
+		{
+			auto f = atma::filesystem::file_t("../../shaders/vs_voxelize.hlsl");
+			vs_voxelize = shiny::create_vertex_shader(ctx, vb->data_declaration(), f.read_into_memory(), false);
+		}
+
+		// geometry-shader
+		{
+			auto f = atma::filesystem::file_t("../../shaders/gs_voxelize.hlsl");
+			gs_voxelize = shiny::create_geometry_shader(ctx, f.read_into_memory(), false);
+		}
+
+		// fragment-shader
+		if (false)
+		{
+			auto f = atma::filesystem::file_t("../../shaders/fs_voxelize.hlsl");
+			fs_voxelize = shiny::create_fragment_shader(ctx, f.read_into_memory(), false);
+		}
+
+
+
+		// fragments buffer
+		fragments_buf = shiny::make_buffer(ctx,
+			shiny::resource_type_t::structured_buffer,
+			shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
+			shiny::resource_storage_t::persistant,
+			shiny::buffer_dimensions_t{sizeof(uint32), 5 * 1024 * 1024},
+			shiny::buffer_data_t{});
+
+		fragments_view = shiny::make_resource_view(fragments_buf,
+			shiny::resource_view_type_t::compute,
+			shiny::element_format_t::unknown);
+
+		namespace sdc = shiny::draw_commands;
+
+		shiny::signal_draw(ctx,
+
+			sdc::input_assembly_stage(vb->data_declaration(), vb, ib),
+			sdc::vertex_stage(vs_voxelize),
+			sdc::geometry_stage(gs_voxelize),
+
+			sdc::fragment_stage(
+				fs_voxelize,
+				shiny::bound_compute_views_t{
+					{0, fragments_view}
+				}
+			)
+		);
+	}
+
+	
+
 	// get the real-world bounding box of the model
 	auto bbmin = aml::point4f(FLT_MAX, FLT_MAX, FLT_MAX), bbmax = aml::point4f(-FLT_MAX, -FLT_MAX, -FLT_MAX);
 
