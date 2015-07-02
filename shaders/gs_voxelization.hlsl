@@ -8,7 +8,15 @@ struct GSOutput
 {
 	float4 position : SV_Position;
 	nointerpolation float3 normal : Normal;
+	nointerpolation float4 aabb : AABB;
 };
+
+
+cbuffer buf_voxelize : register(c2)
+{
+	float2 dimensions;
+};
+
 
 
 #if 0
@@ -56,7 +64,7 @@ static matrix projs[] =
 [maxvertexcount(3)]
 void main(triangle VSOutput input[3], inout TriangleStream<GSOutput> output)
 {
-	float3 hpixel = 1.4142 / 0.5f;
+	float2 hpixel = 0.5f / dimensions;
 
 
 	float3 normal = cross(input[1].world_position.xyz - input[0].world_position.xyz, input[2].world_position.xyz - input[1].world_position.xyz);
@@ -87,23 +95,31 @@ void main(triangle VSOutput input[3], inout TriangleStream<GSOutput> output)
 	float3 p2 = cross(e12, v2.xyw);
 
 	// dilate planes
-	p0.z -= dot(hpixel.xy, abs(p0.xy));
-	p1.z -= dot(hpixel.xy, abs(p1.xy));
-	p2.z -= dot(hpixel.xy, abs(p2.xy));
+	p0.z -= dot(hpixel, abs(p0.xy));
+	p1.z -= dot(hpixel, abs(p1.xy));
+	p2.z -= dot(hpixel, abs(p2.xy));
+
+	// calculate aabb
+	float4 aabb = p0.xyxy;
+	aabb = float4(min(aabb.xy, p1.xy), max(aabb.zw, p1.xy));
+	aabb = float4(min(aabb.xy, p2.xy), max(aabb.zw, p2.xy));
 
 	// output triangle
 	GSOutput g0;
 	g0.position = float4(cross(p0, p1), 0.f);
 	g0.normal = normal;
+	g0.aabb = aabb;
 	output.Append(g0);
 
 	GSOutput g1;
 	g1.position = float4(cross(p1, p2), 0.f);
 	g1.normal = normal;
+	g1.aabb = aabb;
 	output.Append(g1);
 
 	GSOutput g2;
 	g2.position = float4(cross(p2, p0), 0.f);
 	g2.normal = normal;
+	g2.aabb = aabb;
 	output.Append(g2);
 }
