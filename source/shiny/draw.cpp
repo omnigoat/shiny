@@ -36,6 +36,7 @@ auto shiny::detail::generate_command(queue_t::batch_t& batch, context_ptr const&
 	batch.push([ctx, vs]{
 		ctx->immediate_vs_set_vertex_shader(vs.vs);
 		ctx->immediate_vs_set_constant_buffers(vs.cbs);
+		ctx->immediate_vs_set_input_views(vs.ivs);
 	});
 }
 

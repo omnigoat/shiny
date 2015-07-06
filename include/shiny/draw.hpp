@@ -24,14 +24,13 @@ namespace shiny
 		geometry_shader_cptr gs;
 		bound_constant_buffers_t cbs;
 		bound_input_views_t ivs;
-		bound_compute_views_t cvs;
 	};
 
 	struct vertex_stage_t
 	{
 		vertex_shader_cptr vs;
 		bound_constant_buffers_t cbs;
-		bound_resources_t brs;
+		bound_input_views_t ivs;
 	};
 
 	struct fragment_stage_t
@@ -73,14 +72,13 @@ namespace shiny
 			inline auto ia_set(input_assembly_stage_t& ia, vertex_buffer_cptr const& vb) -> void { ia.vb = vb; }
 			inline auto ia_set(input_assembly_stage_t& ia, index_buffer_cptr const& ib) -> void  { ia.ib = ib; }
 
+			inline auto vs_set(vertex_stage_t& vs, vertex_shader_cptr const& vsh) -> void       { vs.vs = vsh; }
+			inline auto vs_set(vertex_stage_t& vs, bound_constant_buffers_t const& cbs) -> void { vs.cbs = cbs; }
+			inline auto vs_set(vertex_stage_t& vs, bound_input_views_t const& ivs) -> void      { vs.ivs = ivs; }
+
 			inline auto gs_set(geometry_stage_t& gs, geometry_shader_cptr const& gsh) -> void     { gs.gs = gsh; }
 			inline auto gs_set(geometry_stage_t& gs, bound_constant_buffers_t const& cbs) -> void { gs.cbs = cbs; }
 			inline auto gs_set(geometry_stage_t& gs, bound_input_views_t const& ivs) -> void      { gs.ivs = ivs; }
-			inline auto gs_set(geometry_stage_t& gs, bound_compute_views_t const& cvs) -> void    { gs.cvs = cvs; }
-
-			inline auto vs_set(vertex_stage_t& vs, vertex_shader_cptr const& vsh) -> void       { vs.vs = vsh; }
-			inline auto vs_set(vertex_stage_t& vs, bound_constant_buffers_t const& cbs) -> void { vs.cbs = cbs; }
-			inline auto vs_set(vertex_stage_t& vs, bound_resources_t const& brs) -> void        { vs.brs = brs; }
 
 			inline auto fs_set(fragment_stage_t& fs, fragment_shader_cptr const& fsh) -> void     { fs.fs  = fsh; }
 			inline auto fs_set(fragment_stage_t& fs, bound_constant_buffers_t const& cbs) -> void { fs.cbs = cbs; }
