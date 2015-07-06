@@ -105,7 +105,7 @@ void main(triangle VSOutput input[3], inout TriangleStream<GSOutput> output)
 	aabb = float4(min(aabb.xy, p2.xy), max(aabb.zw, p2.xy));
 
 	// calcualte depth gradient
-	float2 gradient = 
+	//float2 gradient = 
 
 	// output triangle
 	GSOutput g0;

@@ -335,6 +335,7 @@ auto context_t::immediate_draw_pipeline_reset() -> void
 
 auto context_t::immediate_ia_set_data_declaration(data_declaration_t const* dd) -> void
 {
+	ATMA_ASSERT(dd);
 	ia_dd_ = dd;
 }
 
@@ -343,13 +344,11 @@ auto context_t::immediate_ia_set_vertex_buffer(vertex_buffer_cptr const& vb) -> 
 	ATMA_ASSERT(vb);
 	ATMA_ASSERT(vb->data_declaration() == ia_dd_);
 	ia_vb_ = vb;
-
-	//UINT stride = (UINT)vb->data_declaration()->stride(), offset = 0;
-	//d3d_immediate_context_->IASetVertexBuffers(0, 1, &vb->d3d_buffer().get(), &stride, &offset);
 }
 
 auto context_t::immediate_ia_set_index_buffer(index_buffer_cptr const& ib) -> void
 {
+	ATMA_ASSERT(ib);
 	ia_ib_ = ib;
 }
 
@@ -363,15 +362,10 @@ auto context_t::immediate_ia_set_topology(topology_t t) -> void
 	d3d_immediate_context_->IASetPrimitiveTopology(d3dt);
 }
 
-auto context_t::immediate_gs_set_geometry_shader(geometry_shader_cptr const& gs) -> void
-{
-	d3d_immediate_context_->GSSetShader(gs->d3d_gs().get(), nullptr, 0);
-}
-
 auto context_t::immediate_vs_set_vertex_shader(vertex_shader_cptr const& vs) -> void
 {
+	ATMA_ASSERT(vs);
 	vs_shader_ = vs;
-	d3d_immediate_context_->VSSetShader(vs->d3d_vs().get(), nullptr, 0);
 }
 
 auto context_t::immediate_vs_set_constant_buffers(bound_constant_buffers_t const& cbs) -> void
@@ -379,13 +373,19 @@ auto context_t::immediate_vs_set_constant_buffers(bound_constant_buffers_t const
 	vs_cbs_ = cbs;
 }
 
-auto context_t::immediate_vs_set_resources(bound_resources_t const& rs) -> void
+auto context_t::immediate_vs_set_input_views(bound_input_views_t const& ivs) -> void
 {
-	
+	vs_srvs_ = ivs.views;
+}
+
+auto context_t::immediate_gs_set_geometry_shader(geometry_shader_cptr const& gs) -> void
+{
+	d3d_immediate_context_->GSSetShader(gs->d3d_gs().get(), nullptr, 0);
 }
 
 auto context_t::immediate_fs_set_fragment_shader(fragment_shader_cptr const& fs) -> void
 {
+	ATMA_ASSERT(fs);
 	fs_shader_ = fs;
 }
 
@@ -416,17 +416,16 @@ auto context_t::immediate_om_set_blending(blender_cptr const& b) -> void
 
 auto context_t::immediate_draw() -> void
 {
-	auto ILkey = std::make_tuple(vs_shader_, ia_dd_);
-	auto IL = cached_input_layouts_.find(ILkey);
-	if (IL == cached_input_layouts_.end()) {
-		IL = cached_input_layouts_.insert(std::make_pair(ILkey, create_d3d_input_layout(vs_shader_, ia_dd_))).first;
-	}
-
-	d3d_immediate_context_->IASetInputLayout(IL->second.get());
-
 	// input-assembly-stage
 	{
-		// vertex-buffer required
+		auto ILkey = std::make_tuple(vs_shader_, ia_dd_);
+		auto IL = cached_input_layouts_.find(ILkey);
+		if (IL == cached_input_layouts_.end()) {
+			IL = cached_input_layouts_.insert(std::make_pair(ILkey, create_d3d_input_layout(vs_shader_, ia_dd_))).first;
+		}
+
+		d3d_immediate_context_->IASetInputLayout(IL->second.get());
+
 		ATMA_ENSURE(ia_vb_);
 		UINT stride = (UINT)ia_vb_->data_declaration()->stride(), offset = 0;
 		d3d_immediate_context_->IASetVertexBuffers(0, 1, &ia_vb_->d3d_buffer().get(), &stride, &offset);
@@ -447,12 +446,16 @@ auto context_t::immediate_draw() -> void
 		ATMA_ENSURE(vs_shader_);
 		ATMA_ENSURE(vs_shader_->data_declaration() == ia_vb_->data_declaration());
 		d3d_immediate_context_->VSSetShader(vs_shader_->d3d_vs().get(), nullptr, 0);
-		//d3d_immeidate_context_->
-
+		
 		ID3D11Buffer* cbs[D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT]{};
 		for (auto const& cb : vs_cbs_)
 			cbs[cb.first] = cb.second->d3d_buffer().get();
 		d3d_immediate_context_->VSSetConstantBuffers(0, D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT, cbs);
+
+		ID3D11ShaderResourceView* srvs[D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT]{};
+		for (auto const& x : vs_srvs_)
+			srvs[x.idx] = (ID3D11ShaderResourceView*)x.view->d3d_view().get();
+		d3d_immediate_context_->VSSetShaderResources(0, D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT, srvs);
 	}
 
 	// fragment-stage
@@ -460,12 +463,10 @@ auto context_t::immediate_draw() -> void
 		ATMA_ENSURE(fs_shader_);
 		d3d_immediate_context_->PSSetShader(fs_shader_->d3d_fs().get(), nullptr, 0);
 
-
 		ID3D11Buffer* cbs[D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT]{};
 		for (auto const& cb : fs_cbs_)
 			cbs[cb.first] = cb.second->d3d_buffer().get();
 		d3d_immediate_context_->PSSetConstantBuffers(0, D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT, cbs);
-
 
 		ID3D11ShaderResourceView* srvs[D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT]{};
 		for (auto const& x : fs_srvs_)
