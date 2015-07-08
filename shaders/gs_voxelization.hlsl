@@ -1,7 +1,7 @@
 struct VSOutput
 {
 	float4 position : SV_Position;
-	float4 world_position : Position;
+	float4 world_position : SV_Position;
 };
 
 struct GSOutput

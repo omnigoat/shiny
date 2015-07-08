@@ -330,6 +330,9 @@ auto context_t::immediate_clear(rendertarget_clear_t const& rtc) -> void
 
 auto context_t::immediate_draw_pipeline_reset() -> void
 {
+	vs_shader_.reset();
+	gs_shader_.reset();
+	fs_shader_.reset();
 	draw_range_ = draw_range_t{};
 }
 
@@ -380,7 +383,8 @@ auto context_t::immediate_vs_set_input_views(bound_input_views_t const& ivs) -> 
 
 auto context_t::immediate_gs_set_geometry_shader(geometry_shader_cptr const& gs) -> void
 {
-	d3d_immediate_context_->GSSetShader(gs->d3d_gs().get(), nullptr, 0);
+	//d3d_immediate_context_->GSSetShader(gs->d3d_gs().get(), nullptr, 0);
+	gs_shader_ = gs;
 }
 
 auto context_t::immediate_fs_set_fragment_shader(fragment_shader_cptr const& fs) -> void
@@ -456,6 +460,14 @@ auto context_t::immediate_draw() -> void
 		for (auto const& x : vs_srvs_)
 			srvs[x.idx] = (ID3D11ShaderResourceView*)x.view->d3d_view().get();
 		d3d_immediate_context_->VSSetShaderResources(0, D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT, srvs);
+	}
+
+	// geometry-stage
+	{
+		if (!gs_shader_)
+		{
+			d3d_immediate_context_->GSSetShader(nullptr, nullptr, 0);
+		}
 	}
 
 	// fragment-stage

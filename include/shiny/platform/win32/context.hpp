@@ -165,6 +165,7 @@ namespace shiny
 		vertex_shader_cptr        vs_shader_;
 		bound_constant_buffers_t  vs_cbs_;
 		bound_resource_views_t    vs_srvs_;
+		geometry_shader_cptr      gs_shader_;
 		fragment_shader_cptr      fs_shader_;
 		bound_constant_buffers_t  fs_cbs_;
 		bound_resource_views_t    fs_srvs_;

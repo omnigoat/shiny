@@ -35,25 +35,6 @@
 #include <atma/filesystem/file.hpp>
 
 
-template <typename... Args>
-auto print(char* buf, char const* fmt, Args&&... args) -> int
-{
-	print(buf, 0, fmt, 0, )
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
