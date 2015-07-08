@@ -16,11 +16,16 @@ auto shiny::detail::generate_draw_prelude(queue_t::batch_t& batch, context_ptr c
 
 auto shiny::detail::generate_command(queue_t::batch_t& batch, context_ptr const& ctx, input_assembly_stage_t const& ias) -> void
 {
-	batch.push([ctx, ias]{
+	batch.push([ctx, ias]
+	{
 		ctx->immediate_ia_set_topology(ias.tp);
 		ctx->immediate_ia_set_data_declaration(ias.dd);
 		ctx->immediate_ia_set_vertex_buffer(ias.vb);
-		ctx->immediate_ia_set_index_buffer(ias.ib);
+
+		if (ias.ib)
+		{
+			ctx->immediate_ia_set_index_buffer(ias.ib);
+		}
 	});
 }
 
@@ -69,5 +74,7 @@ auto shiny::signal_draw(context_ptr const& ctx, atma::thread::engine_t::queue_t:
 	batch.push([ctx]{
 		ctx->immediate_draw();
 	});
+
+	ctx->signal(batch);
 }
 

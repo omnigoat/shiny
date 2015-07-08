@@ -109,19 +109,22 @@ void main(triangle VSOutput input[3], inout TriangleStream<GSOutput> output)
 
 	// output triangle
 	GSOutput g0;
-	g0.position = float4(cross(p0, p1), 0.f);
+	g0.position.xyw = cross(p0, p1);
+	g0.position.z = v0.z;
 	g0.normal = normal;
 	g0.aabb = aabb;
 	output.Append(g0);
 
 	GSOutput g1;
-	g1.position = float4(cross(p1, p2), 0.f);
+	g1.position.xyw = cross(p1, p2);
+	g1.position.z = v1.z;
 	g1.normal = normal;
 	g1.aabb = aabb;
 	output.Append(g1);
 
 	GSOutput g2;
-	g2.position = float4(cross(p2, p0), 0.f);
+	g2.position.xyw = cross(p2, p0);
+	g2.position.z = v2.z;
 	g2.normal = normal;
 	g2.aabb = aabb;
 	output.Append(g2);
