@@ -99,7 +99,7 @@ auto voxelization_plugin_t::main_setup() -> void
 	setup_rendering();
 }
 
-auto const gridsize = 256;
+auto const gridsize = 64;
 
 auto voxelization_plugin_t::setup_voxelization() -> void
 {
@@ -238,6 +238,45 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 	auto f2 = atma::filesystem::file_t("../../shaders/gs_normal.hlsl");
 	auto fm2 = f2.read_into_memory();
 	gs = shiny::create_geometry_shader(ctx, fm2, false);
+
+
+
+	auto gs_from_file = [&](atma::string const& filename)
+	{
+		auto f = atma::filesystem::file_t(filename.c_str());
+		auto fmem = f.read_into_memory();
+		return shiny::create_geometry_shader(ctx, fmem, true);
+	};
+
+	// vertex-shader
+	{
+		auto f = atma::filesystem::file_t("../../shaders/vs_voxelize.hlsl");
+		vs_voxelize = shiny::create_vertex_shader(ctx, vb->data_declaration(), f.read_into_memory(), false);
+	}
+
+	// geometry-shader
+	{
+		auto f = atma::filesystem::file_t("../../shaders/gs_voxelization.hlsl");
+		gs_voxelize = shiny::create_geometry_shader(ctx, f.read_into_memory(), false);
+	}
+
+	// fragment-shader
+	{
+		auto f = atma::filesystem::file_t("../../shaders/fs_voxelize.hlsl");
+		fs_voxelize = shiny::create_fragment_shader(ctx, f.read_into_memory(), false);
+	}
+
+	// fragments buffer
+	fragments_buf = shiny::make_buffer(ctx,
+		shiny::resource_type_t::structured_buffer,
+		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
+		shiny::resource_storage_t::persistant,
+		shiny::buffer_dimensions_t{sizeof(uint32), 5 * 1024 * 1024},
+		shiny::buffer_data_t{});
+
+	fragments_view = shiny::make_resource_view(fragments_buf,
+		shiny::resource_view_type_t::compute,
+		shiny::element_format_t::unknown);
 }
 
 auto voxelization_plugin_t::setup_svo() -> void
@@ -421,63 +460,21 @@ auto voxelization_plugin_t::setup_rendering() -> void
 
 auto voxelization_plugin_t::gfx_ctx_draw(shiny::context_ptr const& ctx) -> void
 {
-	
+	namespace sdc = shiny::draw_commands;
 
+	shiny::signal_draw(ctx,
 
-		auto gs_from_file = [&](atma::string const& filename)
-		{
-			auto f = atma::filesystem::file_t(filename.c_str());
-			auto fmem = f.read_into_memory();
-			return shiny::create_geometry_shader(ctx, fmem, true);
-		};
+		sdc::input_assembly_stage(vb->data_declaration(), vb, ib),
+		sdc::vertex_stage(vs_voxelize),
+		sdc::geometry_stage(gs_voxelize),
 
-		// vertex-shader
-		{
-			auto f = atma::filesystem::file_t("../../shaders/vs_voxelize.hlsl");
-			vs_voxelize = shiny::create_vertex_shader(ctx, vb->data_declaration(), f.read_into_memory(), false);
-		}
-
-		// geometry-shader
-		{
-			auto f = atma::filesystem::file_t("../../shaders/gs_voxelization.hlsl");
-			gs_voxelize = shiny::create_geometry_shader(ctx, f.read_into_memory(), false);
-		}
-
-		// fragment-shader
-		{
-			auto f = atma::filesystem::file_t("../../shaders/fs_voxelize.hlsl");
-			fs_voxelize = shiny::create_fragment_shader(ctx, f.read_into_memory(), false);
-		}
-
-
-
-		// fragments buffer
-		fragments_buf = shiny::make_buffer(ctx,
-			shiny::resource_type_t::structured_buffer,
-			shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
-			shiny::resource_storage_t::persistant,
-			shiny::buffer_dimensions_t{sizeof(uint32), 5 * 1024 * 1024},
-			shiny::buffer_data_t{});
-
-		fragments_view = shiny::make_resource_view(fragments_buf,
-			shiny::resource_view_type_t::compute,
-			shiny::element_format_t::unknown);
-
-		namespace sdc = shiny::draw_commands;
-
-		shiny::signal_draw(ctx,
-
-			sdc::input_assembly_stage(vb->data_declaration(), vb, ib),
-			sdc::vertex_stage(vs_voxelize),
-			sdc::geometry_stage(gs_voxelize),
-
-			sdc::fragment_stage(
-				fs_voxelize,
-				shiny::bound_compute_views_t{
-					{0, fragments_view}
-				}
-			)
-		);
+		sdc::fragment_stage(
+			fs_voxelize,
+			shiny::bound_compute_views_t{
+				{0, fragments_view}
+			}
+		)
+	);
 }
 
 auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
