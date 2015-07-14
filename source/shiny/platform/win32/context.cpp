@@ -465,9 +465,9 @@ auto context_t::immediate_draw() -> void
 	// geometry-stage
 	{
 		if (!gs_shader_)
-		{
 			d3d_immediate_context_->GSSetShader(nullptr, nullptr, 0);
-		}
+		else
+			d3d_immediate_context_->GSSetShader(gs_shader_->d3d_gs().get(), nullptr, 0);
 	}
 
 	// fragment-stage

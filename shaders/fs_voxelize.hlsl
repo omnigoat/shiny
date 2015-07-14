@@ -1,8 +1,8 @@
 struct FSInput
 {
 	float4 position : SV_Position;
-	//nointerpolation float3 normal : Normal;
-	//nointerpolation float4 aabb : AABB;
+	nointerpolation float3 normal : Normal;
+	nointerpolation float4 aabb : AABB;
 };
 
 
