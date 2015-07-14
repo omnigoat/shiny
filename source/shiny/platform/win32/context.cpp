@@ -529,7 +529,10 @@ auto context_t::immediate_draw() -> void
 
 	ia_ib_ = index_buffer_cptr::null;
 	draw_range_ = draw_range_t{};
-	//runtime_.d3d_report_live_objects();
+
+#if 0
+	runtime_.d3d_report_live_objects();
+#endif
 }
 
 auto context_t::immediate_compute_pipeline_reset() -> void

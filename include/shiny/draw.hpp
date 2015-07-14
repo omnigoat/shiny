@@ -155,6 +155,8 @@ namespace shiny
 		auto generate_command(queue_t::batch_t&, context_ptr const&, fragment_stage_t const&) -> void;
 		auto generate_command(queue_t::batch_t&, context_ptr const&, output_merger_stage_t const&) -> void;
 		auto generate_command(queue_t::batch_t&, context_ptr const&, draw_range_t const&) -> void;
+
+		auto dispatch_signal_draw(context_ptr const&, queue_t::batch_t&) -> void;
 	}
 
 	auto signal_draw(context_ptr const&, atma::thread::engine_t::queue_t::batch_t&) -> void;
@@ -172,5 +174,6 @@ namespace shiny
 	{
 		atma::thread::engine_t::queue_t::batch_t batch;
 		signal_draw(ctx, batch, std::forward<Args>(args)...);
+		detail::dispatch_signal_draw(ctx, batch);
 	}
 }

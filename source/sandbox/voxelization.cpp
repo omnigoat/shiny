@@ -99,7 +99,7 @@ auto voxelization_plugin_t::main_setup() -> void
 	setup_rendering();
 }
 
-auto const gridsize = 256;
+auto const gridsize = 64;
 
 auto voxelization_plugin_t::setup_voxelization() -> void
 {
@@ -266,8 +266,11 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 		fs_voxelize = shiny::create_fragment_shader(ctx, f.read_into_memory(), false);
 	}
 
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> ecb14e55942fe15bec85d4dbe99adfd73c4a37cc
 	// fragments buffer
 	fragments_buf = shiny::make_buffer(ctx,
 		shiny::resource_type_t::structured_buffer,
