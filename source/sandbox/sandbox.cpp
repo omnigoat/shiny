@@ -32,6 +32,7 @@
 #include <atma/math/vector4i.hpp>
 #include <atma/math/intersection.hpp>
 
+#include <atma/hash_map.hpp>
 #include <atma/filesystem/file.hpp>
 
 
@@ -42,6 +43,11 @@
 
 
 
+
+namespace
+{
+	
+}
 
 
 
@@ -81,6 +87,12 @@ application_t::application_t()
 	, window(fooey::window("Excitement!", 640, 480))
 	, runtime{}
 {
+	auto t = atma::hash_map<int, float>{};
+	t.add(4, 5.f);
+
+
+
+
 	function_main();
 
 	window_renderer->add_window(window);

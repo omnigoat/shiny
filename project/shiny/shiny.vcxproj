@@ -231,6 +231,7 @@
     <ClInclude Include="..\..\include\shiny\context.hpp" />
     <ClInclude Include="..\..\include\shiny\data_declaration.hpp" />
     <ClInclude Include="..\..\include\shiny\data_stream.hpp" />
+    <ClInclude Include="..\..\include\shiny\depth_state.hpp" />
     <ClInclude Include="..\..\include\shiny\draw.hpp" />
     <ClInclude Include="..\..\include\shiny\generic_buffer.hpp" />
     <ClInclude Include="..\..\include\shiny\geometry_declaration.hpp" />

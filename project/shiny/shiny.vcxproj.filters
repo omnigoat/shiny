@@ -352,6 +352,9 @@
     <ClInclude Include="..\..\include\shiny\compute.hpp">
       <Filter>include\shiny</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\shiny\depth_state.hpp">
+      <Filter>include\shiny</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="..\..\shaders\cs_test.hlsl">
