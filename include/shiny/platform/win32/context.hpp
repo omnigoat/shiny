@@ -15,6 +15,7 @@
 #include <shiny/draw_state.hpp>
 #include <shiny/draw.hpp>
 #include <shiny/rendertarget_clear.hpp>
+#include <shiny/depth_state.hpp>
 
 #include <shiny/platform/win32/d3d_fwd.hpp>
 #include <shiny/platform/win32/blender.hpp>
@@ -52,8 +53,6 @@ namespace shiny
 
 		auto make_generic_buffer(resource_usage_mask_t const&, resource_storage_t, size_t stride, uint elements, void const* data, uint data_elemcount) -> generic_buffer_ptr;
 		auto make_generic_buffer(resource_usage_mask_t const&, resource_storage_t, size_t stride, uint elements) -> generic_buffer_ptr;
-		auto make_blender(blend_state_t const&) -> blender_ptr;
-
 
 		auto signal_block() -> void;
 		auto signal_fullscreen_toggle(uint output_index = primary_output) -> void;
@@ -148,8 +147,25 @@ namespace shiny
 
 		auto update_display_mode() -> void;
 
+		
+		//auto make_depth_stencil(depth_stencil_state_t const&) -> 
+
 		// these functions are called on a fooey thread
 		auto on_resize(fooey::events::resize_t&) -> void;
+
+
+	private:
+		auto get_d3d_input_layout(data_declaration_t const*, vertex_shader_cptr const&) -> platform::d3d_input_layout_ptr const&;
+		auto get_d3d_blend(blend_state_t const&) -> platform::d3d_blend_state_ptr const&;
+		auto get_d3d_depth_stencil(depth_stencil_state_t const&) -> platform::d3d_depth_stencil_state_ptr const&;
+
+		using input_layouts_t        = std::map<std::tuple<data_declaration_t const*, vertex_shader_cptr>, platform::d3d_input_layout_ptr>;
+		using blend_states_t         = std::unordered_map<blend_state_t, platform::d3d_blend_state_ptr, atma::std_hash_functor_adaptor_t>;
+		using depth_stencil_states_t = std::unordered_map<depth_stencil_state_t, platform::d3d_depth_stencil_state_ptr, atma::std_hash_functor_adaptor_t>;
+
+		input_layouts_t        built_input_layouts_;
+		blend_states_t         built_blend_states_;
+		depth_stencil_states_t built_depth_stencil_states_;
 
 	private:
 		// compute pipeline
@@ -171,6 +187,7 @@ namespace shiny
 		bound_resource_views_t    fs_srvs_;
 		bound_resource_views_t    fs_uavs_;
 		bound_resource_views_t    om_rtvs_;
+		depth_stencil_state_t     om_depth_stencil_;
 		draw_range_t              draw_range_;
 
 	private:
@@ -203,13 +220,6 @@ namespace shiny
 		display_mode_t* current_display_mode_;
 		display_mode_t requested_windowed_display_mode_, requested_fullscreen_display_mode_;
 		display_mode_t* requested_display_mode_;
-
-		// blenders
-		std::unordered_map<blend_state_t, blender_ptr, atma::std_hash_functor_adaptor_t> cached_blenders_;
-
-		// cache for vertex-layouts
-		std::map<std::tuple<vertex_shader_cptr, data_declaration_t const*>, platform::d3d_input_layout_ptr> cached_input_layouts_;
-
 
 		// debug stuff
 		vertex_buffer_ptr debug_vertices_;

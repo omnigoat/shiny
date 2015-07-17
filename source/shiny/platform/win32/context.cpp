@@ -422,16 +422,12 @@ auto context_t::immediate_draw() -> void
 {
 	// input-assembly-stage
 	{
-		auto ILkey = std::make_tuple(vs_shader_, ia_dd_);
-		auto IL = cached_input_layouts_.find(ILkey);
-		if (IL == cached_input_layouts_.end()) {
-			IL = cached_input_layouts_.insert(std::make_pair(ILkey, create_d3d_input_layout(vs_shader_, ia_dd_))).first;
-		}
-
-		d3d_immediate_context_->IASetInputLayout(IL->second.get());
+		auto d3d_il = get_d3d_input_layout(ia_dd_, vs_shader_);
+		d3d_immediate_context_->IASetInputLayout(d3d_il.get());
 
 		ATMA_ENSURE(ia_vb_);
-		UINT stride = (UINT)ia_vb_->data_declaration()->stride(), offset = 0;
+		UINT offset = 0;
+		UINT stride = (UINT)ia_vb_->data_declaration()->stride();
 		d3d_immediate_context_->IASetVertexBuffers(0, 1, &ia_vb_->d3d_buffer().get(), &stride, &offset);
 
 		if (ia_ib_)
@@ -489,14 +485,11 @@ auto context_t::immediate_draw() -> void
 	}
 
 	// output-merger-stage
-	//if (false)
 	{
-#if 0
-		auto blah = D3D11_DEPTH_STENCIL_DESC{false};
-		atma::com_ptr<ID3D11DepthStencilState> ds;
-		d3d_device_->CreateDepthStencilState(&blah, ds.assign());
-		d3d_immediate_context_->OMSetDepthStencilState(ds.get(), 0);
+		auto d3d_ds = get_d3d_depth_stencil(om_depth_stencil_);
+		d3d_immediate_context_->OMSetDepthStencilState(d3d_ds.get(), 0);
 
+#if 0
 		ID3D11UnorderedAccessView* uavs[D3D11_PS_CS_UAV_REGISTER_COUNT - 1]{};
 		UINT atomic_counters[D3D11_PS_CS_UAV_REGISTER_COUNT - 1];
 		memset(atomic_counters, -1, sizeof(atomic_counters));
@@ -647,11 +640,42 @@ auto context_t::create_d3d_input_layout(vertex_shader_cptr const& vs, data_decla
 	return result;
 }
 
-auto context_t::make_blender(blend_state_t const& bs) -> blender_ptr
+auto context_t::get_d3d_input_layout(data_declaration_t const* dd, vertex_shader_cptr const& vs) -> platform::d3d_input_layout_ptr const&
+{
+	auto key = input_layouts_t::key_type{dd, vs};
+	auto candidate = built_input_layouts_.find(key);
+	if (candidate != built_input_layouts_.end())
+		return candidate->second;
+
+	size_t offset = 0;
+	std::vector<D3D11_INPUT_ELEMENT_DESC> d3d_elements;
+	for (auto const& x : dd->streams())
+	{
+		d3d_elements.push_back({
+			x.semantic().c_str(), 0,
+			platform::dxgi_format_of(x.element_format()),
+			0, (UINT)offset,
+			platform::d3d_input_class_of(x.stage()), 0
+		});
+
+		offset += x.size();
+	}
+
+	platform::d3d_input_layout_ptr input_layout;
+	ATMA_ENSURE_IS(S_OK, d3d_device_->CreateInputLayout(&d3d_elements[0], (uint)d3d_elements.size(),
+		vs->d3d_blob()->GetBufferPointer(), vs->d3d_blob()->GetBufferSize(), input_layout.assign()));
+
+	auto r = built_input_layouts_.insert({key, input_layout});
+	ATMA_ENSURE(r.second);
+
+	return r.first->second;
+}
+
+auto context_t::get_d3d_blend(blend_state_t const& bs) -> platform::d3d_blend_state_ptr const&
 {
 	// cached?
-	auto candidate = cached_blenders_.find(bs);
-	if (candidate != cached_blenders_.end())
+	auto candidate = built_blend_states_.find(bs);
+	if (candidate != built_blend_states_.end())
 		return candidate->second;
 
 	// not cached; construct
@@ -674,13 +698,38 @@ auto context_t::make_blender(blend_state_t const& bs) -> blender_ptr
 	}
 
 	platform::d3d_blend_state_ptr d3d_bs;
-
 	ATMA_ENSURE_IS(S_OK, d3d_device_->CreateBlendState(&d3d_blend_desc, d3d_bs.assign()));
 
-	auto thing = blender_ptr(new blender_t(shared_from_this<context_t>(), d3d_bs));
+	auto r = built_blend_states_.insert({bs, d3d_bs});
+	ATMA_ENSURE(r.second);
 
-	cached_blenders_[bs] = thing;
-	return thing;
+	return r.first->second;
+}
+
+auto context_t::get_d3d_depth_stencil(depth_stencil_state_t const& ds) -> platform::d3d_depth_stencil_state_ptr const&
+{
+	auto candidate = built_depth_stencil_states_.find(ds);
+	if (candidate != built_depth_stencil_states_.end())
+		return candidate->second;
+
+
+	auto d3d_depth_stencil_desc = D3D11_DEPTH_STENCIL_DESC
+	{
+		ds.depth_enabled, (D3D11_DEPTH_WRITE_MASK)ds.depth_write_enabled, platform::d3d_comparison_of(ds.depth_test),
+		ds.stencil_enabled, UINT8(0xff), UINT8(0xff),
+		// front-face
+		{platform::d3d_stencil_op_of(ds.stencil_ff_fail_op), platform::d3d_stencil_op_of(ds.stencil_ff_depth_fail_op), platform::d3d_stencil_op_of(ds.stencil_ff_pass_op)},
+		// back-face
+		{platform::d3d_stencil_op_of(ds.stencil_bf_fail_op), platform::d3d_stencil_op_of(ds.stencil_bf_depth_fail_op), platform::d3d_stencil_op_of(ds.stencil_bf_pass_op)},
+	};
+
+	platform::d3d_depth_stencil_state_ptr d3d_ds;
+	ATMA_ENSURE_IS(S_OK, d3d_device_->CreateDepthStencilState(&d3d_depth_stencil_desc, d3d_ds.assign()));
+
+	auto r = built_depth_stencil_states_.insert({ds, d3d_ds});
+	ATMA_ENSURE(r.second);
+
+	return r.first->second;
 }
 
 auto context_t::make_generic_buffer(resource_usage_mask_t const& rs, resource_storage_t bu, size_t stride, uint elements, void const* data, uint data_elemcount) -> generic_buffer_ptr
@@ -718,4 +767,6 @@ auto context_t::signal_rs_constant_buffer_upload(constant_buffer_ptr const& res,
 
 shiny::blend_state_t const shiny::blend_state_t::opaque = shiny::blend_state_t{blending_t::one_minus_src_alpha, blending_t::zero, blending_t::src_alpha, blending_t::zero};
 
+shiny::depth_stencil_state_t const shiny::depth_stencil_state_t::off = shiny::depth_stencil_state_t{false};
+shiny::depth_stencil_state_t const shiny::depth_stencil_state_t::standard = shiny::depth_stencil_state_t{true};
 

@@ -10,6 +10,7 @@ namespace shiny
 		dec,
 		inc_clamp,
 		dec_clamp,
+		replace,
 		invert,
 	};
 
@@ -27,6 +28,13 @@ namespace shiny
 
 	struct depth_stencil_state_t
 	{
+		depth_stencil_state_t()
+		{}
+
+		depth_stencil_state_t(bool enabled)
+			: depth_enabled(enabled)
+		{}
+
 		bool depth_enabled         = true;
 		bool depth_write_enabled   = true;
 		comparison_t depth_test    = comparison_t::lt;
@@ -41,5 +49,14 @@ namespace shiny
 		stencil_op_t stencil_bf_pass_op       = stencil_op_t::keep;
 		stencil_op_t stencil_bf_fail_op       = stencil_op_t::keep;
 		stencil_op_t stencil_bf_depth_fail_op = stencil_op_t::keep;
+
+		static depth_stencil_state_t const off;
+		static depth_stencil_state_t const standard;
 	};
+
+	inline auto operator == (depth_stencil_state_t const& lhs, depth_stencil_state_t const& rhs) -> bool
+	{
+		return memcmp(&lhs, &rhs, sizeof(depth_stencil_state_t)) == 0;
+	}
+
 }

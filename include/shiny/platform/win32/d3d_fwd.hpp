@@ -33,5 +33,6 @@ namespace shiny { namespace platform {
 	typedef atma::com_ptr<ID3D11UnorderedAccessView> d3d_unordered_access_view_ptr;
 	typedef atma::com_ptr<ID3D11View> d3d_view_ptr;
 	typedef atma::com_ptr<ID3D11BlendState> d3d_blend_state_ptr;
+	typedef atma::com_ptr<ID3D11DepthStencilState> d3d_depth_stencil_state_ptr;
 
 } }

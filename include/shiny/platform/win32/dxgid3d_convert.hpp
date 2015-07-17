@@ -4,16 +4,17 @@
 #include <shiny/platform/win32/dxgi_fwd.hpp>
 #include <shiny/element_format.hpp>
 #include <shiny/blend_state.hpp>
+#include <shiny/depth_state.hpp>
+
 
 namespace shiny { namespace platform {
 	
 	namespace detail
 	{
-		template <typename T, size_t N, typename E>
+		template <typename T, int N, typename E>
 		inline auto lookup(T(&map)[N], E x) -> T
 		{
-			//static_assert(std::extent<E>::value == N, "differing number of entires");
-			ATMA_ASSERT((size_t)x < N);
+			ATMA_ASSERT(0 <= (int)x && (int)x < N);
 			return map[(uint)x];
 		}
 	}
@@ -95,6 +96,40 @@ namespace shiny { namespace platform {
 		{
 			DXGI_FORMAT_R16_UINT,
 			DXGI_FORMAT_R32_UINT,
+		};
+
+		return detail::lookup(mapping, x);
+	}
+
+	inline auto d3d_comparison_of(comparison_t x) -> D3D11_COMPARISON_FUNC
+	{
+		static D3D11_COMPARISON_FUNC const mapping[] =
+		{
+			D3D11_COMPARISON_NEVER,
+			D3D11_COMPARISON_LESS,
+			D3D11_COMPARISON_LESS_EQUAL,
+			D3D11_COMPARISON_EQUAL,
+			D3D11_COMPARISON_NOT_EQUAL,
+			D3D11_COMPARISON_GREATER_EQUAL,
+			D3D11_COMPARISON_GREATER,
+			D3D11_COMPARISON_ALWAYS,
+		};
+
+		return detail::lookup(mapping, x);
+	}
+
+	inline auto d3d_stencil_op_of(stencil_op_t x) -> D3D11_STENCIL_OP
+	{
+		static D3D11_STENCIL_OP const mapping[] =
+		{
+			D3D11_STENCIL_OP_KEEP,
+			D3D11_STENCIL_OP_ZERO,
+			D3D11_STENCIL_OP_INCR,
+			D3D11_STENCIL_OP_DECR,
+			D3D11_STENCIL_OP_INCR_SAT,
+			D3D11_STENCIL_OP_DECR_SAT,
+			D3D11_STENCIL_OP_REPLACE,
+			D3D11_STENCIL_OP_INVERT,
 		};
 
 		return detail::lookup(mapping, x);
