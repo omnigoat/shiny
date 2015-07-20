@@ -383,7 +383,6 @@ auto context_t::immediate_vs_set_input_views(bound_input_views_t const& ivs) -> 
 
 auto context_t::immediate_gs_set_geometry_shader(geometry_shader_cptr const& gs) -> void
 {
-	//d3d_immediate_context_->GSSetShader(gs->d3d_gs().get(), nullptr, 0);
 	gs_shader_ = gs;
 }
 
@@ -489,7 +488,6 @@ auto context_t::immediate_draw() -> void
 		auto d3d_ds = get_d3d_depth_stencil(om_depth_stencil_);
 		d3d_immediate_context_->OMSetDepthStencilState(d3d_ds.get(), 0);
 
-#if 0
 		ID3D11UnorderedAccessView* uavs[D3D11_PS_CS_UAV_REGISTER_COUNT - 1]{};
 		UINT atomic_counters[D3D11_PS_CS_UAV_REGISTER_COUNT - 1];
 		memset(atomic_counters, -1, sizeof(atomic_counters));
@@ -500,7 +498,6 @@ auto context_t::immediate_draw() -> void
 		d3d_immediate_context_->OMSetRenderTargetsAndUnorderedAccessViews(
 			D3D11_KEEP_RENDER_TARGETS_AND_DEPTH_STENCIL, nullptr, nullptr,
 			1, D3D11_PS_CS_UAV_REGISTER_COUNT - 1, uavs, atomic_counters);
-#endif
 	}
 	
 	
