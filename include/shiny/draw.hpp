@@ -161,12 +161,11 @@ namespace shiny
 
 	auto signal_draw(context_ptr const&, atma::thread::engine_t::queue_t::batch_t&) -> void;
 
-	template <typename T, typename... Args>
-	inline auto signal_draw(context_ptr const& ctx, atma::thread::engine_t::queue_t::batch_t& batch, T&& t, Args&&... args) -> void
+	template <typename... Args>
+	inline auto signal_draw(context_ptr const& ctx, atma::thread::engine_t::queue_t::batch_t& batch, Args&&... args) -> void
 	{
 		detail::generate_draw_prelude(batch, ctx);
 		int expand_type[] = {0, (detail::generate_command(batch, ctx, std::forward<Args>(args)), 0)...};
-		signal_draw(ctx, batch, std::forward<Args>(args)...);
 	}
 
 	template <typename... Args>
