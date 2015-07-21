@@ -99,7 +99,7 @@ auto voxelization_plugin_t::main_setup() -> void
 	setup_rendering();
 }
 
-auto const gridsize = 64;
+auto const gridsize = 128;
 
 auto voxelization_plugin_t::setup_voxelization() -> void
 {

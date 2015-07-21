@@ -166,6 +166,7 @@ namespace shiny
 	{
 		detail::generate_draw_prelude(batch, ctx);
 		int expand_type[] = {0, (detail::generate_command(batch, ctx, std::forward<Args>(args)), 0)...};
+		detail::dispatch_signal_draw(ctx, batch);
 	}
 
 	template <typename... Args>
@@ -173,6 +174,5 @@ namespace shiny
 	{
 		atma::thread::engine_t::queue_t::batch_t batch;
 		signal_draw(ctx, batch, std::forward<Args>(args)...);
-		detail::dispatch_signal_draw(ctx, batch);
 	}
 }

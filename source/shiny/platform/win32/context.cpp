@@ -421,7 +421,8 @@ auto context_t::immediate_draw() -> void
 {
 	// input-assembly-stage
 	{
-		auto d3d_il = get_d3d_input_layout(ia_dd_, vs_shader_);
+		ATMA_ENSURE(vs_shader_);
+		auto d3d_il = get_d3d_input_layout(vs_shader_->data_declaration(), vs_shader_);
 		d3d_immediate_context_->IASetInputLayout(d3d_il.get());
 
 		ATMA_ENSURE(ia_vb_);
@@ -752,11 +753,11 @@ auto context_t::signal_copy_buffer(resource_ptr const& dest, resource_cptr const
 	});
 }
 
-auto context_t::signal_rs_constant_buffer_upload(constant_buffer_ptr const& res, size_t offset, void const* data, size_t size) -> void
+auto context_t::signal_rs_constant_buffer_upload(constant_buffer_ptr const& rs, size_t offset, void const* data, size_t size) -> void
 {
 	auto mem = atma::shared_memory_t{(uint)size, (void*)data};
 
-	signal_res_map(res, 0, map_type_t::write_discard, [res, offset, mem](mapped_subresource_t const& sr){
+	signal_rs_map(res, 0, map_type_t::write_discard, [res, offset, mem](mapped_subresource_t const& sr){
 		memcpy(sr.data, mem.begin(), mem.size());
 	});
 }

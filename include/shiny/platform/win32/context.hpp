@@ -42,6 +42,15 @@ namespace shiny
 		uint const user = 3;
 	}
 
+	enum class renderer_stage_t
+	{
+		//setup,
+		resource_upload,
+		render,
+		//present,
+		//teardown,
+	};
+
 	struct context_t : atma::ref_counted
 	{
 		using map_callback_t = std::function<void(mapped_subresource_t&)>;
@@ -60,7 +69,7 @@ namespace shiny
 		auto signal_clear(atma::math::vector4f const&) -> void;
 		auto signal_draw_scene(scene_t&) -> void;
 		auto signal(atma::thread::engine_t::queue_t::batch_t&) -> void;
-
+		auto signal_stage_change(renderer_stage_t) -> void;
 		auto signal_copy_buffer(resource_ptr const&, resource_cptr const&) -> void;
 
 
@@ -73,15 +82,17 @@ namespace shiny
 		auto immediate_compute_pipeline_reset() -> void;
 
 
-		// "resources stage"
-
+		// obsolete resource-stage
 		#pragma region Obsolete
 		auto signal_res_map(resource_ptr const&, uint subresource, map_type_t, map_callback_t const&) -> void;
 		auto signal_res_update(constant_buffer_ptr const&, uint data_size, void*) -> void;
 		auto signal_res_update(constant_buffer_ptr const&, atma::shared_memory_t const&) -> void;
 		#pragma endregion
-		auto signal_rs_constant_buffer_upload(constant_buffer_ptr const&, size_t offset, void const* data, size_t size) -> void;
-		template <typename T> auto signal_rs_constant_buffer_upload(constant_buffer_ptr const&, T const&) -> void;
+
+		// resource-stage
+		auto signal_rs_upload(resource_ptr const&, buffer_data_t const&) -> void;
+		auto signal_rs_upload(resource_ptr const&, resource_subset_t const&, buffer_data_t const&) -> void;
+		template <typename T> auto signal_rs_upload(resource_ptr const&, T const&) -> void;
 
 		// input-assembly-stage
 		auto immediate_ia_set_data_declaration(data_declaration_t const*) -> void;
@@ -191,8 +202,8 @@ namespace shiny
 		draw_range_t              draw_range_;
 
 	private:
-		atma::thread::engine_t engine_;
 		runtime_t& runtime_;
+		atma::thread::engine_t engine_;
 
 		platform::dxgi_adapter_ptr dxgi_adapter_;
 		platform::d3d_device_ptr   d3d_device_;
@@ -200,6 +211,9 @@ namespace shiny
 
 
 	private:
+		// stage
+		renderer_stage_t stage_;
+
 		// swap-chain
 		platform::dxgi_output_ptr              dxgi_output_;
 		platform::dxgi_swap_chain_ptr          dxgi_swap_chain_;
@@ -232,9 +246,9 @@ namespace shiny
 
 
 	template <typename T>
-	inline auto context_t::signal_rs_constant_buffer_upload(constant_buffer_ptr const& res, T const& t) -> void
+	inline auto context_t::signal_rs_upload_constant_buffer(constant_buffer_ptr const& res, T const& t) -> void
 	{
-		signal_rs_constant_buffer_upload(res, 0, reinterpret_cast<void const*>(&t), sizeof(T));
+		signal_rs_upload_constant_buffer(res, 0, reinterpret_cast<void const*>(&t), sizeof(T));
 	}
 }
 
