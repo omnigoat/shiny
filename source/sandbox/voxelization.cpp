@@ -99,7 +99,7 @@ auto voxelization_plugin_t::main_setup() -> void
 	setup_rendering();
 }
 
-auto const gridsize = 128;
+auto const gridsize = 512;
 
 auto voxelization_plugin_t::setup_voxelization() -> void
 {
@@ -350,11 +350,14 @@ auto voxelization_plugin_t::setup_svo() -> void
 		shiny::resource_view_type_t::compute,
 		shiny::element_format_t::unknown);
 
+
+	auto const grid_size_500mb = 320;
+
 	// brick-cache
 	brickcache = shiny::make_texture3d(ctx,
 		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
 		shiny::resource_storage_t::persistant,
-		shiny::texture3d_dimensions_t::cube(shiny::element_format_t::f32x2, gridsize / 2, 1));
+		shiny::texture3d_dimensions_t::cube(shiny::element_format_t::f32x2, 320, 1));
 
 	brickcache_view = shiny::make_resource_view(brickcache,
 		shiny::resource_view_type_t::compute,
@@ -389,7 +392,7 @@ auto voxelization_plugin_t::setup_svo() -> void
 	// mark & allocate tiles in the node-cache
 	for (int i = 0; i != levels_required; ++i)
 	{
-		ctx->signal_rs_constant_buffer_upload(cb, cbuf{
+		ctx->signal_rs_upload(cb, cbuf{
 			(uint32)fragments.size(),
 			(uint32)levels_required,
 			(uint32)i
@@ -409,7 +412,7 @@ auto voxelization_plugin_t::setup_svo() -> void
 	// 2) allocate bricks from the brick-cache
 	// 3) write fragments into 3d texture
 	{
-		ctx->signal_rs_constant_buffer_upload(cb, cbuf{
+		ctx->signal_rs_upload(cb, cbuf{
 			(uint32)fragments.size(),
 			(uint32)levels_required,
 			(uint32)levels_required

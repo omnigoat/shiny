@@ -44,7 +44,7 @@ namespace shiny
 
 	enum class renderer_stage_t
 	{
-		//setup,
+		init,
 		resource_upload,
 		render,
 		//present,
@@ -72,7 +72,7 @@ namespace shiny
 		auto signal_stage_change(renderer_stage_t) -> void;
 		auto signal_copy_buffer(resource_ptr const&, resource_cptr const&) -> void;
 
-
+		auto immediate_set_stage(renderer_stage_t) -> void;
 
 		auto immediate_clear(rendertarget_clear_t const&) -> void;
 
@@ -91,8 +91,11 @@ namespace shiny
 
 		// resource-stage
 		auto signal_rs_upload(resource_ptr const&, buffer_data_t const&) -> void;
-		auto signal_rs_upload(resource_ptr const&, resource_subset_t const&, buffer_data_t const&) -> void;
+		auto signal_rs_upload(resource_ptr const&, uint subresource, buffer_data_t const&) -> void;
+		//auto signal_rs_upload(resource_ptr const&, resource_subset_t const&, buffer_data_t const&) -> void;
+		//auto signal_rs_upload(resource_ptr const&, uint subresource, resource_subset_t const&, buffer_data_t const&) -> void;
 		template <typename T> auto signal_rs_upload(resource_ptr const&, T const&) -> void;
+		auto signal_rs_map(resource_ptr const&, uint subresource, map_type_t, map_callback_t const&) -> void;
 
 		// input-assembly-stage
 		auto immediate_ia_set_data_declaration(data_declaration_t const*) -> void;
@@ -246,9 +249,9 @@ namespace shiny
 
 
 	template <typename T>
-	inline auto context_t::signal_rs_upload_constant_buffer(constant_buffer_ptr const& res, T const& t) -> void
+	inline auto context_t::signal_rs_upload(resource_ptr const& res, T const& t) -> void
 	{
-		signal_rs_upload_constant_buffer(res, 0, reinterpret_cast<void const*>(&t), sizeof(T));
+		signal_rs_upload(res, buffer_data_t{&t, sizeof(t)});
 	}
 }
 

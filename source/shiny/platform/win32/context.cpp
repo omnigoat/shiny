@@ -40,7 +40,7 @@ auto shiny::create_context(runtime_t& runtime, fooey::window_ptr const& window, 
 }
 
 context_t::context_t(runtime_t& runtime, fooey::window_ptr const& window, uint adapter)
-: runtime_(runtime), window_(window), current_display_mode_(), requested_display_mode_()
+	: runtime_(runtime), stage_(), window_(window), current_display_mode_(), requested_display_mode_()
 {
 	std::tie(dxgi_adapter_, d3d_device_, d3d_immediate_context_) = runtime_.dxgid3d_for_adapter(adapter);
 	create_swapchain();
@@ -81,6 +81,11 @@ context_t::~context_t()
 	});
 
 	engine_.signal_block();
+}
+
+auto context_t::immediate_set_stage(renderer_stage_t rs) -> void
+{
+	stage_ = rs;
 }
 
 auto context_t::pull_display_format(display_mode_t& mode, DXGI_SWAP_CHAIN_DESC& desc) -> void
@@ -615,6 +620,24 @@ auto context_t::signal_res_map(resource_ptr const& rs, uint subresource, map_typ
 	});
 }
 
+auto context_t::signal_rs_map(resource_ptr const& rs, uint subresource, map_type_t maptype, map_callback_t const& fn) -> void
+{
+	auto d3dmap =
+		maptype == map_type_t::read ? D3D11_MAP_READ :
+		maptype == map_type_t::write ? D3D11_MAP_WRITE :
+		maptype == map_type_t::write_discard ? D3D11_MAP_WRITE_DISCARD :
+		D3D11_MAP_READ_WRITE
+		;
+
+	engine_.signal([&, rs, subresource, d3dmap, fn] {
+		auto sr = D3D11_MAPPED_SUBRESOURCE{};
+		ATMA_ENSURE_IS(S_OK, d3d_immediate_context_->Map(rs->d3d_resource().get(), subresource, d3dmap, 0, &sr));
+		mapped_subresource_t msr{sr.pData, sr.RowPitch, sr.DepthPitch};
+		fn(msr);
+		d3d_immediate_context_->Unmap(rs->d3d_resource().get(), subresource);
+	});
+}
+
 auto context_t::create_d3d_input_layout(vertex_shader_cptr const& vs, data_declaration_t const* vd) -> platform::d3d_input_layout_ptr
 {
 	size_t offset = 0;
@@ -753,14 +776,56 @@ auto context_t::signal_copy_buffer(resource_ptr const& dest, resource_cptr const
 	});
 }
 
-auto context_t::signal_rs_constant_buffer_upload(constant_buffer_ptr const& rs, size_t offset, void const* data, size_t size) -> void
+auto context_t::signal_rs_upload(resource_ptr const& rs, buffer_data_t const& bd) -> void
 {
-	auto mem = atma::shared_memory_t{(uint)size, (void*)data};
-
-	signal_rs_map(res, 0, map_type_t::write_discard, [res, offset, mem](mapped_subresource_t const& sr){
-		memcpy(sr.data, mem.begin(), mem.size());
-	});
+	signal_rs_upload(rs, 0, bd);
 }
+
+auto context_t::signal_rs_upload(resource_ptr const& rs, uint subresource, buffer_data_t const& bd) -> void
+{
+	if (stage_ == renderer_stage_t::render)
+	{
+		switch (rs->resource_storage())
+		{
+			case resource_storage_t::transient:
+			case resource_storage_t::temporary:
+				break;
+
+			default:
+				ATMA_HALT("you can't upload non-transient/temporary buffers outside of the resource-upload stage");
+				return;
+		}
+	}
+
+	auto mem = atma::shared_memory_t{(uint)bd.size, (void*)bd.data};
+
+	switch (rs->resource_storage())
+	{
+		// these two take should map
+		case resource_storage_t::transient:
+		case resource_storage_t::temporary:
+		case resource_storage_t::constant:
+		{
+
+			signal_rs_map(rs, subresource, map_type_t::write_discard, [mem](mapped_subresource_t const& sr){
+				memcpy(sr.data, mem.begin(), mem.size());
+			});
+
+			break;
+		}
+
+		// everything uses upload subresource
+		default:
+		{
+			engine_.signal([&, rs, subresource, mem]{
+				d3d_immediate_context_->UpdateSubresource(rs->d3d_resource().get(), subresource, nullptr, mem.begin(), (UINT)mem.size(), 1);
+			});
+		}
+	}
+}
+
+//auto context_t::signal_rs_upload(resource_ptr const&, resource_subset_t const&, buffer_data_t const&) -> void;
+//template <typename T> auto signal_rs_upload(resource_ptr const&, T const&) -> void;
 
 
 shiny::blend_state_t const shiny::blend_state_t::opaque = shiny::blend_state_t{blending_t::one_minus_src_alpha, blending_t::zero, blending_t::src_alpha, blending_t::zero};

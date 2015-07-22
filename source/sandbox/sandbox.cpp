@@ -154,7 +154,10 @@ auto application_t::run() -> int
 			x->input_update();
 		}
 
+		ctx->immediate_set_stage(shiny::renderer_stage_t::resource_upload);
+
 		// all plugins draw to same scene
+		ctx->immediate_set_stage(shiny::renderer_stage_t::render);
 		auto scene = shiny::scene_t{ctx, cc.camera(), shiny::rendertarget_clear_t{aml::vector4f{0.2f, 0.2f, 0.2f}, 1.f}};
 		for (auto const& x : plugins_) {
 			x->gfx_ctx_draw(ctx);

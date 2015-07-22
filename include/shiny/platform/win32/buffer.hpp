@@ -63,20 +63,20 @@ namespace shiny
 	struct buffer_data_t
 	{
 		buffer_data_t()
-			: data(), count()
+			: data(), size()
 		{}
 
-		buffer_data_t(void const* data, size_t count)
-			: data(data), count(count)
+		buffer_data_t(void const* data, size_t size)
+			: data(data), size(size)
 		{}
 
 		template <typename T>
 		buffer_data_t(detail::aligned_data_t<T> const& x)
-			: data(x.data()), count(x.size())
+			: data(x.data()), size(x.size())
 		{}
 
 		void const* data;
-		size_t count;
+		size_t size;
 	};
 
 	struct buffer_t : resource_t
@@ -86,7 +86,6 @@ namespace shiny
 		buffer_t(context_ptr const&, resource_type_t, resource_usage_mask_t, resource_storage_t, buffer_dimensions_t const&, buffer_data_t const&);
 		virtual ~buffer_t();
 
-		auto buffer_usage() const -> resource_storage_t { return buffer_usage_; }
 		auto primary_input_view() const -> resource_view_ptr const& { return primary_input_view_; }
 		auto primary_compute_view() const -> resource_view_ptr const& { return primary_compute_view_; }
 
@@ -97,8 +96,6 @@ namespace shiny
 		auto d3d_resource() const -> platform::d3d_resource_ptr override { return d3d_buffer_; }
 
 	protected:
-		resource_storage_t buffer_usage_;
-
 		resource_view_ptr primary_input_view_;
 		resource_view_ptr primary_compute_view_;
 
@@ -112,12 +109,12 @@ namespace shiny
 	inline auto make_buffer(context_ptr const& ctx,
 		resource_type_t rt,
 		resource_usage_mask_t ru,
-		resource_storage_t bu,
+		resource_storage_t rs,
 		buffer_dimensions_t const& bdm,
 		buffer_data_t const& bdt,
 		Args&&... req_views) -> buffer_ptr
 	{
-		auto b = atma::make_intrusive_ptr<buffer_t>(ctx, rt, ru, bu, bdm, bdt);
+		auto b = atma::make_intrusive_ptr<buffer_t>(ctx, rt, ru, rs, bdm, bdt);
 		int _[] = { 0, (b->bind(req_views), 0)... };
 		
 		return b;

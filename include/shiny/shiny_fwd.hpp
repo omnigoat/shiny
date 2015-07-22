@@ -150,15 +150,9 @@ namespace shiny
 		//   cpu: write
 		//   gpu: read (write with unordered-access)
 		//   update: update-subresource (d3d)
+		//   NOTE: can't update mid-frame. need to be updated in the 
+		//         resource-upload stage
 		persistant,
-		persistant_shadowed,
-
-		// temporary:
-		//   cpu: write
-		//   gpu: read
-		//   update: map/unmap
-		temporary,
-		temporary_shadowed,
 
 		// transient:
 		//   cpu: write
@@ -166,15 +160,23 @@ namespace shiny
 		//   update: map/discard
 		//   NOTE: these should be pooled
 		transient,
-		transient_shadowed,
+
+		// temporary:
+		//   cpu: write
+		//   gpu: read
+		//   update: map/unmap
+		//   NOTE: can update mid-frame
+		temporary,
 
 		// constant:
 		//   cpu: write
 		//   gpu: read
 		//   update: map/discard
 		constant,
-		constant_shadowed,
 
+		// staging:
+		//   cpu: read
+		//   gpu: write
 		staging,
 	};
 

@@ -10,57 +10,53 @@ using namespace shiny;
 using shiny::buffer_t;
 
 
-buffer_t::buffer_t(context_ptr const& ctx,
-			resource_type_t type, resource_usage_mask_t rs, resource_storage_t usage,
-			buffer_dimensions_t const& bdm, buffer_data_t const& bdt)
-	: resource_t(ctx, type, rs, bdm.stride, bdm.count)
-	, buffer_usage_(usage)
+buffer_t::buffer_t(
+	context_ptr const& ctx,
+	resource_type_t rt, resource_usage_mask_t ru, resource_storage_t rs,
+	buffer_dimensions_t const& bdm, buffer_data_t const& bdt)
+	: resource_t(ctx, rt, ru, rs, bdm.stride, bdm.count)
 {
 	// no zero-size buffers
 	ATMA_ASSERT(resource_size());
 	// unordered-access buffers must be placed into persistant storage
-	ATMA_ASSERT(!(rs & resource_usage_t::unordered_access) || (usage == resource_storage_t::persistant || usage == resource_storage_t::persistant_shadowed));
+	ATMA_ASSERT(!(ru & resource_usage_t::unordered_access) || rs == resource_storage_t::persistant);
 
 
 
 	// fixup default element-count, figure out size of data
-	auto data_element_count = bdt.count;
+	auto data_element_count = bdt.size;
 	if (data_element_count == 0)
 		data_element_count = bdm.count;
 	auto data_size = bdm.stride * data_element_count;
 
 
-	// determine buffer-usage and cpu-access
-	auto d3d_bu = D3D11_USAGE();
+	// determine resource-storage and cpu-access
+	auto d3d_rs = D3D11_USAGE();
 	auto d3d_ca = D3D11_CPU_ACCESS_FLAG();
-	switch (buffer_usage_)
+	switch (resource_storage())
 	{
 		case resource_storage_t::immutable:
-			d3d_bu = D3D11_USAGE_IMMUTABLE;
+			d3d_rs = D3D11_USAGE_IMMUTABLE;
 			break;
 
 		case resource_storage_t::persistant:
-		case resource_storage_t::persistant_shadowed:
-			d3d_bu = D3D11_USAGE_DEFAULT;
+			d3d_rs = D3D11_USAGE_DEFAULT;
 			break;
 
 		case resource_storage_t::temporary:
-		case resource_storage_t::temporary_shadowed:
 		case resource_storage_t::transient:
-		case resource_storage_t::transient_shadowed:
 		case resource_storage_t::constant:
-		case resource_storage_t::constant_shadowed:
-			d3d_bu = D3D11_USAGE_DYNAMIC;
+			d3d_rs = D3D11_USAGE_DYNAMIC;
 			d3d_ca = D3D11_CPU_ACCESS_WRITE;
 			break;
 
 		case resource_storage_t::staging:
-			d3d_bu = D3D11_USAGE_STAGING;
+			d3d_rs = D3D11_USAGE_STAGING;
 			d3d_ca = D3D11_CPU_ACCESS_READ;
 			break;
 
 		default:
-			ATMA_HALT("buffer usage is ill-formed");
+			ATMA_HALT("resource-storage is ill-formed");
 			break;
 	}
 
@@ -73,14 +69,6 @@ buffer_t::buffer_t(context_ptr const& ctx,
 	}
 
 
-	bool shadowed =
-		buffer_usage_ == resource_storage_t::persistant_shadowed ||
-		buffer_usage_ == resource_storage_t::temporary_shadowed ||
-		buffer_usage_ == resource_storage_t::transient_shadowed ||
-		buffer_usage_ == resource_storage_t::constant_shadowed
-		;
-
-
 	// determine binding
 	auto binding = platform::d3dbind_of(resource_type());
 	if (resource_usage() & resource_usage_t::render_target)
@@ -89,17 +77,13 @@ buffer_t::buffer_t(context_ptr const& ctx,
 		(uint&)binding |= D3D11_BIND_DEPTH_STENCIL;
 	if (resource_usage() & resource_usage_t::shader_resource)
 		(uint&)binding |= D3D11_BIND_SHADER_RESOURCE;
-	if (resource_usage() & resource_usage_t::unordered_access) {
+	if (resource_usage() & resource_usage_t::unordered_access)
 		(uint&)binding |= D3D11_BIND_UNORDERED_ACCESS;
-	}
 
-	// cpu-access for unordered-access-buffers
-	//if (resource_usage() & resource_usage_t::unordered_access)
-		//(uint&)d3d_ca |= D3D11_CPU_ACCESS_READ;
 
 	// create buffer
-	auto buffer_desc = D3D11_BUFFER_DESC{(UINT)resource_size(), d3d_bu, binding, d3d_ca, misc_flags, (UINT)bdm.stride};
-	switch (buffer_usage_)
+	auto buffer_desc = D3D11_BUFFER_DESC{(UINT)resource_size(), d3d_rs, binding, d3d_ca, misc_flags, (UINT)bdm.stride};
+	switch (resource_storage())
 	{
 		case resource_storage_t::immutable:
 		{
@@ -115,8 +99,7 @@ buffer_t::buffer_t(context_ptr const& ctx,
 		// constant-buffers must be 16byte sized
 		case resource_storage_t::constant:
 			data_size = ((data_size / 16) + 1) * 16;
-			//buffer_desc.StructureByteStride = (UINT)((bdm.stride / 16) + 1) * 16;
-			// fallthrough
+			// fallthrough!
 
 		case resource_storage_t::persistant:
 		case resource_storage_t::temporary:
@@ -136,10 +119,7 @@ buffer_t::buffer_t(context_ptr const& ctx,
 			break;
 		}
 
-		case resource_storage_t::persistant_shadowed:
-		case resource_storage_t::temporary_shadowed:
-		case resource_storage_t::transient_shadowed:
-		case resource_storage_t::constant_shadowed:
+		default:
 		{
 			ATMA_HALT("not supported");
 			break;

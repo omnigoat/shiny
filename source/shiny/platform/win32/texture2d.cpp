@@ -9,7 +9,7 @@ using shiny::texture2d_t;
 
 
 texture2d_t::texture2d_t(context_ptr const& ctx, resource_usage_mask_t usage_flags, element_format_t format, uint width, uint height, uint mips)
-	: resource_t(ctx, resource_type_t::texture2d, usage_flags, shiny::element_size(format), width * height)
+	: resource_t(ctx, resource_type_t::texture2d, usage_flags, resource_storage_t::persistant, shiny::element_size(format), width * height)
 	, format_(format), width_(width), height_(height), mips_(mips)
 {
 	auto const& device = context()->d3d_device();
