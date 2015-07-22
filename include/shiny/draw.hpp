@@ -159,8 +159,6 @@ namespace shiny
 		auto dispatch_signal_draw(context_ptr const&, queue_t::batch_t&) -> void;
 	}
 
-	auto signal_draw(context_ptr const&, atma::thread::engine_t::queue_t::batch_t&) -> void;
-
 	template <typename... Args>
 	inline auto signal_draw(context_ptr const& ctx, atma::thread::engine_t::queue_t::batch_t& batch, Args&&... args) -> void
 	{

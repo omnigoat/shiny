@@ -71,15 +71,11 @@ auto shiny::detail::generate_command(batch_t& batch, context_ptr const& ctx, dra
 
 auto shiny::detail::dispatch_signal_draw(context_ptr const& ctx, batch_t& batch) -> void
 {
+	batch.push([ctx]{
+		ctx->immediate_draw();
+	});
+
 	ctx->signal(batch);
 }
 
 
-
-
-auto shiny::signal_draw(context_ptr const& ctx, batch_t& batch) -> void
-{
-	batch.push([ctx]{
-		ctx->immediate_draw();
-	});
-}
