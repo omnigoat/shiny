@@ -744,7 +744,7 @@ int function_main()
 
 		auto s2 = clock.now();
 
-		printf("atma time: %d microseconds, result: %ull\n", std::chrono::duration_cast<std::chrono::microseconds>(s2 - s), result);
+		printf("atma time: %d microseconds, result: %ull\n", (int)std::chrono::duration_cast<std::chrono::microseconds>(s2 - s).count(), (uint)result);
 	}
 
 #else

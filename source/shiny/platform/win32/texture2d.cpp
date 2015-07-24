@@ -33,7 +33,7 @@ texture2d_t::texture2d_t(context_ptr const& ctx, resource_usage_mask_t usage_fla
 
 	D3D11_TEXTURE2D_DESC texdesc{
 		width_, height_, mips_, 1,
-		d3dfmt, {1, 0}, d3dusage, d3dbind, d3dcpu, 0};
+		d3dfmt, {1, 0}, d3dusage, (UINT)d3dbind, (UINT)d3dcpu, 0};
 
 	ATMA_ENSURE_IS(S_OK, device->CreateTexture2D(&texdesc, nullptr, d3d_texture_.assign()));
 }

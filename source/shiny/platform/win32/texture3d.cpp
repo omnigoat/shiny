@@ -57,7 +57,7 @@ texture3d_t::texture3d_t(context_ptr const& ctx, resource_usage_mask_t ru, resou
 
 	auto desc = D3D11_TEXTURE3D_DESC{
 		(UINT)width_, (UINT)height_, (UINT)depth_, mips_,
-		d3dfmt, d3dusage, d3dbind, d3dcpu, 0};
+		d3dfmt, d3dusage, (UINT)d3dbind, (UINT)d3dcpu, 0};
 
 	ATMA_ENSURE_IS(S_OK, device->CreateTexture3D(&desc, nullptr, d3d_texture_.assign()));
 }

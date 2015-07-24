@@ -82,7 +82,7 @@ buffer_t::buffer_t(
 
 
 	// create buffer
-	auto buffer_desc = D3D11_BUFFER_DESC{(UINT)resource_size(), d3d_rs, binding, d3d_ca, misc_flags, (UINT)bdm.stride};
+	auto buffer_desc = D3D11_BUFFER_DESC{(UINT)resource_size(), d3d_rs, (UINT)binding, (UINT)d3d_ca, (UINT)misc_flags, (UINT)bdm.stride};
 	switch (resource_storage())
 	{
 		case resource_storage_t::immutable:

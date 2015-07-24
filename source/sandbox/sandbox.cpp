@@ -131,7 +131,7 @@ auto application_t::run() -> int
 
 
 	// camera-controller
-	auto cc = pepper::freelook_camera_controller_t{window};
+	auto&& cc = pepper::freelook_camera_controller_t{window};
 	cc.require_mousedown_for_rotation(true);
 
 	// timestep of 16ms = 60hz
@@ -158,7 +158,7 @@ auto application_t::run() -> int
 
 		// all plugins draw to same scene
 		ctx->immediate_set_stage(shiny::renderer_stage_t::render);
-		auto scene = shiny::scene_t{ctx, cc.camera(), shiny::rendertarget_clear_t{aml::vector4f{0.2f, 0.2f, 0.2f}, 1.f}};
+		auto&& scene = shiny::scene_t{ctx, cc.camera(), shiny::rendertarget_clear_t{aml::vector4f{0.2f, 0.2f, 0.2f}, 1.f}};
 		for (auto const& x : plugins_) {
 			x->gfx_ctx_draw(ctx);
 			x->gfx_draw(scene);
@@ -211,7 +211,7 @@ auto plugin_t::fs_flat() const -> shiny::fragment_shader_ptr const&
 
 int main()
 {
-	auto app = sandbox::application_t{};
+	auto&& app = sandbox::application_t{};
 
 	app.register_plugin(plugin_ptr(new sandbox::voxelization_plugin_t{&app}));
 
