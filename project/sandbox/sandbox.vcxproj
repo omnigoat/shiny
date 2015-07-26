@@ -226,6 +226,7 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\shaders\morton.hlsli" />
     <None Include="..\..\shaders\svo_traversal.hlsli" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

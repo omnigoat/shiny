@@ -64,7 +64,7 @@ extern int function_main();
 
 application_t::application_t()
 	: window_renderer(fooey::system_renderer())
-	, window(fooey::window("Excitement!", 640, 480))
+	, window(fooey::window("Excitement!", 128 + 16, 128 + 38))
 	, runtime{}
 {
 	function_main();
@@ -118,6 +118,14 @@ auto application_t::run() -> int
 		running = false;
 	});
 
+	// camera-controller
+	auto&& cc = pepper::freelook_camera_controller_t{window};
+	cc.require_mousedown_for_rotation(true);
+
+
+	// clear!
+	ctx->signal_draw_scene(shiny::scene_t{ctx, cc.camera(), shiny::rendertarget_clear_t{aml::vector4f{0.2f, 0.2f, 0.2f}, 1.f}});
+
 
 	//
 	//  initialize plugins
@@ -129,10 +137,6 @@ auto application_t::run() -> int
 		x->main_setup();
 	}
 
-
-	// camera-controller
-	auto&& cc = pepper::freelook_camera_controller_t{window};
-	cc.require_mousedown_for_rotation(true);
 
 	// timestep of 16ms = 60hz
 	auto const timestep_uint = 16u;
@@ -158,13 +162,14 @@ auto application_t::run() -> int
 
 		// all plugins draw to same scene
 		ctx->immediate_set_stage(shiny::renderer_stage_t::render);
+#if 1
 		auto&& scene = shiny::scene_t{ctx, cc.camera(), shiny::rendertarget_clear_t{aml::vector4f{0.2f, 0.2f, 0.2f}, 1.f}};
 		for (auto const& x : plugins_) {
 			x->gfx_ctx_draw(ctx);
 			x->gfx_draw(scene);
 		}
 		ctx->signal_draw_scene(scene);
-
+#endif
 		ctx->signal_present();
 		ctx->signal_block();
 	}
@@ -208,10 +213,9 @@ auto plugin_t::fs_flat() const -> shiny::fragment_shader_ptr const&
 	return app_->fs_flat;
 }
 
-
 int main()
 {
-	auto&& app = sandbox::application_t{};
+	sandbox::application_t app;
 
 	app.register_plugin(plugin_ptr(new sandbox::voxelization_plugin_t{&app}));
 

@@ -2,6 +2,7 @@
 
 #include <shiny/shiny_fwd.hpp>
 #include <shiny/resource_view.hpp>
+#include <shiny/depth_state.hpp>
 
 #include <atma/thread/engine.hpp>
 
@@ -44,6 +45,7 @@ namespace shiny
 	struct output_merger_stage_t
 	{
 		blender_cptr b;
+		depth_stencil_state_t dss = depth_stencil_state_t::standard;
 	};
 
 	struct draw_range_t
@@ -86,6 +88,7 @@ namespace shiny
 			inline auto fs_set(fragment_stage_t& fs, bound_compute_views_t const& cvs) -> void    { fs.cvs = cvs; }
 
 			inline auto om_set(output_merger_stage_t& om, blender_cptr const& b) -> void { om.b = b; }
+			inline auto om_set(output_merger_stage_t& om, depth_stencil_state_t const& dss) -> void { om.dss = dss; }
 		}
 
 		template <typename... Args>

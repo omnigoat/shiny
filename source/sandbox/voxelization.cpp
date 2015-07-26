@@ -150,17 +150,16 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 	auto voxelwidth = (gridwidth / gridsize);
 	auto voxel_halfwidth = std::sqrtf(voxelwidth * voxelwidth) / 0.5f;
 
+#if 1
 	for (auto const& f : obj.faces())
 	{
 		auto t = obj.triangle_of(f);
 
 		// expand triangle edges by half voxel-width
-#if 1
 		auto tmid = (t.v0 + t.v1 + t.v2) / 3.f;
 		t.v0 = tmid + (t.v0 - tmid) * (1.f + voxel_halfwidth);
 		t.v1 = tmid + (t.v1 - tmid) * (1.f + voxel_halfwidth);
 		t.v2 = tmid + (t.v2 - tmid) * (1.f + voxel_halfwidth);
-#endif
 
 		auto tbb = t.aabb();
 		auto info = aml::aabb_triangle_intersection_info_t{aml::vector4f{voxelwidth, voxelwidth, voxelwidth}, t.v0, t.v1, t.v2};
@@ -203,7 +202,7 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 		std::unique(fragments.begin(), fragments.end()),
 		fragments.end());
 
-
+#if 0
 	voxelbuf = shiny::make_buffer(ctx,
 		shiny::resource_type_t::structured_buffer,
 		shiny::resource_usage_t::shader_resource,
@@ -214,6 +213,8 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 	voxelbuf_view = shiny::make_resource_view(voxelbuf,
 		shiny::resource_view_type_t::input,
 		shiny::element_format_t::unknown);
+#endif
+#endif
 
 #if 1
 	// load .obj triangles into vb/ib so that we can see the original mesh
@@ -262,8 +263,8 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 
 	// fragment-shader
 	{
-		auto f = atma::filesystem::file_t("../../shaders/fs_voxelize.hlsl");
-		fs_voxelize = shiny::create_fragment_shader(ctx, f.read_into_memory(), false);
+		auto f = atma::filesystem::file_t("../shiny/x64/Debug/fs_voxelize.cso");
+		fs_voxelize = shiny::create_fragment_shader(ctx, f.read_into_memory(), true);
 	}
 
 	// fragments buffer
@@ -277,6 +278,106 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 	fragments_view = shiny::make_resource_view(fragments_buf,
 		shiny::resource_view_type_t::compute,
 		shiny::element_format_t::unknown);
+
+	{
+		namespace sdc = shiny::draw_commands;
+
+
+		uint32 counters[2] = {0, 0};
+		auto countbuf = shiny::make_buffer(ctx,
+			shiny::resource_type_t::structured_buffer,
+			shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
+			shiny::resource_storage_t::persistant,
+			shiny::buffer_dimensions_t{sizeof(uint32), 2},
+			shiny::buffer_data_t{&counters, 2});
+
+		auto countbuf_view = shiny::make_resource_view(countbuf,
+			shiny::resource_view_type_t::compute,
+			shiny::element_format_t::unknown);
+
+		auto mid = (bbmin + bbmax) / 2.f;
+		mid.w = gridwidth / 2.f;
+		auto cb = shiny::make_constant_buffer(ctx, mid);
+
+		shiny::signal_draw(ctx,
+
+			sdc::input_assembly_stage(vb->data_declaration(), vb, ib),
+			sdc::vertex_stage(vs_voxelize,
+				shiny::bound_constant_buffers_t{
+					{0, cb}
+				}
+			),
+
+			sdc::geometry_stage(gs_voxelize),
+
+			sdc::fragment_stage(
+				fs_voxelize,
+
+				shiny::bound_constant_buffers_t{
+					{0, cb}
+				},
+
+				shiny::bound_compute_views_t{
+					{0, countbuf_view},
+					{1, fragments_view}
+				}
+			),
+
+			sdc::output_merger_stage(
+				shiny::depth_stencil_state_t::off
+			)
+		);
+
+		auto counter_scratch = shiny::make_buffer(ctx,
+			shiny::resource_type_t::staging_buffer,
+			shiny::resource_usage_mask_t::none,
+			shiny::resource_storage_t::staging,
+			shiny::buffer_dimensions_t{sizeof(uint32), 2},
+			shiny::buffer_data_t{});
+
+		ctx->signal_copy_buffer(counter_scratch, countbuf);
+
+		uint fragment_count = 0;
+		ctx->signal_rs_map(counter_scratch, 0, shiny::map_type_t::read, [&](shiny::mapped_subresource_t const& ms) {
+			fragment_count = *(uint*)ms.data;
+		});
+
+		ctx->signal_block();
+
+		auto scratch = shiny::make_buffer(ctx,
+			shiny::resource_type_t::staging_buffer,
+			shiny::resource_usage_mask_t::none,
+			shiny::resource_storage_t::staging,
+			shiny::buffer_dimensions_t{sizeof(uint32), 5 * 1024 * 1024},
+			shiny::buffer_data_t{});
+
+		ctx->signal_copy_buffer(scratch, fragments_buf);
+
+		shiny::buffer_t::aligned_data_t<uint> gpu_fragments(fragment_count);
+		ctx->signal_rs_map(scratch, 0, shiny::map_type_t::read, [&](shiny::mapped_subresource_t const& ms) {
+			memcpy(gpu_fragments.data(), ms.data, sizeof(uint) * fragment_count);
+		});
+
+		ctx->signal_block();
+
+		std::sort(gpu_fragments.begin(), gpu_fragments.end());
+
+		gpu_fragments.erase(
+			std::unique(gpu_fragments.begin(), gpu_fragments.end()),
+			gpu_fragments.end());
+
+
+		voxelbuf = shiny::make_buffer(ctx,
+			shiny::resource_type_t::structured_buffer,
+			shiny::resource_usage_t::shader_resource,
+			shiny::resource_storage_t::persistant,
+			shiny::buffer_dimensions_t::infer(gpu_fragments),
+			shiny::buffer_data_t{gpu_fragments.data(), gpu_fragments.size()});
+
+		voxelbuf_view = shiny::make_resource_view(voxelbuf,
+			shiny::resource_view_type_t::input,
+			shiny::element_format_t::unknown);
+	}
 }
 
 auto voxelization_plugin_t::setup_svo() -> void
@@ -463,22 +564,7 @@ auto voxelization_plugin_t::setup_rendering() -> void
 
 auto voxelization_plugin_t::gfx_ctx_draw(shiny::context_ptr const& ctx) -> void
 {
-	namespace sdc = shiny::draw_commands;
-
-	shiny::signal_draw(ctx,
-
-		sdc::input_assembly_stage(vb->data_declaration(), vb, ib),
-		sdc::vertex_stage(vs_voxelize),
-		sdc::geometry_stage(gs_voxelize),
-
-		sdc::fragment_stage(
-			fs_voxelize,
-			
-			shiny::bound_compute_views_t{
-				{0, fragments_view}
-			}
-		)
-	);
+	
 }
 
 auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void

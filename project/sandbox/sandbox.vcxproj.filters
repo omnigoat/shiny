@@ -56,5 +56,8 @@
     <None Include="..\..\shaders\svo_traversal.hlsli">
       <Filter>shaders</Filter>
     </None>
+    <None Include="..\..\shaders\morton.hlsli">
+      <Filter>shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>
