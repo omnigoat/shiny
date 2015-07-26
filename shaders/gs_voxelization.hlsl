@@ -37,17 +37,17 @@ static matrix projs[] =
 	(
 		float4( 0.f, 0.f, 1.f, 0.f),
 		float4( 0.f, 1.f, 0.f, 0.f),
-		float4(-1.f, 0.f, 0.f, 0.f),
+		float4( 1.f, 0.f, 0.f, 0.f),
 		float4( 0.f, 0.f, 0.f, 1.f)
 	),
 
 	// project down y-axis
 	matrix
 	(
-		float4( 0.f, 1.f,  0.f, 0.f),
-		float4( 0.f, 0.f, -1.f, 0.f),
-		float4(-1.f, 0.f,  0.f, 0.f),
-		float4( 0.f, 0.f,  0.f, 1.f)
+		float4( 0.f, 0.f, 1.f, 0.f),
+		float4( 1.f, 0.f, 0.f, 0.f),
+		float4( 0.f, 1.f, 0.f, 0.f),
+		float4( 0.f, 0.f, 0.f, 1.f)
 	),
 
 	// project down z-axis
@@ -57,7 +57,16 @@ static matrix projs[] =
 		float4( 0.f, 1.f, 0.f, 0.f),
 		float4( 0.f, 0.f, 1.f, 0.f),
 		float4( 0.f, 0.f, 0.f, 1.f)
-	)
+	),
+
+	// debugging, wipe triangle out
+	matrix
+	(
+		float4( 0.f, 0.f, 0.f, 0.f),
+		float4( 0.f, 0.f, 0.f, 0.f),
+		float4( 0.f, 0.f, 0.f, 0.f),
+		float4( 0.f, 0.f, 0.f, 1.f)
+	),
 };
 
 
@@ -83,6 +92,10 @@ void main(triangle VSOutput input[3], inout TriangleStream<GSOutput> output)
 	float4 v0 = mul(projs[proj_idx], input[0].world_position);
 	float4 v1 = mul(projs[proj_idx], input[1].world_position);
 	float4 v2 = mul(projs[proj_idx], input[2].world_position);
+
+	v0.z = v0.z * 0.5f + 0.5f;
+	v1.z = v1.z * 0.5f + 0.5f;
+	v2.z = v2.z * 0.5f + 0.5f;
 
 	// edges in homogenous clip-space
 	float3 e01 = v1.xyw - v0.xyw;
@@ -111,6 +124,7 @@ void main(triangle VSOutput input[3], inout TriangleStream<GSOutput> output)
 	GSOutput g0;
 	g0.position.xyw = cross(p0, p1);
 	g0.position.z = v0.z;
+	g0.position = v0;
 	g0.normal = normal;
 	g0.aabb = aabb;
 	output.Append(g0);
@@ -118,6 +132,7 @@ void main(triangle VSOutput input[3], inout TriangleStream<GSOutput> output)
 	GSOutput g1;
 	g1.position.xyw = cross(p1, p2);
 	g1.position.z = v1.z;
+	g1.position = v1;
 	g1.normal = normal;
 	g1.aabb = aabb;
 	output.Append(g1);
@@ -125,6 +140,7 @@ void main(triangle VSOutput input[3], inout TriangleStream<GSOutput> output)
 	GSOutput g2;
 	g2.position.xyw = cross(p2, p0);
 	g2.position.z = v2.z;
+	g2.position = v2;
 	g2.normal = normal;
 	g2.aabb = aabb;
 	output.Append(g2);
