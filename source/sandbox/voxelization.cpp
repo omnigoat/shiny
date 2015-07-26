@@ -99,7 +99,7 @@ auto voxelization_plugin_t::main_setup() -> void
 	setup_rendering();
 }
 
-auto const gridsize = 128;
+auto const gridsize = 256;
 
 auto voxelization_plugin_t::setup_voxelization() -> void
 {
@@ -150,7 +150,7 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 	auto voxelwidth = (gridwidth / gridsize);
 	auto voxel_halfwidth = std::sqrtf(voxelwidth * voxelwidth) / 0.5f;
 
-#if 1
+#if 0
 	for (auto const& f : obj.faces())
 	{
 		auto t = obj.triangle_of(f);
@@ -279,6 +279,10 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 		shiny::resource_view_type_t::compute,
 		shiny::element_format_t::unknown);
 
+	fragments_srv_view = shiny::make_resource_view(fragments_buf,
+		shiny::resource_view_type_t::input,
+		shiny::element_format_t::unknown);
+
 	{
 		namespace sdc = shiny::draw_commands;
 
@@ -337,12 +341,14 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 
 		ctx->signal_copy_buffer(counter_scratch, countbuf);
 
-		uint fragment_count = 0;
 		ctx->signal_rs_map(counter_scratch, 0, shiny::map_type_t::read, [&](shiny::mapped_subresource_t const& ms) {
-			fragment_count = *(uint*)ms.data;
+			fragments_count = *(uint*)ms.data;
 		});
 
 		ctx->signal_block();
+		ctx->immediate_draw_pipeline_reset();
+		
+#if 0
 
 		auto scratch = shiny::make_buffer(ctx,
 			shiny::resource_type_t::staging_buffer,
@@ -353,20 +359,23 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 
 		ctx->signal_copy_buffer(scratch, fragments_buf);
 
-		shiny::buffer_t::aligned_data_t<uint> gpu_fragments(fragment_count);
+		shiny::buffer_t::aligned_data_t<uint> gpu_fragments(fragments_count);
 		ctx->signal_rs_map(scratch, 0, shiny::map_type_t::read, [&](shiny::mapped_subresource_t const& ms) {
-			memcpy(gpu_fragments.data(), ms.data, sizeof(uint) * fragment_count);
+			memcpy(gpu_fragments.data(), ms.data, sizeof(uint) * fragments_count);
 		});
 
 		ctx->signal_block();
+#endif
 
+#if 0
 		std::sort(gpu_fragments.begin(), gpu_fragments.end());
 
 		gpu_fragments.erase(
 			std::unique(gpu_fragments.begin(), gpu_fragments.end()),
 			gpu_fragments.end());
+#endif
 
-
+#if 0
 		voxelbuf = shiny::make_buffer(ctx,
 			shiny::resource_type_t::structured_buffer,
 			shiny::resource_usage_t::shader_resource,
@@ -377,6 +386,7 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 		voxelbuf_view = shiny::make_resource_view(voxelbuf,
 			shiny::resource_view_type_t::input,
 			shiny::element_format_t::unknown);
+#endif
 	}
 }
 
@@ -487,14 +497,14 @@ auto voxelization_plugin_t::setup_svo() -> void
 
 	// setup bound resources
 	auto bound_constant_buffers = scc::bind_constant_buffers({{0, cb}});
-	auto bound_input_views      = scc::bind_input_views({{0, voxelbuf_view}});
+	auto bound_input_views      = scc::bind_input_views({{0, fragments_srv_view}});
 	auto bound_compute_views    = scc::bind_compute_views({{0, countbuf_view}, {1, nodecache_view}, {2, brickcache_view}});
 
 	// mark & allocate tiles in the node-cache
 	for (int i = 0; i != levels_required; ++i)
 	{
 		ctx->signal_rs_upload(cb, cbuf{
-			(uint32)fragments.size(),
+			(uint32)fragments_count,
 			(uint32)levels_required,
 			(uint32)i
 		});
@@ -505,7 +515,7 @@ auto voxelization_plugin_t::setup_svo() -> void
 			bound_constant_buffers,
 			bound_input_views,
 			bound_compute_views,
-			scc::dispatch(cs_mark, (uint)fragments.size() / 64, 1, 1),
+			scc::dispatch(cs_mark, (uint)fragments_count / 64, 1, 1),
 			scc::dispatch(cs_allocate, d, d, d));
 	}
 
@@ -514,7 +524,7 @@ auto voxelization_plugin_t::setup_svo() -> void
 	// 3) write fragments into 3d texture
 	{
 		ctx->signal_rs_upload(cb, cbuf{
-			(uint32)fragments.size(),
+			(uint32)fragments_count,
 			(uint32)levels_required,
 			(uint32)levels_required
 		});
@@ -524,9 +534,9 @@ auto voxelization_plugin_t::setup_svo() -> void
 			bound_constant_buffers,
 			bound_input_views,
 			bound_compute_views,
-			scc::dispatch(cs_mark, (uint)fragments.size() / 64, 1, 1),
+			scc::dispatch(cs_mark, (uint)fragments_count / 64, 1, 1),
 			scc::dispatch(cs_allocate, dim, dim, dim),
-			scc::dispatch(cs_write_fragments, (uint)fragments.size() / 64, 1, 1));
+			scc::dispatch(cs_write_fragments, (uint)fragments_count / 64, 1, 1));
 	}
 }
 

@@ -64,11 +64,14 @@ namespace sandbox
 	private:
 		// fragments
 		using fragments_t = shiny::buffer_t::aligned_data_t<voxel_t>;
+
+		uint fragments_count;
 		fragments_t fragments;
 		shiny::buffer_ptr voxelbuf;
 		shiny::resource_view_ptr voxelbuf_view;
 		shiny::buffer_ptr fragments_buf;
 		shiny::resource_view_ptr fragments_view;
+		shiny::resource_view_ptr fragments_srv_view;
 		shiny::vertex_shader_ptr vs_voxelize;
 		shiny::geometry_shader_ptr gs_voxelize;
 		shiny::fragment_shader_ptr fs_voxelize;

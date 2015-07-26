@@ -10,6 +10,7 @@ struct GSOutput
 	nointerpolation float3 normal : Normal;
 	nointerpolation float4 aabb : AABB;
 	nointerpolation uint proj : ProjIdx;
+	float3 posagain : Position;
 };
 
 
@@ -123,29 +124,26 @@ void main(triangle VSOutput input[3], inout TriangleStream<GSOutput> output)
 
 	// output triangle
 	GSOutput g0;
-	g0.position.xyw = cross(p0, p1);
-	g0.position.z = v0.z;
 	g0.position = v0;
 	g0.normal = normal;
 	g0.aabb = aabb;
 	g0.proj = proj_idx;
+	g0.posagain = v0;
 	output.Append(g0);
 
 	GSOutput g1;
-	g1.position.xyw = cross(p1, p2);
-	g1.position.z = v1.z;
 	g1.position = v1;
 	g1.normal = normal;
 	g1.aabb = aabb;
 	g1.proj = proj_idx;
+	g1.posagain = v1;
 	output.Append(g1);
 
 	GSOutput g2;
-	g2.position.xyw = cross(p2, p0);
-	g2.position.z = v2.z;
 	g2.position = v2;
 	g2.normal = normal;
 	g2.aabb = aabb;
 	g2.proj = proj_idx;
+	g2.posagain = v2;
 	output.Append(g2);
 }

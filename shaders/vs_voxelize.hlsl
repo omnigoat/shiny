@@ -5,7 +5,7 @@ cbuffer lulz : register(c0)
 };
 
 // so basic!
-float4 main(float4 position : Position) : SV_Position
+noperspective float4 main(float4 position : Position) : SV_Position
 {
 	// position in [-1, 1]
 	float3 p = (position.xyz - bounds.xyz) / bounds.w;

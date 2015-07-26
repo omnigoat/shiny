@@ -2,10 +2,11 @@
 
 struct FSInput
 {
-	float4 position : SV_Position;
+	noperspective float4 position : SV_Position;
 	nointerpolation float3 normal : Normal;
 	nointerpolation float4 aabb : AABB;
 	nointerpolation uint proj_idx : ProjIdx;
+	float3 posagain : Position;
 };
 
 
@@ -58,20 +59,16 @@ static matrix projs[] =
 
 float4 main(FSInput input) : SV_Target
 {
+	// position now in [0, 1] range
+	float3 p = float3(input.posagain.xy * 0.5f + 0.5f, input.posagain.z);
+	// unproject and expand to 128 for now
+	float3 p2 = mul(projs[input.proj_idx], float4(p, 1.f)).xyz * 256;
+
+	// write new fragment
 	uint idx;
 	InterlockedAdd(countbuf[0], 1, idx);
+	morton_encoding32(fragments[idx], p2.x, p2.y, p2.z);
 
-	float3 p2 = (input.position - 0.5f) * 0.5f;
-	//float3 p2 = float3(input.position.xy, (input.position.z - 0.5f) * 2.f);
-	//float3 p2 = (input.position - 0.5f) * 2.f;
-	float3 p = mul(projs[input.proj_idx], p2);
-	p = p * 0.5f + 0.5f;
-	//float4 p = input.position;
-	p = p * bounds.w * 0.5f;
-
-	morton_encoding32(fragments[idx], p.x, p.y, p.z);
-	//fragments[idx] = idx;
-
-	//discard;
+	discard;
 	return float4(1.f, 0.f, 0.f, 0.f);
 }

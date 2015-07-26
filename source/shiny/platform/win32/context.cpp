@@ -73,6 +73,22 @@ context_t::context_t(runtime_t& runtime, fooey::window_ptr const& window, uint a
 
 		for (auto i = 0; i != D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT; ++i)
 			samplers[i]->Release();
+
+		D3D11_RASTERIZER_DESC rasterDesc;
+		rasterDesc.AntialiasedLineEnable = false;
+		rasterDesc.CullMode = D3D11_CULL_NONE;
+		rasterDesc.DepthBias = 0;
+		rasterDesc.DepthBiasClamp = 0.0f;
+		rasterDesc.DepthClipEnable = true;
+		rasterDesc.FillMode = D3D11_FILL_SOLID;
+		rasterDesc.FrontCounterClockwise = true;
+		rasterDesc.MultisampleEnable = false;
+		rasterDesc.ScissorEnable = false;
+		rasterDesc.SlopeScaledDepthBias = 0.0f;
+
+		atma::com_ptr<ID3D11RasterizerState> d3d_rs;
+		d3d_device_->CreateRasterizerState(&rasterDesc, d3d_rs.assign());
+		d3d_immediate_context_->RSSetState(d3d_rs.get());
 	}
 }
 
@@ -544,6 +560,13 @@ auto context_t::immediate_compute_pipeline_reset() -> void
 	cs_srvs_.clear();
 	cs_uavs_.clear();
 	cs_shader_ = compute_shader_cptr::null;
+
+	ID3D11UnorderedAccessView* uavs[D3D11_PS_CS_UAV_REGISTER_COUNT - 1]{};
+	UINT atomic_counters[D3D11_PS_CS_UAV_REGISTER_COUNT - 1];
+	memset(atomic_counters, 0, sizeof(atomic_counters));
+	d3d_immediate_context_->OMSetRenderTargetsAndUnorderedAccessViews(
+		D3D11_KEEP_RENDER_TARGETS_AND_DEPTH_STENCIL, nullptr, nullptr,
+		1, D3D11_PS_CS_UAV_REGISTER_COUNT - 1, uavs, atomic_counters);
 }
 
 auto context_t::immediate_cs_set_constant_buffers(bound_constant_buffers_t const& bufs) -> void

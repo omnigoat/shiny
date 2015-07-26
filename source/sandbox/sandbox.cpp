@@ -64,7 +64,7 @@ extern int function_main();
 
 application_t::application_t()
 	: window_renderer(fooey::system_renderer())
-	, window(fooey::window("Excitement!", 128 + 16, 128 + 38))
+	, window(fooey::window("Excitement!", 1024, 1024))
 	, runtime{}
 {
 	function_main();
