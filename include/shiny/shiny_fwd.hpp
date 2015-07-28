@@ -105,6 +105,9 @@ namespace shiny
 	using  blender_ptr  = atma::intrusive_ptr<blender_t>;
 	using  blender_cptr = atma::intrusive_ptr<blender_t const>;
 
+	struct draw_target_t;
+	using  draw_target_ptr = atma::intrusive_ptr<draw_targe_t>;
+
 	struct mapped_subresource_t
 	{
 		void* data;

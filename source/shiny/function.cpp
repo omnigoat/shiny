@@ -5,6 +5,8 @@
 #include <memory>
 #include <functional>
 #include <tuple>
+#include <chrono>
+#include <string>
 
 template <typename> struct fn_t;
 
@@ -644,12 +646,7 @@ auto multiplus(int a, float b, char c) -> int
 	return (int)(a + b + c);
 }
 
-uint64 plus(uint64 a, uint64 b) { return a + b; }
-
-auto plusint(int a, int b, int c) -> int
-{
-	return a+b+c;
-}
+int plus(int a, int b) { return a + b; }
 
 
 struct dragon_t
@@ -660,110 +657,31 @@ struct dragon_t
 	int things = 0;
 };
 
-#include <chrono>
+#define FUNCTIONS_ON 1
 
-#if 0
-template <typename T, size_t i> struct K2 {};
 
-template <typename Blam, size_t...> struct K;
+auto c2f(char x, int) -> float { return (float)x + 4.f; }
+auto f2i(float x) -> int { return (int)x * 2; }
+auto i2s(int x) -> std::string { return std::to_string(x); }
 
-template <typename... Blam, size_t... idxs>
-struct K<std::tuple<Blam...>, idxs...>
-	: K2<std::tuple<Blam...>, idxs>...
-{};
-#endif
+
+
 
 int function_main()
 {
-	//auto k = K<std::tuple<int, float>, 4, 5>{};
+#if FUNCTIONS_ON
+	auto g = atma::functionize(c2f);
+	auto f = atma::functionize(f2i);
+	auto e = atma::functionize(i2s);
 
-	auto b = atma::curry(&dragon_t::plus);
+	//auto c = e * f * atma::function<float(char, int)>{&c2f};
+	auto c = f * g;
 
-	using tt = atma::function_traits<int(int, float)>::arg_type<0>;
-	
-	bool bbb = atma::function_traits<int(int, float)>::is_memfnptr;
-	bool bbb2 = atma::function_traits<int(dragon_t::*)(int, float)>::is_memfnptr;
+	// partial-application
+	//auto cp1 = c(6);
 
-#if 0
-	auto f = fn_t<int(int const&, float)>{&plus};
-	int i = 3;
-	auto r = f(i, 4);
-	auto f2 = f(3);
-	auto r2 = f2(4.f);
-	ATMA_ASSERT(r == r2);
+	//auto r = c(17);
 #endif
-
-
-	//auto blam = atma::curry(&multiplus, 2);
-	auto blam = atma::bind(&multiplus, 2, arg2, arg1);
-	//auto lkh = atma::function_traits<decltype(blam)>::tupled_args_type();
-	auto d = dragon_t();
-
-	auto clock = std::chrono::high_resolution_clock{};
-
-#if 1
-	auto stdfn = std::function<uint64(uint64, uint64)>(&plus);
-	auto atmafn = atma::function<uint64(uint64, uint64)>(&plus);
-#else
-	auto stdfn = std::function<uint64(uint64, uint64)>(atma::curry(&dragon_t::plus, &d));
-	auto atmafn = fn_t<uint64(uint64, uint64)>(atma::curry(&dragon_t::plus, &d));
-#endif
-
-	{
-		auto efn = atma::function<int(int, float, char)>{};
-
-		if (efn)
-		{
-		}
-		else
-		{
-			int breakpoint = 4;
-		}
-
-		auto fn = atma::function<int(int, float, char)>{&multiplus};
-		//fn = atma::bind(&multiplus, 2, arg2, arg1);
-		bool fn_yay = (bool)fn;
-		auto r1 = fn(1, 2.f);
-		auto r2 = fn(1, 2.f, 3);
-		auto r3 = fn(1, 2.f, 3, 4.0);
-		
-		auto fn2 = atma::function<int(int, int, int)>{&plusint};
-		//fn2 = std::move(fn);
-		auto fn2a = fn2(5);
-		auto s1 = fn2a(6, 7);
-		auto fn2b = fn2a(6);
-		auto s2 = fn2b(7);
-	}
-	
-#if 1
-	{
-		auto s = clock.now();
-		uint64 result = 0;
-		for (uint64 i = 0u; i != 100000000u; ++i)
-			result += atmafn(i, i + 1);
-
-		auto s2 = clock.now();
-
-		printf("atma time: %d microseconds, result: %ull\n", (int)std::chrono::duration_cast<std::chrono::microseconds>(s2 - s).count(), (uint)result);
-	}
-
-#else
-	{
-		auto s = clock.now();
-		uint64 result = 0;
-		for (uint64 i = 0; i != 100000000; ++i)
-			result += stdfn(i, i + 1);
-
-		auto s2 = clock.now();
-
-		printf(" std time: %d microseconds, result: %ull\n", std::chrono::duration_cast<std::chrono::microseconds>(s2 - s), result);
-	}
-
-	
-#endif
-	
-
-
 
 	return 0;
 }

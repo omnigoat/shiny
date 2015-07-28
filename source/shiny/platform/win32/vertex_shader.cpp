@@ -5,7 +5,6 @@
 #include <shiny/data_declaration.hpp>
 #include <shiny/context.hpp>
 
-
 using namespace shiny;
 using shiny::vertex_shader_t;
 
