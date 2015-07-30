@@ -5,57 +5,12 @@
 
 auto shiny::element_count(shiny::element_format_t f) -> int
 {
-	using ef = shiny::element_format_t;
-
-	switch (f)
-	{
-		default:
-			break;
-
-		// 4-component
-		case ef::g8x4:
-		case ef::s8x4:
-		case ef::u8x4:
-		case ef::sn8x4:
-		case ef::un8x4:
-		case ef::f16x4:
-		case ef::f32x4:
-			return 4;
-
-		// 2-component
-		case ef::u32x2:
-		case ef::f32x2:
-			return 2;
-
-		// 1-component
-		case ef::g32: case ef::s32: case ef::u32:
-			return 1;
-	}
-
-	ATMA_HALT("component-count of non-recognised element_format_t");
-	return -1;
+	return ((uint16)f & 0xf0) >> 4;
 }
 
-auto shiny::element_size(element_format_t fmt) -> size_t
+auto shiny::element_size(element_format_t f) -> size_t
 {
-	static size_t const mapping[] =
-	{
-		0,
-
-		4,4,4,4,4,
-		8,
-		16,
-
-		// 2-component
-		8,
-		8,
-
-		// 1-component
-		4,4,4,
-	};
-
-	ATMA_ASSERT((int)fmt < std::extent<decltype(mapping)>::value);
-	return mapping[(int)fmt];
+	return element_count(f) * (((uint16)f & 0xff00) >> 8) / 8;
 }
 
 auto shiny::index_size(index_format_t fmt) -> size_t

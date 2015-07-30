@@ -21,27 +21,37 @@ namespace shiny { namespace platform {
 
 	inline auto dxgi_format_of(element_format_t fmt) -> DXGI_FORMAT
 	{
-		static DXGI_FORMAT const mapping[] =
+		using ef = element_format_t;
+
+		switch (fmt)
 		{
-			DXGI_FORMAT_UNKNOWN,
-			
-			DXGI_FORMAT_R8G8B8A8_TYPELESS,
-			DXGI_FORMAT_R8G8B8A8_SINT,
-			DXGI_FORMAT_R8G8B8A8_UINT,
-			DXGI_FORMAT_R8G8B8A8_SNORM,
-			DXGI_FORMAT_R8G8B8A8_UNORM,
-			DXGI_FORMAT_R16G16B16A16_FLOAT,
-			DXGI_FORMAT_R32G32B32A32_FLOAT,
+			// unknown
+			case ef::unknown: return DXGI_FORMAT_UNKNOWN;
 
-			DXGI_FORMAT_R32G32_UINT,
-			DXGI_FORMAT_R32G32_FLOAT,
+			// 4-component
+			case ef::g8x4: return DXGI_FORMAT_R8G8B8A8_TYPELESS;
+			case ef::u8x4: return DXGI_FORMAT_R8G8B8A8_UINT;
+			case ef::s8x4: return DXGI_FORMAT_R8G8B8A8_SINT;
+			case ef::nu8x4: return DXGI_FORMAT_R8G8B8A8_UNORM;
+			case ef::ns8x4: return DXGI_FORMAT_R8G8B8A8_SNORM;
+			case ef::f16x4: return DXGI_FORMAT_R16G16B16A16_FLOAT;
+			case ef::f32x4: return DXGI_FORMAT_R32G32B32A32_FLOAT;
 
-			DXGI_FORMAT_R32_TYPELESS,
-			DXGI_FORMAT_R32_SINT,
-			DXGI_FORMAT_R32_UINT,
-		};
+			// 2-component
+			case ef::u32x2: return DXGI_FORMAT_R32G32_UINT;
+			case ef::f32x2: return DXGI_FORMAT_R32G32_FLOAT;
 
-		return detail::lookup(mapping, fmt);
+			// 1-component
+			case ef::g32: return DXGI_FORMAT_R32_TYPELESS;
+			case ef::u32: return DXGI_FORMAT_R32_UINT;
+			case ef::s32: return DXGI_FORMAT_R32_SINT;
+
+			default:
+				ATMA_HALT("unsupported element-format");
+				break;
+		}
+
+		return DXGI_FORMAT_UNKNOWN;
 	}
 
 	inline auto d3dbind_of(resource_type_t bu) -> D3D11_BIND_FLAG

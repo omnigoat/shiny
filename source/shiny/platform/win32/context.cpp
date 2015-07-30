@@ -112,7 +112,7 @@ auto context_t::pull_display_format(display_mode_t& mode, DXGI_SWAP_CHAIN_DESC& 
 	mode.width = desc.BufferDesc.Width;
 	mode.height = desc.BufferDesc.Height;
 	mode.fullscreen = desc.Windowed == FALSE;
-	mode.format = element_format_t::un8x4;
+	mode.format = element_format_t::nu8x4;
 	mode.refreshrate_frames = desc.BufferDesc.RefreshRate.Numerator;
 	mode.refreshrate_period = desc.BufferDesc.RefreshRate.Denominator;
 }

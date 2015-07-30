@@ -194,6 +194,7 @@
     <ClCompile Include="..\..\source\shiny\platform\win32\index_buffer.cpp" />
     <ClCompile Include="..\..\source\shiny\platform\win32\output.cpp" />
     <ClCompile Include="..\..\source\shiny\platform\win32\fragment_shader.cpp" />
+    <ClCompile Include="..\..\source\shiny\platform\win32\render_target_view.cpp" />
     <ClCompile Include="..\..\source\shiny\platform\win32\resource.cpp" />
     <ClCompile Include="..\..\source\shiny\platform\win32\resource_view.cpp" />
     <ClCompile Include="..\..\source\shiny\platform\win32\runtime.cpp" />
@@ -233,6 +234,7 @@
     <ClInclude Include="..\..\include\shiny\data_stream.hpp" />
     <ClInclude Include="..\..\include\shiny\depth_state.hpp" />
     <ClInclude Include="..\..\include\shiny\draw.hpp" />
+    <ClInclude Include="..\..\include\shiny\draw_target.hpp" />
     <ClInclude Include="..\..\include\shiny\generic_buffer.hpp" />
     <ClInclude Include="..\..\include\shiny\geometry_declaration.hpp" />
     <ClInclude Include="..\..\include\shiny\geometry_shader.hpp" />
@@ -242,6 +244,7 @@
     <ClInclude Include="..\..\include\shiny\platform\win32\dxgid3d_convert.hpp" />
     <ClInclude Include="..\..\include\shiny\platform\win32\generic_buffer.hpp" />
     <ClInclude Include="..\..\include\shiny\platform\win32\geometry_shader.hpp" />
+    <ClInclude Include="..\..\include\shiny\platform\win32\render_target_view.hpp" />
     <ClInclude Include="..\..\include\shiny\platform\win32\resource.hpp" />
     <ClInclude Include="..\..\include\shiny\platform\win32\resource_view.hpp" />
     <ClInclude Include="..\..\include\shiny\platform\win32\structured_buffer.hpp" />
