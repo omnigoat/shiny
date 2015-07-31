@@ -45,6 +45,11 @@ namespace shiny { namespace platform {
 			case ef::g32: return DXGI_FORMAT_R32_TYPELESS;
 			case ef::u32: return DXGI_FORMAT_R32_UINT;
 			case ef::s32: return DXGI_FORMAT_R32_SINT;
+			case ef::u16: return DXGI_FORMAT_R16_UINT;
+
+			// depth-stencil
+			case ef::df32:    return DXGI_FORMAT_D32_FLOAT;
+			case ef::dnu24s8: return DXGI_FORMAT_D24_UNORM_S8_UINT;
 
 			default:
 				ATMA_HALT("unsupported element-format");
@@ -95,17 +100,6 @@ namespace shiny { namespace platform {
 		{
 			D3D11_INPUT_PER_INSTANCE_DATA,
 			D3D11_INPUT_PER_VERTEX_DATA,
-		};
-
-		return detail::lookup(mapping, x);
-	}
-
-	inline auto dxgi_format_of(index_format_t x) -> DXGI_FORMAT
-	{
-		static DXGI_FORMAT const mapping[] =
-		{
-			DXGI_FORMAT_R16_UINT,
-			DXGI_FORMAT_R32_UINT,
 		};
 
 		return detail::lookup(mapping, x);

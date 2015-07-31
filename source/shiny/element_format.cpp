@@ -18,18 +18,16 @@ auto shiny::is_generic(element_format_t f) -> bool
 	return ((uint32)f & 0x1) != 0;
 }
 
-auto shiny::index_size(index_format_t fmt) -> size_t
+auto shiny::format_depth_size(element_format_t f) -> size_t
 {
-	switch (fmt)
-	{
-		case index_format_t::index16:
-			return 2;
-
-		case index_format_t::index32:
-			return 4;
-
-		default:
-			ATMA_HALT("bad index-format");
-			return 0;
-	}
+	if ((uint32)f & 0x100)
+		return element_size(f);
+	else
+		return 0;
 }
+
+auto shiny::format_stencil_size(element_format_t f) -> size_t
+{
+	return ((uint32)f & 0x200);
+}
+

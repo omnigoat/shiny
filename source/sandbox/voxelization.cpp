@@ -121,7 +121,7 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 		}
 
 		vb = shiny::create_vertex_buffer(ctx, shiny::resource_storage_t::immutable, dd_position(), (uint)obj.vertices().size(), &obj.vertices()[0]);
-		ib = shiny::create_index_buffer(ctx, shiny::resource_storage_t::immutable, shiny::index_format_t::index32, (uint)obj.faces().size() * 3, mi.begin());
+		ib = shiny::create_index_buffer(ctx, shiny::resource_storage_t::immutable, shiny::element_format_t::u32, (uint)obj.faces().size() * 3, mi.begin());
 
 
 	}
@@ -233,7 +233,7 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 		}
 
 		vb = shiny::create_vertex_buffer(ctx, shiny::resource_storage_t::immutable, dd_position(), (uint)obj.vertices().size(), &obj.vertices()[0]);
-		ib = shiny::create_index_buffer(ctx, shiny::resource_storage_t::immutable, shiny::index_format_t::index32, (uint)obj.faces().size() * 3, mi.begin());
+		ib = shiny::create_index_buffer(ctx, shiny::resource_storage_t::immutable, shiny::element_format_t::u32, (uint)obj.faces().size() * 3, mi.begin());
 	}
 #endif
 

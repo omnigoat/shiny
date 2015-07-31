@@ -19,7 +19,7 @@ namespace shiny
 	//
 	//  bitfield:
 	//  -----------
-	//                      zzzzzzzz ccccnsif
+	//                   td zzzzzzzz ccccnsif
 	//    76543210 76543210 76543210 76543210
 	//
 	//    f: floating-point
@@ -28,6 +28,8 @@ namespace shiny
 	//    n: normalized
 	//    c: component-count
 	//    z: size of components
+	//    d: is depth-buffer
+	//    t: has 8-bit stencil
 	//     : unused
 	//
 	#define  G 0x0 //0b0000
@@ -40,6 +42,8 @@ namespace shiny
 	#define MK(t, s, c) \
 		((s << 8) | (c << 4) | (t))
 
+	#define MKDS(t, d, s) \
+		(((s / 8) << 17) | (1 << 16) | (d << 8) | (t))
 
 	enum class element_format_t : uint32
 	{
@@ -62,8 +66,14 @@ namespace shiny
 		g32 = MK(G, 32, 1),
 		u32 = MK(U, 32, 1),
 		s32 = MK(S, 32, 1),
+		u16 = MK(U, 16, 1),
+
+		// depth-stencil
+		dnu24s8 = MKDS(U, 24, 8),
+		df32    = MKDS(F, 32, 0),
 	};
 
+	#undef MKDS
 	#undef MK
 	#undef  G
 	#undef  F
@@ -76,15 +86,7 @@ namespace shiny
 	auto element_count(element_format_t) -> uint;
 	auto element_size(element_format_t) -> size_t;
 	auto is_generic(element_format_t) -> bool;
-
-
-
-	enum class index_format_t
-	{
-		index16,
-		index32,
-	};
-
-	auto index_size(index_format_t) -> size_t;
+	auto format_depth_size(element_format_t) -> size_t;
+	auto format_stencil_size(element_format_t) -> size_t;
 
 }
