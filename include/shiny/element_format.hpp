@@ -19,8 +19,8 @@ namespace shiny
 	//
 	//  bitfield:
 	//  -----------
-	//    zzzzzzzz ccccnsif
-	//    76543210 76543210
+	//                      zzzzzzzz ccccnsif
+	//    76543210 76543210 76543210 76543210
 	//
 	//    f: floating-point
 	//    i: integer
@@ -28,6 +28,7 @@ namespace shiny
 	//    n: normalized
 	//    c: component-count
 	//    z: size of components
+	//     : unused
 	//
 	#define  G 0x0 //0b0000
 	#define  F 0x1 //0b0001
@@ -40,7 +41,7 @@ namespace shiny
 		((s << 8) | (c << 4) | (t))
 
 
-	enum class element_format_t : uint16
+	enum class element_format_t : uint32
 	{
 		unknown = 0,
 
@@ -72,9 +73,9 @@ namespace shiny
 	#undef NS
 
 
-	auto element_count(element_format_t) -> int;
+	auto element_count(element_format_t) -> uint;
 	auto element_size(element_format_t) -> size_t;
-
+	auto is_generic(element_format_t) -> bool;
 
 
 

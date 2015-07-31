@@ -11,7 +11,15 @@ render_target_view_t::render_target_view_t(texture2d_ptr const& tx, uint mip)
 	, texture_{tx}
 	, mip_{mip}
 {
-	auto desc = D3D11_RENDER_TARGET_VIEW_DESC{};
+	// get format, if generic, change to unsigned int
+	auto fmt = tx->format();
+	if (is_generic(fmt))
+		fmt = (element_format_t)((uint32)fmt | 0x10);
+
+	D3D11_RENDER_TARGET_VIEW_DESC desc;
+	desc.Format = platform::dxgi_format_of(fmt);
+	desc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+	desc.Texture2D = D3D11_TEX2D_RTV{0};
 
 	ctx_->d3d_device()->CreateRenderTargetView(texture_->d3d_resource().get(), &desc, d3d_rt_.assign());
 }

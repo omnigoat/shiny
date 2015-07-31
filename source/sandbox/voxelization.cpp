@@ -10,6 +10,7 @@
 #include <shiny/compute_shader.hpp>
 #include <shiny/constant_buffer.hpp>
 #include <shiny/camera.hpp>
+#include <shiny/texture2d.hpp>
 
 #include <shelf/file.hpp>
 

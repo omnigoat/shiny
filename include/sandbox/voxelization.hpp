@@ -62,19 +62,26 @@ namespace sandbox
 		shiny::compute_shader_ptr cs_clear;
 
 	private:
-		// fragments
+		// voxelization
 		using fragments_t = shiny::buffer_t::aligned_data_t<voxel_t>;
-
-		uint fragments_count;
-		fragments_t fragments;
-		shiny::buffer_ptr voxelbuf;
-		shiny::resource_view_ptr voxelbuf_view;
+		
+		shiny::texture2d_ptr render_texture, depth_stencil_texture;
+		//shiny::render_target_ptr render_target;
+		//pepper::draw_target_ptr draw_target;
 		shiny::buffer_ptr fragments_buf;
+		uint fragments_count;
 		shiny::resource_view_ptr fragments_view;
 		shiny::resource_view_ptr fragments_srv_view;
 		shiny::vertex_shader_ptr vs_voxelize;
 		shiny::geometry_shader_ptr gs_voxelize;
 		shiny::fragment_shader_ptr fs_voxelize;
+#if 0
+		fragments_t fragments;
+		shiny::buffer_ptr voxelbuf;
+		shiny::resource_view_ptr voxelbuf_view;
+#endif
+		
+		
 
 		// svo
 		using nodes_t = std::vector<node_t>;

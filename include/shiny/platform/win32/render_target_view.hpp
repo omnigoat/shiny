@@ -11,6 +11,9 @@ namespace shiny
 	{
 		render_target_view_t(texture2d_ptr const& tx, uint mip = 0);
 
+		auto texture() const -> texture2d_ptr const& { return texture_; }
+		auto mip() const -> uint { return mip_; }
+
 	private:
 		context_ptr ctx_;
 
