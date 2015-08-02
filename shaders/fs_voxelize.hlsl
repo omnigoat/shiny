@@ -2,11 +2,10 @@
 
 struct FSInput
 {
-	noperspective float4 position : SV_Position;
+	float4 position : SV_Position;
 	nointerpolation float3 normal : Normal;
 	nointerpolation float4 aabb : AABB;
 	nointerpolation uint proj_idx : ProjIdx;
-	centroid float3 posagain : Position;
 };
 
 
@@ -62,18 +61,29 @@ static matrix projs[] =
 	),
 };
 
+
+bool inter()
+{
+	
+	return true;
+}
+
+
+
+
 float4 main(FSInput input) : SV_Target
 {
-	float3 q = input.posagain.xyz;
+	// position now in [0, dimensions] range
+	//  - note: flip y because SV_Position, mult z because depth
+	float3 p = float3(input.position.x, dimensions.y - input.position.y, input.position.z * dimensions.z);
 
-	if (q.x < input.aabb.x || q.y < input.aabb.y || q.x > input.aabb.z || q.y > input.aabb.w)
+	// cull against aabb of triangle
+	float4 aabb = (input.aabb * 0.5f + 0.5f) * dimensions.xyxy;
+	if (p.x < aabb.x || p.y < aabb.y || p.x > aabb.z || p.y > aabb.w)
 		discard;
 
-	// position now in [0, 1] range
-	float3 p = float3(input.posagain.xy * 0.5f + 0.5f, input.posagain.z);
-	// quantize
-	float d = dimensions.x;
-	p = floor(p * d);
+	// gradient
+	//float2 dz = float2(ddx(input.posagain.z), ddy(input.posagain.z));
 
 	// unproject and expand to 128 for now
 	float3 p2 = mul(projs[input.proj_idx], float4(p, 1.f)).xyz;
