@@ -79,6 +79,8 @@ float4 main(FSInput input) : SV_Target
 
 	// cull against aabb of triangle
 	float4 aabb = (input.aabb * 0.5f + 0.5f) * dimensions.xyxy;
+	aabb.xy -= 0.5f;
+	aabb.zw += 0.5f;
 	if (p.x < aabb.x || p.y < aabb.y || p.x > aabb.z || p.y > aabb.w)
 		discard;
 

@@ -120,7 +120,7 @@ void main(triangle VSOutput input[3], inout TriangleStream<GSOutput> output)
 	//  = sqrt((1/d^2) + (1/d^2))
 	//  = sqrt(2/d^2)
 	//  = sqrt(2) / d
-	float2 hpixel = 0.5f * 1.4142135637309f / dimensions.xy;
+	float2 hpixel =  1.4142135637309f / dimensions.xy;
 
 	v0.xy += hpixel * (e2 / dot(e2, n0.xy) + e0 / dot(e0, n2.xy));
 	v1.xy += hpixel * (e0 / dot(e0, n1.xy) + e1 / dot(e1, n0.xy));
