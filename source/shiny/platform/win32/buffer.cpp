@@ -98,8 +98,8 @@ buffer_t::buffer_t(
 
 		// constant-buffers must be 16byte sized/aligned
 		case resource_storage_t::constant:
-			buffer_desc.ByteWidth += 16 - (buffer_desc.ByteWidth % 16);
-			data_size += 16 - (data_size % 16);
+			buffer_desc.ByteWidth += (16 - buffer_desc.ByteWidth % 16) % 16;
+			data_size += (16 - data_size % 16) % 16;
 			// fallthrough!
 
 		case resource_storage_t::persistant:

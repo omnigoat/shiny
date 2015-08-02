@@ -410,6 +410,16 @@ auto context_t::immediate_gs_set_geometry_shader(geometry_shader_cptr const& gs)
 	gs_shader_ = gs;
 }
 
+auto shiny::context_t::immediate_gs_set_constant_buffers(bound_constant_buffers_t const& cbs) -> void
+{
+	gs_cbs_ = cbs;
+}
+
+auto shiny::context_t::immediate_gs_set_input_views(bound_input_views_t const &) -> void
+{
+	
+}
+
 auto context_t::immediate_fs_set_fragment_shader(fragment_shader_cptr const& fs) -> void
 {
 	ATMA_ASSERT(fs);
@@ -487,7 +497,12 @@ auto context_t::immediate_draw() -> void
 	}
 
 	// geometry-stage
-	{
+	{	
+		ID3D11Buffer* cbs[D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT]{};
+		for (auto const& cb : gs_cbs_)
+			cbs[cb.first] = cb.second->d3d_buffer().get();
+		d3d_immediate_context_->GSSetConstantBuffers(0, D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT, cbs);
+
 		if (!gs_shader_)
 			d3d_immediate_context_->GSSetShader(nullptr, nullptr, 0);
 		else

@@ -29,19 +29,20 @@ auto shiny::detail::generate_command(batch_t& batch, context_ptr const& ctx, inp
 	});
 }
 
-auto shiny::detail::generate_command(batch_t& batch, context_ptr const& ctx, geometry_stage_t const& gs) -> void
-{
-	batch.push([ctx, gs]{
-		ctx->immediate_gs_set_geometry_shader(gs.gs);
-	});
-}
-
 auto shiny::detail::generate_command(batch_t& batch, context_ptr const& ctx, vertex_stage_t const& vs) -> void
 {
 	batch.push([ctx, vs]{
 		ctx->immediate_vs_set_vertex_shader(vs.vs);
 		ctx->immediate_vs_set_constant_buffers(vs.cbs);
 		ctx->immediate_vs_set_input_views(vs.ivs);
+	});
+}
+
+auto shiny::detail::generate_command(batch_t& batch, context_ptr const& ctx, geometry_stage_t const& gs) -> void
+{
+	batch.push([ctx, gs] {
+		ctx->immediate_gs_set_geometry_shader(gs.gs);
+		ctx->immediate_gs_set_constant_buffers(gs.cbs);
 	});
 }
 

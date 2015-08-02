@@ -16,10 +16,10 @@ cbuffer buf_main : register(b0)
 StructuredBuffer<uint> fragments : register(t0);
 
 
-[numthreads(64, 1, 1)]
+[numthreads(8, 8, 8)]
 void main(uint3 DTid : SV_DispatchThreadID)
 {
-	uint idx = DTid.x;
+	uint idx = DTid.x * 64 + DTid.y * 8 + DTid.z;
 	if (idx >= fragment_count)
 		return;
 

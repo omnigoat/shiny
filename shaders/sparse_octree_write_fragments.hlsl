@@ -61,11 +61,11 @@ void morton_decoding32(uint morton, out uint x, out uint y, out uint z)
 }
 
 
-[numthreads(64, 1, 1)]
+[numthreads(8, 8, 8)]
 void main(uint3 DTid : SV_DispatchThreadID)
 {
 	// fragment-index, abandon if we're too large
-	uint idx = DTid.x;
+	uint idx = DTid.x * 64 + DTid.y * 8 + DTid.z;
 	if (idx >= fragment_count)
 		return;
 

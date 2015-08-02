@@ -14,9 +14,9 @@ struct GSOutput
 };
 
 
-cbuffer buf_voxelize : register(c2)
+cbuffer buf_voxelize : register(c0)
 {
-	float2 dimensions;
+	float4 dimensions;
 };
 
 
@@ -75,9 +75,6 @@ static matrix projs[] =
 [maxvertexcount(3)]
 void main(triangle VSOutput input[3], inout TriangleStream<GSOutput> output)
 {
-	float2 hpixel = 0.5f / dimensions;
-
-
 	float3 normal = cross(input[1].world_position.xyz - input[0].world_position.xyz, input[2].world_position.xyz - input[1].world_position.xyz);
 
 	// pick projection axis
@@ -95,29 +92,39 @@ void main(triangle VSOutput input[3], inout TriangleStream<GSOutput> output)
 	float4 v1 = mul(projs[proj_idx], input[1].world_position);
 	float4 v2 = mul(projs[proj_idx], input[2].world_position);
 
+	// convert Z to NDC (won't render otherwise!)
 	v0.z = v0.z * 0.5f + 0.5f;
 	v1.z = v1.z * 0.5f + 0.5f;
 	v2.z = v2.z * 0.5f + 0.5f;
 
-	// edges in homogenous clip-space
-	float3 e01 = v1.xyw - v0.xyw;
-	float3 e12 = v2.xyw - v1.xyw;
-	float3 e20 = v0.xyw - v2.xyw;
+	// equation of lines
+	float2 e0 = v1.xy - v0.xy;
+	float2 e1 = v2.xy - v1.xy;
+	float2 e2 = v0.xy - v2.xy;
 
-	// planes in homogenous clip-space
-	float3 p0 = cross(e20, v0.xyw);
-	float3 p1 = cross(e01, v1.xyw);
-	float3 p2 = cross(e12, v2.xyw);
+	// normals of triangle
+	float2 n0 = normalize(float2(e0.y, -e0.x));
+	float2 n1 = normalize(float2(e1.y, -e1.x));
+	float2 n2 = normalize(float2(e2.y, -e2.x));
+	n0 *= -sign(dot(n0, v2.xy - v0.xy));
+	n1 *= -sign(dot(n1, v0.xy - v1.xy));
+	n2 *= -sign(dot(n2, v1.xy - v2.xy));
 
-	// dilate planes
-	p0.z -= dot(hpixel, abs(p0.xy));
-	p1.z -= dot(hpixel, abs(p1.xy));
-	p2.z -= dot(hpixel, abs(p2.xy));
+	// expand triangel by half-diagonal of pixel
+	//  = sqrt((1/d)^2 + (1/d)^2)
+	//  = sqrt((1/d^2) + (1/d^2))
+	//  = sqrt(2/d^2)
+	//  = sqrt(2) / d
+	float2 hpixel = 0.5f * 1.4142135637309f / dimensions.xy;
+
+	v0.xy += hpixel * (e2 / dot(e2, n0.xy) + e0 / dot(e0, n2.xy));
+	v1.xy += hpixel * (e0 / dot(e0, n1.xy) + e1 / dot(e1, n0.xy));
+	v2.xy += hpixel * (e1 / dot(e1, n2.xy) + e2 / dot(e2, n1.xy));
 
 	// calculate aabb
-	float4 aabb = p0.xyxy;
-	aabb = float4(min(aabb.xy, p1.xy), max(aabb.zw, p1.xy));
-	aabb = float4(min(aabb.xy, p2.xy), max(aabb.zw, p2.xy));
+	float4 aabb = v0.xyxy;
+	aabb = float4(min(aabb.xy, v1.xy), max(aabb.zw, v1.xy));
+	aabb = float4(min(aabb.xy, v2.xy), max(aabb.zw, v2.xy));
 
 	// calcualte depth gradient
 	//float2 gradient = 
@@ -128,7 +135,7 @@ void main(triangle VSOutput input[3], inout TriangleStream<GSOutput> output)
 	g0.normal = normal;
 	g0.aabb = aabb;
 	g0.proj = proj_idx;
-	g0.posagain = v0;
+	g0.posagain = g0.position.xyz; //v0.xyz;
 	output.Append(g0);
 
 	GSOutput g1;
@@ -136,7 +143,7 @@ void main(triangle VSOutput input[3], inout TriangleStream<GSOutput> output)
 	g1.normal = normal;
 	g1.aabb = aabb;
 	g1.proj = proj_idx;
-	g1.posagain = v1;
+	g1.posagain = g1.position.xyz; //v1.xyz;
 	output.Append(g1);
 
 	GSOutput g2;
@@ -144,6 +151,6 @@ void main(triangle VSOutput input[3], inout TriangleStream<GSOutput> output)
 	g2.normal = normal;
 	g2.aabb = aabb;
 	g2.proj = proj_idx;
-	g2.posagain = v2;
+	g2.posagain = g2.position.xyz; //v2.xyz;
 	output.Append(g2);
 }

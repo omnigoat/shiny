@@ -657,7 +657,7 @@ struct dragon_t
 	int things = 0;
 };
 
-#define FUNCTIONS_ON 1
+#define FUNCTIONS_ON 0
 
 
 auto c2f(char x, int) -> float { return (float)x + 4.f; }
@@ -665,14 +665,12 @@ auto f2i(float x) -> int { return (int)x * 2; }
 auto i2s(int x) -> std::string { return std::to_string(x); }
 
 
-
-
 int function_main()
 {
 #if FUNCTIONS_ON
-	auto g = atma::functionize(c2f);
-	auto f = atma::functionize(f2i);
-	auto e = atma::functionize(i2s);
+	auto g = atma::functionize(&c2f);
+	auto f = atma::functionize(&f2i);
+	auto e = atma::functionize(&i2s);
 
 	//auto c = e * f * atma::function<float(char, int)>{&c2f};
 	auto c = f * g;

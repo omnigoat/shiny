@@ -100,7 +100,23 @@ auto voxelization_plugin_t::main_setup() -> void
 	setup_rendering();
 }
 
-auto const gridsize = 256;
+auto const gridsize = 512;
+
+auto fit_linear_dispatch_to_group(uint& x, uint& y, uint& z, uint xs, uint ys, uint zs, uint s) -> bool
+{
+	// s = 10,000
+	// x,y,z = 8
+	// id = x * 64 + y * 8 + z
+	// ------
+	//  [1, 1, 1] -> [8, 8, 8]
+	//  [8, 1, 1] -> [64, 8, 8]
+
+	x = std::max(1u, s / (xs * ys * zs));
+	y = 1;
+	z = 1;
+
+	return true;
+}
 
 auto voxelization_plugin_t::setup_voxelization() -> void
 {
@@ -304,6 +320,9 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 		mid.w = gridwidth / 2.f;
 		auto cb = shiny::make_constant_buffer(ctx, mid);
 
+		aml::vector4f dimensions{(float)gridsize, (float)gridsize, (float)gridsize, 0.f};
+		auto cb2 = shiny::make_constant_buffer(ctx, dimensions);
+
 		shiny::signal_draw(ctx,
 
 			sdc::input_assembly_stage(vb->data_declaration(), vb, ib),
@@ -313,13 +332,16 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 				}
 			),
 
-			sdc::geometry_stage(gs_voxelize),
-
-			sdc::fragment_stage(
-				fs_voxelize,
-
+			sdc::geometry_stage(gs_voxelize,
 				shiny::bound_constant_buffers_t{
-					{0, cb}
+					{0, cb2}
+				}
+			),
+
+			sdc::fragment_stage(fs_voxelize,
+				shiny::bound_constant_buffers_t{
+					{0, cb},
+					{1, cb2}
 				},
 
 				shiny::bound_compute_views_t{
@@ -347,7 +369,6 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 		});
 
 		ctx->signal_block();
-		ctx->immediate_draw_pipeline_reset();
 		
 #if 0
 
@@ -501,6 +522,10 @@ auto voxelization_plugin_t::setup_svo() -> void
 	auto bound_input_views      = scc::bind_input_views({{0, fragments_srv_view}});
 	auto bound_compute_views    = scc::bind_compute_views({{0, countbuf_view}, {1, nodecache_view}, {2, brickcache_view}});
 
+	uint kx, ky, kz;
+	fit_linear_dispatch_to_group(kx, ky, kz, 8, 8, 8, fragments_count);
+	//kx = fragments_count / 64;
+
 	// mark & allocate tiles in the node-cache
 	for (int i = 0; i != levels_required; ++i)
 	{
@@ -516,7 +541,7 @@ auto voxelization_plugin_t::setup_svo() -> void
 			bound_constant_buffers,
 			bound_input_views,
 			bound_compute_views,
-			scc::dispatch(cs_mark, (uint)fragments_count / 64, 1, 1),
+			scc::dispatch(cs_mark, kx, ky, kz),
 			scc::dispatch(cs_allocate, d, d, d));
 	}
 
@@ -535,9 +560,9 @@ auto voxelization_plugin_t::setup_svo() -> void
 			bound_constant_buffers,
 			bound_input_views,
 			bound_compute_views,
-			scc::dispatch(cs_mark, (uint)fragments_count / 64, 1, 1),
+			scc::dispatch(cs_mark, kx, ky, kz),
 			scc::dispatch(cs_allocate, dim, dim, dim),
-			scc::dispatch(cs_write_fragments, (uint)fragments_count / 64, 1, 1));
+			scc::dispatch(cs_write_fragments, kx, ky, kz));
 	}
 }
 
