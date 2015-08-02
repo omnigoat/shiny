@@ -96,6 +96,12 @@ void main(triangle VSOutput input[3], inout TriangleStream<GSOutput> output)
 	v1.z = v1.z * 0.5f + 0.5f;
 	v2.z = v2.z * 0.5f + 0.5f;
 
+	// calculate aabb
+	float4 aabb = v0.xyxy;
+	aabb = float4(min(aabb.xy, v1.xy), max(aabb.zw, v1.xy));
+	aabb = float4(min(aabb.xy, v2.xy), max(aabb.zw, v2.xy));
+
+
 	// equation of lines
 	float2 e0 = v1.xy - v0.xy;
 	float2 e1 = v2.xy - v1.xy;
@@ -119,11 +125,6 @@ void main(triangle VSOutput input[3], inout TriangleStream<GSOutput> output)
 	v0.xy += hpixel * (e2 / dot(e2, n0.xy) + e0 / dot(e0, n2.xy));
 	v1.xy += hpixel * (e0 / dot(e0, n1.xy) + e1 / dot(e1, n0.xy));
 	v2.xy += hpixel * (e1 / dot(e1, n2.xy) + e2 / dot(e2, n1.xy));
-
-	// calculate aabb
-	float4 aabb = v0.xyxy;
-	aabb = float4(min(aabb.xy, v1.xy), max(aabb.zw, v1.xy));
-	aabb = float4(min(aabb.xy, v2.xy), max(aabb.zw, v2.xy));
 
 	// calcualte depth gradient
 	//float2 gradient = 
