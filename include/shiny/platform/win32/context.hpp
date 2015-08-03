@@ -81,19 +81,9 @@ namespace shiny
 		auto immediate_draw_pipeline_reset() -> void;
 		auto immediate_compute_pipeline_reset() -> void;
 
-
-		// obsolete resource-stage
-		#pragma region Obsolete
-		auto signal_res_map(resource_ptr const&, uint subresource, map_type_t, map_callback_t const&) -> void;
-		auto signal_res_update(constant_buffer_ptr const&, uint data_size, void*) -> void;
-		auto signal_res_update(constant_buffer_ptr const&, atma::shared_memory_t const&) -> void;
-		#pragma endregion
-
 		// resource-stage
 		auto signal_rs_upload(resource_ptr const&, buffer_data_t const&) -> void;
 		auto signal_rs_upload(resource_ptr const&, uint subresource, buffer_data_t const&) -> void;
-		//auto signal_rs_upload(resource_ptr const&, resource_subset_t const&, buffer_data_t const&) -> void;
-		//auto signal_rs_upload(resource_ptr const&, uint subresource, resource_subset_t const&, buffer_data_t const&) -> void;
 		template <typename T> auto signal_rs_upload(resource_ptr const&, T const&) -> void;
 		auto signal_rs_map(resource_ptr const&, uint subresource, map_type_t, map_callback_t const&) -> void;
 

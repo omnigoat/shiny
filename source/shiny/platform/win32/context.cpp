@@ -330,21 +330,6 @@ auto context_t::signal(atma::thread::engine_t::queue_t::batch_t& batch) -> void
 	engine_.signal_batch(batch);
 }
 
-auto context_t::signal_res_update(constant_buffer_ptr const& cb, uint data_size, void* data) -> void
-{
-	signal_res_update(cb, atma::shared_memory_t(data_size, data));
-}
-
-auto context_t::signal_res_update(constant_buffer_ptr const& cb, atma::shared_memory_t const& sm) -> void
-{
-	engine_.signal([&, cb, sm] {
-		D3D11_MAPPED_SUBRESOURCE sr;
-		d3d_immediate_context_->Map(cb->d3d_resource().get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &sr);
-		memcpy(sr.pData, sm.begin(), sm.size());
-		d3d_immediate_context_->Unmap(cb->d3d_resource().get(), 0);
-	});
-}
-
 auto context_t::immediate_clear(rendertarget_clear_t const& rtc) -> void
 {
 	float color[4] = {rtc.color().x, rtc.color().y, rtc.color().z, rtc.color().w};
@@ -649,24 +634,6 @@ auto context_t::immediate_compute(uint x, uint y, uint z) -> void
 	d3d_immediate_context_->CSSetConstantBuffers(0, cbs_count, cbs);
 	d3d_immediate_context_->CSSetShaderResources(0, srvs_count, srvs);
 	d3d_immediate_context_->CSSetUnorderedAccessViews(0, uavs_count, uavs, nullptr);
-}
-
-auto context_t::signal_res_map(resource_ptr const& rs, uint subresource, map_type_t maptype, map_callback_t const& fn) -> void
-{
-	auto d3dmap = 
-		maptype == map_type_t::read ? D3D11_MAP_READ :
-		maptype == map_type_t::write ? D3D11_MAP_WRITE :
-		maptype == map_type_t::write_discard ? D3D11_MAP_WRITE_DISCARD : 
-		D3D11_MAP_READ_WRITE
-		;
-
-	engine_.signal([&, rs, subresource, d3dmap, fn] {
-		auto sr = D3D11_MAPPED_SUBRESOURCE{};
-		ATMA_ENSURE_IS(S_OK, d3d_immediate_context_->Map(rs->d3d_resource().get(), subresource, d3dmap, 0, &sr));
-		mapped_subresource_t msr{sr.pData, sr.RowPitch, sr.DepthPitch};
-		fn(msr);
-		d3d_immediate_context_->Unmap(rs->d3d_resource().get(), subresource);
-	});
 }
 
 auto context_t::signal_rs_map(resource_ptr const& rs, uint subresource, map_type_t maptype, map_callback_t const& fn) -> void
