@@ -8,6 +8,8 @@
 #include <shiny/index_buffer.hpp>
 #include <shiny/vertex_shader.hpp>
 #include <shiny/fragment_shader.hpp>
+#include <shiny/render_target_view.hpp>
+#include <shiny/draw_target.hpp>
 
 #include <atma/shared_memory.hpp>
 

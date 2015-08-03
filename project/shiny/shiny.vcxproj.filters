@@ -179,6 +179,9 @@
     <ClCompile Include="..\..\source\shiny\platform\win32\depth_stencil_view.cpp">
       <Filter>source\shiny\platform\win32</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\source\shiny\draw_target.cpp">
+      <Filter>source\shiny</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\shiny\context.hpp">

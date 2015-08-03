@@ -76,6 +76,13 @@ namespace shiny
 
 		auto immediate_clear(rendertarget_clear_t const&) -> void;
 
+		// make functions
+		// these are threadsafe
+		//auto make_render_target_view(resource_cptr const&) -> render_target_view_ptr;
+
+
+
+
 
 		// pipeline-setup-stage
 		auto immediate_draw_pipeline_reset() -> void;

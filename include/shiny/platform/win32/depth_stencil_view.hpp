@@ -7,7 +7,7 @@
 
 namespace shiny
 {
-	struct depth_stencil_view_t
+	struct depth_stencil_view_t : atma::ref_counted
 	{
 		depth_stencil_view_t(texture2d_ptr const& tx, uint mip = 0);
 

@@ -1,10 +1,19 @@
-#include <shiny/platform/win32/render_target_view.hpp>
+#include <shiny/render_target_view.hpp>
 
 #include <shiny/context.hpp>
 
 
 using namespace shiny;
 using shiny::render_target_view_t;
+
+
+auto shiny::make_render_target_view(texture2d_ptr const& tx) -> render_target_view_ptr
+{
+	return render_target_view_ptr{new render_target_view_t{tx, 0}};
+}
+
+
+
 
 render_target_view_t::render_target_view_t(texture2d_ptr const& tx, uint mip)
 	: ctx_{tx->context()}
@@ -23,3 +32,4 @@ render_target_view_t::render_target_view_t(texture2d_ptr const& tx, uint mip)
 
 	ctx_->d3d_device()->CreateRenderTargetView(texture_->d3d_resource().get(), &desc, d3d_rt_.assign());
 }
+

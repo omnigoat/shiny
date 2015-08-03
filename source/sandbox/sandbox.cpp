@@ -15,7 +15,9 @@
 #include <shiny/compute_shader.hpp>
 #include <shiny/texture3d.hpp>
 #include <shiny/blend_state.hpp>
-#include <shiny/platform/win32/generic_buffer.hpp>
+#include <shiny/generic_buffer.hpp>
+#include <shiny/draw_target.hpp>
+
 #include <shelf/file.hpp>
 
 #include <pepper/freelook_camera_controller.hpp>

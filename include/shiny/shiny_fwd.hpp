@@ -105,14 +105,6 @@ namespace shiny
 	using  blender_ptr  = atma::intrusive_ptr<blender_t>;
 	using  blender_cptr = atma::intrusive_ptr<blender_t const>;
 
-	struct render_target_t;
-	using  render_target_ptr  = atma::intrusive_ptr<render_target_t>;
-	using  render_target_cptr = atma::intrusive_ptr<render_target_t const>;
-
-	struct depth_stencil_target_t;
-	using  depth_stencil_target_ptr  = atma::intrusive_ptr<depth_stencil_target_t>;
-	using  depth_stencil_target_cptr = atma::intrusive_ptr<depth_stencil_target_t const>;
-
 	struct draw_target_t;
 	using  draw_target_ptr  = atma::intrusive_ptr<draw_target_t>;
 	using  draw_target_cptr = atma::intrusive_ptr<draw_target_t const>;

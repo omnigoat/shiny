@@ -15,10 +15,12 @@ namespace shiny
 	struct scene_t
 	{
 		scene_t(context_ptr const&, camera_t const&, rendertarget_clear_t const&);
+		scene_t(context_ptr const&, draw_target_ptr const&, camera_t const&, rendertarget_clear_t const&);
 
 		auto scene_constant_buffer() const -> constant_buffer_ptr const& { return scene_constant_buffer_; }
 
 		auto context() const -> context_ptr const& { return context_; }
+		auto draw_target() const -> draw_target_ptr const& { return draw_target_; }
 		auto camera() const -> camera_t const& { return *camera_; }
 
 		template <typename... Stages>
@@ -26,6 +28,7 @@ namespace shiny
 
 	private:
 		context_ptr context_;
+		draw_target_ptr draw_target_;
 		constant_buffer_ptr scene_constant_buffer_;
 		camera_t const* camera_;
 

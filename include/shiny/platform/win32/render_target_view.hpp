@@ -7,7 +7,7 @@
 
 namespace shiny
 {
-	struct render_target_view_t
+	struct render_target_view_t : atma::ref_counted
 	{
 		render_target_view_t(texture2d_ptr const& tx, uint mip = 0);
 

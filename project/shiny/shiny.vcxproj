@@ -34,7 +34,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v120</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
@@ -184,6 +184,7 @@
     <ClCompile Include="..\..\source\shiny\data_declaration.cpp" />
     <ClCompile Include="..\..\source\shiny\data_stream.cpp" />
     <ClCompile Include="..\..\source\shiny\draw.cpp" />
+    <ClCompile Include="..\..\source\shiny\draw_target.cpp" />
     <ClCompile Include="..\..\source\shiny\element_format.cpp" />
     <ClCompile Include="..\..\source\shiny\function.cpp" />
     <ClCompile Include="..\..\source\shiny\platform\win32\buffer.cpp" />
