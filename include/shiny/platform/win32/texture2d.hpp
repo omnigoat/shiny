@@ -28,11 +28,16 @@ namespace shiny
 		auto d3d_resource() const -> platform::d3d_resource_ptr override;
 
 	private:
+		texture2d_t(context_ptr const&, platform::d3d_texture2d_ptr const&, resource_usage_mask_t, element_format_t, uint width, uint height, uint mips);
+
+	private:
 		element_format_t format_;
 		uint width_, height_;
 		uint mips_;
 
 		platform::d3d_texture2d_ptr d3d_texture_;
+
+		friend struct context_t;
 	};
 
 

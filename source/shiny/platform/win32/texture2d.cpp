@@ -38,6 +38,11 @@ texture2d_t::texture2d_t(context_ptr const& ctx, resource_usage_mask_t usage_fla
 	ATMA_ENSURE_IS(S_OK, device->CreateTexture2D(&texdesc, nullptr, d3d_texture_.assign()));
 }
 
+texture2d_t::texture2d_t(context_ptr const& ctx, platform::d3d_texture2d_ptr const&, resource_usage_mask_t rum, element_format_t f, uint w, uint h, uint m)
+	: resource_t{ctx, resource_type_t::texture2d, rum, resource_storage_t::persistant, shiny::element_size(f), w * h}
+	, format_(f), width_(w), height_(h), mips_(m)
+{}
+
 auto texture2d_t::format() const -> element_format_t
 {
 	return format_;

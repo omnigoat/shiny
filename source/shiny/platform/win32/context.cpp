@@ -18,6 +18,8 @@
 #include <shiny/generic_buffer.hpp>
 #include <shiny/vertex_buffer.hpp>
 #include <shiny/index_buffer.hpp>
+#include <shiny/render_target_view.hpp>
+#include <shiny/depth_stencil_view.hpp>
 
 #include <fooey/events/resize.hpp>
 #include <fooey/keys.hpp>
@@ -162,8 +164,12 @@ auto context_t::setup_rendertarget(uint width, uint height) -> void
 	d3d_immediate_context_->OMSetRenderTargets(0, nullptr, nullptr);
 
 	// grab backbuffer from swap-chain and it's desc
-	ATMA_ENSURE_IS(S_OK, dxgi_swap_chain_->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)d3d_backbuffer_.assign()));
-	ATMA_ENSURE_IS(S_OK, d3d_device_->CreateRenderTargetView(d3d_backbuffer_.get(), nullptr, d3d_render_target_.assign()));
+	platform::d3d_texture2d_ptr backbuffer;
+	ATMA_ENSURE_IS(S_OK, dxgi_swap_chain_->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)backbuffer.assign()));
+	render_target_texture_ = texture2d_ptr{new texture2d_t{shared_from_this<context_t>(), backbuffer, resource_usage_t::render_target, element_format_t::u8x4, width, height, 1}};
+	render_target_view_ = render_target_view_ptr{new render_target_view_t{render_target_texture_, 0}};
+
+	//ATMA_ENSURE_IS(S_OK, d3d_device_->CreateRenderTargetView(d3d_backbuffer_.get(), nullptr, d3d_render_target_.assign()));
 	auto backbuffer_desc = D3D11_TEXTURE2D_DESC{};
 	d3d_backbuffer_->GetDesc(&backbuffer_desc);
 	
@@ -183,7 +189,9 @@ auto context_t::setup_rendertarget(uint width, uint height) -> void
 
 auto context_t::recreate_backbuffer() -> void
 {
-	d3d_backbuffer_.reset();
+	//d3d_backbuffer_.reset();
+	render_target_view_.reset();
+	render_target_texture_.reset();
 	d3d_render_target_.reset();
 
 	ATMA_ENSURE_IS(S_OK, dxgi_swap_chain_->ResizeBuffers(1, 0, 0, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH));

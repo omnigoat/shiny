@@ -31,7 +31,28 @@ namespace
 }
 
 
+scene_t::scene_t(context_ptr const& context, draw_target_ptr const& dt, camera_t const& camera, rendertarget_clear_t const& fc)
+	: context_(context)
+	, draw_target_(dt)
+	, camera_(&camera)
+{
+	if (fc.clear_any())
+	{
+		batch_.push([&] {
+			context_->immediate_set_render_target(0, dt->render_target());
+			context_->immediate_set_depth_stencil(0, dt->depth_stencil_target());
+			context_->immediate_clear(fc);
+		});
+	}
 
+	scene_constant_buffer_ = shiny::make_constant_buffer(context_, scene_data_t{
+		camera.view(),
+		camera.inverse_view(),
+		camera.projection(),
+		invert(camera.view() * camera.projection()),
+		0.f
+	});
+}
 
 scene_t::scene_t(context_ptr const& context, camera_t const& camera, rendertarget_clear_t const& fc)
 	: context_(context), camera_(&camera)

@@ -60,6 +60,9 @@ namespace shiny
 		auto runtime() -> runtime_t& { return runtime_; }
 		auto runtime() const -> runtime_t const& { return runtime_; }
 
+		auto backbuffer_render_target() -> render_target_view_ptr const&;
+		auto backbuffer_depth_stencil() -> depth_stencil_view_ptr const&;
+
 		auto make_generic_buffer(resource_usage_mask_t const&, resource_storage_t, size_t stride, uint elements, void const* data, uint data_elemcount) -> generic_buffer_ptr;
 		auto make_generic_buffer(resource_usage_mask_t const&, resource_storage_t, size_t stride, uint elements) -> generic_buffer_ptr;
 
@@ -81,7 +84,8 @@ namespace shiny
 		//auto make_render_target_view(resource_cptr const&) -> render_target_view_ptr;
 
 
-
+		auto immediate_set_render_target(render_target_view_ptr const&) -> void;
+		auto immediate_set_depth_stencil(depth_stencil_view_ptr const&) -> void;
 
 
 		// pipeline-setup-stage
@@ -220,8 +224,12 @@ namespace shiny
 		platform::dxgi_swap_chain_ptr        dxgi_swap_chain_;
 		platform::d3d_render_target_view_ptr d3d_render_target_;
 		platform::d3d_depth_stencil_view_ptr d3d_depth_stencil_;
-		platform::d3d_texture2d_ptr          d3d_backbuffer_;
 		platform::d3d_texture2d_ptr          d3d_depth_stencil_buffer_;
+
+		texture2d_ptr render_target_texture_;
+		texture2d_ptr depth_stencil_texture_;
+		render_target_view_ptr render_target_view_;
+		depth_stencil_view_ptr depth_stencil_view_;
 
 		// fooey
 		fooey::window_ptr window_;
