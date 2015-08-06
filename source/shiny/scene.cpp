@@ -34,7 +34,7 @@ namespace
 scene_t::scene_t(context_ptr const& context, draw_target_ptr const& dt, camera_t const& camera, rendertarget_clear_t const& fc)
 	: context_(context)
 	, draw_target_(dt)
-	, camera_(&camera)
+	, camera_(camera)
 {
 	if (fc.clear_any())
 	{
@@ -54,8 +54,13 @@ scene_t::scene_t(context_ptr const& context, draw_target_ptr const& dt, camera_t
 	});
 }
 
+scene_t::scene_t(context_ptr const& context, draw_target_ptr const& dt)
+	: scene_t(context, dt, camera_t{}, rendertarget_clear_t{})
+{}
+
 scene_t::scene_t(context_ptr const& context, camera_t const& camera, rendertarget_clear_t const& fc)
-	: context_(context), camera_(&camera)
+	: context_(context)
+	, camera_(camera)
 {
 	if (fc.clear_any())
 	{

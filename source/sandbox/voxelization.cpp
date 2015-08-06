@@ -11,6 +11,7 @@
 #include <shiny/constant_buffer.hpp>
 #include <shiny/camera.hpp>
 #include <shiny/texture2d.hpp>
+#include <shiny/draw_target.hpp>
 
 #include <shelf/file.hpp>
 
@@ -164,6 +165,20 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 	auto gridwidth = std::max({tri_dp.x, tri_dp.y, tri_dp.z});
 	auto voxelwidth = (gridwidth / gridsize);
 	auto voxel_halfwidth = std::sqrtf(voxelwidth * voxelwidth) / 0.5f;
+
+
+	auto render_target = shiny::make_texture2d(ctx,
+		shiny::resource_usage_t::render_target,
+		shiny::element_format_t::u8x4,
+		gridsize, gridsize);
+
+	auto render_target_view = shiny::make_resource_view(render_target,
+		shiny::resource_view_type_t::render_target,
+		shiny::element_format_t::u8x4);
+
+	auto draw_target = shiny::draw_target_t{}
+	auto&& ss = shiny::scene_t{ctx, draw_target};
+
 
 #if 0
 	for (auto const& f : obj.faces())
