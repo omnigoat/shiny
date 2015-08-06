@@ -9,7 +9,7 @@ using shiny::compute_shader_t;
 
 auto shiny::make_compute_shader(context_ptr const& context, void const* data, size_t data_size) -> compute_shader_ptr
 {
-	return atma::make_intrusive_ptr<compute_shader_t>(context, data, data_size);
+	return atma::make_intrusive<compute_shader_t>(context, data, data_size);
 }
 
 compute_shader_t::compute_shader_t(context_ptr const& context, void const* data, size_t data_size)

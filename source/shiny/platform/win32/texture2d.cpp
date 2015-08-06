@@ -15,7 +15,7 @@ texture2d_t::texture2d_t(context_ptr const& ctx, resource_usage_mask_t usage_fla
 	auto const& device = context()->d3d_device();
 
 	auto d3dusage = D3D11_USAGE();
-	auto d3dbind = D3D11_BIND_SHADER_RESOURCE;
+	auto d3dbind = 0;
 	auto d3dcpu = D3D11_CPU_ACCESS_FLAG();
 	auto d3dfmt = platform::dxgi_format_of(format);
 
@@ -38,8 +38,9 @@ texture2d_t::texture2d_t(context_ptr const& ctx, resource_usage_mask_t usage_fla
 	ATMA_ENSURE_IS(S_OK, device->CreateTexture2D(&texdesc, nullptr, d3d_texture_.assign()));
 }
 
-texture2d_t::texture2d_t(context_ptr const& ctx, platform::d3d_texture2d_ptr const&, resource_usage_mask_t rum, element_format_t f, uint w, uint h, uint m)
+texture2d_t::texture2d_t(context_ptr const& ctx, platform::d3d_texture2d_ptr const& tx, resource_usage_mask_t rum, element_format_t f, uint w, uint h, uint m)
 	: resource_t{ctx, resource_type_t::texture2d, rum, resource_storage_t::persistant, shiny::element_size(f), w * h}
+	, d3d_texture_(tx)
 	, format_(f), width_(w), height_(h), mips_(m)
 {}
 
@@ -83,7 +84,7 @@ auto texture2d_t::d3d_resource() const -> platform::d3d_resource_ptr
 
 auto shiny::make_texture2d(context_ptr const& context, resource_usage_mask_t flags, element_format_t format, uint width, uint height) -> texture2d_ptr
 {
-	return atma::make_intrusive_ptr<texture2d_t>(context, flags, format, width, height, 0u);
+	return atma::make_intrusive<texture2d_t>(context, flags, format, width, height, 0u);
 }
 
 

@@ -40,7 +40,7 @@ scene_t::scene_t(context_ptr const& context, draw_target_ptr const& dt, camera_t
 	{
 		batch_.push([&] {
 			context_->immediate_set_render_target(0, dt->render_target());
-			context_->immediate_set_depth_stencil(0, dt->depth_stencil_target());
+			context_->immediate_set_depth_stencil(dt->depth_stencil_target());
 			context_->immediate_clear(fc);
 		});
 	}

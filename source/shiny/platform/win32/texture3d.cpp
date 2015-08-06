@@ -14,7 +14,7 @@ auto shiny::make_texture3d(
 	resource_storage_t rs,
 	texture3d_dimensions_t const& td) -> texture3d_ptr
 {
-	return atma::make_intrusive_ptr<texture3d_t>(ctx, ru, rs, td);
+	return atma::make_intrusive<texture3d_t>(ctx, ru, rs, td);
 }
 
 

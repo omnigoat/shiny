@@ -19,5 +19,5 @@ auto shiny::make_generic_buffer(
 	size_t stride, uint elements,
 	void const* data, uint data_elements) -> generic_buffer_ptr
 {
-	return atma::make_intrusive_ptr<generic_buffer_t>(ctx, rmask, usage, stride, elements, data, data_elements);
+	return atma::make_intrusive<generic_buffer_t>(ctx, rmask, usage, stride, elements, data, data_elements);
 }

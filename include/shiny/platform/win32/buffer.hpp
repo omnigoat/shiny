@@ -114,7 +114,7 @@ namespace shiny
 		buffer_data_t const& bdt,
 		Args&&... req_views) -> buffer_ptr
 	{
-		auto b = atma::make_intrusive_ptr<buffer_t>(ctx, rt, ru, rs, bdm, bdt);
+		auto b = atma::make_intrusive<buffer_t>(ctx, rt, ru, rs, bdm, bdt);
 		int _[] = { 0, (b->bind(req_views), 0)... };
 		
 		return b;

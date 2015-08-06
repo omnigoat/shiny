@@ -1,4 +1,4 @@
-#include <shiny/platform/win32/context.hpp>
+#include <shiny/context.hpp>
 
 #include <shiny/platform/win32/dxgid3d_convert.hpp>
 #include <shiny/platform/win32/d3d_fwd.hpp>
@@ -40,9 +40,12 @@ using shiny::context_t;
 //======================================================================
 // context_t
 //======================================================================
-auto shiny::create_context(runtime_t& runtime, fooey::window_ptr const& window, uint adapter) -> shiny::context_ptr {
-	return context_ptr(new context_t(runtime, window, adapter));
+auto shiny::create_context(runtime_t& runtime, fooey::window_ptr const& window, uint adapter) -> shiny::context_ptr
+{
+	//return context_ptr(new context_t(runtime, window, adapter));
+	return atma::make_intrusive<context_t>(runtime, window, adapter);
 }
+
 
 context_t::context_t(runtime_t& runtime, fooey::window_ptr const& window, uint adapter)
 	: runtime_(runtime), stage_(), window_(window), current_display_mode_(), requested_display_mode_()
@@ -164,23 +167,39 @@ auto context_t::setup_rendertarget(uint width, uint height) -> void
 	d3d_immediate_context_->OMSetRenderTargets(0, nullptr, nullptr);
 
 	// grab backbuffer from swap-chain and it's desc
-	platform::d3d_texture2d_ptr backbuffer;
-	ATMA_ENSURE_IS(S_OK, dxgi_swap_chain_->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)backbuffer.assign()));
-	render_target_texture_ = texture2d_ptr{new texture2d_t{shared_from_this<context_t>(), backbuffer, resource_usage_t::render_target, element_format_t::u8x4, width, height, 1}};
-	render_target_view_ = render_target_view_ptr{new render_target_view_t{render_target_texture_, 0}};
-
-	//ATMA_ENSURE_IS(S_OK, d3d_device_->CreateRenderTargetView(d3d_backbuffer_.get(), nullptr, d3d_render_target_.assign()));
+	ATMA_ENSURE_IS(S_OK, dxgi_swap_chain_->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)d3d_backbuffer_.assign()));
 	auto backbuffer_desc = D3D11_TEXTURE2D_DESC{};
 	d3d_backbuffer_->GetDesc(&backbuffer_desc);
+
+	// create default render-target
+	backbuffer_texture_ = texture2d_ptr{new texture2d_t{
+		shared_from_this<context_t>(), d3d_backbuffer_,
+		resource_usage_t::render_target,
+		element_format_t::u8x4,
+		backbuffer_desc.Width, backbuffer_desc.Height, 1}};
+
+	backbuffer_view_ = make_resource_view(
+		backbuffer_texture_,
+		resource_view_type_t::render_target,
+		element_format_t::u8x4);
 	
-	// create depth-stencil buffer & depth-stencil-view
-	auto texdesc = D3D11_TEXTURE2D_DESC{backbuffer_desc.Width, backbuffer_desc.Height, 1, 1, DXGI_FORMAT_D24_UNORM_S8_UINT, {1, 0}, D3D11_USAGE_DEFAULT, D3D11_BIND_DEPTH_STENCIL, 0, 0};
-	ATMA_ENSURE_IS(S_OK, d3d_device_->CreateTexture2D(&texdesc, nullptr, d3d_depth_stencil_buffer_.assign()));
-	auto depthdesc = D3D11_DEPTH_STENCIL_VIEW_DESC{texdesc.Format, D3D11_DSV_DIMENSION_TEXTURE2D, 0u, {0}};
-	ATMA_ENSURE_IS(S_OK, d3d_device_->CreateDepthStencilView(d3d_depth_stencil_buffer_.get(), &depthdesc, d3d_depth_stencil_.assign()));
+	// create default depth-stencil
+	default_depth_stencil_texture_ = texture2d_ptr{new texture2d_t{
+		shared_from_this<context_t>(),
+		resource_usage_t::depth_stencil,
+		element_format_t::dnu24s8,
+		backbuffer_desc.Width, backbuffer_desc.Height, 1}};
+
+	default_depth_stencil_view_ = make_resource_view(default_depth_stencil_texture_,
+		resource_view_type_t::depth_stencil,
+		element_format_t::dnu24s8);
+
+	
+	current_render_target_view_[0] = backbuffer_view_;
+	current_depth_stencil_view_ = default_depth_stencil_view_;
 
 	// set render targets
-	d3d_immediate_context_->OMSetRenderTargets(1, &d3d_render_target_.get(), d3d_depth_stencil_.get());
+	d3d_immediate_context_->OMSetRenderTargets(1, &(ID3D11RenderTargetView*&)backbuffer_view_->d3d_view().get(), (ID3D11DepthStencilView*)default_depth_stencil_view_->d3d_view().get());
 
 	// create viewport
 	auto vp = D3D11_VIEWPORT{0, 0, (float)backbuffer_desc.Width, (float)backbuffer_desc.Height, 0, 1.f};
@@ -189,10 +208,14 @@ auto context_t::setup_rendertarget(uint width, uint height) -> void
 
 auto context_t::recreate_backbuffer() -> void
 {
-	//d3d_backbuffer_.reset();
-	render_target_view_.reset();
-	render_target_texture_.reset();
-	d3d_render_target_.reset();
+	d3d_backbuffer_.reset();
+	current_render_target_view_[0].reset();
+	current_render_target_view_[1].reset();
+	current_render_target_view_[2].reset();
+	current_render_target_view_[3].reset();
+	current_depth_stencil_view_.reset();
+	//render_target_texture_.reset();
+	//d3d_render_target_.reset();
 
 	ATMA_ENSURE_IS(S_OK, dxgi_swap_chain_->ResizeBuffers(1, 0, 0, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH));
 }
@@ -323,8 +346,8 @@ auto context_t::signal_clear(atma::math::vector4f const& color) -> void
 {
 	engine_.signal([&] {
 		float f4c[4] = {color.x, color.y, color.z, color.w};
-		d3d_immediate_context_->ClearRenderTargetView(d3d_render_target_.get(), f4c);
-		d3d_immediate_context_->ClearDepthStencilView(d3d_depth_stencil_.get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
+		//d3d_immediate_context_->ClearRenderTargetView((ID3D11RenderTargetView*)render_target_view_[0]->d3d_view().get(), f4c);
+		//d3d_immediate_context_->ClearDepthStencilView((ID3D11DepthStencilView*)default_depth_stencil_view_->d3d_view().get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 	});
 }
 
@@ -341,8 +364,17 @@ auto context_t::signal(atma::thread::engine_t::queue_t::batch_t& batch) -> void
 auto context_t::immediate_clear(rendertarget_clear_t const& rtc) -> void
 {
 	float color[4] = {rtc.color().x, rtc.color().y, rtc.color().z, rtc.color().w};
-	d3d_immediate_context_->ClearRenderTargetView(d3d_render_target_.get(), color);
-	d3d_immediate_context_->ClearDepthStencilView(d3d_depth_stencil_.get(), D3D11_CLEAR_DEPTH, rtc.depth(), rtc.stencil());
+	d3d_immediate_context_->ClearRenderTargetView((ID3D11RenderTargetView*)current_render_target_view_[0]->d3d_view().get(), color);
+	d3d_immediate_context_->ClearDepthStencilView((ID3D11DepthStencilView*)current_depth_stencil_view_->d3d_view().get(), D3D11_CLEAR_DEPTH, rtc.depth(), rtc.stencil());
+}
+
+auto shiny::context_t::immediate_set_render_target(uint idx, render_target_view_ptr const& rtv) -> void
+{
+	// things
+}
+
+auto shiny::context_t::immediate_set_depth_stencil(depth_stencil_view_ptr const &) -> void
+{
 }
 
 auto context_t::immediate_draw_pipeline_reset() -> void

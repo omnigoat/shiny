@@ -77,6 +77,30 @@ resource_view_t::resource_view_t(resource_cptr const& rs, resource_view_type_t v
 			break;
 		}
 
+		case resource_view_type_t::render_target:
+		{
+			ATMA_ASSERT(resource_->resource_type() == resource_type_t::texture2d);
+			
+			auto desc = D3D11_RENDER_TARGET_VIEW_DESC{fmt};
+			desc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+			desc.Texture2D = D3D11_TEX2D_RTV{0u};
+
+			ATMA_ENSURE_IS(S_OK, context()->d3d_device()->CreateRenderTargetView(resource_->d3d_resource().get(), nullptr, &(ID3D11RenderTargetView*&)d3d_view_.get()));
+			break;
+		}
+
+		case resource_view_type_t::depth_stencil:
+		{
+			ATMA_ASSERT(resource_->resource_type() == resource_type_t::texture2d);
+
+			auto desc = D3D11_DEPTH_STENCIL_VIEW_DESC{fmt};
+			desc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+			desc.Texture2D = D3D11_TEX2D_DSV{0u};
+
+			ATMA_ENSURE_IS(S_OK, context()->d3d_device()->CreateDepthStencilView(resource_->d3d_resource().get(), &desc, &(ID3D11DepthStencilView*&)d3d_view_.get()));
+			break;
+		}
+
 		default:
 			ATMA_HALT("bad!!");
 			break;
@@ -94,7 +118,7 @@ auto resource_view_t::context() const -> context_ptr const&
 
 auto shiny::make_resource_view(resource_cptr const& r, resource_view_type_t vt, element_format_t ef, resource_subset_t s) -> resource_view_ptr
 {
-	return atma::make_intrusive_ptr<resource_view_t>(r, vt, ef, s);
+	return atma::make_intrusive<resource_view_t>(r, vt, ef, s);
 }
 
 

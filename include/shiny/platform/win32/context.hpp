@@ -84,7 +84,7 @@ namespace shiny
 		//auto make_render_target_view(resource_cptr const&) -> render_target_view_ptr;
 
 
-		auto immediate_set_render_target(render_target_view_ptr const&) -> void;
+		auto immediate_set_render_target(uint idx, render_target_view_ptr const&) -> void;
 		auto immediate_set_depth_stencil(depth_stencil_view_ptr const&) -> void;
 
 
@@ -220,17 +220,21 @@ namespace shiny
 		renderer_stage_t stage_;
 
 		// swap-chain
-		platform::dxgi_output_ptr            dxgi_output_;
-		platform::dxgi_swap_chain_ptr        dxgi_swap_chain_;
-		platform::d3d_render_target_view_ptr d3d_render_target_;
-		platform::d3d_depth_stencil_view_ptr d3d_depth_stencil_;
-		platform::d3d_texture2d_ptr          d3d_depth_stencil_buffer_;
+		platform::dxgi_output_ptr        dxgi_output_;
+		platform::dxgi_swap_chain_ptr    dxgi_swap_chain_;
+		platform::d3d_texture2d_ptr      d3d_backbuffer_;
+		
+		texture2d_ptr                    backbuffer_texture_;
+		resource_view_ptr                backbuffer_view_;
+		texture2d_ptr                    default_depth_stencil_texture_;
+		resource_view_ptr                default_depth_stencil_view_;
 
-		texture2d_ptr render_target_texture_;
-		texture2d_ptr depth_stencil_texture_;
-		render_target_view_ptr render_target_view_;
-		depth_stencil_view_ptr depth_stencil_view_;
-
+		// render-targets & depth-stencil
+		texture2d_ptr                    current_render_target_texture_[4];
+		resource_view_ptr                current_render_target_view_[4];
+		texture2d_ptr                    current_depth_stencil_texture_;
+		resource_view_ptr                current_depth_stencil_view_;
+		
 		// fooey
 		fooey::window_ptr window_;
 		fooey::event_handler_t::delegate_set_t bound_events_;
@@ -250,7 +254,7 @@ namespace shiny
 
 
 	private:
-		friend auto create_context(runtime_t&, fooey::window_ptr const&, uint adapter) -> context_ptr;
+		friend struct atma::intrusive_ptr_expose_constructor;
 	};
 
 
