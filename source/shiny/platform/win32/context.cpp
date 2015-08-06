@@ -194,11 +194,9 @@ auto context_t::setup_rendertarget(uint width, uint height) -> void
 		resource_view_type_t::depth_stencil,
 		element_format_t::dnu24s8);
 
-	
+	// set defaults as targets
 	current_render_target_view_[0] = backbuffer_view_;
 	current_depth_stencil_view_ = default_depth_stencil_view_;
-
-	// set render targets
 	d3d_immediate_context_->OMSetRenderTargets(1, &(ID3D11RenderTargetView*&)backbuffer_view_->d3d_view().get(), (ID3D11DepthStencilView*)default_depth_stencil_view_->d3d_view().get());
 
 	// create viewport
@@ -209,13 +207,13 @@ auto context_t::setup_rendertarget(uint width, uint height) -> void
 auto context_t::recreate_backbuffer() -> void
 {
 	d3d_backbuffer_.reset();
+	backbuffer_texture_.reset();
+	backbuffer_view_.reset();
 	current_render_target_view_[0].reset();
 	current_render_target_view_[1].reset();
 	current_render_target_view_[2].reset();
 	current_render_target_view_[3].reset();
 	current_depth_stencil_view_.reset();
-	//render_target_texture_.reset();
-	//d3d_render_target_.reset();
 
 	ATMA_ENSURE_IS(S_OK, dxgi_swap_chain_->ResizeBuffers(1, 0, 0, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH));
 }
@@ -807,6 +805,16 @@ auto context_t::get_d3d_depth_stencil(depth_stencil_state_t const& ds) -> platfo
 	ATMA_ENSURE(r.second);
 
 	return r.first->second;
+}
+
+auto shiny::context_t::backbuffer_render_target() -> resource_view_ptr const &
+{
+	return backbuffer_view_;
+}
+
+auto shiny::context_t::backbuffer_depth_stencil() -> resource_view_ptr const &
+{
+	return default_depth_stencil_view_;
 }
 
 auto context_t::make_generic_buffer(resource_usage_mask_t const& rs, resource_storage_t bu, size_t stride, uint elements, void const* data, uint data_elemcount) -> generic_buffer_ptr

@@ -60,8 +60,8 @@ namespace shiny
 		auto runtime() -> runtime_t& { return runtime_; }
 		auto runtime() const -> runtime_t const& { return runtime_; }
 
-		auto backbuffer_render_target() -> render_target_view_ptr const&;
-		auto backbuffer_depth_stencil() -> depth_stencil_view_ptr const&;
+		auto backbuffer_render_target() -> resource_view_ptr const&;
+		auto backbuffer_depth_stencil() -> resource_view_ptr const&;
 
 		auto make_generic_buffer(resource_usage_mask_t const&, resource_storage_t, size_t stride, uint elements, void const* data, uint data_elemcount) -> generic_buffer_ptr;
 		auto make_generic_buffer(resource_usage_mask_t const&, resource_storage_t, size_t stride, uint elements) -> generic_buffer_ptr;
@@ -230,9 +230,7 @@ namespace shiny
 		resource_view_ptr                default_depth_stencil_view_;
 
 		// render-targets & depth-stencil
-		texture2d_ptr                    current_render_target_texture_[4];
 		resource_view_ptr                current_render_target_view_[4];
-		texture2d_ptr                    current_depth_stencil_texture_;
 		resource_view_ptr                current_depth_stencil_view_;
 		
 		// fooey
