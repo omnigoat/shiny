@@ -7,9 +7,9 @@
 using namespace shiny;
 using shiny::draw_target_t;
 
-draw_target_t::draw_target_t(render_target_view_ptr const& rtv, depth_stencil_view_ptr const& dsv)
+draw_target_t::draw_target_t(resource_view_ptr const& rtv, resource_view_ptr const& dsv)
 	: render_target_{rtv}
-	, depth_stencil_target_{dsv}
+	, depth_stencil_{dsv}
 {}
 
 //draw_target_t(render_target_ptr const&);

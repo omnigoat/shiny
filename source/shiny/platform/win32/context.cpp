@@ -366,15 +366,6 @@ auto context_t::immediate_clear(rendertarget_clear_t const& rtc) -> void
 	d3d_immediate_context_->ClearDepthStencilView((ID3D11DepthStencilView*)current_depth_stencil_view_->d3d_view().get(), D3D11_CLEAR_DEPTH, rtc.depth(), rtc.stencil());
 }
 
-auto shiny::context_t::immediate_set_render_target(uint idx, render_target_view_ptr const& rtv) -> void
-{
-	// things
-}
-
-auto shiny::context_t::immediate_set_depth_stencil(depth_stencil_view_ptr const &) -> void
-{
-}
-
 auto context_t::immediate_draw_pipeline_reset() -> void
 {
 	vs_shader_.reset();
@@ -467,6 +458,16 @@ auto context_t::immediate_fs_set_compute_views(bound_compute_views_t const& cvs)
 auto context_t::immediate_draw_set_range(draw_range_t const& dr) -> void
 {
 	draw_range_ = dr;
+}
+
+auto shiny::context_t::immediate_om_set_render_target(resource_view_ptr const& rv) -> void
+{
+	current_render_target_view_[0] = rv;
+}
+
+auto shiny::context_t::immediate_om_set_depth_stencil(resource_view_ptr const& ds) -> void
+{
+	current_depth_stencil_view_ = ds;
 }
 
 auto context_t::immediate_om_set_blending(blender_cptr const& b) -> void
@@ -563,7 +564,7 @@ auto context_t::immediate_draw() -> void
 			atomic_counters[x.idx] = (UINT)x.counter;
 		}
 		d3d_immediate_context_->OMSetRenderTargetsAndUnorderedAccessViews(
-			D3D11_KEEP_RENDER_TARGETS_AND_DEPTH_STENCIL, nullptr, nullptr,
+			1, &(ID3D11RenderTargetView*&)current_render_target_view_[0]->d3d_view().get(), (ID3D11DepthStencilView*&)current_depth_stencil_view_->d3d_view().get(),
 			1, D3D11_PS_CS_UAV_REGISTER_COUNT - 1, uavs, atomic_counters);
 	}
 	

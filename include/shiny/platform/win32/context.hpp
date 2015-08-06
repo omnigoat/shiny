@@ -84,10 +84,6 @@ namespace shiny
 		//auto make_render_target_view(resource_cptr const&) -> render_target_view_ptr;
 
 
-		auto immediate_set_render_target(uint idx, render_target_view_ptr const&) -> void;
-		auto immediate_set_depth_stencil(depth_stencil_view_ptr const&) -> void;
-
-
 		// pipeline-setup-stage
 		auto immediate_draw_pipeline_reset() -> void;
 		auto immediate_compute_pipeline_reset() -> void;
@@ -121,6 +117,8 @@ namespace shiny
 		auto immediate_fs_set_compute_views(bound_compute_views_t const&) -> void;
 
 		// output-merger-stage
+		auto immediate_om_set_render_target(resource_view_ptr const&) -> void;
+		auto immediate_om_set_depth_stencil(resource_view_ptr const&) -> void;
 		auto immediate_om_set_blending(blender_cptr const&) -> void;
 
 		// draw

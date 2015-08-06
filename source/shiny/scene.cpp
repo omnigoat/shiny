@@ -39,8 +39,8 @@ scene_t::scene_t(context_ptr const& context, draw_target_ptr const& dt, camera_t
 	if (fc.clear_any())
 	{
 		batch_.push([&] {
-			context_->immediate_set_render_target(0, dt->render_target());
-			context_->immediate_set_depth_stencil(dt->depth_stencil_target());
+			context_->immediate_om_set_render_target(dt->render_target());
+			context_->immediate_om_set_depth_stencil(dt->depth_stencil());
 			context_->immediate_clear(fc);
 		});
 	}
@@ -60,6 +60,8 @@ scene_t::scene_t(context_ptr const& context, camera_t const& camera, rendertarge
 	if (fc.clear_any())
 	{
 		batch_.push([&] {
+			context_->immediate_om_set_render_target(context_->backbuffer_render_target());
+			context_->immediate_om_set_depth_stencil(context_->backbuffer_depth_stencil());
 			context_->immediate_clear(fc);
 		});
 	}
