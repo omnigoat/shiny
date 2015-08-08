@@ -31,16 +31,19 @@ namespace
 }
 
 
-scene_t::scene_t(context_ptr const& context, draw_target_ptr const& dt, camera_t const& camera, rendertarget_clear_t const& fc)
+scene_t::scene_t(context_ptr const& context, draw_target_t const& dt, camera_t const& camera, rendertarget_clear_t const& fc)
 	: context_(context)
 	, draw_target_(dt)
 	, camera_(camera)
 {
+	batch_.push([&] {
+		context_->immediate_om_set_render_target(dt.render_target());
+		context_->immediate_om_set_depth_stencil(dt.depth_stencil());
+	});
+
 	if (fc.clear_any())
 	{
 		batch_.push([&] {
-			context_->immediate_om_set_render_target(dt->render_target());
-			context_->immediate_om_set_depth_stencil(dt->depth_stencil());
 			context_->immediate_clear(fc);
 		});
 	}
@@ -54,7 +57,7 @@ scene_t::scene_t(context_ptr const& context, draw_target_ptr const& dt, camera_t
 	});
 }
 
-scene_t::scene_t(context_ptr const& context, draw_target_ptr const& dt)
+scene_t::scene_t(context_ptr const& context, draw_target_t const& dt)
 	: scene_t(context, dt, camera_t{}, rendertarget_clear_t{})
 {}
 

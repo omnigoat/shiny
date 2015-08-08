@@ -9,6 +9,7 @@ namespace shiny
 {
 	struct draw_target_t : atma::ref_counted
 	{
+		draw_target_t();
 		draw_target_t(resource_view_ptr const&, resource_view_ptr const&);
 		draw_target_t(resource_view_ptr const&);
 

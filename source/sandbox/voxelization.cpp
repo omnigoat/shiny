@@ -169,15 +169,18 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 
 	auto render_target = shiny::make_texture2d(ctx,
 		shiny::resource_usage_t::render_target,
-		shiny::element_format_t::u8x4,
+		shiny::element_format_t::nu8x4,
 		gridsize, gridsize);
 
 	auto render_target_view = shiny::make_resource_view(render_target,
 		shiny::resource_view_type_t::render_target,
-		shiny::element_format_t::u8x4);
+		shiny::element_format_t::nu8x4);
 
-	auto draw_target = shiny::draw_target_t{}
-	auto&& ss = shiny::scene_t{ctx, draw_target};
+	auto draw_target = shiny::draw_target_t{
+		render_target_view};
+
+	shiny::scene_t voxelization_scene{ctx, draw_target};
+
 
 
 #if 0
@@ -336,8 +339,8 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 		aml::vector4f dimensions{(float)gridsize, (float)gridsize, (float)gridsize, 0.f};
 		auto cb2 = shiny::make_constant_buffer(ctx, dimensions);
 
-		shiny::signal_draw(ctx,
-
+		voxelization_scene.draw
+		(
 			sdc::input_assembly_stage(vb->data_declaration(), vb, ib),
 			sdc::vertex_stage(vs_voxelize,
 				shiny::bound_constant_buffers_t{
@@ -367,6 +370,8 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 				shiny::depth_stencil_state_t::off
 			)
 		);
+
+		ctx->signal_draw_scene(voxelization_scene);
 
 		auto counter_scratch = shiny::make_buffer(ctx,
 			shiny::resource_type_t::staging_buffer,

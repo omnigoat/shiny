@@ -175,13 +175,13 @@ auto context_t::setup_rendertarget(uint width, uint height) -> void
 	backbuffer_texture_ = texture2d_ptr{new texture2d_t{
 		shared_from_this<context_t>(), d3d_backbuffer_,
 		resource_usage_t::render_target,
-		element_format_t::u8x4,
+		element_format_t::nu8x4,
 		backbuffer_desc.Width, backbuffer_desc.Height, 1}};
 
 	backbuffer_view_ = make_resource_view(
 		backbuffer_texture_,
 		resource_view_type_t::render_target,
-		element_format_t::u8x4);
+		element_format_t::nu8x4);
 	
 	// create default depth-stencil
 	default_depth_stencil_texture_ = texture2d_ptr{new texture2d_t{
@@ -563,8 +563,25 @@ auto context_t::immediate_draw() -> void
 			uavs[x.idx] = (ID3D11UnorderedAccessView*)x.view->d3d_view().get();
 			atomic_counters[x.idx] = (UINT)x.counter;
 		}
+
+		ID3D11RenderTargetView* RT[4] =
+		{
+			current_render_target_view_[0] ? (ID3D11RenderTargetView*&)current_render_target_view_[0]->d3d_view().get() : nullptr,
+			current_render_target_view_[1] ? (ID3D11RenderTargetView*&)current_render_target_view_[1]->d3d_view().get() : nullptr,
+			current_render_target_view_[2] ? (ID3D11RenderTargetView*&)current_render_target_view_[2]->d3d_view().get() : nullptr,
+			current_render_target_view_[3] ? (ID3D11RenderTargetView*&)current_render_target_view_[3]->d3d_view().get() : nullptr
+		};
+
+		auto mainbuf = atma::ptr_cast_static<texture2d_t const>(current_render_target_view_[0]->resource());
+
+		auto vp = D3D11_VIEWPORT{0, 0, (float)mainbuf->width(), (float)mainbuf->height(), 0, 1.f};
+		d3d_immediate_context_->RSSetViewports(1, &vp);
+
+
+		auto DS = current_depth_stencil_view_ ? (ID3D11DepthStencilView*&)current_depth_stencil_view_->d3d_view().get() : nullptr;
+
 		d3d_immediate_context_->OMSetRenderTargetsAndUnorderedAccessViews(
-			1, &(ID3D11RenderTargetView*&)current_render_target_view_[0]->d3d_view().get(), (ID3D11DepthStencilView*&)current_depth_stencil_view_->d3d_view().get(),
+			1, RT, DS,
 			1, D3D11_PS_CS_UAV_REGISTER_COUNT - 1, uavs, atomic_counters);
 	}
 	

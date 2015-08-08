@@ -20,7 +20,10 @@ texture2d_t::texture2d_t(context_ptr const& ctx, resource_usage_mask_t usage_fla
 	auto d3dfmt = platform::dxgi_format_of(format);
 
 	if (usage_flags & resource_usage_t::render_target || usage_flags & resource_usage_t::depth_stencil)
-		ATMA_ASSERT_MSG(mips_ == 1, "render-targets|depth-stencil-targets can not have mipmaps");
+		if (mips_ == 0)
+			mips_ = 1;
+		else
+			ATMA_ASSERT_MSG(mips_ == 1, "render-targets|depth-stencil-targets can not have mipmaps");
 
 	if (usage_flags & resource_usage_t::render_target)
 		(uint&)d3dbind |= D3D11_BIND_RENDER_TARGET;

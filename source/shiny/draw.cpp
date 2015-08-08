@@ -76,7 +76,7 @@ auto shiny::detail::dispatch_signal_draw(context_ptr const& ctx, batch_t& batch)
 		ctx->immediate_draw();
 	});
 
-	ctx->signal(batch);
+	//ctx->signal(batch);
 }
 
 
