@@ -112,7 +112,7 @@ auto fit_linear_dispatch_to_group(uint& x, uint& y, uint& z, uint xs, uint ys, u
 	//  [1, 1, 1] -> [8, 8, 8]
 	//  [8, 1, 1] -> [64, 8, 8]
 
-	x = std::max(1u, s / (xs * ys * zs));
+	x = std::max(1u, (uint)std::ceil((float)s / (xs * ys * zs)));
 	y = 1;
 	z = 1;
 
@@ -300,12 +300,12 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 		fs_voxelize = shiny::create_fragment_shader(ctx, f.read_into_memory(), true);
 	}
 
-	// fragments buffer
+	// fragments buffer (64mb)
 	fragments_buf = shiny::make_buffer(ctx,
 		shiny::resource_type_t::structured_buffer,
 		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
 		shiny::resource_storage_t::persistant,
-		shiny::buffer_dimensions_t{sizeof(uint32), 5 * 1024 * 1024},
+		shiny::buffer_dimensions_t{sizeof(uint32), 16 * 1024 * 1024},
 		shiny::buffer_data_t{});
 
 	fragments_view = shiny::make_resource_view(fragments_buf,
@@ -502,13 +502,13 @@ auto voxelization_plugin_t::setup_svo() -> void
 		shiny::element_format_t::unknown);
 
 
-	auto const grid_size_500mb = 320;
+	auto const grid_size_500mb = 400;
 
 	// brick-cache
 	brickcache = shiny::make_texture3d(ctx,
 		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
 		shiny::resource_storage_t::persistant,
-		shiny::texture3d_dimensions_t::cube(shiny::element_format_t::f32x2, 320, 1));
+		shiny::texture3d_dimensions_t::cube(shiny::element_format_t::f32x2, grid_size_500mb, 1));
 
 	brickcache_view = shiny::make_resource_view(brickcache,
 		shiny::resource_view_type_t::compute,
@@ -518,6 +518,7 @@ auto voxelization_plugin_t::setup_svo() -> void
 		shiny::resource_view_type_t::input,
 		shiny::element_format_t::f32x2);
 
+#if 0
 	auto brick_readback = shiny::make_texture3d(ctx,
 		shiny::resource_usage_mask_t::none,
 		shiny::resource_storage_t::staging,
@@ -530,7 +531,7 @@ auto voxelization_plugin_t::setup_svo() -> void
 		shiny::resource_storage_t::staging,
 		shiny::buffer_dimensions_t{tile_size, tiles_required},
 		shiny::buffer_data_t{});
-
+#endif
 
 
 	namespace scc = shiny::compute_commands;
