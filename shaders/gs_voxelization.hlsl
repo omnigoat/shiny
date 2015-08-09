@@ -96,11 +96,14 @@ void main(triangle VSOutput input[3], inout TriangleStream<GSOutput> output)
 	v1.z = v1.z * 0.5f + 0.5f;
 	v2.z = v2.z * 0.5f + 0.5f;
 
-	// calculate aabb
+	// calculate aabb into [0.f, dimensions] range
 	float4 aabb = v0.xyxy;
 	aabb = float4(min(aabb.xy, v1.xy), max(aabb.zw, v1.xy));
 	aabb = float4(min(aabb.xy, v2.xy), max(aabb.zw, v2.xy));
-
+	aabb = aabb * 0.5f + 0.5f;
+	aabb.xy -= 0.5f / dimensions.xy;
+	aabb.zw += 0.5f / dimensions.xy;
+	aabb *= dimensions.xyxy;
 
 	// equation of lines
 	float2 e0 = v1.xy - v0.xy;

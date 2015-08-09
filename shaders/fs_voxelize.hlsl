@@ -2,19 +2,19 @@
 
 struct FSInput
 {
-	float4 position : SV_Position;
+	centroid float4 position : SV_Position;
 	nointerpolation float3 normal : Normal;
 	nointerpolation float4 aabb : AABB;
 	nointerpolation uint proj_idx : ProjIdx;
 };
 
 
-cbuffer lulz : register(b0)
+cbuffer cb1 : register(b0)
 {
 	float4 bounds;
 };
 
-cbuffer lulz2 : register(b1)
+cbuffer cb2 : register(b1)
 {
 	float4 dimensions;
 };
@@ -78,10 +78,7 @@ float4 main(FSInput input) : SV_Target
 	float3 p = floor(float3(input.position.x, dimensions.y - input.position.y, input.position.z * dimensions.z));
 
 	// cull against aabb of triangle
-	float4 aabb = (input.aabb * 0.5f + 0.5f) * dimensions.xyxy;
-	aabb.xy -= 0.5f;
-	aabb.zw += 0.5f;
-	if (p.x < aabb.x || p.y < aabb.y || p.x > aabb.z || p.y > aabb.w)
+	if (p.x < input.aabb.x || p.y < input.aabb.y || p.x > input.aabb.z || p.y > input.aabb.w)
 		discard;
 
 	// gradient
@@ -107,6 +104,10 @@ float4 main(FSInput input) : SV_Target
 
 	InterlockedAdd(countbuf[0], 1, idx);
 	morton_encoding32(fragments[idx], p2.x, p2.y, p2.z - 1);
+
+	//InterlockedAdd(countbuf[0], 1, idx);
+	//morton_encoding32(fragments[idx], p2.x, p2.y, p2.z +_ 3);
+
 
 	discard;
 	return float4(1.f, 0.f, 0.f, 0.f);
