@@ -123,7 +123,7 @@ void main(triangle VSOutput input[3], inout TriangleStream<GSOutput> output)
 	//  = sqrt((1/d^2) + (1/d^2))
 	//  = sqrt(2/d^2)
 	//  = sqrt(2) / d
-	float2 hpixel =  1.4142135637309f / dimensions.xy;
+	float2 hpixel =  (1.4142135637309f / 2.f) / dimensions.xy;
 
 	v0.xy += hpixel * (e2 / dot(e2, n0.xy) + e0 / dot(e0, n2.xy));
 	v1.xy += hpixel * (e0 / dot(e0, n1.xy) + e1 / dot(e1, n0.xy));
@@ -131,6 +131,10 @@ void main(triangle VSOutput input[3], inout TriangleStream<GSOutput> output)
 
 	// calcualte depth gradient
 	//float2 gradient = 
+	//v0.xy = v0.xy * 2.f - 1.f;
+	//v1.xy = v1.xy * 2.f - 1.f;
+	//v2.xy = v2.xy * 2.f - 1.f;
+
 
 	// output triangle
 	GSOutput g0;

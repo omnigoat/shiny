@@ -84,7 +84,7 @@ float4 main(FSInput input) : SV_Target
 	// gradient
 	//float2 dz = float2(ddx(input.posagain.z), ddy(input.posagain.z));
 
-	// unproject and expand to 128 for now
+	// unproject
 	float3 p2 = mul(projs[input.proj_idx], float4(p, 1.f)).xyz;
 
 	// write new fragment(s)
@@ -106,8 +106,10 @@ float4 main(FSInput input) : SV_Target
 	morton_encoding32(fragments[idx], p2.x, p2.y, p2.z - 1);
 
 	//InterlockedAdd(countbuf[0], 1, idx);
-	//morton_encoding32(fragments[idx], p2.x, p2.y, p2.z +_ 3);
+	//morton_encoding32(fragments[idx], p2.x, p2.y, p2.z + 3);
 
+	//InterlockedAdd(countbuf[0], 1, idx);
+	//morton_encoding32(fragments[idx], p2.x, p2.y, p2.z - 3);
 
 	discard;
 	return float4(1.f, 0.f, 0.f, 0.f);
