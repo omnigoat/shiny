@@ -146,9 +146,6 @@
     <ClCompile Include="..\..\source\shiny\camera.cpp">
       <Filter>source\shiny</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\shiny\element_format.cpp">
-      <Filter>source\shiny</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\source\shiny\scene.cpp">
       <Filter>source\shiny</Filter>
     </ClCompile>
@@ -180,6 +177,9 @@
       <Filter>source\shiny\platform\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\shiny\draw_target.cpp">
+      <Filter>source\shiny</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\shiny\format.cpp">
       <Filter>source\shiny</Filter>
     </ClCompile>
   </ItemGroup>
@@ -304,9 +304,6 @@
     <ClInclude Include="..\..\include\shiny\generic_buffer.hpp">
       <Filter>include\shiny</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\shiny\element_format.hpp">
-      <Filter>include\shiny</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\shelf\file.hpp">
       <Filter>include\shelf</Filter>
     </ClInclude>
@@ -378,6 +375,9 @@
     </ClInclude>
     <ClInclude Include="..\..\include\shiny\platform\win32\depth_stencil_view.hpp">
       <Filter>include\shiny\platform\win32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\shiny\format.hpp">
+      <Filter>include\shiny</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -138,7 +138,7 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 		}
 
 		vb = shiny::create_vertex_buffer(ctx, shiny::resource_storage_t::immutable, dd_position(), (uint)obj.vertices().size(), &obj.vertices()[0]);
-		ib = shiny::create_index_buffer(ctx, shiny::resource_storage_t::immutable, shiny::element_format_t::u32, (uint)obj.faces().size() * 3, mi.begin());
+		ib = shiny::create_index_buffer(ctx, shiny::resource_storage_t::immutable, shiny::format_t::u32, (uint)obj.faces().size() * 3, mi.begin());
 	}
 
 	
@@ -169,12 +169,12 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 
 	auto render_target = shiny::make_texture2d(ctx,
 		shiny::resource_usage_t::render_target,
-		shiny::element_format_t::nu8x4,
+		shiny::format_t::nu8x4,
 		gridsize, gridsize);
 
 	auto render_target_view = shiny::make_resource_view(render_target,
 		shiny::resource_view_type_t::render_target,
-		shiny::element_format_t::nu8x4);
+		shiny::format_t::nu8x4);
 
 	auto draw_target = shiny::draw_target_t{
 		render_target_view};
@@ -245,7 +245,7 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 
 	voxelbuf_view = shiny::make_resource_view(voxelbuf,
 		shiny::resource_view_type_t::input,
-		shiny::element_format_t::unknown);
+		shiny::format_t::unknown);
 #endif
 #endif
 
@@ -265,7 +265,7 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 		}
 
 		vb = shiny::create_vertex_buffer(ctx, shiny::resource_storage_t::immutable, dd_position(), (uint)obj.vertices().size(), &obj.vertices()[0]);
-		ib = shiny::create_index_buffer(ctx, shiny::resource_storage_t::immutable, shiny::element_format_t::u32, (uint)obj.faces().size() * 3, mi.begin());
+		ib = shiny::create_index_buffer(ctx, shiny::resource_storage_t::immutable, shiny::format_t::u32, (uint)obj.faces().size() * 3, mi.begin());
 	}
 #endif
 
@@ -310,11 +310,11 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 
 	fragments_view = shiny::make_resource_view(fragments_buf,
 		shiny::resource_view_type_t::compute,
-		shiny::element_format_t::unknown);
+		shiny::format_t::unknown);
 
 	fragments_srv_view = shiny::make_resource_view(fragments_buf,
 		shiny::resource_view_type_t::input,
-		shiny::element_format_t::unknown);
+		shiny::format_t::unknown);
 
 	{
 		namespace sdc = shiny::draw_commands;
@@ -330,7 +330,7 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 
 		auto countbuf_view = shiny::make_resource_view(countbuf,
 			shiny::resource_view_type_t::compute,
-			shiny::element_format_t::unknown);
+			shiny::format_t::unknown);
 
 		auto mid = (bbmin + bbmax) / 2.f;
 		mid.w = gridwidth / 2.f;
@@ -425,7 +425,7 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 
 		voxelbuf_view = shiny::make_resource_view(voxelbuf,
 			shiny::resource_view_type_t::input,
-			shiny::element_format_t::unknown);
+			shiny::format_t::unknown);
 #endif
 	}
 }
@@ -485,7 +485,7 @@ auto voxelization_plugin_t::setup_svo() -> void
 
 	countbuf_view = shiny::make_resource_view(countbuf,
 		shiny::resource_view_type_t::compute,
-		shiny::element_format_t::unknown);
+		shiny::format_t::unknown);
 
 	// node-cache
 	nodecache = shiny::make_buffer(ctx,
@@ -499,7 +499,7 @@ auto voxelization_plugin_t::setup_svo() -> void
 
 	nodecache_view = shiny::make_resource_view(nodecache,
 		shiny::resource_view_type_t::compute,
-		shiny::element_format_t::unknown);
+		shiny::format_t::unknown);
 
 
 	auto const grid_size_500mb = 400;
@@ -508,21 +508,21 @@ auto voxelization_plugin_t::setup_svo() -> void
 	brickcache = shiny::make_texture3d(ctx,
 		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
 		shiny::resource_storage_t::persistant,
-		shiny::texture3d_dimensions_t::cube(shiny::element_format_t::f32x2, grid_size_500mb, 1));
+		shiny::texture3d_dimensions_t::cube(shiny::format_t::f32x2, grid_size_500mb, 1));
 
 	brickcache_view = shiny::make_resource_view(brickcache,
 		shiny::resource_view_type_t::compute,
-		shiny::element_format_t::unknown);
+		shiny::format_t::unknown);
 
 	brickcache_input_view = shiny::make_resource_view(brickcache,
 		shiny::resource_view_type_t::input,
-		shiny::element_format_t::f32x2);
+		shiny::format_t::f32x2);
 
 #if 0
 	auto brick_readback = shiny::make_texture3d(ctx,
 		shiny::resource_usage_mask_t::none,
 		shiny::resource_storage_t::staging,
-		shiny::texture3d_dimensions_t::cube(shiny::element_format_t::f32x2, brickcache->width() / 2, 1));
+		shiny::texture3d_dimensions_t::cube(shiny::format_t::f32x2, brickcache->width() / 2, 1));
 
 	// staging buffer
 	stb = shiny::make_buffer(ctx,
@@ -598,7 +598,7 @@ auto voxelization_plugin_t::setup_rendering() -> void
 	};
 
 	auto dd = ctx->runtime().make_data_declaration({
-		{"position", 0, shiny::element_format_t::f32x4}
+		{"position", 0, shiny::format_t::f32x4}
 	});
 
 	vb_quad = shiny::create_vertex_buffer(ctx, shiny::resource_storage_t::persistant, dd, 8, vbd);

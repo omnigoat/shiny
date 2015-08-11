@@ -76,16 +76,16 @@ application_t::application_t()
 
 	// geometry
 	dd_position = runtime.make_data_declaration({
-		{"position", 0, shiny::element_format_t::f32x4}
+		{"position", 0, shiny::format_t::f32x4}
 	});
 
 	dd_position_color = runtime.make_data_declaration({
-		{"position", 0, shiny::element_format_t::f32x4},
-		{"color", 0, shiny::element_format_t::f32x4}
+		{"position", 0, shiny::format_t::f32x4},
+		{"color", 0, shiny::format_t::f32x4}
 	});
 
 	vb_cube = shiny::create_vertex_buffer(ctx, shiny::resource_storage_t::immutable, dd_position_color, 8, cube_vertices);
-	ib_cube = shiny::create_index_buffer(ctx, shiny::resource_storage_t::immutable, shiny::element_format_t::u16, 36, cube_indices);
+	ib_cube = shiny::create_index_buffer(ctx, shiny::resource_storage_t::immutable, shiny::format_t::u16, 36, cube_indices);
 
 
 	// shaders

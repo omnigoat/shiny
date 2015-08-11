@@ -117,7 +117,7 @@ auto context_t::pull_display_format(display_mode_t& mode, DXGI_SWAP_CHAIN_DESC& 
 	mode.width = desc.BufferDesc.Width;
 	mode.height = desc.BufferDesc.Height;
 	mode.fullscreen = desc.Windowed == FALSE;
-	mode.format = element_format_t::nu8x4;
+	mode.format = format_t::nu8x4;
 	mode.refreshrate_frames = desc.BufferDesc.RefreshRate.Numerator;
 	mode.refreshrate_period = desc.BufferDesc.RefreshRate.Denominator;
 }
@@ -175,24 +175,24 @@ auto context_t::setup_rendertarget(uint width, uint height) -> void
 	backbuffer_texture_ = texture2d_ptr{new texture2d_t{
 		shared_from_this<context_t>(), d3d_backbuffer_,
 		resource_usage_t::render_target,
-		element_format_t::nu8x4,
+		format_t::nu8x4,
 		backbuffer_desc.Width, backbuffer_desc.Height, 1}};
 
 	backbuffer_view_ = make_resource_view(
 		backbuffer_texture_,
 		resource_view_type_t::render_target,
-		element_format_t::nu8x4);
+		format_t::nu8x4);
 	
 	// create default depth-stencil
 	default_depth_stencil_texture_ = texture2d_ptr{new texture2d_t{
 		shared_from_this<context_t>(),
 		resource_usage_t::depth_stencil,
-		element_format_t::dnu24s8,
+		format_t::dnu24s8,
 		backbuffer_desc.Width, backbuffer_desc.Height, 1}};
 
 	default_depth_stencil_view_ = make_resource_view(default_depth_stencil_texture_,
 		resource_view_type_t::depth_stencil,
-		element_format_t::dnu24s8);
+		format_t::dnu24s8);
 
 	// set defaults as targets
 	current_render_target_view_[0] = backbuffer_view_;

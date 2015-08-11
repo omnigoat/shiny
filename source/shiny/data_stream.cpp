@@ -4,7 +4,7 @@ using namespace shiny;
 using shiny::data_stream_t;
 
 
-data_stream_t::data_stream_t(atma::string const& semantic, uint index, element_format_t element_format, data_stream_stage_t stage)
+data_stream_t::data_stream_t(atma::string const& semantic, uint index, format_t element_format, data_stream_stage_t stage)
 	: stage_(stage), semantic_(semantic), index_(index), element_format_(element_format)
 {
 }
@@ -24,7 +24,7 @@ auto data_stream_t::index() const -> uint32
 	return index_;
 }
 
-auto data_stream_t::element_format() const -> element_format_t
+auto data_stream_t::element_format() const -> format_t
 {
 	return element_format_;
 }

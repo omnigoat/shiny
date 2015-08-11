@@ -3,7 +3,7 @@
 #include <shiny/platform/win32/dxgi_fwd.hpp>
 #include <shiny/platform/win32/d3d_fwd.hpp>
 
-#include <shiny/element_format.hpp>
+#include <shiny/format.hpp>
 #include <shiny/output.hpp>
 #include <shiny/data_declaration.hpp>
 #include <shiny/geometry_declaration.hpp>

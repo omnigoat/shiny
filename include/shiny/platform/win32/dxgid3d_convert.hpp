@@ -2,7 +2,7 @@
 
 #include <shiny/platform/win32/d3d_fwd.hpp>
 #include <shiny/platform/win32/dxgi_fwd.hpp>
-#include <shiny/element_format.hpp>
+#include <shiny/format.hpp>
 #include <shiny/blend_state.hpp>
 #include <shiny/depth_state.hpp>
 
@@ -19,9 +19,9 @@ namespace shiny { namespace platform {
 		}
 	}
 
-	inline auto dxgi_format_of(element_format_t fmt) -> DXGI_FORMAT
+	inline auto dxgi_format_of(format_t fmt) -> DXGI_FORMAT
 	{
-		using ef = element_format_t;
+		using ef = format_t;
 
 		switch (fmt)
 		{

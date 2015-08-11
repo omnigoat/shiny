@@ -1,7 +1,7 @@
 #pragma once
 
 #include <shiny/shiny_fwd.hpp>
-#include <shiny/element_format.hpp>
+#include <shiny/format.hpp>
 #include <shiny/platform/win32/d3d_fwd.hpp>
 
 #include <atma/intrusive_ptr.hpp>
@@ -32,13 +32,13 @@ namespace shiny
 
 	struct resource_view_t : atma::ref_counted
 	{
-		resource_view_t(resource_cptr const&, resource_view_type_t, element_format_t, resource_subset_t);
+		resource_view_t(resource_cptr const&, resource_view_type_t, format_t, resource_subset_t);
 		~resource_view_t();
 
 		auto context() const -> context_ptr const&;
 		auto resource() const -> resource_cptr const& { return resource_; }
 		auto view_type() const -> resource_view_type_t { return resource_view_type_; }
-		auto format() const -> element_format_t { return format_; }
+		auto format() const -> format_t { return format_; }
 		auto subset() const -> resource_subset_t const& { return subset_; }
 
 		auto d3d_view() const -> platform::d3d_view_ptr const& { return d3d_view_; }
@@ -46,7 +46,7 @@ namespace shiny
 	private:
 		resource_cptr resource_;
 		resource_view_type_t resource_view_type_;
-		element_format_t format_;
+		format_t format_;
 		resource_subset_t subset_;
 
 		platform::d3d_view_ptr d3d_view_;
@@ -61,5 +61,5 @@ namespace shiny
 	};
 #endif
 
-	auto make_resource_view(resource_cptr const&, resource_view_type_t, element_format_t, resource_subset_t = resource_subset_t::whole) -> resource_view_ptr;
+	auto make_resource_view(resource_cptr const&, resource_view_type_t, format_t, resource_subset_t = resource_subset_t::whole) -> resource_view_ptr;
 }

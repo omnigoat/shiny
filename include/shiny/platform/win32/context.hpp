@@ -1,7 +1,7 @@
 #pragma once
 
 #include <shiny/shiny_fwd.hpp>
-#include <shiny/element_format.hpp>
+#include <shiny/format.hpp>
 #include <shiny/adapter.hpp>
 #include <shiny/output.hpp>
 #include <shiny/constant_buffer.hpp>

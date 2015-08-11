@@ -73,7 +73,7 @@ auto runtime_t::enumerate_backbuffers(platform::dxgi_output_ptr const& output) -
 		formats.push_back({
 			x.Width, x.Height,
 			x.RefreshRate.Numerator, x.RefreshRate.Denominator,
-			element_format_t::nu8x4
+			format_t::nu8x4
 		});
 	}
 }

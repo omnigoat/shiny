@@ -23,7 +23,7 @@ render_target_view_t::render_target_view_t(texture2d_ptr const& tx, uint mip)
 	// get format, if generic, change to unsigned int
 	auto fmt = tx->format();
 	if (is_generic(fmt))
-		fmt = (element_format_t)((uint32)fmt | 0x10);
+		fmt = (format_t)((uint32)fmt | 0x10);
 
 	D3D11_RENDER_TARGET_VIEW_DESC desc;
 	desc.Format = platform::dxgi_format_of(fmt);

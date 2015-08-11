@@ -17,27 +17,27 @@ namespace shiny
 
 		struct gen_view_t
 		{
-			gen_view_t(bool g, gpu_access_t ga, element_format_t ef, resource_subset_t rs)
+			gen_view_t(bool g, gpu_access_t ga, format_t ef, resource_subset_t rs)
 				: generate(g), gpu_access(ga), element_format(ef), subset(rs)
 			{}
 
 			bool generate;
 			gpu_access_t gpu_access;
-			element_format_t element_format;
+			format_t element_format;
 			resource_subset_t subset;
 		};
 	}
 
 	struct gen_primary_input_view_t : detail::gen_view_t
 	{
-		gen_primary_input_view_t(element_format_t ef = element_format_t::unknown, resource_subset_t rs = resource_subset_t::whole)
+		gen_primary_input_view_t(format_t ef = format_t::unknown, resource_subset_t rs = resource_subset_t::whole)
 			: detail::gen_view_t{true, gpu_access_t::read, ef, rs}
 		{}
 	};
 
 	struct gen_primary_compute_view_t : detail::gen_view_t
 	{
-		gen_primary_compute_view_t(element_format_t ef = element_format_t::unknown, resource_subset_t const& rs = resource_subset_t::whole)
+		gen_primary_compute_view_t(format_t ef = format_t::unknown, resource_subset_t const& rs = resource_subset_t::whole)
 			: detail::gen_view_t{true, gpu_access_t::read_write, ef, rs}
 		{}
 	};

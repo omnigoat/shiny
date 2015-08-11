@@ -45,7 +45,7 @@ namespace shiny
 	#define MKDS(t, d, s) \
 		(((s / 8) << 17) | (1 << 16) | (d << 8) | (t))
 
-	enum class element_format_t : uint32
+	enum class format_t : uint32
 	{
 		unknown = 0,
 
@@ -83,10 +83,10 @@ namespace shiny
 	#undef NS
 
 
-	auto element_count(element_format_t) -> uint;
-	auto element_size(element_format_t) -> size_t;
-	auto is_generic(element_format_t) -> bool;
-	auto format_depth_size(element_format_t) -> size_t;
-	auto format_stencil_size(element_format_t) -> size_t;
+	auto element_count(format_t) -> uint;
+	auto element_size(format_t) -> size_t;
+	auto is_generic(format_t) -> bool;
+	auto format_depth_size(format_t) -> size_t;
+	auto format_stencil_size(format_t) -> size_t;
 
 }

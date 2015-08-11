@@ -15,12 +15,12 @@ using shiny::resource_view_t;
 resource_subset_t const resource_subset_t::whole = resource_subset_t{};
 
 
-resource_view_t::resource_view_t(resource_cptr const& rs, resource_view_type_t view_type, element_format_t ef, resource_subset_t subset)
+resource_view_t::resource_view_t(resource_cptr const& rs, resource_view_type_t view_type, format_t ef, resource_subset_t subset)
 	: resource_(rs), resource_view_type_(view_type), format_(ef), subset_(subset)
 {
 	if (rs->resource_type() == resource_type_t::structured_buffer)
 	{
-		ATMA_ASSERT_MSG(ef == element_format_t::unknown, "structured buffers don't specify typed-views. use element_format_t::unknown");
+		ATMA_ASSERT_MSG(ef == format_t::unknown, "structured buffers don't specify typed-views. use format_t::unknown");
 	}
 
 	auto fmt = platform::dxgi_format_of(format_);
@@ -116,7 +116,7 @@ auto resource_view_t::context() const -> context_ptr const&
 	return resource_->context();
 }
 
-auto shiny::make_resource_view(resource_cptr const& r, resource_view_type_t vt, element_format_t ef, resource_subset_t s) -> resource_view_ptr
+auto shiny::make_resource_view(resource_cptr const& r, resource_view_type_t vt, format_t ef, resource_subset_t s) -> resource_view_ptr
 {
 	return atma::make_intrusive<resource_view_t>(r, vt, ef, s);
 }

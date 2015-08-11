@@ -62,7 +62,7 @@ texture3d_t::texture3d_t(context_ptr const& ctx, resource_usage_mask_t ru, resou
 	ATMA_ENSURE_IS(S_OK, device->CreateTexture3D(&desc, nullptr, d3d_texture_.assign()));
 }
 
-auto texture3d_t::format() const -> element_format_t
+auto texture3d_t::format() const -> format_t
 {
 	return format_;
 }
