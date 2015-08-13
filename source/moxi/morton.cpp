@@ -1,4 +1,4 @@
-#include <../../shiny/include/shox/morton.hpp>
+#include <moxi/morton.hpp>
 
 
 uint32 const moxi::detail::morton256_x[256] =

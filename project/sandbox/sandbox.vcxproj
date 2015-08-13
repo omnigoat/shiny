@@ -170,9 +170,6 @@
     <ProjectReference Include="..\shiny\shiny.vcxproj">
       <Project>{8e03b685-d9ce-45bf-8597-e7ef57e62b8d}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\shox\shox.vcxproj">
-      <Project>{f1645233-021f-48a6-8be7-8bbb552230be}</Project>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\source\sandbox\sandbox.cpp" />

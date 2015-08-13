@@ -21,8 +21,9 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{F1645233-021F-48A6-8BE7-8BBB552230BE}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>shoxelizer</RootNamespace>
+    <RootNamespace>moxi</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <ProjectName>moxi</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -74,7 +75,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)..\..\shox\include;$(SolutionDir)..\..\shiny\include;$(SolutionDir)..\..\fooey\include;$(SolutionDir)..\..\atma\vendor;$(SolutionDir)..\..\atma\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)..\..\moxi\include;$(SolutionDir)..\..\shiny\include;$(SolutionDir)..\..\fooey\include;$(SolutionDir)..\..\atma\vendor;$(SolutionDir)..\..\atma\include;$(IncludePath)</IncludePath>
     <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(ProjectDir)$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
@@ -84,7 +85,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(SolutionDir)..\..\shox\include;$(SolutionDir)..\..\shiny\include;$(SolutionDir)..\..\fooey\include;$(SolutionDir)..\..\atma\vendor;$(SolutionDir)..\..\atma\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)..\..\moxi\include;$(SolutionDir)..\..\shiny\include;$(SolutionDir)..\..\fooey\include;$(SolutionDir)..\..\atma\vendor;$(SolutionDir)..\..\atma\include;$(IncludePath)</IncludePath>
     <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(ProjectDir)$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
@@ -154,11 +155,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\source\shoxelizer\shoxelizer.cpp" />
-    <ClCompile Include="..\..\source\shox\morton.cpp" />
+    <ClCompile Include="..\..\source\moxi\morton.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\include\shox\morton.hpp" />
+    <ClInclude Include="..\..\include\moxi\morton.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\fooey\project\fooey.vcxproj">

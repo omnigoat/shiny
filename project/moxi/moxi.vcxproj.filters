@@ -15,15 +15,12 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\source\shoxelizer\shoxelizer.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\source\shox\morton.cpp">
+    <ClCompile Include="..\..\source\moxi\morton.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\include\shox\morton.hpp">
+    <ClInclude Include="..\..\include\moxi\morton.hpp">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
