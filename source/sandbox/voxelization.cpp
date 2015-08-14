@@ -15,7 +15,7 @@
 
 #include <shelf/file.hpp>
 
-#include <shox/morton.hpp>
+#include <moxi/morton.hpp>
 
 #include <atma/math/matrix4f.hpp>
 #include <atma/math/vector4f.hpp>
