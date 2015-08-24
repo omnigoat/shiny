@@ -82,15 +82,21 @@ float4 main(FSInput input) : SV_Target
 {
 	// position now in [0, dimensions] range
 	//  - note: flip y because SV_Position, mult z because depth
-	float3 p = floor(float3(input.position.x, dimensions.y - input.position.y, input.position.z * dimensions.z));
+	float3 pr2 = float3(input.position.x, dimensions.y - input.position.y, input.position.z * dimensions.z);
+	float3 pr = floor(pr2);
 
 	// cull against aabb of triangle
-	if (p.x < input.aabb.x || p.y < input.aabb.y || p.x > input.aabb.z || p.y > input.aabb.w)
+	if (pr2.x < input.aabb.x || pr2.y < input.aabb.y || pr2.x > input.aabb.z || pr2.y > input.aabb.w)
 		discard;
 
 
 
 	//float3 p = {0.f, 0.f, 0.f};
+
+#if 1
+	float3 p = pr2 / dimensions.xyz;
+	p.xy *= 2.f;
+	p.xy -= 1.f;
 
 	// triangle-plane
 	if ((dot(input.n, p) + input.d1) * (dot(input.n, p) + input.d2) > 0.f)
@@ -98,19 +104,19 @@ float4 main(FSInput input) : SV_Target
 
 	// xy-plane
 	float4 pxy = {p.x, p.y, 0.f, 0.f};
-	if ((dot(input.ne0xy, pxy) + input.de0xy) < 0.f || (dot(input.ne1xy, pxy) + input.de1xy) < 0.f || (dot(input.ne2xy, pxy) + input.de2xy) < 0.f)
-		return false;
+	//if ((dot(input.ne0xy, pxy) + input.de0xy) < 0.f || (dot(input.ne1xy, pxy) + input.de1xy) < 0.f || (dot(input.ne2xy, pxy) + input.de2xy) < 0.f)
+		//return false;
 
 	// yz-plane
 	float4 pyz = {p.y, p.z, 0.f, 0.f};
-	if ((dot(input.ne0yz, pyz) + input.de0yz) < 0.f || (dot(input.ne1yz, pyz) + input.de1yz) < 0.f || (dot(input.ne2yz, pyz) + input.de2yz) < 0.f)
-		return false;
-
+	//if ((dot(input.ne0yz, pyz) + input.de0yz) < 0.f || (dot(input.ne1yz, pyz) + input.de1yz) < 0.f || (dot(input.ne2yz, pyz) + input.de2yz) < 0.f)
+		//return false;
+		 
 	// zx-plane
 	float4 pzx = {p.z, p.x, 0.f, 0.f};
-	if ((dot(input.ne0zx, pzx) + input.de0zx) < 0.f || (dot(input.ne1zx, pzx) + input.de1zx) < 0.f || (dot(input.ne2zx, pzx) + input.de2zx) < 0.f)
-		return false;
-
+	//if ((dot(input.ne0zx, pzx) + input.de0zx) < 0.f || (dot(input.ne1zx, pzx) + input.de1zx) < 0.f || (dot(input.ne2zx, pzx) + input.de2zx) < 0.f)
+		//return false;
+#endif
 
 
 
@@ -120,7 +126,7 @@ float4 main(FSInput input) : SV_Target
 	//float2 dz = float2(ddx(input.posagain.z), ddy(input.posagain.z));
 
 	// unproject
-	float3 p2 = mul(projs[input.proj], float4(p, 1.f)).xyz;
+	float3 p2 = mul(projs[input.proj], float4(pr, 1.f)).xyz;
 
 	// write new fragment(s)
 	//  - currently brute-forcing all 5 possible voxels

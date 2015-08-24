@@ -84,10 +84,10 @@ void main(triangle VSOutput input[3], inout TriangleStream<GSOutput> output)
 	// we write a lot of shared state
 	GSOutput g;
 
-	g.n = cross(input[1].world_position.xyz - input[0].world_position.xyz, input[2].world_position.xyz - input[1].world_position.xyz);
+	float wsn = cross(input[1].world_position.xyz - input[0].world_position.xyz, input[2].world_position.xyz - input[1].world_position.xyz);
 
 	// pick projection axis
-	float3 pn = abs(g.n);
+	float3 pn = abs(wsn);
 	int proj_idx;
 	if (pn.x > pn.y && pn.x > pn.z)
 		proj_idx = 0;
@@ -97,15 +97,16 @@ void main(triangle VSOutput input[3], inout TriangleStream<GSOutput> output)
 		proj_idx = 2;
 
 	// projected verts
-	float4 v0 = mul(projs[proj_idx], input[0].world_position);
-	float4 v1 = mul(projs[proj_idx], input[1].world_position);
-	float4 v2 = mul(projs[proj_idx], input[2].world_position);
+	float4 pv0 = mul(projs[proj_idx], input[0].world_position);
+	float4 pv1 = mul(projs[proj_idx], input[1].world_position);
+	float4 pv2 = mul(projs[proj_idx], input[2].world_position);
 
 	// convert Z to NDC (won't render otherwise!)
 	v0.z = v0.z * 0.5f + 0.5f;
 	v1.z = v1.z * 0.5f + 0.5f;
 	v2.z = v2.z * 0.5f + 0.5f;
 
+	g.n = cross(v1.xyz - v0.xyz, v2.xyz - v1.xyz);
 	g.dp = 1.f / dimensions.xyz;
 	g.c = float3(g.n.x > 0.f ? g.dp.x : 0.f, g.n.y > 0.f ? g.dp.y : 0.f, g.n.z > 0.f ? g.dp.z : 0.f);
 	g.d1 = dot(g.n, g.c - v0.xyz);
@@ -195,17 +196,17 @@ void main(triangle VSOutput input[3], inout TriangleStream<GSOutput> output)
 
 
 	// output triangle
-	g.position = v0;
+	g.position = pv0;
 	g.aabb = aabb;
 	g.proj = proj_idx;
 	output.Append(g);
 
-	g.position = v1;
+	g.position = pv1;
 	g.aabb = aabb;
 	g.proj = proj_idx;
 	output.Append(g);
 
-	g.position = v2;
+	g.position = pv2;
 	g.aabb = aabb;
 	g.proj = proj_idx;
 	output.Append(g);
