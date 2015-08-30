@@ -93,10 +93,6 @@ float4 main(FSInput input) : SV_Target
 		discard;
 
 
-	float dzdx = ddx(p.z);
-	float dzdy = ddy(p.y);
-
-
 #if 1
 	// triangle-plane
 	if ((dot(input.n, p) + input.d1) * (dot(input.n, p) + input.d2) > 0.f)
@@ -119,12 +115,6 @@ float4 main(FSInput input) : SV_Target
 #endif
 
 
-
-
-
-	// gradient
-	//float2 dz = float2(ddx(input.posagain.z), ddy(input.posagain.z));
-
 	// unproject
 	float3 p2 = mul(projs[input.proj], float4(pr, 1.f)).xyz;
 
@@ -134,7 +124,29 @@ float4 main(FSInput input) : SV_Target
 	InterlockedAdd(countbuf[0], 1, idx);
 	morton_encoding32(fragments[idx], p2.x, p2.y, p2.z);
 
+
+	float dzdx = ddx(p2.z);
+	float dzdy = ddy(p2.y);
+
+	float2 dzdxy = float2(dzdx, dzdy);
+
+	float2 minzdxy = min(p2.z + dzdxy * 0.5f, p2.z - dzdxy * 0.5f);
+	float2 maxzdxy = max(p2.z + dzdxy * 0.5f, p2.z - dzdxy * 0.5f);
+
+	float minz = min(minzdxy.x, minzdxy.y);
+	float maxz = max(maxzdxy.x, maxzdxy.y);
+
+	//float minzf = floor(minz * dimensions.x);
+	//float maxzf = floor(maxz * dimensions.x);
+
 #if 1
+	for (float f = minz - 1.f; f <= maxz + 1; f += 1)
+	{
+		InterlockedAdd(countbuf[0], 1, idx);
+		morton_encoding32(fragments[idx], p2.x, p2.y, f);
+	}
+
+#else
 	InterlockedAdd(countbuf[0], 1, idx);
 	morton_encoding32(fragments[idx], p2.x, p2.y, p2.z + 1);
 
