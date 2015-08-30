@@ -10,7 +10,7 @@ struct GSOutput
 	
 	nointerpolation uint proj : ProjIdx;
 	nointerpolation float4 aabb : AABB;
-	nointerpolation float4 e0 : e0, e1 : e1, e2 : e2;
+	nointerpolation float3 e0 : e0, e1 : e1, e2 : e2;
 	nointerpolation float3 n : Normal;
 	nointerpolation float3 dp : DP;
 	nointerpolation float3 c : C;
@@ -81,10 +81,17 @@ static matrix projs[] =
 [maxvertexcount(3)]
 void main(triangle VSOutput input[3], inout TriangleStream<GSOutput> output)
 {
+	// expand triangel by half-diagonal of pixel
+	//  = 0.5 * sqrt((1/d)^2 + (1/d)^2)
+	//  = 0.5 * sqrt((1/d^2) + (1/d^2))
+	//  = 0.5 * sqrt(2/d^2)
+	//  = 0.5 * sqrt(2) / d
+	const float2 hpixel = 0.5f * 1.4142135637309f / dimensions.xy;
+
 	// we write a lot of shared state
 	GSOutput g;
 
-	float wsn = cross(input[1].world_position.xyz - input[0].world_position.xyz, input[2].world_position.xyz - input[1].world_position.xyz);
+	float3 wsn = cross(input[1].world_position.xyz - input[0].world_position.xyz, input[2].world_position.xyz - input[1].world_position.xyz);
 
 	// pick projection axis
 	float3 pn = abs(wsn);
@@ -101,27 +108,27 @@ void main(triangle VSOutput input[3], inout TriangleStream<GSOutput> output)
 	float4 pv1 = mul(projs[proj_idx], input[1].world_position);
 	float4 pv2 = mul(projs[proj_idx], input[2].world_position);
 
-	// convert Z to NDC (won't render otherwise!)
-	v0.z = v0.z * 0.5f + 0.5f;
-	v1.z = v1.z * 0.5f + 0.5f;
-	v2.z = v2.z * 0.5f + 0.5f;
+	// verts for triangle intersection in [0, 1] range
+	float3 v0 = pv0.xyz * 0.5f + 0.5f;
+	float3 v1 = pv1.xyz * 0.5f + 0.5f;
+	float3 v2 = pv2.xyz * 0.5f + 0.5f;
 
-	g.n = cross(v1.xyz - v0.xyz, v2.xyz - v1.xyz);
+	// triangle intersection values
+	g.n = cross(v1 - v0, v2 - v1);
 	g.dp = 1.f / dimensions.xyz;
 	g.c = float3(g.n.x > 0.f ? g.dp.x : 0.f, g.n.y > 0.f ? g.dp.y : 0.f, g.n.z > 0.f ? g.dp.z : 0.f);
-	g.d1 = dot(g.n, g.c - v0.xyz);
-	g.d2 = dot(g.n, g.dp - g.c - v0.xyz);
-
+	g.d1 = dot(g.n, g.c - v0);
+	g.d2 = dot(g.n, g.dp - g.c - v0);
 
 
 	// calculate aabb into [0.f, dimensions] range
-	float4 aabb = v0.xyxy;
-	aabb = float4(min(aabb.xy, v1.xy), max(aabb.zw, v1.xy));
-	aabb = float4(min(aabb.xy, v2.xy), max(aabb.zw, v2.xy));
+	float4 aabb = pv0.xyxy;
+	aabb = float4(min(aabb.xy, pv1.xy), max(aabb.zw, pv1.xy));
+	aabb = float4(min(aabb.xy, pv2.xy), max(aabb.zw, pv2.xy));
 	aabb = aabb * 0.5f + 0.5f;
 	aabb.xy -= 0.5f / dimensions.xy;
 	aabb.zw += 0.5f / dimensions.xy;
-	aabb *= dimensions.xyxy;
+	//aabb *= dimensions.xyxy;
 
 	// edges in screen-space
 	float2 e0ss = v1.xy - v0.xy;
@@ -135,13 +142,6 @@ void main(triangle VSOutput input[3], inout TriangleStream<GSOutput> output)
 	n0 *= -sign(dot(n0, v2.xy - v0.xy));
 	n1 *= -sign(dot(n1, v0.xy - v1.xy));
 	n2 *= -sign(dot(n2, v1.xy - v2.xy));
-
-	// expand triangel by half-diagonal of pixel
-	//  = 0.5 * sqrt((1/d)^2 + (1/d)^2)
-	//  = 0.5 * sqrt((1/d^2) + (1/d^2))
-	//  = 0.5 * sqrt(2/d^2)
-	//  = 0.5 * sqrt(2) / d
-	float2 hpixel = 0.5f * 1.4142135637309f / dimensions.xy;
 
 	v0.xy += hpixel * (e2ss / dot(e2ss, n0.xy) + e0ss / dot(e0ss, n2.xy));
 	v1.xy += hpixel * (e0ss / dot(e0ss, n1.xy) + e1ss / dot(e1ss, n0.xy));
@@ -167,7 +167,7 @@ void main(triangle VSOutput input[3], inout TriangleStream<GSOutput> output)
 	g.de2xy = -dot(g.ne2xy, v2xy) + max(0.f, g.dp.x * g.ne2xy.x) + max(0.f, g.dp.y * g.ne2xy.y);
 
 	// yz-plane
-	float yzm = (g.n.z < 0.f ? -1.f : 1.f);
+	float yzm = (g.n.x < 0.f ? -1.f : 1.f);
 	g.ne0yz = float4(-g.e0.z, g.e0.y, 0.f, 0.f) * yzm;
 	g.ne1yz = float4(-g.e1.z, g.e1.y, 0.f, 0.f) * yzm;
 	g.ne2yz = float4(-g.e2.z, g.e2.y, 0.f, 0.f) * yzm;
@@ -181,7 +181,7 @@ void main(triangle VSOutput input[3], inout TriangleStream<GSOutput> output)
 	g.de2yz = -dot(g.ne2yz, v2yz) + max(0.f, g.dp.y * g.ne2yz.x) + max(0.f, g.dp.z * g.ne2yz.y);
 
 	// zx-plane
-	float zxm = (g.n.z < 0.f ? -1.f : 1.f);
+	float zxm = (g.n.y < 0.f ? -1.f : 1.f);
 	g.ne0zx = float4(-g.e0.x, g.e0.z, 0.f, 0.f) * zxm;
 	g.ne1zx = float4(-g.e1.x, g.e1.z, 0.f, 0.f) * zxm;
 	g.ne2zx = float4(-g.e2.x, g.e2.z, 0.f, 0.f) * zxm;
@@ -194,6 +194,11 @@ void main(triangle VSOutput input[3], inout TriangleStream<GSOutput> output)
 	g.de1zx = -dot(g.ne1zx, v1zx) + max(0.f, g.dp.z * g.ne1zx.x) + max(0.f, g.dp.x * g.ne1zx.y);
 	g.de2zx = -dot(g.ne2zx, v2zx) + max(0.f, g.dp.z * g.ne2zx.x) + max(0.f, g.dp.x * g.ne2zx.y);
 
+
+	// convert Z to NDC (won't render otherwise!)
+	pv0.z = pv0.z * 0.5f + 0.5f;
+	pv1.z = pv1.z * 0.5f + 0.5f;
+	pv2.z = pv2.z * 0.5f + 0.5f;
 
 	// output triangle
 	g.position = pv0;

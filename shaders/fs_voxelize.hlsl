@@ -6,7 +6,7 @@ struct FSInput
 
 	nointerpolation uint proj : ProjIdx;
 	nointerpolation float4 aabb : AABB;
-	nointerpolation float4 e0 : e0, e1 : e1, e2 : e2;
+	nointerpolation float3 e0 : e0, e1 : e1, e2 : e2;
 	nointerpolation float3 n : Normal;
 	nointerpolation float3 dp : DP;
 	nointerpolation float3 c : C;
@@ -85,37 +85,37 @@ float4 main(FSInput input) : SV_Target
 	float3 pr2 = float3(input.position.x, dimensions.y - input.position.y, input.position.z * dimensions.z);
 	float3 pr = floor(pr2);
 
+	// position in [0, 1]
+	float3 p = pr / dimensions.xyz;
+
 	// cull against aabb of triangle
-	if (pr2.x < input.aabb.x || pr2.y < input.aabb.y || pr2.x > input.aabb.z || pr2.y > input.aabb.w)
+	if (p.x < input.aabb.x || p.y < input.aabb.y || p.x > input.aabb.z || p.y > input.aabb.w)
 		discard;
 
 
+	float dzdx = ddx(p.z);
+	float dzdy = ddy(p.y);
 
-	//float3 p = {0.f, 0.f, 0.f};
 
 #if 1
-	float3 p = pr2 / dimensions.xyz;
-	p.xy *= 2.f;
-	p.xy -= 1.f;
-
 	// triangle-plane
 	if ((dot(input.n, p) + input.d1) * (dot(input.n, p) + input.d2) > 0.f)
 		return false;
 
 	// xy-plane
 	float4 pxy = {p.x, p.y, 0.f, 0.f};
-	//if ((dot(input.ne0xy, pxy) + input.de0xy) < 0.f || (dot(input.ne1xy, pxy) + input.de1xy) < 0.f || (dot(input.ne2xy, pxy) + input.de2xy) < 0.f)
-		//return false;
+	if ((dot(input.ne0xy, pxy) + input.de0xy) < 0.f || (dot(input.ne1xy, pxy) + input.de1xy) < 0.f || (dot(input.ne2xy, pxy) + input.de2xy) < 0.f)
+		return false;
 
 	// yz-plane
 	float4 pyz = {p.y, p.z, 0.f, 0.f};
-	//if ((dot(input.ne0yz, pyz) + input.de0yz) < 0.f || (dot(input.ne1yz, pyz) + input.de1yz) < 0.f || (dot(input.ne2yz, pyz) + input.de2yz) < 0.f)
-		//return false;
-		 
+	if ((dot(input.ne0yz, pyz) + input.de0yz) < 0.f || (dot(input.ne1yz, pyz) + input.de1yz) < 0.f || (dot(input.ne2yz, pyz) + input.de2yz) < 0.f)
+		return false;
+
 	// zx-plane
 	float4 pzx = {p.z, p.x, 0.f, 0.f};
-	//if ((dot(input.ne0zx, pzx) + input.de0zx) < 0.f || (dot(input.ne1zx, pzx) + input.de1zx) < 0.f || (dot(input.ne2zx, pzx) + input.de2zx) < 0.f)
-		//return false;
+	if ((dot(input.ne0zx, pzx) + input.de0zx) < 0.f || (dot(input.ne1zx, pzx) + input.de1zx) < 0.f || (dot(input.ne2zx, pzx) + input.de2zx) < 0.f)
+		return false;
 #endif
 
 
@@ -134,6 +134,7 @@ float4 main(FSInput input) : SV_Target
 	InterlockedAdd(countbuf[0], 1, idx);
 	morton_encoding32(fragments[idx], p2.x, p2.y, p2.z);
 
+#if 1
 	InterlockedAdd(countbuf[0], 1, idx);
 	morton_encoding32(fragments[idx], p2.x, p2.y, p2.z + 1);
 
@@ -145,6 +146,7 @@ float4 main(FSInput input) : SV_Target
 
 	InterlockedAdd(countbuf[0], 1, idx);
 	morton_encoding32(fragments[idx], p2.x, p2.y, p2.z - 1);
+#endif
 
 	//InterlockedAdd(countbuf[0], 1, idx);
 	//morton_encoding32(fragments[idx], p2.x, p2.y, p2.z + 3);

@@ -126,7 +126,7 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 	
 	{
 		auto mi = atma::unique_memory_t{sizeof(uint32) * obj.faces().size() * 3};
-		auto tmi = atma::memory_view_t<decltype(mi), uint32>{mi};
+		auto tmi = atma::memory_view_t<uint32>{mi};
 
 		size_t i = 0;
 		for (auto const& f : obj.faces())
@@ -253,7 +253,7 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 	// load .obj triangles into vb/ib so that we can see the original mesh
 	{
 		auto mi = atma::unique_memory_t{sizeof(uint32) * obj.faces().size() * 3};
-		auto tmi = atma::memory_view_t<decltype(mi), uint32>{mi};
+		auto tmi = atma::memory_view_t<uint32>{mi};
 
 		size_t i = 0;
 		for (auto const& f : obj.faces())
