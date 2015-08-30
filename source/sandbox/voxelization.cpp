@@ -388,6 +388,8 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 
 		ctx->signal_block();
 		
+		std::cout << "fragments_count: " << fragments_count << std::endl;
+
 #if 0
 
 		auto scratch = shiny::make_buffer(ctx,

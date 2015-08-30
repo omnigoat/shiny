@@ -4,19 +4,24 @@ struct VSOutput
 	float4 world_position : SV_Position;
 };
 
+struct triangle_intersection_info_t
+{
+	float4 aabb;
+	float3 e0, e1, e2;
+	float3 n;
+	float3 dp;
+	float3 c;
+	float d1, d2;
+	float4 ne0xy, ne1xy, ne2xy, ne0yz, ne1yz, ne2yz, ne0zx, ne1zx, ne2zx;
+	float de0xy, de1xy, de2xy, de0yz, de1yz, de2yz, de0zx, de1zx, de2zx;
+};
+
 struct GSOutput
 {
 	float4 position : SV_Position;
 	
 	nointerpolation uint proj : ProjIdx;
-	nointerpolation float4 aabb : AABB;
-	nointerpolation float3 e0 : e0, e1 : e1, e2 : e2;
-	nointerpolation float3 n : Normal;
-	nointerpolation float3 dp : DP;
-	nointerpolation float3 c : C;
-	nointerpolation float d1 : D1, d2 : D2;
-	nointerpolation float4 ne0xy : ne0xy, ne1xy : ne1xy, ne2xy : ne2xy, ne0yz : ne0yz, ne1yz : ne1yz, ne2yz : ne2yz, ne0zx : ne0zx, ne1zx : ne1zx, ne2zx : ne2zx;
-	nointerpolation float de0xy : de0xy, de1xy : de1xy, de2xy : de2xy, de0yz : de0yz, de1yz : de1yz, de2yz : de2yz, de0zx : de0zx, de1zx : de1zx, de2zx : de2zx;
+	triangle_intersection_info_t tri : tri;
 };
 
 
@@ -90,6 +95,7 @@ void main(triangle VSOutput input[3], inout TriangleStream<GSOutput> output)
 
 	// we write a lot of shared state
 	GSOutput g;
+	triangle_intersection_info_t tri;
 
 	float3 wsn = cross(input[1].world_position.xyz - input[0].world_position.xyz, input[2].world_position.xyz - input[1].world_position.xyz);
 
@@ -125,57 +131,57 @@ void main(triangle VSOutput input[3], inout TriangleStream<GSOutput> output)
 	//  dp: delta-p, where p is size of voxel
 	//  c: critical-point
 	//  d1 & d2: just like, some values that we'll need
-	g.n = cross(v1 - v0, v2 - v1);
-	g.dp = 1.f / dimensions.xyz;
-	g.c = float3(g.n.x > 0.f ? g.dp.x : 0.f, g.n.y > 0.f ? g.dp.y : 0.f, g.n.z > 0.f ? g.dp.z : 0.f);
-	g.d1 = dot(g.n, g.c - v0);
-	g.d2 = dot(g.n, g.dp - g.c - v0);
+	tri.n = cross(v1 - v0, v2 - v1);
+	tri.dp = 1.f / dimensions.xyz;
+	tri.c = float3(tri.n.x > 0.f ? tri.dp.x : 0.f, tri.n.y > 0.f ? tri.dp.y : 0.f, tri.n.z > 0.f ? tri.dp.z : 0.f);
+	tri.d1 = dot(tri.n, tri.c - v0);
+	tri.d2 = dot(tri.n, tri.dp - tri.c - v0);
 
-	g.e0 = v1 - v0;
-	g.e1 = v2 - v1;
-	g.e2 = v0 - v2;
+	tri.e0 = v1 - v0;
+	tri.e1 = v2 - v1;
+	tri.e2 = v0 - v2;
 
 	// xy-plane 
-	float xym = (g.n.z < 0.f ? -1.f : 1.f);
-	g.ne0xy = float4(-g.e0.y, g.e0.x, 0.f, 0.f) * xym;
-	g.ne1xy = float4(-g.e1.y, g.e1.x, 0.f, 0.f) * xym;
-	g.ne2xy = float4(-g.e2.y, g.e2.x, 0.f, 0.f) * xym;
+	float xym = (tri.n.z < 0.f ? -1.f : 1.f);
+	tri.ne0xy = float4(-tri.e0.y, tri.e0.x, 0.f, 0.f) * xym;
+	tri.ne1xy = float4(-tri.e1.y, tri.e1.x, 0.f, 0.f) * xym;
+	tri.ne2xy = float4(-tri.e2.y, tri.e2.x, 0.f, 0.f) * xym;
 
 	float4 v0xy = float4(v0.x, v0.y, 0.f, 0.f);
 	float4 v1xy = float4(v1.x, v1.y, 0.f, 0.f);
 	float4 v2xy = float4(v2.x, v2.y, 0.f, 0.f);
 
-	g.de0xy = -dot(g.ne0xy, v0xy) + max(0.f, g.dp.x * g.ne0xy.x) + max(0.f, g.dp.y * g.ne0xy.y);
-	g.de1xy = -dot(g.ne1xy, v1xy) + max(0.f, g.dp.x * g.ne1xy.x) + max(0.f, g.dp.y * g.ne1xy.y);
-	g.de2xy = -dot(g.ne2xy, v2xy) + max(0.f, g.dp.x * g.ne2xy.x) + max(0.f, g.dp.y * g.ne2xy.y);
+	tri.de0xy = -dot(tri.ne0xy, v0xy) + max(0.f, tri.dp.x * tri.ne0xy.x) + max(0.f, tri.dp.y * tri.ne0xy.y);
+	tri.de1xy = -dot(tri.ne1xy, v1xy) + max(0.f, tri.dp.x * tri.ne1xy.x) + max(0.f, tri.dp.y * tri.ne1xy.y);
+	tri.de2xy = -dot(tri.ne2xy, v2xy) + max(0.f, tri.dp.x * tri.ne2xy.x) + max(0.f, tri.dp.y * tri.ne2xy.y);
 
 	// yz-plane
-	float yzm = (g.n.x < 0.f ? -1.f : 1.f);
-	g.ne0yz = float4(-g.e0.z, g.e0.y, 0.f, 0.f) * yzm;
-	g.ne1yz = float4(-g.e1.z, g.e1.y, 0.f, 0.f) * yzm;
-	g.ne2yz = float4(-g.e2.z, g.e2.y, 0.f, 0.f) * yzm;
+	float yzm = (tri.n.x < 0.f ? -1.f : 1.f);
+	tri.ne0yz = float4(-tri.e0.z, tri.e0.y, 0.f, 0.f) * yzm;
+	tri.ne1yz = float4(-tri.e1.z, tri.e1.y, 0.f, 0.f) * yzm;
+	tri.ne2yz = float4(-tri.e2.z, tri.e2.y, 0.f, 0.f) * yzm;
 
 	float4 v0yz = float4(v0.y, v0.z, 0.f, 0.f);
 	float4 v1yz = float4(v1.y, v1.z, 0.f, 0.f);
 	float4 v2yz = float4(v2.y, v2.z, 0.f, 0.f);
 
-	g.de0yz = -dot(g.ne0yz, v0yz) + max(0.f, g.dp.y * g.ne0yz.x) + max(0.f, g.dp.z * g.ne0yz.y);
-	g.de1yz = -dot(g.ne1yz, v1yz) + max(0.f, g.dp.y * g.ne1yz.x) + max(0.f, g.dp.z * g.ne1yz.y);
-	g.de2yz = -dot(g.ne2yz, v2yz) + max(0.f, g.dp.y * g.ne2yz.x) + max(0.f, g.dp.z * g.ne2yz.y);
+	tri.de0yz = -dot(tri.ne0yz, v0yz) + max(0.f, tri.dp.y * tri.ne0yz.x) + max(0.f, tri.dp.z * tri.ne0yz.y);
+	tri.de1yz = -dot(tri.ne1yz, v1yz) + max(0.f, tri.dp.y * tri.ne1yz.x) + max(0.f, tri.dp.z * tri.ne1yz.y);
+	tri.de2yz = -dot(tri.ne2yz, v2yz) + max(0.f, tri.dp.y * tri.ne2yz.x) + max(0.f, tri.dp.z * tri.ne2yz.y);
 
 	// zx-plane
-	float zxm = (g.n.y < 0.f ? -1.f : 1.f);
-	g.ne0zx = float4(-g.e0.x, g.e0.z, 0.f, 0.f) * zxm;
-	g.ne1zx = float4(-g.e1.x, g.e1.z, 0.f, 0.f) * zxm;
-	g.ne2zx = float4(-g.e2.x, g.e2.z, 0.f, 0.f) * zxm;
+	float zxm = (tri.n.y < 0.f ? -1.f : 1.f);
+	tri.ne0zx = float4(-tri.e0.x, tri.e0.z, 0.f, 0.f) * zxm;
+	tri.ne1zx = float4(-tri.e1.x, tri.e1.z, 0.f, 0.f) * zxm;
+	tri.ne2zx = float4(-tri.e2.x, tri.e2.z, 0.f, 0.f) * zxm;
 
 	float4 v0zx = float4(v0.z, v0.x, 0.f, 0.f);
 	float4 v1zx = float4(v1.z, v1.x, 0.f, 0.f);
 	float4 v2zx = float4(v2.z, v2.x, 0.f, 0.f);
 
-	g.de0zx = -dot(g.ne0zx, v0zx) + max(0.f, g.dp.z * g.ne0zx.x) + max(0.f, g.dp.x * g.ne0zx.y);
-	g.de1zx = -dot(g.ne1zx, v1zx) + max(0.f, g.dp.z * g.ne1zx.x) + max(0.f, g.dp.x * g.ne1zx.y);
-	g.de2zx = -dot(g.ne2zx, v2zx) + max(0.f, g.dp.z * g.ne2zx.x) + max(0.f, g.dp.x * g.ne2zx.y);
+	tri.de0zx = -dot(tri.ne0zx, v0zx) + max(0.f, tri.dp.z * tri.ne0zx.x) + max(0.f, tri.dp.x * tri.ne0zx.y);
+	tri.de1zx = -dot(tri.ne1zx, v1zx) + max(0.f, tri.dp.z * tri.ne1zx.x) + max(0.f, tri.dp.x * tri.ne1zx.y);
+	tri.de2zx = -dot(tri.ne2zx, v2zx) + max(0.f, tri.dp.z * tri.ne2zx.x) + max(0.f, tri.dp.x * tri.ne2zx.y);
 
 	// expand triangle by half-pixels
 	float2 e0ss = pv1.xy - pv0.xy;
@@ -199,19 +205,19 @@ void main(triangle VSOutput input[3], inout TriangleStream<GSOutput> output)
 	pv1.z = pv1.z * 0.5f + 0.5f;
 	pv2.z = pv2.z * 0.5f + 0.5f;
 
+	tri.aabb = aabb;
+	g.tri = tri;
+
 	// output triangle
 	g.position = pv0;
-	g.aabb = aabb;
 	g.proj = proj_idx;
 	output.Append(g);
 
 	g.position = pv1;
-	g.aabb = aabb;
 	g.proj = proj_idx;
 	output.Append(g);
 
 	g.position = pv2;
-	g.aabb = aabb;
 	g.proj = proj_idx;
 	output.Append(g);
 }
