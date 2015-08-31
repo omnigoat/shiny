@@ -134,26 +134,27 @@ float4 main(FSInput input) : SV_Target
 
 
 	
-	float dzdx = ddx(tsp.z);
-	float dzdy = ddy(tsp.z);
+	float dzdx = ddx(tsp.z) * 0.5f;
+	float dzdy = ddy(tsp.z) * 0.5f;
 
 	float2 dzdxy = float2(dzdx, dzdy);
 	
 	float2 minzdxy = min(p.z + dzdxy, p.z - dzdxy);
-	float2 maxzdxy = max(p.z + 1.f / dimensions.xy + dzdxy, p.z + 1.f / dimensions.xy - dzdxy);
+	float2 maxzdxy = max(p.z + dzdxy, p.z - dzdxy) + 1.f / dimensions.z;
 
 	float minz = floor(min(minzdxy.x, minzdxy.y) * dimensions.xy) / dimensions.xy;
 	float maxz = floor(max(maxzdxy.x, maxzdxy.y) * dimensions.xy) / dimensions.xy;
 
 	float zstep = 1.f / dimensions.z;
 
-	for (float f = minz - 10 * zstep; f < maxz + 10 * zstep; f += zstep)
+	for (float f = minz; f < maxz + zstep; f += zstep)
 	{
-		float3 fp = float3(rp.x, rp.y, f);
+		float rz = floor(f * dimensions.z) / dimensions.z;
+		float3 fp = float3(rp.x, rp.y, rz);
 
 		if (intersect(input.tri, fp))
 		{
-			fp = mul(projs[input.proj], float4(fp * dimensions, 1.f)).xyz;
+			fp = mul(projs[input.proj], float4(tsp.x, tsp.y, f * dimensions.z + 0.5f, 1.f)).xyz;
 
 			uint idx;
 			InterlockedAdd(countbuf[0], 1, idx);
