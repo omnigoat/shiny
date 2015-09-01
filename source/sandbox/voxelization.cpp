@@ -13,7 +13,7 @@
 #include <shiny/texture2d.hpp>
 #include <shiny/draw_target.hpp>
 
-#include <shelf/file.hpp>
+#include <lion/file.hpp>
 
 #include <moxi/morton.hpp>
 
@@ -41,7 +41,7 @@ struct obj_model_t
 	using verts_t = std::vector<aml::vector4f>;
 	using faces_t = std::vector<aml::vector4i>;
 
-	obj_model_t(shelf::file_t&);
+	obj_model_t(lion::file_t&);
 
 	auto vertices() const -> verts_t const& { return verts_; }
 	auto faces() const -> faces_t const& { return faces_; }
@@ -52,9 +52,9 @@ private:
 	faces_t faces_;
 };
 
-obj_model_t::obj_model_t(shelf::file_t& file)
+obj_model_t::obj_model_t(lion::file_t& file)
 {
-	shelf::for_each_line<256>(file, 128, [&](char const* str, size_t size)
+	lion::for_each_line<256>(file, 128, [&](char const* str, size_t size)
 	{
 		switch (str[0])
 		{
@@ -121,7 +121,7 @@ auto fit_linear_dispatch_to_group(uint& x, uint& y, uint& z, uint xs, uint ys, u
 
 auto voxelization_plugin_t::setup_voxelization() -> void
 {
-	auto sf = shelf::file_t{"../../data/dragon.obj"};
+	auto sf = lion::file_t{"../../data/dragon.obj"};
 	auto obj = obj_model_t{sf};
 	
 	{

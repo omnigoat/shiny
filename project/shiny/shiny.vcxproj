@@ -34,7 +34,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v120</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
@@ -206,7 +206,6 @@
     <ClCompile Include="..\..\source\shiny\platform\win32\vertex_buffer.cpp" />
     <ClCompile Include="..\..\source\shiny\platform\win32\vertex_shader.cpp" />
     <ClCompile Include="..\..\source\shiny\scene.cpp" />
-    <ClCompile Include="..\..\source\shelf\file.cpp" />
     <ClCompile Include="..\..\vendor\zlib\adler32.c" />
     <ClCompile Include="..\..\vendor\zlib\compress.c" />
     <ClCompile Include="..\..\vendor\zlib\crc32.c" />
@@ -282,7 +281,6 @@
     <ClInclude Include="..\..\include\shiny\texture3d.hpp" />
     <ClInclude Include="..\..\include\shiny\vertex_buffer.hpp" />
     <ClInclude Include="..\..\include\shiny\vertex_shader.hpp" />
-    <ClInclude Include="..\..\include\shelf\file.hpp" />
     <ClInclude Include="..\..\vendor\zlib\deflate.h" />
     <ClInclude Include="..\..\vendor\zlib\inffast.h" />
     <ClInclude Include="..\..\vendor\zlib\inftrees.h" />

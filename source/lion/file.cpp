@@ -1,9 +1,8 @@
-#include <shelf/file.hpp>
+#include <lion/file.hpp>
 
 
-using namespace shelf;
-using shelf::file_t;
-#if 0
+using namespace lion;
+using lion::file_t;
 
 
 file_t::file_t()
@@ -128,6 +127,3 @@ auto file_t::p_move(int64 x) -> stream_status_t
 {
 	return move(x);
 }
-
-
-#endif // 0

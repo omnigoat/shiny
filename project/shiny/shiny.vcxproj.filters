@@ -27,14 +27,8 @@
     <Filter Include="vendor\zlib">
       <UniqueIdentifier>{e98436a5-640f-4186-96dd-4a7572289df1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\shelf">
-      <UniqueIdentifier>{82679630-1638-4ba9-ab13-c504af59b576}</UniqueIdentifier>
-    </Filter>
     <Filter Include="source\shiny">
       <UniqueIdentifier>{14079420-de18-4597-80fe-c99aa0f42f3f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="source\shelf">
-      <UniqueIdentifier>{97a5e9b6-c71a-419f-a4b3-8468b7dca168}</UniqueIdentifier>
     </Filter>
     <Filter Include="source\shiny\platform">
       <UniqueIdentifier>{12a41398-3e52-463b-9511-7b7d7694b954}</UniqueIdentifier>
@@ -139,9 +133,6 @@
     </ClCompile>
     <ClCompile Include="..\..\source\shiny\platform\win32\geometry_shader.cpp">
       <Filter>source\shiny\platform\win32</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\source\shelf\file.cpp">
-      <Filter>source\shelf</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\shiny\camera.cpp">
       <Filter>source\shiny</Filter>
@@ -303,9 +294,6 @@
     </ClInclude>
     <ClInclude Include="..\..\include\shiny\generic_buffer.hpp">
       <Filter>include\shiny</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\shelf\file.hpp">
-      <Filter>include\shelf</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\shiny\platform\win32\fragment_shader.hpp">
       <Filter>include\shiny\platform\win32</Filter>
