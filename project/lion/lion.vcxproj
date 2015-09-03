@@ -20,6 +20,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\lion\file.hpp" />
+    <ClInclude Include="..\..\include\lion\streams.hpp" />
+    <ClInclude Include="..\..\include\lion\vfs.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\source\lion\file.cpp" />

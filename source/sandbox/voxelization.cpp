@@ -269,8 +269,8 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 	}
 #endif
 
-	auto f2 = atma::filesystem::file_t("../../shaders/gs_normal.hlsl");
-	auto fm2 = f2.read_into_memory();
+	auto f2 = lion::file_t("../../shaders/gs_normal.hlsl");
+	auto fm2 = lion::read_into_memory(f2);
 	gs = shiny::create_geometry_shader(ctx, fm2, false);
 
 

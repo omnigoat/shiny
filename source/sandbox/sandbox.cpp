@@ -18,7 +18,8 @@
 #include <shiny/generic_buffer.hpp>
 #include <shiny/draw_target.hpp>
 
-#include <shelf/file.hpp>
+#include <lion/file.hpp>
+#include <lion/vfs.hpp>
 
 #include <pepper/freelook_camera_controller.hpp>
 
