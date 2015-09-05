@@ -119,9 +119,7 @@ float4 main(FSInput input) : SV_Target
 	float3 tsp = float3(input.position.x, dimensions.y - input.position.y, input.position.z * dimensions.z);
 
 	// rounded-transform-space-position (for voxel)
-	float3 rtsp = floor(tsp);
-	// unprojected-position (voxel-coord)
-	float3 up = mul(projs[input.proj], float4(rtsp, 1.f)).xyz;
+	float3 rtsp = tsp - 0.5f; //floor(tsp);
 
 	// position in [0, 1]
 	float3 p = tsp / dimensions.xyz;
@@ -133,32 +131,30 @@ float4 main(FSInput input) : SV_Target
 		discard;
 
 
-	
+	// find min and max z based off gradient of triangle
 	float dzdx = ddx(tsp.z) * 0.5f;
 	float dzdy = ddy(tsp.z) * 0.5f;
 
-	float2 dzdxy = float2(dzdx, dzdy);
+	float2 dzdxy = abs(float2(dzdx, dzdy));
 	
-	float2 minzdxy = min(p.z + dzdxy, p.z - dzdxy);
-	float2 maxzdxy = max(p.z + dzdxy, p.z - dzdxy) + 1.f / dimensions.z;
+	float2 minzdxy = p.z - dzdxy;
+	float2 maxzdxy = p.z + dzdxy;
 
-	float minz = floor(min(minzdxy.x, minzdxy.y) * dimensions.xy) / dimensions.xy;
-	float maxz = floor(max(maxzdxy.x, maxzdxy.y) * dimensions.xy) / dimensions.xy;
+	// round z and make sure it's within bounds
+	float minz = max(0,                  floor(min(minzdxy.x, minzdxy.y) * dimensions.z))       / dimensions.z;
+	float maxz = min(dimensions.z - 1.f, floor(max(maxzdxy.x, maxzdxy.y) * dimensions.z) + 1.f) / dimensions.z;
 
-	float zstep = 1.f / dimensions.z;
+	const float zstep = 1.f / dimensions.z;
 
-	for (float f = minz; f < maxz + zstep; f += zstep)
+	for (float f = minz; f < maxz; f += zstep)
 	{
-		float rz = floor(f * dimensions.z) / dimensions.z;
-		float3 fp = float3(rp.x, rp.y, rz);
-
-		if (intersect(input.tri, fp))
+		if (intersect(input.tri, float3(rp.x, rp.y, f)))
 		{
-			fp = mul(projs[input.proj], float4(tsp.x, tsp.y, f * dimensions.z + 0.5f, 1.f)).xyz;
-
+			float3 up = mul(projs[input.proj], float4(rtsp.x, rtsp.y, f * dimensions.z, 1.f)).xyz;
+			
 			uint idx;
 			InterlockedAdd(countbuf[0], 1, idx);
-			morton_encoding32(fragments[idx], fp.x, fp.y, fp.z);
+			morton_encoding32(fragments[idx], up.x, up.y, up.z);
 		}
 	}
 

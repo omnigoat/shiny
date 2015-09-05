@@ -86,13 +86,6 @@ static matrix projs[] =
 [maxvertexcount(3)]
 void main(triangle VSOutput input[3], inout TriangleStream<GSOutput> output)
 {
-	// expand triangel by half-diagonal of pixel
-	//  = 0.5 * sqrt((1/d)^2 + (1/d)^2)
-	//  = 0.5 * sqrt((1/d^2) + (1/d^2))
-	//  = 0.5 * sqrt(2/d^2)
-	//  = 0.5 * sqrt(2) / d
-	const float2 hpixel = 0.5f * 1.4142135637309f / dimensions.xy;
-
 	// we write a lot of shared state
 	GSOutput g;
 	triangle_intersection_info_t tri;
@@ -184,6 +177,14 @@ void main(triangle VSOutput input[3], inout TriangleStream<GSOutput> output)
 	tri.de2zx = -dot(tri.ne2zx, v2zx) + max(0.f, tri.dp.z * tri.ne2zx.x) + max(0.f, tri.dp.x * tri.ne2zx.y);
 
 	// expand triangle by half-pixels
+	//  = v * 0.5 * sqrt((1/d)^2 + (1/d)^2)
+	//  = v * 0.5 * sqrt((1/d^2) + (1/d^2))
+	//  = v * 0.5 * sqrt(2/d^2)
+	//  = v * 0.5 * sqrt(2) / d
+	//    where v = viewport width = 2  (-1 to 1)
+	//  = sqrt(2) / d
+	const float2 hpixel = 1.4142135637309f / dimensions.xy;
+
 	float2 e0ss = pv1.xy - pv0.xy;
 	float2 e1ss = pv2.xy - pv1.xy;
 	float2 e2ss = pv0.xy - pv2.xy;

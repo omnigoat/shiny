@@ -341,7 +341,10 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 
 		voxelization_scene.draw
 		(
-			sdc::input_assembly_stage(vb->data_declaration(), vb, ib),
+			sdc::input_assembly_stage(
+				vb->data_declaration(),
+				vb, ib),
+
 			sdc::vertex_stage(vs_voxelize,
 				shiny::bound_constant_buffers_t{
 					{0, cb}
@@ -369,6 +372,8 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 			sdc::output_merger_stage(
 				shiny::depth_stencil_state_t::off
 			)
+			
+			//, sdc::draw_indexed_range(18905*3, 1*3, 0)
 		);
 
 		ctx->signal_draw_scene(voxelization_scene);
