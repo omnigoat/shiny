@@ -13,8 +13,8 @@ namespace lion
 	};
 
 	struct path_t;
-	using  path_ptr = atma::intrusive_ptr<path_t>;
-
+	using  path_ptr  = atma::intrusive_ptr<path_t>;
+	using  path_wptr = path_t*;
 
 	// path
 	struct path_t : atma::ref_counted
@@ -30,9 +30,13 @@ namespace lion
 		path_t(atma::string const&, atma::string::const_iterator const&);
 
 	private:
+		using children_t = atma::vector<path_ptr>;
+
 		atma::string name_;
 		path_type_t type_;
-		path_ptr parent_;
+		
+		path_wptr parent_;
+		children_t children_;
 	};
 
 
@@ -41,7 +45,6 @@ namespace lion
 
 	inline auto split_path(atma::string const& str) -> void
 	{
-		
 	}
 
 	path_t::path_t()
@@ -96,10 +99,10 @@ namespace lion
 	{
 		auto result = atma::string();
 
-		for (auto t = this; t != nullptr; t = t->child_.get())
-		{
-			result += t->name_;
-		}
+		//for (auto t = this; t != nullptr; t = t->child_.get())
+		//{
+		//	result += t->name_;
+		//}
 
 		return result;
 	}
@@ -114,6 +117,22 @@ namespace lion
 		return !operator == (lhs, rhs);
 	}
 
+
+	struct abstract_filesystem_t
+	{
+		virtual auto generate_path(atma::string const&) -> path_ptr const& = 0;
+	};
+
+	struct physical_filesystem_t : abstract_filesystem_t
+	{
+		auto generate_path(atma::string const& p) -> path_ptr const& override
+		{
+			//auto things = atma::split_on_any(p, "/\\");
+		}
+
+	private:
+		path_ptr root_;
+	};
 
 
 

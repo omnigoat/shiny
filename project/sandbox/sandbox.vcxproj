@@ -167,6 +167,9 @@
     <ProjectReference Include="..\..\..\fooey\project\fooey.vcxproj">
       <Project>{82b83f8f-a8cf-4720-9abd-f08682c1c325}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\lion\lion.vcxproj">
+      <Project>{86dfa87f-4570-47f6-9c4c-6c21efb610b7}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\shiny\shiny.vcxproj">
       <Project>{8e03b685-d9ce-45bf-8597-e7ef57e62b8d}</Project>
     </ProjectReference>

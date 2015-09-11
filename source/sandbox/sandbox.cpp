@@ -18,8 +18,8 @@
 #include <shiny/generic_buffer.hpp>
 #include <shiny/draw_target.hpp>
 
-#include <lion/file.hpp>
-#include <lion/vfs.hpp>
+//#include <lion/file.hpp>
+//#include <lion/vfs.hpp>
 
 #include <pepper/freelook_camera_controller.hpp>
 
@@ -70,6 +70,12 @@ application_t::application_t()
 	, window(fooey::window("Excitement!", 800 + 16, 600 + 38))
 	, runtime{}
 {
+	atma::string dragon = "dragon";
+
+	auto di = atma::find_first_of(++++++dragon.begin(), dragon.end(), "oa");
+
+	exit(0);
+
 	function_main();
 
 	window_renderer->add_window(window);
