@@ -16,26 +16,58 @@ namespace lion
 	using  path_ptr  = atma::intrusive_ptr<path_t>;
 	using  path_wptr = path_t*;
 
+	struct abstract_filesystem_t : atma::ref_counted
+	{
+		virtual auto generate_path(atma::string const&) -> path_ptr const& = 0;
+	};
+
+	using abstract_filesystem_ptr = atma::intrusive_ptr<abstract_filesystem_t>;
+
+	auto split_on_any(atma::string const& str, atma::string const& delims) -> atma::vector<atma::string>
+	{
+		atma::vector<atma::string> r;
+
+		auto i = str.begin();
+		while (i != str.end())
+		{
+			auto e = atma::find_first_of(str, i, delims.c_str());
+
+			r.push_back(atma::string{i, e});
+			i = ++e;
+		}
+		
+		return r;
+	}
+
+	struct physical_filesystem_t : abstract_filesystem_t
+	{
+		auto generate_path(atma::string const& p) -> path_ptr const& override
+		{
+			auto things = split_on_any(p, "/\\");
+		}
+
+	private:
+		path_ptr root_;
+	};
+
 	// path
 	struct path_t : atma::ref_counted
 	{
-		path_t();
-		path_t(atma::string const&);
-
 		auto to_string() const -> atma::string;
 
 		auto is_file() const -> bool;
 
 	private:
-		path_t(atma::string const&, atma::string::const_iterator const&);
+		path_t(abstract_filesystem_ptr const&, path_t* parent, atma::string const&);
 
 	private:
-		using children_t = atma::vector<path_ptr>;
+		using children_t = atma::vector<path_t>;
 
+		abstract_filesystem_ptr fs_;
 		atma::string name_;
 		path_type_t type_;
-		
-		path_wptr parent_;
+
+		path_t* parent_;
 		children_t children_;
 	};
 
@@ -46,54 +78,6 @@ namespace lion
 	inline auto split_path(atma::string const& str) -> void
 	{
 	}
-
-	path_t::path_t()
-	{
-	}
-
-	path_t::path_t(atma::string const& str)
-		//: path_t(str, str.end())
-	{
-		atma::vector<path_ptr> ancestors;
-
-
-		auto i = str.begin();
-
-		for (;;)
-		{
-			auto j = atma::find_first_of(i, str.end(), delims);
-			if (j == i)
-			{
-				
-			}
-		}
-	}
-
-	path_t::path_t(atma::string const& str, atma::string::const_iterator const& begin)
-	{
-#if 0
-		ATMA_ASSERT(end != str.begin());
-
-		char const* delims = "/\\";
-
-		auto self_begin = atma::find_first_of(str, begin, delims);
-		if (self_begin == str.end()) {
-			type_ = path_type_t::file;
-		}
-		else {
-			type_ = path_type_t::dir;
-			++end;
-		}
-
-		name_ = atma::string(begin, end);
-
-		if (end == begin)
-			return;
-
-		child_ = path_ptr(new path_t(str, end));
-#endif
-	}
-
 
 	auto path_t::to_string() const -> atma::string
 	{
@@ -118,21 +102,7 @@ namespace lion
 	}
 
 
-	struct abstract_filesystem_t
-	{
-		virtual auto generate_path(atma::string const&) -> path_ptr const& = 0;
-	};
-
-	struct physical_filesystem_t : abstract_filesystem_t
-	{
-		auto generate_path(atma::string const& p) -> path_ptr const& override
-		{
-			//auto things = atma::split_on_any(p, "/\\");
-		}
-
-	private:
-		path_ptr root_;
-	};
+	
 
 
 

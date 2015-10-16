@@ -1,5 +1,6 @@
 #include <lion/file.hpp>
 
+#include <lion/vfs.hpp>
 
 using namespace lion;
 using lion::file_t;

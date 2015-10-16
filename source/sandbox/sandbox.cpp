@@ -36,7 +36,7 @@
 #include <atma/math/intersection.hpp>
 
 #include <atma/filesystem/file.hpp>
-
+#include <atma/algorithm.hpp>
 
 using namespace sandbox;
 using sandbox::application_t;
@@ -72,7 +72,7 @@ application_t::application_t()
 {
 	atma::string dragon = "dragon";
 
-	auto di = atma::find_first_of(++++++dragon.begin(), dragon.end(), "oa");
+	auto di = atma::find_first_of(dragon.begin(), dragon.end(), "oa");
 
 	exit(0);
 
