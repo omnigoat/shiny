@@ -2,6 +2,9 @@
 
 #include <atma/intrusive_ptr.hpp>
 
+#include <filesystem>
+
+namespace stdfs = std::tr2::sys;
 
 namespace lion
 {
@@ -12,27 +15,30 @@ namespace lion
 		symlink
 	};
 
-	struct path_t;
-	using  path_ptr  = atma::intrusive_ptr<path_t>;
-	using  path_wptr = path_t*;
-
+	struct fs_path_t;
+	using  fs_path_ptr  = atma::intrusive_ptr<fs_path_t>;
+	
 	struct abstract_filesystem_t : atma::ref_counted
 	{
-		virtual auto generate_path(atma::string const&) -> path_ptr const& = 0;
+		virtual auto generate_path(atma::string const&) -> fs_path_ptr = 0;
 	};
 
 	using abstract_filesystem_ptr = atma::intrusive_ptr<abstract_filesystem_t>;
 
-	auto split_on_any(atma::string const& str, atma::string const& delims) -> atma::vector<atma::string>
+	inline auto split_path(atma::string const& str) -> atma::vector<atma::string>
 	{
+		char const* const delims = "\\/";
+
 		atma::vector<atma::string> r;
 
 		auto i = str.begin();
 		while (i != str.end())
 		{
-			auto e = atma::find_first_of(str, i, delims.c_str());
+			auto e = atma::find_first_of(str, i, delims);
 
-			r.push_back(atma::string{i, e});
+			auto s = atma::string{i, e};
+			s.push_back('/');
+			r.push_back(s);
 			i = ++e;
 		}
 		
@@ -41,62 +47,38 @@ namespace lion
 
 	struct physical_filesystem_t : abstract_filesystem_t
 	{
-		auto generate_path(atma::string const& p) -> path_ptr const& override
-		{
-			auto things = split_on_any(p, "/\\");
-		}
+		auto generate_path(atma::string const& p) -> fs_path_ptr override;
 
 	private:
-		path_ptr root_;
+		fs_path_ptr root_;
 	};
 
-	// path
-	struct path_t : atma::ref_counted
+	struct fs_path_t : atma::ref_counted
 	{
-		auto to_string() const -> atma::string;
-
-		auto is_file() const -> bool;
-
 	private:
-		path_t(abstract_filesystem_ptr const&, path_t* parent, atma::string const&);
+		fs_path_t(abstract_filesystem_ptr const&, fs_path_t* parent, path_type_t, stdfs::path const& logical, stdfs::path const& physical);
 
-	private:
-		using children_t = atma::vector<path_t>;
+	public:
+		using children_t = atma::vector<fs_path_ptr>;
 
 		abstract_filesystem_ptr fs_;
-		atma::string name_;
-		path_type_t type_;
-
-		path_t* parent_;
+		fs_path_t* parent_;
 		children_t children_;
+
+		path_type_t type_;
+		stdfs::path logical_path_;
+		stdfs::path physical_path_;
+
+		friend struct atma::intrusive_ptr_expose_constructor;
 	};
 
-
-
-	char const* const delims = "\\/";
-
-	inline auto split_path(atma::string const& str) -> void
+	inline auto operator == (fs_path_t const& lhs, fs_path_t const& rhs) -> bool
 	{
+		//return lhs.to_string() == rhs.to_string();
+		return true;
 	}
 
-	auto path_t::to_string() const -> atma::string
-	{
-		auto result = atma::string();
-
-		//for (auto t = this; t != nullptr; t = t->child_.get())
-		//{
-		//	result += t->name_;
-		//}
-
-		return result;
-	}
-
-	inline auto operator == (path_t const& lhs, path_t const& rhs) -> bool
-	{
-		return lhs.to_string() == rhs.to_string();
-	}
-
-	inline auto operator != (path_t const& lhs, path_t const& rhs) -> bool
+	inline auto operator != (fs_path_t const& lhs, fs_path_t const& rhs) -> bool
 	{
 		return !operator == (lhs, rhs);
 	}
@@ -107,7 +89,14 @@ namespace lion
 
 
 	// 
-	struct vfs_t
+	struct vfs_t : abstract_filesystem_t
 	{
+		vfs_t();
+
+		auto mount(stdfs::path const& logical, abstract_filesystem_ptr const&) -> void;
+		auto set_working_dir(stdfs::path const& logical) -> void;
+
+	private:
+		fs_path_ptr root_;
 	};
 }

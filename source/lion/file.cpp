@@ -2,9 +2,83 @@
 
 #include <lion/vfs.hpp>
 
+#include <atma/algorithm.hpp>
+
+
 using namespace lion;
 using lion::file_t;
 
+stdfs::path p;
+
+
+auto cd(lion::fs_path_ptr const& p, atma::string const& s) -> fs_path_ptr const&
+{
+	return atma::find_if_else(p->children_, fs_path_ptr::null, [&s](fs_path_ptr const& x) {
+		return x->type_ == path_type_t::dir && x->physical_path_.leaf() == s.c_str();
+	});
+}
+
+auto lion::physical_filesystem_t::generate_path(atma::string const& p) -> fs_path_ptr
+{
+	fs_path_ptr r;
+	root_ = fs_path_ptr::make(shared_from_this<abstract_filesystem_t>(), nullptr, path_type_t::dir, stdfs::path{"/"}, stdfs::path{"."});
+
+	stdfs::path rp = p.c_str();
+
+	auto path_strings = split_path(p);
+	if (path_strings.empty())
+		return fs_path_ptr::null;
+
+	stdfs::path lp;
+	stdfs::path fp;
+	for (auto si = path_strings.begin(), sie = path_strings.end() - 1; si != path_strings.end(); ++si)
+	{
+		auto const& s = *si;
+
+		if (s == "/")
+		{
+			ATMA_ASSERT(si == path_strings.begin());
+			r = root_;
+			lp = "/";
+			fp = ".";
+		}
+		else
+		{
+			lp /= s.c_str();
+			fp /= s.c_str();
+			
+			if (auto r2 = cd(r, s))
+			{
+				r = r2;
+			}
+			else
+			{
+				auto type = s.raw_end()[-1] == '/' ? path_type_t::dir : path_type_t::file;
+				auto np = fs_path_ptr::make(shared_from_this<abstract_filesystem_t>(), r.get(), type, lp, fp);
+				r->children_.push_back(np);
+				r = np;
+			}
+		}
+	}
+
+	return r;
+}
+
+lion::fs_path_t::fs_path_t(abstract_filesystem_ptr const& fs, fs_path_t* parent, lion::path_type_t type, stdfs::path const& logical, stdfs::path const& physical)
+	: fs_(fs), parent_(parent), type_(type), logical_path_(logical), physical_path_(physical)
+{
+
+}
+
+lion::vfs_t::vfs_t()
+{
+	root_ = fs_path_ptr::make(shared_from_this<abstract_filesystem_t>(), nullptr, path_type_t::dir, "/", ".");
+}
+
+auto lion::vfs_t::mount(stdfs::path const& logical, abstract_filesystem_ptr const&) -> void
+{
+	
+}
 
 file_t::file_t()
 	: filename_()

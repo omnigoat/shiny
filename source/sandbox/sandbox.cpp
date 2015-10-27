@@ -19,7 +19,7 @@
 #include <shiny/draw_target.hpp>
 
 //#include <lion/file.hpp>
-//#include <lion/vfs.hpp>
+#include <lion/vfs.hpp>
 
 #include <pepper/freelook_camera_controller.hpp>
 
@@ -70,9 +70,8 @@ application_t::application_t()
 	, window(fooey::window("Excitement!", 800 + 16, 600 + 38))
 	, runtime{}
 {
-	atma::string dragon = "dragon";
-
-	auto di = atma::find_first_of(dragon.begin(), dragon.end(), "oa");
+	lion::physical_filesystem_t fs;
+	fs.generate_path("/dragon/elephant/giraffe/");
 
 	exit(0);
 
