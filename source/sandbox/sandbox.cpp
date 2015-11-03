@@ -65,13 +65,62 @@ uint16 application_t::cube_indices[] =
 
 extern int function_main();
 
+template <typename T>
+struct indirect_ptr
+{
+	indirect_ptr(T* const& ptr)
+		: ptr_(&ptr)
+	{}
+
+	auto operator -> () const -> T*
+	{
+		return *ptr_;
+	}
+
+private:
+	T* const* ptr_;
+};
+
 application_t::application_t()
 	: window_renderer(fooey::system_renderer())
 	, window(fooey::window("Excitement!", 800 + 16, 600 + 38))
 	, runtime{}
 {
-	lion::physical_filesystem_t fs;
-	fs.generate_path("/dragon/elephant/giraffe/");
+	//lion::physical_filesystem_t fs;
+	//fs.generate_path("/dragon/elephant/giraffe/");
+	lion::vfs_t vfs;
+	auto fs = lion::physical_filesystem_ptr::make("./resources/published");
+	vfs.mount("/res", fs);
+
+	//auto f = vfs.open("/res/shaders/vs_basic.hlsl", file_bind_flags::read_only);
+
+	//lion::asset_library_t library{vfs};
+	//library.register_asset_type("*\\.hlsl$", [](lion::input_stream_t const& stream) {
+		// do things with f, return an asset_ptr
+	//});
+
+	//auto sh = library.load_asset_as<shiny::vertex_shader_t>("/res/shaders/);
+
+	struct vertex_shader_backend_t
+	{
+		auto d3d_vs() const -> shiny::platform::d3d_vertex_shader_ptr { return {}; }
+	};
+
+	using vertex_shader_backend_ptr = indirect_ptr<vertex_shader_backend_t>;
+
+	struct vertex_shader_tx
+	{
+		auto d3d_vs() const -> shiny::platform::d3d_vertex_shader_ptr
+		{
+			return backend_->d3d_vs();
+		}
+
+	private:
+		//vertex_shader_backend_t const* const* backend_;
+		vertex_shader_backend_ptr backend_;
+	};
+
+	//auto vs = lion::lock_asset_ptr(vertex_shader_handle);
 
 	exit(0);
 

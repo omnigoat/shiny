@@ -8,14 +8,40 @@
 using namespace lion;
 using lion::file_t;
 
-stdfs::path p;
 
+auto toplevel_dir(stdfs::path const& p) -> stdfs::path
+{
+	auto const& k = p.native();
+	auto i = k.find(stdfs::path::preferred_separator);
+
+	if (i == k.npos)
+		return {};
+	else
+		return {k.c_str(), k.c_str() + i};
+}
+
+auto remove_toplevel(stdfs::path const& p) -> stdfs::path
+{
+	auto const& k = p.native();
+	auto i = k.find(stdfs::path::preferred_separator);
+
+	if (i == k.npos)
+		return {};
+	else
+		return {k.c_str() + i + 1, k.c_str() + k.size()};
+}
 
 auto cd(lion::fs_path_ptr const& p, atma::string const& s) -> fs_path_ptr const&
 {
 	return atma::find_if_else(p->children_, fs_path_ptr::null, [&s](fs_path_ptr const& x) {
-		return x->type_ == path_type_t::dir && x->physical_path_.leaf() == s.c_str();
+		return x->type_ == path_type_t::dir && x->physical_path_.filename() == s.c_str();
 	});
+}
+
+lion::physical_filesystem_t::physical_filesystem_t(stdfs::path const& pp)
+	: physical_path_(pp)
+{
+	ATMA_ASSERT(stdfs::exists(physical_path_));
 }
 
 auto lion::physical_filesystem_t::generate_path(atma::string const& p) -> fs_path_ptr
@@ -64,6 +90,47 @@ auto lion::physical_filesystem_t::generate_path(atma::string const& p) -> fs_pat
 	return r;
 }
 
+auto lion::physical_filesystem_t::internal_cd(fs_path_t* parent, stdfs::path const& path) -> fs_path_ptr
+{
+	ATMA_ASSERT(parent);
+
+	auto lp = parent->logical_path_;
+	auto pp = parent->physical_path_;
+
+	for (auto leaf : path)
+	{
+		lp /= leaf;
+		pp /= leaf;
+
+		if (stdfs::exists(pp))
+		{
+			auto child = fs_path_ptr::make(shared_from_this<abstract_filesystem_t>(), parent, path_type_t::dir, lp, pp);
+
+			parent->children_.push_back(child);
+			parent = parent->children_.back().get();
+		}
+		else
+		{
+			break;
+		}
+	}
+
+	return fs_path_ptr::null;
+}
+
+auto lion::fs_path_t::cd(stdfs::path const& p) -> fs_path_ptr
+{
+	auto tp = toplevel_dir(p);
+
+	for (auto const& x : children_)
+	{
+		if (tp.string() == x->logical_path_.filename().string())
+			break;
+	}
+
+	return fs_->internal_cd(this, p);
+}
+
 lion::fs_path_t::fs_path_t(abstract_filesystem_ptr const& fs, fs_path_t* parent, lion::path_type_t type, stdfs::path const& logical, stdfs::path const& physical)
 	: fs_(fs), parent_(parent), type_(type), logical_path_(logical), physical_path_(physical)
 {
@@ -72,12 +139,41 @@ lion::fs_path_t::fs_path_t(abstract_filesystem_ptr const& fs, fs_path_t* parent,
 
 lion::vfs_t::vfs_t()
 {
-	root_ = fs_path_ptr::make(shared_from_this<abstract_filesystem_t>(), nullptr, path_type_t::dir, "/", ".");
+	root_ = fs_path_ptr::make(shared_from_this<abstract_filesystem_t>(), nullptr, path_type_t::dir, "/", "");
 }
 
-auto lion::vfs_t::mount(stdfs::path const& logical, abstract_filesystem_ptr const&) -> void
+auto lion::vfs_t::mount(stdfs::path const& logical, abstract_filesystem_ptr const& fs) -> void
 {
-	
+	fs_path_ptr lp;
+
+	if (logical.empty())
+		return;
+	else if (logical.c_str()[0] == stdfs::path::preferred_separator)
+		lp = root_->cd(remove_toplevel(logical));
+	else
+		lp = root_->cd(logical);
+
+	lp->fs_ = fs;
+}
+
+auto lion::vfs_t::internal_cd(fs_path_t* parent, stdfs::path const& path) -> fs_path_ptr
+{
+	ATMA_ASSERT(parent);
+
+	auto lp = parent->logical_path_;
+	auto pp = stdfs::path{};
+
+	for (auto leaf : path)
+	{
+		lp /= leaf;
+
+		auto child = fs_path_ptr::make(shared_from_this<abstract_filesystem_t>(), parent, path_type_t::dir, lp, pp);
+
+		parent->children_.push_back(child);
+		parent = parent->children_.back().get();
+	}
+
+	return parent->shared_from_this<fs_path_t>();
 }
 
 file_t::file_t()

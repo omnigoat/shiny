@@ -20,7 +20,9 @@ namespace lion
 	
 	struct abstract_filesystem_t : atma::ref_counted
 	{
-		virtual auto generate_path(atma::string const&) -> fs_path_ptr = 0;
+		virtual auto generate_path(atma::string const&) -> fs_path_ptr {return{};}
+
+		virtual auto internal_cd(fs_path_t*, stdfs::path const&) -> fs_path_ptr {return{};}
 	};
 
 	using abstract_filesystem_ptr = atma::intrusive_ptr<abstract_filesystem_t>;
@@ -47,14 +49,23 @@ namespace lion
 
 	struct physical_filesystem_t : abstract_filesystem_t
 	{
+		physical_filesystem_t(stdfs::path const&);
+
 		auto generate_path(atma::string const& p) -> fs_path_ptr override;
 
+		auto internal_cd(fs_path_t*, stdfs::path const&) -> fs_path_ptr override;
+
 	private:
+		stdfs::path physical_path_;
 		fs_path_ptr root_;
 	};
 
+	using physical_filesystem_ptr = atma::intrusive_ptr<physical_filesystem_t>;
+
 	struct fs_path_t : atma::ref_counted
 	{
+		auto cd(stdfs::path const&) -> fs_path_ptr;
+
 	private:
 		fs_path_t(abstract_filesystem_ptr const&, fs_path_t* parent, path_type_t, stdfs::path const& logical, stdfs::path const& physical);
 
@@ -66,6 +77,7 @@ namespace lion
 		children_t children_;
 
 		path_type_t type_;
+		atma::string leaf_;
 		stdfs::path logical_path_;
 		stdfs::path physical_path_;
 
@@ -95,6 +107,9 @@ namespace lion
 
 		auto mount(stdfs::path const& logical, abstract_filesystem_ptr const&) -> void;
 		auto set_working_dir(stdfs::path const& logical) -> void;
+
+
+		auto internal_cd(fs_path_t*, stdfs::path const&) -> fs_path_ptr override;
 
 	private:
 		fs_path_ptr root_;
