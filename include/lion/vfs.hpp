@@ -1,10 +1,15 @@
 #pragma once
 
+#include <lion/streams.hpp>
+
 #include <atma/intrusive_ptr.hpp>
+#include <atma/bitmask.hpp>
+#include <atma/string.hpp>
 
 #include <filesystem>
 
-namespace stdfs = std::tr2::sys;
+
+namespace stdfs = std::experimental::filesystem;
 
 namespace lion
 {
@@ -18,11 +23,34 @@ namespace lion
 	struct fs_path_t;
 	using  fs_path_ptr  = atma::intrusive_ptr<fs_path_t>;
 	
+	enum class open_flags_t
+	{
+		read,
+		write,
+		exclusive,
+		nonbacked,
+	};
+
+	using open_mask_t = atma::bitmask_t<open_flags_t>;
+
 	struct abstract_filesystem_t : atma::ref_counted
 	{
-		virtual auto generate_path(atma::string const&) -> fs_path_ptr {return{};}
+		virtual auto working_dir() const -> stdfs::path const& = 0;
 
-		virtual auto internal_cd(fs_path_t*, stdfs::path const&) -> fs_path_ptr {return{};}
+		virtual auto generate_path(atma::string const&) -> fs_path_ptr
+		{
+			return fs_path_ptr::null;
+		}
+
+		virtual auto open(fs_path_ptr const&, open_mask_t) -> abstract_stream_ptr
+		{
+			return abstract_stream_ptr::null;
+		}
+
+		virtual auto internal_cd(fs_path_t*, stdfs::path const&) -> fs_path_ptr
+		{
+			return fs_path_ptr::null;
+		}
 	};
 
 	using abstract_filesystem_ptr = atma::intrusive_ptr<abstract_filesystem_t>;
@@ -50,6 +78,10 @@ namespace lion
 	struct physical_filesystem_t : abstract_filesystem_t
 	{
 		physical_filesystem_t(stdfs::path const&);
+
+		auto working_dir() const -> stdfs::path const& override { return physical_path_; }
+
+		auto open(fs_path_ptr const&, open_mask_t) -> abstract_stream_ptr override;
 
 		auto generate_path(atma::string const& p) -> fs_path_ptr override;
 
@@ -97,7 +129,17 @@ namespace lion
 
 
 	
+	inline auto remove_toplevel(stdfs::path const& p) -> stdfs::path
+	{
+		auto const& k = p.native();
+		auto i = k.find(stdfs::path::preferred_separator);
 
+		if (i == k.npos)
+			return stdfs::path{};
+		else
+			return stdfs::path{k.c_str() + i + 1, k.c_str() + k.size()};
+	}
+	
 
 
 	// 
@@ -105,11 +147,18 @@ namespace lion
 	{
 		vfs_t();
 
+		auto working_dir() const -> stdfs::path const& override { return root_->physical_path_; }
 		auto mount(stdfs::path const& logical, abstract_filesystem_ptr const&) -> void;
 		auto set_working_dir(stdfs::path const& logical) -> void;
 
+		auto open(stdfs::path const&) -> abstract_stream_ptr;
+		auto open(stdfs::path const&, open_mask_t) -> abstract_stream_ptr;
 
+	public:
 		auto internal_cd(fs_path_t*, stdfs::path const&) -> fs_path_ptr override;
+
+	private:
+		auto logical_cd(stdfs::path const&) -> fs_path_ptr;
 
 	private:
 		fs_path_ptr root_;

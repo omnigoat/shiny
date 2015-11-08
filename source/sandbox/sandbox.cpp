@@ -92,6 +92,8 @@ application_t::application_t()
 	auto fs = lion::physical_filesystem_ptr::make("./resources/published");
 	vfs.mount("/res", fs);
 
+	auto f = vfs.open("/res/shaders/vs_basic.hlsl");
+
 	//auto f = vfs.open("/res/shaders/vs_basic.hlsl", file_bind_flags::read_only);
 
 	//lion::asset_library_t library{vfs};

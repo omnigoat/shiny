@@ -77,8 +77,8 @@ namespace lion
 		atma::string line;
 
 		// read bytes into line until newline is found
-		auto rr = read_result_t{stream_status_t::ok, 0};
-		while (rr.status == stream_status_t::ok)
+		auto rr = read_result_t{stream_status_t::good, 0};
+		while (rr.status == stream_status_t::good)
 		{
 			rr = stream.read(buf, Bufsize);
 			auto bufend = buf + rr.bytes_read;

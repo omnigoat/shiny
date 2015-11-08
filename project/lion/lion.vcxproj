@@ -20,11 +20,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\lion\file.hpp" />
+    <ClInclude Include="..\..\include\lion\mmap.hpp" />
     <ClInclude Include="..\..\include\lion\streams.hpp" />
     <ClInclude Include="..\..\include\lion\vfs.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\source\lion\file.cpp" />
+    <ClCompile Include="..\..\source\lion\mmap.cpp" />
+    <ClCompile Include="..\..\source\lion\vfs.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{86DFA87F-4570-47F6-9C4C-6C21EFB610B7}</ProjectGuid>

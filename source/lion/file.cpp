@@ -1,6 +1,7 @@
 #include <lion/file.hpp>
 
 #include <lion/vfs.hpp>
+#include <lion/mmap.hpp>
 
 #include <atma/algorithm.hpp>
 
@@ -20,16 +21,7 @@ auto toplevel_dir(stdfs::path const& p) -> stdfs::path
 		return {k.c_str(), k.c_str() + i};
 }
 
-auto remove_toplevel(stdfs::path const& p) -> stdfs::path
-{
-	auto const& k = p.native();
-	auto i = k.find(stdfs::path::preferred_separator);
 
-	if (i == k.npos)
-		return {};
-	else
-		return {k.c_str() + i + 1, k.c_str() + k.size()};
-}
 
 auto cd(lion::fs_path_ptr const& p, atma::string const& s) -> fs_path_ptr const&
 {
@@ -111,11 +103,11 @@ auto lion::physical_filesystem_t::internal_cd(fs_path_t* parent, stdfs::path con
 		}
 		else
 		{
-			break;
+			return fs_path_ptr::null;
 		}
 	}
 
-	return fs_path_ptr::null;
+	return parent->shared_from_this<fs_path_t>();
 }
 
 auto lion::fs_path_t::cd(stdfs::path const& p) -> fs_path_ptr
@@ -125,55 +117,51 @@ auto lion::fs_path_t::cd(stdfs::path const& p) -> fs_path_ptr
 	for (auto const& x : children_)
 	{
 		if (tp.string() == x->logical_path_.filename().string())
-			break;
+			return x->cd(remove_toplevel(p));
 	}
 
 	return fs_->internal_cd(this, p);
 }
 
+auto physical_filesystem_t::open(fs_path_ptr const& path, open_mask_t mask) -> abstract_stream_ptr
+{
+	// we can use a mmap for most cases, except where we need to write to a file
+	// if we want to mutate the contents of a file, but don't care about having those
+	// changes actually written to disk, then we can use 'nonbacked', which will create
+	// a copy-on-write mmap (or something similar)
+	if ((mask & open_flags_t::read) || ((mask & open_flags_t::write) && (mask & open_flags_t::nonbacked)))
+	{
+		auto mmap = mmap_ptr::make(path->physical_path_.string());
+		return mmap_stream_ptr::make(mmap);
+	}
+	else
+	{
+	}
+
+	return abstract_stream_ptr::null;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 lion::fs_path_t::fs_path_t(abstract_filesystem_ptr const& fs, fs_path_t* parent, lion::path_type_t type, stdfs::path const& logical, stdfs::path const& physical)
 	: fs_(fs), parent_(parent), type_(type), logical_path_(logical), physical_path_(physical)
 {
 
-}
-
-lion::vfs_t::vfs_t()
-{
-	root_ = fs_path_ptr::make(shared_from_this<abstract_filesystem_t>(), nullptr, path_type_t::dir, "/", "");
-}
-
-auto lion::vfs_t::mount(stdfs::path const& logical, abstract_filesystem_ptr const& fs) -> void
-{
-	fs_path_ptr lp;
-
-	if (logical.empty())
-		return;
-	else if (logical.c_str()[0] == stdfs::path::preferred_separator)
-		lp = root_->cd(remove_toplevel(logical));
-	else
-		lp = root_->cd(logical);
-
-	lp->fs_ = fs;
-}
-
-auto lion::vfs_t::internal_cd(fs_path_t* parent, stdfs::path const& path) -> fs_path_ptr
-{
-	ATMA_ASSERT(parent);
-
-	auto lp = parent->logical_path_;
-	auto pp = stdfs::path{};
-
-	for (auto leaf : path)
-	{
-		lp /= leaf;
-
-		auto child = fs_path_ptr::make(shared_from_this<abstract_filesystem_t>(), parent, path_type_t::dir, lp, pp);
-
-		parent->children_.push_back(child);
-		parent = parent->children_.back().get();
-	}
-
-	return parent->shared_from_this<fs_path_t>();
 }
 
 file_t::file_t()
@@ -229,7 +217,7 @@ auto file_t::seek(size_t x) -> stream_status_t
 {
 	auto r = fseek(handle_, (long)x, SEEK_SET);
 	if (r == 0)
-		return stream_status_t::ok;
+		return stream_status_t::good;
 	else
 		return stream_status_t::error;
 }
@@ -238,7 +226,7 @@ auto file_t::move(int64 x) -> stream_status_t
 {
 	auto r = fseek(handle_, (long)x, SEEK_CUR);
 	if (r == 0)
-		return stream_status_t::ok;
+		return stream_status_t::good;
 	else
 		return stream_status_t::error;
 }
@@ -248,7 +236,7 @@ auto file_t::read(void* buf, size_t size) -> read_result_t
 	size_t r = fread(buf, 1, size, handle_);
 
 	if (r == size)
-		return {stream_status_t::ok, r};
+		return {stream_status_t::good, r};
 	else if (feof(handle_))
 		return {stream_status_t::eof, r};
 	else
@@ -260,7 +248,7 @@ auto file_t::write(void const* data, size_t size) -> write_result_t
 	size_t r = fwrite(data, 1, size, handle_);
 
 	if (r == size)
-		return {stream_status_t::ok, r};
+		return {stream_status_t::good, r};
 	else if (feof(handle_))
 		return {stream_status_t::eof, r};
 	else
