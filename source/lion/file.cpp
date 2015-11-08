@@ -190,7 +190,10 @@ file_t::file_t(file_t&& rhs)
 	: filename_(rhs.filename_)
 	, access_(rhs.access_)
 	, filesize_(rhs.filesize_)
-{}
+	, handle_(rhs.handle_)
+{
+	rhs.handle_ = nullptr;
+}
 
 file_t::~file_t()
 {

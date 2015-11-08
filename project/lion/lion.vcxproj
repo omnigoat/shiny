@@ -27,6 +27,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\source\lion\file.cpp" />
     <ClCompile Include="..\..\source\lion\mmap.cpp" />
+    <ClCompile Include="..\..\source\lion\streams.cpp" />
     <ClCompile Include="..\..\source\lion\vfs.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

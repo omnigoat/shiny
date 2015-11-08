@@ -15,9 +15,6 @@ namespace lion
 		read_write,
 	};
 
-
-
-
 	struct file_t
 		: abstract_random_access_input_stream_t
 		, abstract_random_access_output_stream_t
@@ -63,8 +60,6 @@ namespace lion
 		FILE* handle_;
 		size_t filesize_;
 	};
-
-
 
 
 	inline auto read_into_memory(file_t& file) -> atma::unique_memory_t

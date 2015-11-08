@@ -93,14 +93,8 @@ application_t::application_t()
 	vfs.mount("/res", fs);
 
 	auto f = vfs.open("/res/shaders/vs_basic.hlsl");
-	if (f->stream_opers() & lion::stream_opers_t::random_access)
-	{
-		auto s = lion::stream_cast<lion::abstract_random_access_input_stream_t>(f);
-
-		atma::unique_memory_t mem{s->g_size()};
-		s->read(mem.begin(), s->g_size());
-	}
-	//auto f2 = f.cast_dynamic<lion::abstract_random_access_input_stream_t>();
+	auto m = lion::read_all(f.cast_dynamic<lion::abstract_random_access_input_stream_t>());
+	//auto f2 = ;
 
 	//char buf[8000];
 	//auto r = f2->read(buf, 1200);

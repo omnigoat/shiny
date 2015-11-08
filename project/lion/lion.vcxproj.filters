@@ -34,5 +34,8 @@
     <ClCompile Include="..\..\source\lion\vfs.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\source\lion\streams.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

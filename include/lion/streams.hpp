@@ -3,14 +3,13 @@
 #include <atma/types.hpp>
 #include <atma/intrusive_ptr.hpp>
 #include <atma/bitmask.hpp>
-
+#include <atma/unique_memory.hpp>
 
 namespace lion
 {
 	enum class stream_status_t
 	{
 		good,
-		bof,
 		eof,
 		error,
 	};
@@ -26,6 +25,9 @@ namespace lion
 
 	struct read_result_t
 	{
+		read_result_t() : status(), bytes_read() {}
+		read_result_t(stream_status_t s, size_t b) : status(s), bytes_read(b) {}
+
 		stream_status_t status;
 		size_t bytes_read;
 	};
@@ -70,13 +72,18 @@ namespace lion
 		virtual auto p_move(int64) -> stream_status_t = 0;
 	};
 
-	using abstract_stream_ptr        = atma::intrusive_ptr<abstract_stream_t>;
-	using abstract_input_stream_ptr  = atma::intrusive_ptr<abstract_input_stream_t>;
-	using abstract_output_stream_ptr = atma::intrusive_ptr<abstract_output_stream_t>;
+	using abstract_stream_ptr                      = atma::intrusive_ptr<abstract_stream_t>;
+	using abstract_input_stream_ptr                = atma::intrusive_ptr<abstract_input_stream_t>;
+	using abstract_output_stream_ptr               = atma::intrusive_ptr<abstract_output_stream_t>;
+	using abstract_random_access_input_stream_ptr  = atma::intrusive_ptr<abstract_random_access_input_stream_t>;
+	using abstract_random_access_output_stream_ptr = atma::intrusive_ptr<abstract_random_access_output_stream_t>;
 
 	template <typename T, typename Y>
 	inline auto stream_cast(atma::intrusive_ptr<Y> const& stream) -> atma::intrusive_ptr<T>
 	{
 		return stream.cast_dynamic<T>();
 	}
+
+	auto read_all(abstract_input_stream_ptr const& stream) -> atma::unique_memory_t;
+	auto read_all(abstract_random_access_input_stream_ptr const& stream) -> atma::unique_memory_t;
 }
