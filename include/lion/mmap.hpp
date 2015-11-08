@@ -49,6 +49,7 @@ namespace lion
 	{
 		mmap_stream_t(mmap_ptr const&);
 
+		auto stream_opers() const -> stream_opers_mask_t override;
 		auto read(void*, size_t) -> read_result_t override;
 
 	private:

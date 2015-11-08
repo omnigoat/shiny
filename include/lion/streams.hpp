@@ -2,6 +2,8 @@
 
 #include <atma/types.hpp>
 #include <atma/intrusive_ptr.hpp>
+#include <atma/bitmask.hpp>
+
 
 namespace lion
 {
@@ -12,6 +14,15 @@ namespace lion
 		eof,
 		error,
 	};
+
+	enum class stream_opers_t
+	{
+		read,
+		write,
+		random_access,
+	};
+
+	using stream_opers_mask_t = atma::bitmask_t<stream_opers_t>;
 
 	struct read_result_t
 	{
@@ -28,6 +39,7 @@ namespace lion
 	struct abstract_stream_t
 		: atma::ref_counted
 	{
+		virtual auto stream_opers() const -> stream_opers_mask_t = 0;
 	};
 
 	struct abstract_input_stream_t
@@ -61,4 +73,10 @@ namespace lion
 	using abstract_stream_ptr        = atma::intrusive_ptr<abstract_stream_t>;
 	using abstract_input_stream_ptr  = atma::intrusive_ptr<abstract_input_stream_t>;
 	using abstract_output_stream_ptr = atma::intrusive_ptr<abstract_output_stream_t>;
+
+	template <typename T, typename Y>
+	inline auto stream_cast(atma::intrusive_ptr<Y> const& stream) -> atma::intrusive_ptr<T>
+	{
+		return stream.cast_dynamic<T>();
+	}
 }

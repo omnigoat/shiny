@@ -55,6 +55,11 @@ mmap_stream_t::mmap_stream_t(mmap_ptr const& mmap)
 	, position_()
 {}
 
+auto mmap_stream_t::stream_opers() const -> stream_opers_mask_t
+{
+	return stream_opers_mask_t{stream_opers_t::random_access, stream_opers_t::read};
+}
+
 auto mmap_stream_t::read(void* buf, size_t size) -> read_result_t
 {
 	auto msz = mmap_->size() - position_;

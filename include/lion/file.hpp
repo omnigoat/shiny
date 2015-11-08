@@ -35,11 +35,15 @@ namespace lion
 		auto seek(size_t) -> stream_status_t;
 		auto move(int64) -> stream_status_t;
 
+		// abstract-stream
+		auto stream_opers() const -> stream_opers_mask_t override;
+
 		// input-stream
 		auto read(void*, size_t) -> read_result_t override;
 
 		// output-stream
 		auto write(void const*, size_t) -> write_result_t override;
+
 
 	private:
 		// random-access-input-stream

@@ -255,6 +255,12 @@ auto file_t::write(void const* data, size_t size) -> write_result_t
 		return {stream_status_t::error, r};
 }
 
+// absract-stream
+auto file_t::stream_opers() const -> stream_opers_mask_t
+{
+	return stream_opers_mask_t{stream_opers_t::read, stream_opers_t::write, stream_opers_t::random_access};
+}
+
 // input-stream
 auto file_t::g_size() const -> size_t
 {
