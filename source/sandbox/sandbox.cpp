@@ -93,15 +93,26 @@ application_t::application_t()
 	vfs.mount("/res", fs);
 
 	auto f = vfs.open("/res/shaders/vs_basic.hlsl");
-	auto m = lion::read_all(f.cast_dynamic<lion::abstract_random_access_input_stream_t>());
+	//auto m = lion::read_all(f.cast_dynamic<lion::random_access_input_stream_t>());
+	auto m = lion::read_all(f);
 	//auto f2 = ;
 
 	//char buf[8000];
 	//auto r = f2->read(buf, 1200);
 	
 	//auto f = vfs.open("/res/shaders/vs_basic.hlsl", file_bind_flags::read_only);
+#if 0
+	lion::asset_library_t library{vfs};
+	library.register_asset_thing("/res/shaders/",
+		lion::open_flags_t::read,
+		lion::file_watching_flags_t::yes,
+		&load_shader);
+		
+	[](lion::input_stream_t const& stream) {
+		
+	});
+#endif
 
-	//lion::asset_library_t library{vfs};
 	//library.register_asset_type("*\\.hlsl$", [](lion::input_stream_t const& stream) {
 		// do things with f, return an asset_ptr
 	//});

@@ -45,7 +45,7 @@ namespace lion
 
 
 	struct mmap_stream_t
-		: abstract_random_access_input_stream_t
+		: random_access_input_stream_t
 	{
 		mmap_stream_t(mmap_ptr const&);
 

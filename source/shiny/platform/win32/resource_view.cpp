@@ -20,7 +20,7 @@ resource_view_t::resource_view_t(resource_cptr const& rs, resource_view_type_t v
 {
 	if (rs->resource_type() == resource_type_t::structured_buffer)
 	{
-		ATMA_ASSERT_MSG(ef == format_t::unknown, "structured buffers don't specify typed-views. use format_t::unknown");
+		ATMA_ASSERT(ef == format_t::unknown, "structured buffers don't specify typed-views. use format_t::unknown");
 	}
 
 	auto fmt = platform::dxgi_format_of(format_);

@@ -87,9 +87,9 @@ buffer_t::buffer_t(
 	{
 		case resource_storage_t::immutable:
 		{
-			ATMA_ASSERT_MSG(bdt.data, "immutable buffers require data upon initialisation");
-			ATMA_ASSERT_MSG(resource_size() == data_size, "immutable buffer: allocation size != data size");
-			ATMA_ASSERT_MSG(d3d_ca == 0, "immutable buffer with cpu access? silly.");
+			ATMA_ASSERT(bdt.data, "immutable buffers require data upon initialisation");
+			ATMA_ASSERT(resource_size() == data_size, "immutable buffer: allocation size != data size");
+			ATMA_ASSERT(d3d_ca == 0, "immutable buffer with cpu access? silly.");
 
 			auto d3d_data = D3D11_SUBRESOURCE_DATA{bdt.data, (UINT)data_size, 1};
 			ATMA_ENSURE_IS(S_OK, context()->d3d_device()->CreateBuffer(&buffer_desc, &d3d_data, d3d_buffer_.assign()));

@@ -16,8 +16,8 @@ namespace lion
 	};
 
 	struct file_t
-		: abstract_random_access_input_stream_t
-		, abstract_random_access_output_stream_t
+		: random_access_input_stream_t
+		, random_access_output_stream_t
 	{
 		file_t();
 		file_t(atma::string const&, file_access_t = file_access_t::read);
@@ -70,7 +70,7 @@ namespace lion
 	}
 
 	template <size_t Bufsize, typename FN>
-	inline auto for_each_line(abstract_input_stream_t& stream, size_t maxsize, FN&& fn) -> void
+	inline auto for_each_line(input_stream_t& stream, size_t maxsize, FN&& fn) -> void
 	{
 		char buf[Bufsize];
 		atma::string line;

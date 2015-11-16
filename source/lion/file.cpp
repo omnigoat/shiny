@@ -123,7 +123,7 @@ auto lion::fs_path_t::cd(stdfs::path const& p) -> fs_path_ptr
 	return fs_->internal_cd(this, p);
 }
 
-auto physical_filesystem_t::open(fs_path_ptr const& path, open_mask_t mask) -> abstract_stream_ptr
+auto physical_filesystem_t::open(fs_path_ptr const& path, open_mask_t mask) -> stream_ptr
 {
 	// we can use a mmap for most cases, except where we need to write to a file
 	// if we want to mutate the contents of a file, but don't care about having those
@@ -138,7 +138,7 @@ auto physical_filesystem_t::open(fs_path_ptr const& path, open_mask_t mask) -> a
 	{
 	}
 
-	return abstract_stream_ptr::null;
+	return stream_ptr::null;
 }
 
 

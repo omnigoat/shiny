@@ -253,7 +253,7 @@ auto context_t::update_display_mode() -> void
 	// fullscreen to fullscreen, let's not support this yet
 	else if (current_display_mode_ == &fullscreen_display_mode_ && requested_display_mode_ == &requested_fullscreen_display_mode_)
 	{
-		ATMA_ASSERT_MSG(false, "fullscreen -> fullscreen resolution change not supported yet");
+		ATMA_ASSERT(false, "fullscreen -> fullscreen resolution change not supported yet");
 	}
 
 	// windowed to windowed

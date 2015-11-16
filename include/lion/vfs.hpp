@@ -42,9 +42,9 @@ namespace lion
 			return fs_path_ptr::null;
 		}
 
-		virtual auto open(fs_path_ptr const&, open_mask_t) -> abstract_stream_ptr
+		virtual auto open(fs_path_ptr const&, open_mask_t) -> stream_ptr
 		{
-			return abstract_stream_ptr::null;
+			return stream_ptr::null;
 		}
 
 		virtual auto internal_cd(fs_path_t*, stdfs::path const&) -> fs_path_ptr
@@ -81,7 +81,7 @@ namespace lion
 
 		auto working_dir() const -> stdfs::path const& override { return physical_path_; }
 
-		auto open(fs_path_ptr const&, open_mask_t) -> abstract_stream_ptr override;
+		auto open(fs_path_ptr const&, open_mask_t) -> stream_ptr override;
 
 		auto generate_path(atma::string const& p) -> fs_path_ptr override;
 
@@ -146,13 +146,13 @@ namespace lion
 	struct vfs_t : abstract_filesystem_t
 	{
 		vfs_t();
+		vfs_t(stdfs::path const& working_dir);
 
 		auto working_dir() const -> stdfs::path const& override { return root_->physical_path_; }
 		auto mount(stdfs::path const& logical, abstract_filesystem_ptr const&) -> void;
-		auto set_working_dir(stdfs::path const& logical) -> void;
 
-		auto open(stdfs::path const&) -> abstract_stream_ptr;
-		auto open(stdfs::path const&, open_mask_t) -> abstract_stream_ptr;
+		auto open(stdfs::path const&) -> stream_ptr;
+		auto open(stdfs::path const&, open_mask_t) -> stream_ptr;
 
 	public:
 		auto internal_cd(fs_path_t*, stdfs::path const&) -> fs_path_ptr override;

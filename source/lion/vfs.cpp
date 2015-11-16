@@ -28,7 +28,7 @@ auto vfs_t::mount(stdfs::path const& logical, abstract_filesystem_ptr const& fs)
 	lp->physical_path_ = fs->working_dir();
 }
 
-auto vfs_t::open(stdfs::path const& path) -> abstract_stream_ptr
+auto vfs_t::open(stdfs::path const& path) -> stream_ptr
 {
 	auto lp = logical_cd(path);
 
