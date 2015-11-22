@@ -8,34 +8,35 @@
 using namespace lion;
 using lion::vfs_t;
 
+
 vfs_t::vfs_t()
 {
-	root_ = fs_path_ptr::make(shared_from_this<abstract_filesystem_t>(), nullptr, path_type_t::dir, "/", "");
+	root_ = fs_path_ptr::make(shared_from_this<filesystem_t>(), nullptr, path_type_t::dir, "/", stdfs::current_path());
 }
 
-auto vfs_t::mount(stdfs::path const& logical, abstract_filesystem_ptr const& fs) -> void
+auto vfs_t::mount(stdfs::path const& logical_path, filesystem_ptr const& fs) -> void
 {
+	ATMA_ASSERT(logical_path.is_absolute());
+
 	fs_path_ptr lp;
 
-	if (logical.empty())
-		return;
-	else if (logical.c_str()[0] == stdfs::path::preferred_separator)
-		lp = root_->cd(remove_toplevel(logical));
-	else
-		lp = root_->cd(logical);
-
-	lp->fs_ = fs;
-	lp->physical_path_ = fs->working_dir();
+	if (auto lp = logical_cd(logical_path))
+	{
+		lp->fs_ = fs;
+		lp->physical_path_ = fs->working_dir();
+	}
 }
 
-auto vfs_t::open(stdfs::path const& path) -> stream_ptr
+auto vfs_t::open(stdfs::path const& logical_path) -> stream_ptr
 {
-	auto lp = logical_cd(path);
+	ATMA_ASSERT(logical_path.is_absolute());
+
+	auto lp = logical_cd(logical_path);
 
 	return lp->fs_->open(lp, open_mask_t{open_flags_t::read});
 }
 
-auto vfs_t::internal_cd(fs_path_t* parent, stdfs::path const& path) -> fs_path_ptr
+auto vfs_t::cd(fs_path_t* parent, stdfs::path const& path) -> fs_path_ptr
 {
 	ATMA_ASSERT(parent);
 
@@ -46,7 +47,7 @@ auto vfs_t::internal_cd(fs_path_t* parent, stdfs::path const& path) -> fs_path_p
 	{
 		lp /= leaf;
 
-		auto child = fs_path_ptr::make(shared_from_this<abstract_filesystem_t>(), parent, path_type_t::dir, lp, pp);
+		auto child = fs_path_ptr::make(shared_from_this<filesystem_t>(), parent, path_type_t::dir, lp, pp);
 
 		parent->children_.push_back(child);
 		parent = parent->children_.back().get();
@@ -55,12 +56,10 @@ auto vfs_t::internal_cd(fs_path_t* parent, stdfs::path const& path) -> fs_path_p
 	return parent->shared_from_this<fs_path_t>();
 }
 
-auto vfs_t::logical_cd(stdfs::path const& logical) -> fs_path_ptr
+auto vfs_t::logical_cd(stdfs::path const& logical_path) -> fs_path_ptr
 {
-	if (logical.empty())
+	if (logical_path.empty())
 		return fs_path_ptr::null;
-	else if (logical.c_str()[0] == stdfs::path::preferred_separator)
-		return root_->cd(remove_toplevel(logical));
 	else
-		return root_->cd(logical);
+		return root_->cd(logical_path);
 }

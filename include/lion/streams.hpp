@@ -50,18 +50,18 @@ namespace lion
 		virtual auto read(void*, size_t) -> read_result_t = 0;
 	};
 
+	struct output_stream_t
+		: virtual stream_t
+	{
+		virtual auto write(void const*, size_t) -> write_result_t = 0;
+	};
+
 	struct random_access_input_stream_t
 		: input_stream_t
 	{
 		virtual auto g_size() const -> size_t = 0;
 		virtual auto g_seek(size_t) -> stream_status_t = 0;
 		virtual auto g_move(int64) -> stream_status_t = 0;
-	};
-
-	struct output_stream_t
-		: virtual stream_t
-	{
-		virtual auto write(void const*, size_t) -> write_result_t = 0;
 	};
 
 	struct random_access_output_stream_t

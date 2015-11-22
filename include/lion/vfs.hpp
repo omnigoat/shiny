@@ -33,27 +33,26 @@ namespace lion
 
 	using open_mask_t = atma::bitmask_t<open_flags_t>;
 
-	struct abstract_filesystem_t : atma::ref_counted
+	struct filesystem_t : atma::ref_counted
 	{
-		virtual auto working_dir() const -> stdfs::path const& = 0;
+		//virtual auto physical_path() const -> stdfs::path const& = 0;
+		virtual auto physical_path() const -> stdfs::path const& = 0;
+		virtual auto root_path() const -> fs_path_ptr const& = 0;
 
-		virtual auto generate_path(atma::string const&) -> fs_path_ptr
-		{
-			return fs_path_ptr::null;
-		}
+		virtual auto cd(stdfs::path const& path) -> fs_path_ptr { return cd(root_path(), path); }
+		virtual auto cd(fs_path_ptr const&, stdfs::path const&) -> fs_path_ptr { return fs_path_ptr::null; }
+		virtual auto open(fs_path_ptr const&, open_mask_t) -> stream_ptr { return stream_ptr::null; }
 
-		virtual auto open(fs_path_ptr const&, open_mask_t) -> stream_ptr
-		{
-			return stream_ptr::null;
-		}
+	protected:
+		auto impl_mkdir(fs_path_ptr const&, fs_path_ptr const&) -> bool;
 
-		virtual auto internal_cd(fs_path_t*, stdfs::path const&) -> fs_path_ptr
-		{
-			return fs_path_ptr::null;
-		}
+	private:
+		//virtual auto internal_cd(fs_path_t*, stdfs::path const&) -> fs_path_ptr { return fs_path_ptr::null; }
+
+		friend struct fs_path_t;
 	};
 
-	using abstract_filesystem_ptr = atma::intrusive_ptr<abstract_filesystem_t>;
+	using filesystem_ptr = atma::intrusive_ptr<filesystem_t>;
 
 	inline auto split_path(atma::string const& str) -> atma::vector<atma::string>
 	{
@@ -75,17 +74,15 @@ namespace lion
 		return r;
 	}
 
-	struct physical_filesystem_t : abstract_filesystem_t
+	struct physical_filesystem_t : filesystem_t
 	{
 		physical_filesystem_t(stdfs::path const&);
 
-		auto working_dir() const -> stdfs::path const& override { return physical_path_; }
+		auto physical_path() const -> stdfs::path const& override { return physical_path_; }
 
 		auto open(fs_path_ptr const&, open_mask_t) -> stream_ptr override;
 
-		auto generate_path(atma::string const& p) -> fs_path_ptr override;
-
-		auto internal_cd(fs_path_t*, stdfs::path const&) -> fs_path_ptr override;
+		auto cd(fs_path_ptr const&, stdfs::path const&) -> fs_path_ptr override;
 
 	private:
 		stdfs::path physical_path_;
@@ -96,15 +93,20 @@ namespace lion
 
 	struct fs_path_t : atma::ref_counted
 	{
-		auto cd(stdfs::path const&) -> fs_path_ptr;
-
-	private:
-		fs_path_t(abstract_filesystem_ptr const&, fs_path_t* parent, path_type_t, stdfs::path const& logical, stdfs::path const& physical);
-
-	public:
 		using children_t = atma::vector<fs_path_ptr>;
 
-		abstract_filesystem_ptr fs_;
+		auto filesystem() const -> filesystem_ptr const& { return fs_; }
+		auto children() const -> children_t const& { return children_; }
+		auto path_type() const -> path_type_t { return type_; }
+		auto logical_path() const -> stdfs::path const& { return logical_path_; }
+		auto physical_path() const -> stdfs::path const& { return physical_path_; }
+
+	private:
+		fs_path_t(filesystem_ptr const&, fs_path_t* parent, path_type_t, stdfs::path const& logical, stdfs::path const& physical);
+
+	private:
+
+		filesystem_ptr fs_;
 		fs_path_t* parent_;
 		children_t children_;
 
@@ -113,6 +115,7 @@ namespace lion
 		stdfs::path logical_path_;
 		stdfs::path physical_path_;
 
+		friend struct filesystem_t;
 		friend struct atma::intrusive_ptr_expose_constructor;
 	};
 
@@ -143,19 +146,18 @@ namespace lion
 
 
 	// 
-	struct vfs_t : abstract_filesystem_t
+	struct vfs_t : filesystem_t
 	{
 		vfs_t();
-		vfs_t(stdfs::path const& working_dir);
+		vfs_t(stdfs::path const& physical_path);
 
-		auto working_dir() const -> stdfs::path const& override { return root_->physical_path_; }
-		auto mount(stdfs::path const& logical, abstract_filesystem_ptr const&) -> void;
+		auto physical_path() const -> stdfs::path const& override { return root_->physical_path(); }
+		auto mount(stdfs::path const& logical, filesystem_ptr const&) -> void;
 
 		auto open(stdfs::path const&) -> stream_ptr;
 		auto open(stdfs::path const&, open_mask_t) -> stream_ptr;
 
-	public:
-		auto internal_cd(fs_path_t*, stdfs::path const&) -> fs_path_ptr override;
+		auto cd(fs_path_ptr const&, stdfs::path const&) -> fs_path_ptr override;
 
 	private:
 		auto logical_cd(stdfs::path const&) -> fs_path_ptr;

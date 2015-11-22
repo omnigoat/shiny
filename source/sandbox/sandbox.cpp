@@ -38,6 +38,9 @@
 #include <atma/filesystem/file.hpp>
 #include <atma/algorithm.hpp>
 
+#include <regex>
+
+
 using namespace sandbox;
 using sandbox::application_t;
 
@@ -81,11 +84,50 @@ private:
 	T* const* ptr_;
 };
 
+namespace lion
+{
+	struct asset_t
+	{
+		virtual ~asset_t() {}
+	};
+
+	using asset_ptr = atma::intrusive_ptr<asset_t>;
+
+	struct asset_storage_t
+	{
+		//asset_ptr current;
+		asset_t* current;
+		//asset_ptr next;
+		std::atomic_int32_t current_use_count;
+		//std::atomic_int32_t next_use_count;
+		std::atomic<asset_t*> ptr;
+	};
+}
+
+using asset_handle_t = intptr; //asset_storage_t const*;
+
+// vertex_shader_t* blah = lion::lock_asset_as<shiny::vertex_shader_t>(asset_handle);
+
+// vertex_shader_t* vs = nullptr;
+// lion::scoped_asset_lock_t SL{asset_handle, vs};
+// auto SL = lion::scoped_asset_lock_t{asset_handle};
+// vertex_shader_t* blah2 = SL.ptr_as<shiny::vertex_shader_t>();
+
 application_t::application_t()
 	: window_renderer(fooey::system_renderer())
 	, window(fooey::window("Excitement!", 800 + 16, 600 + 38))
 	, runtime{}
 {
+	shiny::vertex_shader_t
+	  * vs_basic = nullptr,
+	  * vs_debug = nullptr,
+	  * vs_voxel = nullptr;
+
+	LION_SCOPE_LOCK_ASSETS(
+		(h1, vs_basic),
+		(h2, vs_debug),
+		(h2, vs_debug));
+
 	//lion::physical_filesystem_t fs;
 	//fs.generate_path("/dragon/elephant/giraffe/");
 	lion::vfs_t vfs;
@@ -97,6 +139,15 @@ application_t::application_t()
 	auto m = lion::read_all(f);
 	//auto f2 = ;
 
+	struct asset_pattern_t
+	{
+		std::regex regex;
+		std::function<void()> callback;
+	};
+
+	std::regex R{"^vs_.+\\.hlsl"};
+	bool b = std::regex_match("vs_love.hlsl", R);
+
 	//char buf[8000];
 	//auto r = f2->read(buf, 1200);
 	
@@ -106,7 +157,9 @@ application_t::application_t()
 	library.register_asset_thing("/res/shaders/",
 		lion::open_flags_t::read,
 		lion::file_watching_flags_t::yes,
-		&load_shader);
+		{ lion::asset_pattern{"vs_.+\\.hlsl", &load_vertex_shader},
+		  lion::asset_pattern{"fs_.+\\.hlsl", &load_fragment_shader},
+		  lion::asset_pattern{"cs_.+\\.hlsl", &load_compute_shader} });
 		
 	[](lion::input_stream_t const& stream) {
 		

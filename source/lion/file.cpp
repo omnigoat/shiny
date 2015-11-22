@@ -36,10 +36,10 @@ lion::physical_filesystem_t::physical_filesystem_t(stdfs::path const& pp)
 	ATMA_ASSERT(stdfs::exists(physical_path_));
 }
 
-auto lion::physical_filesystem_t::generate_path(atma::string const& p) -> fs_path_ptr
+auto lion::physical_filesystem_t::cd(atma::string const& p) -> fs_path_ptr
 {
 	fs_path_ptr r;
-	root_ = fs_path_ptr::make(shared_from_this<abstract_filesystem_t>(), nullptr, path_type_t::dir, stdfs::path{"/"}, stdfs::path{"."});
+	root_ = fs_path_ptr::make(shared_from_this<filesystem_t>(), nullptr, path_type_t::dir, stdfs::path{"/"}, stdfs::path{"."});
 
 	stdfs::path rp = p.c_str();
 
@@ -72,7 +72,7 @@ auto lion::physical_filesystem_t::generate_path(atma::string const& p) -> fs_pat
 			else
 			{
 				auto type = s.raw_end()[-1] == '/' ? path_type_t::dir : path_type_t::file;
-				auto np = fs_path_ptr::make(shared_from_this<abstract_filesystem_t>(), r.get(), type, lp, fp);
+				auto np = fs_path_ptr::make(shared_from_this<filesystem_t>(), r.get(), type, lp, fp);
 				r->children_.push_back(np);
 				r = np;
 			}
@@ -96,7 +96,7 @@ auto lion::physical_filesystem_t::internal_cd(fs_path_t* parent, stdfs::path con
 
 		if (stdfs::exists(pp))
 		{
-			auto child = fs_path_ptr::make(shared_from_this<abstract_filesystem_t>(), parent, path_type_t::dir, lp, pp);
+			auto child = fs_path_ptr::make(shared_from_this<filesystem_t>(), parent, path_type_t::dir, lp, pp);
 
 			parent->children_.push_back(child);
 			parent = parent->children_.back().get();
@@ -158,7 +158,7 @@ auto physical_filesystem_t::open(fs_path_ptr const& path, open_mask_t mask) -> s
 
 
 
-lion::fs_path_t::fs_path_t(abstract_filesystem_ptr const& fs, fs_path_t* parent, lion::path_type_t type, stdfs::path const& logical, stdfs::path const& physical)
+lion::fs_path_t::fs_path_t(filesystem_ptr const& fs, fs_path_t* parent, lion::path_type_t type, stdfs::path const& logical, stdfs::path const& physical)
 	: fs_(fs), parent_(parent), type_(type), logical_path_(logical), physical_path_(physical)
 {
 
