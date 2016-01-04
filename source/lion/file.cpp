@@ -23,12 +23,60 @@ auto toplevel_dir(stdfs::path const& p) -> stdfs::path
 
 
 
-auto cd(lion::fs_path_ptr const& p, atma::string const& s) -> fs_path_ptr const&
+auto lion::filesystem_t::cd(fs_path_ptr const& fsp, atma::string const& p) -> fs_path_ptr const&
 {
-	return atma::find_if_else(p->children_, fs_path_ptr::null, [&s](fs_path_ptr const& x) {
-		return x->type_ == path_type_t::dir && x->physical_path_.filename() == s.c_str();
-	});
+	fs_path_t* r = &*fsp;
+#if 0
+
+	for (auto const& x : path_split_range(p))
+	{
+		if (x == "/")
+		{
+			r = &*root_path();
+		}
+		else if (x == "../")
+		{
+			r = r->parent();
+		}
+		else
+		{
+			bool found = false;
+			for (auto const& child : fsp->children_)
+			{
+				if (child->leaf() == x) {
+					bound = true;
+					r = &*child;
+					break;
+				}
+			}
+
+			if (!found)
+			{
+
+			}
+		}
+	}
+#endif // 0
+
+
+#if 0
+	
+
+	auto* r = &fsp;
+	for (auto leaf : path_split_range(p))
+	{
+		auto sub = (*r)->filesystem()->impl_subpath(*r, name.u8string().c_str());
+		(*r)->children_.push_back(sub);
+		r = &(*r)->children_.back();
+	}
+
+	return *r;
+#endif
+	return fs_path_ptr::null;
 }
+
+
+
 
 lion::physical_filesystem_t::physical_filesystem_t(stdfs::path const& pp)
 	: physical_path_(pp)
@@ -36,52 +84,41 @@ lion::physical_filesystem_t::physical_filesystem_t(stdfs::path const& pp)
 	ATMA_ASSERT(stdfs::exists(physical_path_));
 }
 
-auto lion::physical_filesystem_t::cd(atma::string const& p) -> fs_path_ptr
+auto lion::physical_filesystem_t::impl_subpath(fs_path_ptr const& fsp, char const* name) -> fs_path_ptr
 {
-	fs_path_ptr r;
-	root_ = fs_path_ptr::make(shared_from_this<filesystem_t>(), nullptr, path_type_t::dir, stdfs::path{"/"}, stdfs::path{"."});
+	stdfs::path lp;// = fsp->logical_path() / name;
+	stdfs::path fp;// = fsp->physical_path() / name;
 
-	stdfs::path rp = p.c_str();
-
-	auto path_strings = split_path(p);
-	if (path_strings.empty())
+	std::error_code err;
+	auto status = stdfs::status(fp, err);
+	if (err) {
+		ATMA_HALT("OS-level error for filesystem");
 		return fs_path_ptr::null;
-
-	stdfs::path lp;
-	stdfs::path fp;
-	for (auto si = path_strings.begin(), sie = path_strings.end() - 1; si != path_strings.end(); ++si)
-	{
-		auto const& s = *si;
-
-		if (s == "/")
-		{
-			ATMA_ASSERT(si == path_strings.begin());
-			r = root_;
-			lp = "/";
-			fp = ".";
-		}
-		else
-		{
-			lp /= s.c_str();
-			fp /= s.c_str();
-			
-			if (auto r2 = cd(r, s))
-			{
-				r = r2;
-			}
-			else
-			{
-				auto type = s.raw_end()[-1] == '/' ? path_type_t::dir : path_type_t::file;
-				auto np = fs_path_ptr::make(shared_from_this<filesystem_t>(), r.get(), type, lp, fp);
-				r->children_.push_back(np);
-				r = np;
-			}
-		}
 	}
 
-	return r;
+	auto type = path_type_t::unknown;
+	switch (status.type())
+	{
+		case stdfs::file_type::directory:
+			type = path_type_t::dir;
+			break;
+
+		case stdfs::file_type::regular:
+			type = path_type_t::file;
+			break;
+
+		case stdfs::file_type::symlink:
+			type = path_type_t::symlink;
+			break;
+
+		default:
+			break;
+	}
+	
+	return fs_path_ptr::make(shared_from_this<filesystem_t>(), fsp.get(), type, lp, fp);
 }
 
+#if 0
 auto lion::physical_filesystem_t::internal_cd(fs_path_t* parent, stdfs::path const& path) -> fs_path_ptr
 {
 	ATMA_ASSERT(parent);
@@ -109,19 +146,8 @@ auto lion::physical_filesystem_t::internal_cd(fs_path_t* parent, stdfs::path con
 
 	return parent->shared_from_this<fs_path_t>();
 }
+#endif
 
-auto lion::fs_path_t::cd(stdfs::path const& p) -> fs_path_ptr
-{
-	auto tp = toplevel_dir(p);
-
-	for (auto const& x : children_)
-	{
-		if (tp.string() == x->logical_path_.filename().string())
-			return x->cd(remove_toplevel(p));
-	}
-
-	return fs_->internal_cd(this, p);
-}
 
 auto physical_filesystem_t::open(fs_path_ptr const& path, open_mask_t mask) -> stream_ptr
 {
@@ -131,7 +157,7 @@ auto physical_filesystem_t::open(fs_path_ptr const& path, open_mask_t mask) -> s
 	// a copy-on-write mmap (or something similar)
 	if ((mask & open_flags_t::read) || ((mask & open_flags_t::write) && (mask & open_flags_t::nonbacked)))
 	{
-		auto mmap = mmap_ptr::make(path->physical_path_.string());
+		auto mmap = mmap_ptr::make("lulz"); //path->physical_path().string());
 		return mmap_stream_ptr::make(mmap);
 	}
 	else
@@ -159,7 +185,7 @@ auto physical_filesystem_t::open(fs_path_ptr const& path, open_mask_t mask) -> s
 
 
 lion::fs_path_t::fs_path_t(filesystem_ptr const& fs, fs_path_t* parent, lion::path_type_t type, stdfs::path const& logical, stdfs::path const& physical)
-	: fs_(fs), parent_(parent), type_(type), logical_path_(logical), physical_path_(physical)
+	: fs_(fs), parent_(parent), type_(type)//, logical_path_(logical), physical_path_(physical)
 {
 
 }

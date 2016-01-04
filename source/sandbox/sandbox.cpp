@@ -123,20 +123,18 @@ application_t::application_t()
 	  * vs_debug = nullptr,
 	  * vs_voxel = nullptr;
 
-	LION_SCOPE_LOCK_ASSETS(
-		(h1, vs_basic),
-		(h2, vs_debug),
-		(h2, vs_debug));
+	//LION_SCOPE_LOCK_ASSETS(
+	//	(h1, vs_basic),
+	//	(h2, vs_debug),
+	//	(h2, vs_debug));
 
-	//lion::physical_filesystem_t fs;
-	//fs.generate_path("/dragon/elephant/giraffe/");
 	lion::vfs_t vfs;
 	auto fs = lion::physical_filesystem_ptr::make("./resources/published");
 	vfs.mount("/res", fs);
 
-	auto f = vfs.open("/res/shaders/vs_basic.hlsl");
+	//auto f = vfs.open("/res/shaders/vs_basic.hlsl");
 	//auto m = lion::read_all(f.cast_dynamic<lion::random_access_input_stream_t>());
-	auto m = lion::read_all(f);
+	//auto m = lion::read_all(f);
 	//auto f2 = ;
 
 	struct asset_pattern_t
@@ -145,8 +143,8 @@ application_t::application_t()
 		std::function<void()> callback;
 	};
 
-	std::regex R{"^vs_.+\\.hlsl"};
-	bool b = std::regex_match("vs_love.hlsl", R);
+	//std::regex R{"^vs_.+\\.hlsl"};
+	//bool b = std::regex_match("vs_love.hlsl", R);
 
 	//char buf[8000];
 	//auto r = f2->read(buf, 1200);

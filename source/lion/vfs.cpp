@@ -3,39 +3,100 @@
 #include <lion/file.hpp>
 
 #include <atma/algorithm.hpp>
+#include <atma/idxs.hpp>
 
 
 using namespace lion;
 using lion::vfs_t;
 
+auto is_logical_absolute(atma::string const& path) -> bool
+{
+	return !path.empty() && path.c_str()[0] == '/';
+}
 
 vfs_t::vfs_t()
+	: root_{"/"}
 {
-	root_ = fs_path_ptr::make(shared_from_this<filesystem_t>(), nullptr, path_type_t::dir, "/", stdfs::current_path());
 }
 
-auto vfs_t::mount(stdfs::path const& logical_path, filesystem_ptr const& fs) -> void
+auto vfs_t::mount(atma::string const& logical_path, filesystem_ptr const& fs) -> void
 {
-	ATMA_ASSERT(logical_path.is_absolute());
+	ATMA_ASSERT(is_logical_absolute(logical_path));
 
-	fs_path_ptr lp;
+	mount_node_t* m = nullptr;
 
-	if (auto lp = logical_cd(logical_path))
+	for (auto const& x : path_split_range(logical_path))
 	{
-		lp->fs_ = fs;
-		lp->physical_path_ = fs->working_dir();
+		if (x == "/")
+		{
+			m = &root_;
+		}
+		else if (x == "../")
+		{
+			ATMA_HALT("no relative paths for mounting");
+		}
+		else
+		{
+			auto it = std::find_if(m->children.begin(), m->children.end(), [&x](mount_node_t const& c) {
+				return c.name == x;
+			});
+
+			if (it != m->children.end())
+				m = &*it;
+			else {
+				m->children.push_back({x});
+				m = &m->children.back();
+			}
+		}
 	}
+
+	if (m)
+		m->filesystem = fs;
 }
 
-auto vfs_t::open(stdfs::path const& logical_path) -> stream_ptr
+auto vfs_t::open(atma::string const& path) -> stream_ptr
 {
-	ATMA_ASSERT(logical_path.is_absolute());
+	ATMA_ASSERT(is_logical_absolute(path));
 
-	auto lp = logical_cd(logical_path);
+	mount_node_t* m = nullptr;
 
-	return lp->fs_->open(lp, open_mask_t{open_flags_t::read});
+	atma::string fp;
+	auto r = path_split_range(path);
+	for (auto pi = r.begin(); pi != r.end(); ++pi)
+	{
+		auto const& x = *pi;
+
+		if (x == "/")
+		{
+			m = &root_;
+		}
+		else if (x == "../")
+		{
+			ATMA_HALT("no relative paths for the VFS");
+		}
+		else
+		{
+			auto it = std::find_if(m->children.begin(), m->children.end(), [&x](mount_node_t const& c) {
+				return c.name == x;
+			});
+
+			if (it != m->children.end())
+				m = &*it;
+			else
+			{
+				
+				for ( ; pi != r.end(); ++pi)
+					fp.append(pi->begin(), pi->end());
+				break;
+			}
+		}
+	}
+
+	if (m && m->filesystem)
+		return m->filesystem->open(fp, lion::open_flags_t::read);
 }
 
+#if 0
 auto vfs_t::cd(fs_path_t* parent, stdfs::path const& path) -> fs_path_ptr
 {
 	ATMA_ASSERT(parent);
@@ -63,3 +124,4 @@ auto vfs_t::logical_cd(stdfs::path const& logical_path) -> fs_path_ptr
 	else
 		return root_->cd(logical_path);
 }
+#endif
