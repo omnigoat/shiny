@@ -45,7 +45,7 @@ namespace lion
 
 		auto cd(fs_path_ptr const&, atma::string const&) -> fs_path_ptr const&;
 		virtual auto cd(atma::string const& path) -> fs_path_ptr { return cd(root_path(), path); }
-		virtual auto open(fs_path_ptr const&, open_mask_t) -> stream_ptr { return stream_ptr::null; }
+		virtual auto open(atma::string const&, open_mask_t) -> stream_ptr { return stream_ptr::null; }
 
 	protected:
 		// subdirectory
@@ -84,7 +84,7 @@ namespace lion
 		auto physical_path() const -> stdfs::path const& override { return physical_path_; }
 		auto root_path() const -> fs_path_ptr const& override { return root_; }
 
-		auto open(fs_path_ptr const&, open_mask_t) -> stream_ptr override;
+		auto open(atma::string const&, open_mask_t) -> stream_ptr override;
 
 	private:
 		auto impl_subpath(fs_path_ptr const&, char const*) -> fs_path_ptr override;

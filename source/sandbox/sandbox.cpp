@@ -130,12 +130,12 @@ application_t::application_t()
 
 	lion::vfs_t vfs;
 	auto fs = lion::physical_filesystem_ptr::make("./resources/published");
-	vfs.mount("/res", fs);
+	vfs.mount("/res/", fs);
 
-	//auto f = vfs.open("/res/shaders/vs_basic.hlsl");
-	//auto m = lion::read_all(f.cast_dynamic<lion::random_access_input_stream_t>());
-	//auto m = lion::read_all(f);
-	//auto f2 = ;
+	auto f = vfs.open("/res/shaders/vs_basic.hlsl");
+	auto m = lion::read_all(f);
+	//std::cout << (char*)m.begin() << std::endl;
+	printf("%.*s", (int)m.size(), m.begin());
 
 	struct asset_pattern_t
 	{

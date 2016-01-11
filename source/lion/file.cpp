@@ -81,7 +81,7 @@ auto lion::filesystem_t::cd(fs_path_ptr const& fsp, atma::string const& p) -> fs
 lion::physical_filesystem_t::physical_filesystem_t(stdfs::path const& pp)
 	: physical_path_(pp)
 {
-	ATMA_ASSERT(stdfs::exists(physical_path_));
+	//ATMA_ASSERT(stdfs::exists(physical_path_));
 }
 
 auto lion::physical_filesystem_t::impl_subpath(fs_path_ptr const& fsp, char const* name) -> fs_path_ptr
@@ -149,7 +149,7 @@ auto lion::physical_filesystem_t::internal_cd(fs_path_t* parent, stdfs::path con
 #endif
 
 
-auto physical_filesystem_t::open(fs_path_ptr const& path, open_mask_t mask) -> stream_ptr
+auto physical_filesystem_t::open(atma::string const& path, open_mask_t mask) -> stream_ptr
 {
 	// we can use a mmap for most cases, except where we need to write to a file
 	// if we want to mutate the contents of a file, but don't care about having those
@@ -157,7 +157,7 @@ auto physical_filesystem_t::open(fs_path_ptr const& path, open_mask_t mask) -> s
 	// a copy-on-write mmap (or something similar)
 	if ((mask & open_flags_t::read) || ((mask & open_flags_t::write) && (mask & open_flags_t::nonbacked)))
 	{
-		auto mmap = mmap_ptr::make("lulz"); //path->physical_path().string());
+		auto mmap = mmap_ptr::make(physical_path_/path.c_str());
 		return mmap_stream_ptr::make(mmap);
 	}
 	else

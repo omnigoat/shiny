@@ -5,9 +5,12 @@
 #include <atma/algorithm.hpp>
 #include <atma/idxs.hpp>
 
+#include <regex>
 
 using namespace lion;
 using lion::vfs_t;
+
+static std::regex logical_path_regex{"/(\\w+/)+"};
 
 auto is_logical_absolute(atma::string const& path) -> bool
 {
@@ -19,13 +22,18 @@ vfs_t::vfs_t()
 {
 }
 
-auto vfs_t::mount(atma::string const& logical_path, filesystem_ptr const& fs) -> void
+auto path_is_valid_logical_path(atma::string const& path) -> bool
 {
-	ATMA_ASSERT(is_logical_absolute(logical_path));
+	return std::regex_match(path.c_str(), logical_path_regex);
+}
+
+auto vfs_t::mount(atma::string const& path, filesystem_ptr const& fs) -> void
+{
+	ATMA_ASSERT(path_is_valid_logical_path(path));
 
 	mount_node_t* m = nullptr;
 
-	for (auto const& x : path_split_range(logical_path))
+	for (auto const& x : path_split_range(path))
 	{
 		if (x == "/")
 		{
@@ -53,6 +61,7 @@ auto vfs_t::mount(atma::string const& logical_path, filesystem_ptr const& fs) ->
 	if (m)
 		m->filesystem = fs;
 }
+
 
 auto vfs_t::open(atma::string const& path) -> stream_ptr
 {
@@ -86,14 +95,16 @@ auto vfs_t::open(atma::string const& path) -> stream_ptr
 			{
 				
 				for ( ; pi != r.end(); ++pi)
-					fp.append(pi->begin(), pi->end());
+					fp = fp + atma::string(pi->begin(), pi->end());
 				break;
 			}
 		}
 	}
 
 	if (m && m->filesystem)
-		return m->filesystem->open(fp, lion::open_flags_t::read);
+		return m->filesystem->open(fp.c_str(), lion::open_flags_t::read);
+
+	return stream_ptr::null;
 }
 
 #if 0
@@ -117,11 +128,11 @@ auto vfs_t::cd(fs_path_t* parent, stdfs::path const& path) -> fs_path_ptr
 	return parent->shared_from_this<fs_path_t>();
 }
 
-auto vfs_t::logical_cd(stdfs::path const& logical_path) -> fs_path_ptr
+auto vfs_t::logical_cd(stdfs::path const& path) -> fs_path_ptr
 {
-	if (logical_path.empty())
+	if (path.empty())
 		return fs_path_ptr::null;
 	else
-		return root_->cd(logical_path);
+		return root_->cd(path);
 }
 #endif
