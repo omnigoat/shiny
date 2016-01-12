@@ -86,13 +86,6 @@ private:
 
 namespace lion
 {
-	struct asset_t
-	{
-		virtual ~asset_t() {}
-	};
-
-	using asset_ptr = atma::intrusive_ptr<asset_t>;
-
 	struct asset_storage_t
 	{
 		//asset_ptr current;

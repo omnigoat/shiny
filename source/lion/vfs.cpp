@@ -10,21 +10,20 @@
 using namespace lion;
 using lion::vfs_t;
 
-static std::regex logical_path_regex{"/(\\w+/)+"};
-
-auto is_logical_absolute(atma::string const& path) -> bool
+namespace
 {
-	return !path.empty() && path.c_str()[0] == '/';
+	std::regex logical_path_regex{"/([ a-zA-Z0-9_.]+/)+([ a-zA-Z0-9_.]+)?"};
+
+	auto path_is_valid_logical_path(atma::string const& path) -> bool
+	{
+		return std::regex_match(path.c_str(), logical_path_regex);
+	}
 }
+
 
 vfs_t::vfs_t()
 	: root_{"/"}
 {
-}
-
-auto path_is_valid_logical_path(atma::string const& path) -> bool
-{
-	return std::regex_match(path.c_str(), logical_path_regex);
 }
 
 auto vfs_t::mount(atma::string const& path, filesystem_ptr const& fs) -> void
@@ -39,18 +38,15 @@ auto vfs_t::mount(atma::string const& path, filesystem_ptr const& fs) -> void
 		{
 			m = &root_;
 		}
-		else if (x == "../")
-		{
-			ATMA_HALT("no relative paths for mounting");
-		}
 		else
 		{
 			auto it = std::find_if(m->children.begin(), m->children.end(), [&x](mount_node_t const& c) {
 				return c.name == x;
 			});
 
-			if (it != m->children.end())
+			if (it != m->children.end()) {
 				m = &*it;
+			}
 			else {
 				m->children.push_back({x});
 				m = &m->children.back();
@@ -65,7 +61,7 @@ auto vfs_t::mount(atma::string const& path, filesystem_ptr const& fs) -> void
 
 auto vfs_t::open(atma::string const& path) -> stream_ptr
 {
-	ATMA_ASSERT(is_logical_absolute(path));
+	ATMA_ASSERT(path_is_valid_logical_path(path));
 
 	mount_node_t* m = nullptr;
 
@@ -79,23 +75,17 @@ auto vfs_t::open(atma::string const& path) -> stream_ptr
 		{
 			m = &root_;
 		}
-		else if (x == "../")
-		{
-			ATMA_HALT("no relative paths for the VFS");
-		}
 		else
 		{
 			auto it = std::find_if(m->children.begin(), m->children.end(), [&x](mount_node_t const& c) {
 				return c.name == x;
 			});
 
-			if (it != m->children.end())
+			if (it != m->children.end()) {
 				m = &*it;
-			else
-			{
-				
-				for ( ; pi != r.end(); ++pi)
-					fp = fp + atma::string(pi->begin(), pi->end());
+			}
+			else {
+				atma::for_each(pi, r.end(), atma::utf8_appender_t{fp});
 				break;
 			}
 		}

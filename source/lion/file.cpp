@@ -23,16 +23,15 @@ auto toplevel_dir(stdfs::path const& p) -> stdfs::path
 
 
 
-auto lion::filesystem_t::cd(fs_path_ptr const& fsp, atma::string const& p) -> fs_path_ptr const&
+auto lion::filesystem_t::cd(fs_path_ptr const& fsp, atma::string const& p) -> fs_path_ptr
 {
-	fs_path_t* r = &*fsp;
-#if 0
+	fs_path_t* r = root_path().get();
 
 	for (auto const& x : path_split_range(p))
 	{
 		if (x == "/")
 		{
-			r = &*root_path();
+			r = root_path().get();
 		}
 		else if (x == "../")
 		{
@@ -44,35 +43,27 @@ auto lion::filesystem_t::cd(fs_path_ptr const& fsp, atma::string const& p) -> fs
 			for (auto const& child : fsp->children_)
 			{
 				if (child->leaf() == x) {
-					bound = true;
-					r = &*child;
+					found = true;
+					r = child.get();
 					break;
 				}
 			}
 
 			if (!found)
 			{
-
+				if (auto c = impl_subpath(r->shared_from_this<fs_path_t>(), atma::string{x}.c_str()))
+				{
+					r->children_.push_back(c);
+					r = r->children_.back().get();
+				}
 			}
 		}
 	}
-#endif // 0
 
-
-#if 0
-	
-
-	auto* r = &fsp;
-	for (auto leaf : path_split_range(p))
-	{
-		auto sub = (*r)->filesystem()->impl_subpath(*r, name.u8string().c_str());
-		(*r)->children_.push_back(sub);
-		r = &(*r)->children_.back();
-	}
-
-	return *r;
-#endif
-	return fs_path_ptr::null;
+	if (r)
+		return r->shared_from_this<fs_path_t>();
+	else
+		return fs_path_ptr::null;
 }
 
 
@@ -81,13 +72,17 @@ auto lion::filesystem_t::cd(fs_path_ptr const& fsp, atma::string const& p) -> fs
 lion::physical_filesystem_t::physical_filesystem_t(stdfs::path const& pp)
 	: physical_path_(pp)
 {
-	//ATMA_ASSERT(stdfs::exists(physical_path_));
+	ATMA_ASSERT(stdfs::exists(physical_path_));
+
+	root_ = fs_path_ptr::make(shared_from_this<filesystem_t>(), nullptr, path_type_t::dir, pp, pp);
 }
 
 auto lion::physical_filesystem_t::impl_subpath(fs_path_ptr const& fsp, char const* name) -> fs_path_ptr
 {
-	stdfs::path lp;// = fsp->logical_path() / name;
-	stdfs::path fp;// = fsp->physical_path() / name;
+	ATMA_ASSERT(fsp);
+	ATMA_ASSERT(fsp->path_type() == path_type_t::dir);
+
+	auto fp = stdfs::path{fsp->path_string().c_str()} / name;
 
 	std::error_code err;
 	auto status = stdfs::status(fp, err);
@@ -115,7 +110,7 @@ auto lion::physical_filesystem_t::impl_subpath(fs_path_ptr const& fsp, char cons
 			break;
 	}
 	
-	return fs_path_ptr::make(shared_from_this<filesystem_t>(), fsp.get(), type, lp, fp);
+	return fs_path_ptr::make(shared_from_this<filesystem_t>(), fsp.get(), type, fp, fp);
 }
 
 #if 0
@@ -151,7 +146,12 @@ auto lion::physical_filesystem_t::internal_cd(fs_path_t* parent, stdfs::path con
 
 auto physical_filesystem_t::open(atma::string const& path, open_mask_t mask) -> stream_ptr
 {
-	// we can use a mmap for most cases, except where we need to write to a file
+	auto fsp = cd(root_, path);
+
+	if (fsp->stream())
+		return fsp->stream();
+
+	// we can use a mmap for most cases, except where we need to write to a file.
 	// if we want to mutate the contents of a file, but don't care about having those
 	// changes actually written to disk, then we can use 'nonbacked', which will create
 	// a copy-on-write mmap (or something similar)
@@ -185,10 +185,28 @@ auto physical_filesystem_t::open(atma::string const& path, open_mask_t mask) -> 
 
 
 lion::fs_path_t::fs_path_t(filesystem_ptr const& fs, fs_path_t* parent, lion::path_type_t type, stdfs::path const& logical, stdfs::path const& physical)
-	: fs_(fs), parent_(parent), type_(type)//, logical_path_(logical), physical_path_(physical)
+	: fs_(fs), parent_(parent), type_(type), leaf_(physical.u8string().c_str())
 {
 
 }
+
+auto lion::fs_path_t::path_string() const -> atma::string
+{
+	atma::string r;
+	path_string_impl(r);
+	return r;
+}
+
+auto lion::fs_path_t::path_string_impl(atma::string& dest) const -> void
+{
+	if (parent_)
+		parent_->path_string_impl(dest);
+	dest.append(leaf_);
+}
+
+
+
+
 
 file_t::file_t()
 	: filename_()
