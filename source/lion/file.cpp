@@ -1,6 +1,5 @@
 #include <lion/file.hpp>
 
-#include <lion/vfs.hpp>
 #include <lion/mmap.hpp>
 
 #include <atma/algorithm.hpp>

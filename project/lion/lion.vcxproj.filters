@@ -17,9 +17,6 @@
     <ClInclude Include="..\..\include\lion\streams.hpp">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\lion\vfs.hpp">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\lion\mmap.hpp">
       <Filter>include</Filter>
     </ClInclude>
@@ -32,9 +29,6 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\lion\mmap.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\source\lion\vfs.cpp">
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\lion\streams.cpp">
