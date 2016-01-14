@@ -26,9 +26,9 @@ vfs_t::vfs_t()
 {
 }
 
-auto vfs_t::mount(atma::string const& path, filesystem_ptr const& fs) -> void
+auto vfs_t::mount(path_t const& path, filesystem_ptr const& fs) -> void
 {
-	ATMA_ASSERT(path_is_valid_logical_path(path));
+	ATMA_ASSERT(path_is_valid_logical_path(path.string()));
 
 	mount_node_t* m = nullptr;
 
@@ -59,9 +59,9 @@ auto vfs_t::mount(atma::string const& path, filesystem_ptr const& fs) -> void
 }
 
 
-auto vfs_t::open(atma::string const& path) -> stream_ptr
+auto vfs_t::open(path_t const& path) -> stream_ptr
 {
-	ATMA_ASSERT(path_is_valid_logical_path(path));
+	ATMA_ASSERT(path_is_valid_logical_path(path.string()));
 
 	mount_node_t* m = nullptr;
 
@@ -92,37 +92,7 @@ auto vfs_t::open(atma::string const& path) -> stream_ptr
 	}
 
 	if (m && m->filesystem)
-		return m->filesystem->open(fp.c_str(), lion::open_flags_t::read);
+		return m->filesystem->open(fp, lion::open_flags_t::read);
 
 	return stream_ptr::null;
 }
-
-#if 0
-auto vfs_t::cd(fs_path_t* parent, stdfs::path const& path) -> fs_path_ptr
-{
-	ATMA_ASSERT(parent);
-
-	auto lp = parent->logical_path_;
-	auto pp = stdfs::path{};
-
-	for (auto leaf : path)
-	{
-		lp /= leaf;
-
-		auto child = fs_path_ptr::make(shared_from_this<filesystem_t>(), parent, path_type_t::dir, lp, pp);
-
-		parent->children_.push_back(child);
-		parent = parent->children_.back().get();
-	}
-
-	return parent->shared_from_this<fs_path_t>();
-}
-
-auto vfs_t::logical_cd(stdfs::path const& path) -> fs_path_ptr
-{
-	if (path.empty())
-		return fs_path_ptr::null;
-	else
-		return root_->cd(path);
-}
-#endif

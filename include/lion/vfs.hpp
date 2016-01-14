@@ -18,6 +18,77 @@ namespace lion
 	};
 
 	using asset_ptr = atma::intrusive_ptr<asset_t>;
+}
+
+
+
+
+namespace lion
+{
+	struct path_t
+	{
+		path_t() {}
+		path_t(atma::string const& x) : string_{x} {}
+		path_t(char const* x) : string_{x} {}
+		path_t(atma::string&& x) : string_{x} {}
+
+		auto operator /= (atma::string const&) -> path_t&;
+
+		auto string() const -> atma::string const& { return string_; }
+		auto c_str() const -> char const* { return string_.c_str(); }
+
+		operator stdfs::path() const { return stdfs::path{string_.c_str()}; }
+
+	private:
+		atma::string string_;
+	};
+
+	inline auto path_t::operator /= (atma::string const& rhs) -> path_t&
+	{
+		if (!string_.empty() && *--string_.end() != '/')
+			string_.push_back('/');
+		string_.append(rhs);
+		return *this;
+	}
+
+	inline auto operator == (path_t const& lhs, path_t const& rhs) -> bool
+	{
+		return lhs.string() == rhs.string();
+	}
+
+	inline auto operator != (path_t const& lhs, path_t const& rhs) -> bool
+	{
+		return !operator == (lhs, rhs);
+	}
+
+	inline auto operator / (path_t const& lhs, path_t const& rhs) -> path_t
+	{
+		return path_t{lhs.string() + "/" + rhs.string()};
+	}
+
+	inline auto operator / (path_t const& lhs, atma::string const& rhs) -> path_t
+	{
+		return path_t{lhs.string() + "/" + rhs};
+	}
+
+	inline auto operator / (path_t const& lhs, char const* rhs) -> path_t
+	{
+		return path_t{lhs.string() + "/" + rhs};
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 	enum class path_type_t
 	{
@@ -50,16 +121,16 @@ namespace lion
 		auto path_type() const -> path_type_t { return type_; }
 		auto leaf() const -> atma::string const& { return leaf_; }
 
-		auto path_string() const -> atma::string;
+		auto path() const -> path_t const& { return path_; }
 		auto stream() const -> stream_ptr const& { return stream_; }
 		auto asset() const -> asset_ptr const& { return asset_; }
 
 		auto set_filesystem(filesystem_ptr const& fs) -> void { fs_ = fs; }
 
 	private:
-		fs_path_t(filesystem_ptr const&, fs_path_t* parent, path_type_t, stdfs::path const& logical, stdfs::path const& physical);
+		fs_path_t(filesystem_ptr const&, fs_path_t* parent, path_type_t, atma::string const& pathleaf);
 
-		auto path_string_impl(atma::string&) const -> void;
+		auto mk_path(path_t&) const -> void;
 
 	private:
 		atma::string vfs_path_;
@@ -68,6 +139,7 @@ namespace lion
 		children_t children_;
 
 		path_type_t type_;
+		path_t path_;
 		atma::string leaf_;
 
 		stream_ptr stream_;
@@ -111,12 +183,12 @@ namespace lion
 	//
 	struct filesystem_t : atma::ref_counted
 	{
-		virtual auto physical_path() const -> stdfs::path const& = 0;
+		virtual auto physical_path() const -> path_t const& = 0;
 		virtual auto root_path() const -> fs_path_ptr const& = 0;
 
 		auto cd(fs_path_ptr const&, atma::string const&) -> fs_path_ptr;
 		virtual auto cd(atma::string const& path) -> fs_path_ptr { return cd(root_path(), path); }
-		virtual auto open(atma::string const&, open_mask_t) -> stream_ptr { return stream_ptr::null; }
+		virtual auto open(path_t const&, open_mask_t) -> stream_ptr { return stream_ptr::null; }
 
 	protected:
 		// returns a fs_path_ptr to a 
@@ -133,18 +205,18 @@ namespace lion
 	//
 	struct physical_filesystem_t : filesystem_t
 	{
-		physical_filesystem_t(stdfs::path const&);
+		physical_filesystem_t(atma::string const&);
 
-		auto physical_path() const -> stdfs::path const& override { return physical_path_; }
+		auto physical_path() const -> path_t const& override { return physical_path_; }
 		auto root_path() const -> fs_path_ptr const& override { return root_; }
 
-		auto open(atma::string const&, open_mask_t) -> stream_ptr override;
+		auto open(path_t const&, open_mask_t) -> stream_ptr override;
 
 	private:
 		auto impl_subpath(fs_path_ptr const&, char const*) -> fs_path_ptr override;
 
 	private:
-		stdfs::path physical_path_;
+		path_t physical_path_;
 		fs_path_ptr root_;
 	};
 
@@ -224,15 +296,20 @@ namespace lion
 		return path_range_t{p.c_str(), p.raw_size()};
 	}
 	
+	inline auto path_split_range(path_t const& p) -> path_range_t
+	{
+		return path_split_range(p.string());
+	}
+
 	// 
 	struct vfs_t
 	{
 		vfs_t();
 
-		auto mount(atma::string const&, filesystem_ptr const&) -> void;
+		auto mount(path_t const&, filesystem_ptr const&) -> void;
 
-		auto open(atma::string const&) -> stream_ptr;
-		auto open(atma::string const&, open_mask_t) -> stream_ptr;
+		auto open(path_t const&) -> stream_ptr;
+		auto open(path_t const&, open_mask_t) -> stream_ptr;
 
 	private:
 		struct mount_node_t

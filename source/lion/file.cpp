@@ -69,12 +69,12 @@ auto lion::filesystem_t::cd(fs_path_ptr const& fsp, atma::string const& p) -> fs
 
 
 
-lion::physical_filesystem_t::physical_filesystem_t(stdfs::path const& pp)
-	: physical_path_(pp)
+lion::physical_filesystem_t::physical_filesystem_t(atma::string const& path)
+	: physical_path_(path)
 {
-	ATMA_ASSERT(stdfs::exists(physical_path_));
+	ATMA_ASSERT(stdfs::exists(physical_path_.c_str()));
 
-	root_ = fs_path_ptr::make(shared_from_this<filesystem_t>(), nullptr, path_type_t::dir, pp, pp);
+	root_ = fs_path_ptr::make(shared_from_this<filesystem_t>(), nullptr, path_type_t::dir, path);
 }
 
 auto lion::physical_filesystem_t::impl_subpath(fs_path_ptr const& fsp, char const* name) -> fs_path_ptr
@@ -82,7 +82,7 @@ auto lion::physical_filesystem_t::impl_subpath(fs_path_ptr const& fsp, char cons
 	ATMA_ASSERT(fsp);
 	ATMA_ASSERT(fsp->path_type() == path_type_t::dir);
 
-	auto fp = stdfs::path{fsp->path_string().c_str()} / name;
+	auto fp = stdfs::path{fsp->path() / name};
 
 	std::error_code err;
 	auto status = stdfs::status(fp, err);
@@ -110,7 +110,7 @@ auto lion::physical_filesystem_t::impl_subpath(fs_path_ptr const& fsp, char cons
 			break;
 	}
 	
-	return fs_path_ptr::make(shared_from_this<filesystem_t>(), fsp.get(), type, fp, fp);
+	return fs_path_ptr::make(shared_from_this<filesystem_t>(), fsp.get(), type, name);
 }
 
 #if 0
@@ -144,9 +144,9 @@ auto lion::physical_filesystem_t::internal_cd(fs_path_t* parent, stdfs::path con
 #endif
 
 
-auto physical_filesystem_t::open(atma::string const& path, open_mask_t mask) -> stream_ptr
+auto physical_filesystem_t::open(path_t const& path, open_mask_t mask) -> stream_ptr
 {
-	auto fsp = cd(root_, path);
+	auto fsp = cd(root_, path.string());
 
 	if (fsp->stream())
 		return fsp->stream();
@@ -157,7 +157,7 @@ auto physical_filesystem_t::open(atma::string const& path, open_mask_t mask) -> 
 	// a copy-on-write mmap (or something similar)
 	if ((mask & open_flags_t::read) || ((mask & open_flags_t::write) && (mask & open_flags_t::nonbacked)))
 	{
-		auto mmap = mmap_ptr::make(physical_path_/path.c_str());
+		auto mmap = mmap_ptr::make(fsp->path());
 		return mmap_stream_ptr::make(mmap);
 	}
 	else
@@ -184,24 +184,17 @@ auto physical_filesystem_t::open(atma::string const& path, open_mask_t mask) -> 
 
 
 
-lion::fs_path_t::fs_path_t(filesystem_ptr const& fs, fs_path_t* parent, lion::path_type_t type, stdfs::path const& logical, stdfs::path const& physical)
-	: fs_(fs), parent_(parent), type_(type), leaf_(physical.u8string().c_str())
+lion::fs_path_t::fs_path_t(filesystem_ptr const& fs, fs_path_t* parent, lion::path_type_t type, atma::string const& pathleaf)
+	: fs_(fs), parent_(parent), type_(type), leaf_(pathleaf)
 {
-
+	mk_path(path_);
 }
 
-auto lion::fs_path_t::path_string() const -> atma::string
-{
-	atma::string r;
-	path_string_impl(r);
-	return r;
-}
-
-auto lion::fs_path_t::path_string_impl(atma::string& dest) const -> void
+auto lion::fs_path_t::mk_path(path_t& dest) const -> void
 {
 	if (parent_)
-		parent_->path_string_impl(dest);
-	dest.append(leaf_);
+		parent_->mk_path(dest);
+	dest /= leaf_;
 }
 
 
