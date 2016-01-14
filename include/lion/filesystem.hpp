@@ -1,5 +1,6 @@
 #pragma once
 
+
 #include <lion/streams.hpp>
 
 #include <atma/intrusive_ptr.hpp>
@@ -11,18 +12,10 @@
 
 namespace stdfs = std::experimental::filesystem;
 
-namespace lion
-{
-	struct asset_t : atma::ref_counted
-	{
-	};
 
-	using asset_ptr = atma::intrusive_ptr<asset_t>;
-}
-
-
-
-
+//=====================================================================
+// path_t
+//=====================================================================
 namespace lion
 {
 	struct path_t
@@ -77,152 +70,6 @@ namespace lion
 	}
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-	enum class path_type_t
-	{
-		unknown,
-		dir,
-		file,
-		symlink
-	};
-
-
-	struct fs_path_t;
-	using  fs_path_ptr = atma::intrusive_ptr<fs_path_t>;
-
-	struct filesystem_t;
-	using filesystem_ptr = atma::intrusive_ptr<filesystem_t>;
-
-
-	//
-	// fs_path_t
-	//  - unique per VFS (so if two filesystems have identical directory structure, thus
-	//    returning two fs_path_t of same layout, they will still be differentiated)
-	//
-	struct fs_path_t : atma::ref_counted
-	{
-		using children_t = atma::vector<fs_path_ptr>;
-
-		auto filesystem() const -> filesystem_ptr const& { return fs_; }
-		auto parent() const -> fs_path_t* { return parent_; }
-		auto children() const -> children_t const& { return children_; }
-		auto path_type() const -> path_type_t { return type_; }
-		auto leaf() const -> atma::string const& { return leaf_; }
-
-		auto path() const -> path_t const& { return path_; }
-		auto stream() const -> stream_ptr const& { return stream_; }
-		auto asset() const -> asset_ptr const& { return asset_; }
-
-		auto set_filesystem(filesystem_ptr const& fs) -> void { fs_ = fs; }
-
-	private:
-		fs_path_t(filesystem_ptr const&, fs_path_t* parent, path_type_t, atma::string const& pathleaf);
-
-		auto mk_path(path_t&) const -> void;
-
-	private:
-		atma::string vfs_path_;
-		filesystem_ptr fs_;
-		fs_path_t* parent_;
-		children_t children_;
-
-		path_type_t type_;
-		path_t path_;
-		atma::string leaf_;
-
-		stream_ptr stream_;
-		asset_ptr asset_;
-
-		friend struct filesystem_t;
-		friend struct atma::intrusive_ptr_expose_constructor;
-	};
-
-	
-
-#if 0
-	inline auto operator == (fs_path_t const& lhs, fs_path_t const& rhs) -> bool
-	{
-		//return lhs.to_string() == rhs.to_string();
-		return true;
-	}
-
-	inline auto operator != (fs_path_t const& lhs, fs_path_t const& rhs) -> bool
-	{
-		return !operator == (lhs, rhs);
-	}
-#endif
-
-
-
-
-	enum class open_flags_t
-	{
-		read,
-		write,
-		exclusive,
-		nonbacked,
-	};
-
-	ATMA_BITMASK(open_mask_t, open_flags_t);
-
-
-	//
-	// filesystem_t
-	//
-	struct filesystem_t : atma::ref_counted
-	{
-		virtual auto physical_path() const -> path_t const& = 0;
-		virtual auto root_path() const -> fs_path_ptr const& = 0;
-
-		auto cd(fs_path_ptr const&, atma::string const&) -> fs_path_ptr;
-		virtual auto cd(atma::string const& path) -> fs_path_ptr { return cd(root_path(), path); }
-		virtual auto open(path_t const&, open_mask_t) -> stream_ptr { return stream_ptr::null; }
-
-	protected:
-		// returns a fs_path_ptr to a 
-		virtual auto impl_subpath(fs_path_ptr const&, char const*) -> fs_path_ptr { return fs_path_ptr::null; }
-
-	private:
-		friend struct fs_path_t;
-	};
-
-
-
-	//
-	// physical_filesystem_t
-	//
-	struct physical_filesystem_t : filesystem_t
-	{
-		physical_filesystem_t(atma::string const&);
-
-		auto physical_path() const -> path_t const& override { return physical_path_; }
-		auto root_path() const -> fs_path_ptr const& override { return root_; }
-
-		auto open(path_t const&, open_mask_t) -> stream_ptr override;
-
-	private:
-		auto impl_subpath(fs_path_ptr const&, char const*) -> fs_path_ptr override;
-
-	private:
-		path_t physical_path_;
-		fs_path_ptr root_;
-	};
-
-	using physical_filesystem_ptr = atma::intrusive_ptr<physical_filesystem_t>;
-
-	
 
 
 
@@ -295,13 +142,148 @@ namespace lion
 	{
 		return path_range_t{p.c_str(), p.raw_size()};
 	}
-	
+
 	inline auto path_split_range(path_t const& p) -> path_range_t
 	{
 		return path_split_range(p.string());
 	}
+}
 
-	// 
+
+
+
+//=====================================================================
+// fs_path_t
+//=====================================================================
+namespace lion
+{
+	enum class path_type_t
+	{
+		unknown,
+		dir,
+		file,
+		symlink
+	};
+
+
+	struct fs_path_t;
+	using  fs_path_ptr = atma::intrusive_ptr<fs_path_t>;
+
+	struct filesystem_t;
+	using  filesystem_ptr = atma::intrusive_ptr<filesystem_t>;
+
+	//struct asset_t;
+	//using  asset_ptr = atma::intrusive_ptr<asset_t>;
+
+
+	struct fs_path_t : atma::ref_counted
+	{
+		using children_t = atma::vector<fs_path_ptr>;
+
+		auto filesystem() const -> filesystem_ptr const& { return fs_; }
+		auto parent() const -> fs_path_t* { return parent_; }
+		auto children() const -> children_t const& { return children_; }
+		auto path_type() const -> path_type_t { return type_; }
+		auto leaf() const -> atma::string const& { return leaf_; }
+
+		auto path() const -> path_t const& { return path_; }
+		auto stream() const -> stream_ptr const& { return stream_; }
+		//auto asset() const -> asset_ptr const& { return asset_; }
+
+	private:
+		fs_path_t(filesystem_ptr const&, fs_path_t* parent, path_type_t, atma::string const& pathleaf);
+
+		auto mk_path(path_t&) const -> void;
+
+	private:
+		filesystem_ptr fs_;
+		fs_path_t* parent_;
+		children_t children_;
+
+		path_type_t type_;
+		path_t path_;
+		atma::string leaf_;
+
+		stream_ptr stream_;
+		//asset_ptr asset_;
+
+		friend struct filesystem_t;
+		friend struct atma::intrusive_ptr_expose_constructor;
+	};
+
+}
+
+
+
+
+//=====================================================================
+// filesystem_t
+//=====================================================================
+namespace lion
+{
+
+	enum class open_flags_t
+	{
+		read,
+		write,
+		exclusive,
+		nonbacked,
+	};
+
+	ATMA_BITMASK(open_mask_t, open_flags_t);
+
+
+	//
+	// filesystem_t
+	//
+	struct filesystem_t : atma::ref_counted
+	{
+		virtual auto physical_path() const -> path_t const& = 0;
+		virtual auto root_path() const -> fs_path_ptr const& = 0;
+
+		auto cd(fs_path_ptr const&, atma::string const&) -> fs_path_ptr;
+		virtual auto cd(atma::string const& path) -> fs_path_ptr { return cd(root_path(), path); }
+		virtual auto open(path_t const&, open_mask_t) -> stream_ptr { return stream_ptr::null; }
+
+	protected:
+		// returns a fs_path_ptr to a 
+		virtual auto impl_subpath(fs_path_ptr const&, char const*) -> fs_path_ptr { return fs_path_ptr::null; }
+
+	private:
+		friend struct fs_path_t;
+	};
+
+
+
+
+	//
+	// physical_filesystem_t
+	//
+	struct physical_filesystem_t : filesystem_t
+	{
+		physical_filesystem_t(atma::string const&);
+
+		auto physical_path() const -> path_t const& override { return physical_path_; }
+		auto root_path() const -> fs_path_ptr const& override { return root_; }
+
+		auto open(path_t const&, open_mask_t) -> stream_ptr override;
+
+	private:
+		auto impl_subpath(fs_path_ptr const&, char const*) -> fs_path_ptr override;
+
+	private:
+		path_t physical_path_;
+		fs_path_ptr root_;
+	};
+
+	using physical_filesystem_ptr = atma::intrusive_ptr<physical_filesystem_t>;
+
+	
+
+
+	//
+	// vfs_t
+	//
 	struct vfs_t
 	{
 		vfs_t();
@@ -325,4 +307,5 @@ namespace lion
 	private:
 		mount_node_t root_;
 	};
+
 }

@@ -18,8 +18,7 @@
 #include <shiny/generic_buffer.hpp>
 #include <shiny/draw_target.hpp>
 
-//#include <lion/file.hpp>
-#include <lion/vfs.hpp>
+#include <lion/filesystem.hpp>
 
 #include <pepper/freelook_camera_controller.hpp>
 
@@ -86,6 +85,8 @@ private:
 
 namespace lion
 {
+	struct asset_t {};
+
 	struct asset_storage_t
 	{
 		//asset_ptr current;

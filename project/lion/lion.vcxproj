@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\lion\file.hpp" />
+    <ClInclude Include="..\..\include\lion\filesystem.hpp" />
     <ClInclude Include="..\..\include\lion\mmap.hpp" />
     <ClInclude Include="..\..\include\lion\streams.hpp" />
     <ClInclude Include="..\..\include\lion\vfs.hpp" />
@@ -47,6 +48,7 @@
       <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </PrecompiledHeaderOutputFile>
     </ClCompile>
+    <ClCompile Include="..\..\source\lion\filesystem.cpp" />
     <ClCompile Include="..\..\source\lion\mmap.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
