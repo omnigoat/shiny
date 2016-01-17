@@ -198,27 +198,36 @@ struct log_system_t
 	template <typename... Args>
 	auto signal_log(Args&&... args) -> void
 	{
-		int tbs = 0;
-
-		size_t size = strlen(args...);
-		size += header_size;
-
-		byte thread_buf[thread_buf_size];
-		memcpy(thread_buf, &size, header_size);
-		memcpy((char*)thread_buf + header_size, args..., size - header_size);
-
-		// copy to buf
-		copy_buf(thread_buf, size);
+		int k[] = {0, (encode(args), void(), 0)...};
 	}
 
 private:
+	auto encode(byte color) -> void
+	{
+		encode_color(color);
+	}
+
+	auto encode(char const* string) -> void
+	{
+		size_t size = strlen(string);
+		encode_string((byte const*)string, size);
+	}
+
+private:
+	//--------------------------------
+	//  buffer mutations
+	//--------------------------------
 	static int const header_size = sizeof(size_t);
 
-	auto copy_buf(byte const* buf, size_t size) -> void
+	struct buf_allocation_t
 	{
-		//size += header_size;
-		//size_t header = size;
-
+		size_t wp;
+		size_t nwp;
+		size_t p;
+	};
+	
+	auto buf_allocate(size_t size) -> buf_allocation_t
+	{
 		size_t wp = 0, rp = 0;
 		size_t nwp = 0;
 		for (;;)
@@ -239,53 +248,108 @@ private:
 			}
 		}
 
-		auto sz = size - std::max(0, (int)size - int(buf_size - wp));
-		if (auto psz = size - sz)
-		{
-			memcpy(buf_, buf + sz, psz);
-			memcpy(buf_ + wp, buf, sz);
-		}
-		else
-		{
-			memcpy(buf_ + wp, buf, sz);
-		}
+		return buf_allocation_t{wp, nwp, wp};
+	}
 
-		// publish write
-		while (!written_position_.compare_exchange_strong(wp, nwp))
+	auto buf_commit(buf_allocation_t& a) -> void
+	{
+		while (!written_position_.compare_exchange_strong(a.wp, a.nwp))
 			break;
 	}
 
-	auto write_command() -> void
+private:
+	//--------------------------------
+	//  encoding
+	//--------------------------------
+	enum class identifier_t : byte
 	{
-		auto rp = read_position_.load();
+		string,
+		color,
+	};
 
-		size_t size;
-		size_t r = read_size(size, rp, sizeof(size));
-		
-		atma::string str;
-		r = read_string(str, r, size - header_size);
+	auto encode_byte(buf_allocation_t& A, byte b) -> void
+	{
+		ATMA_ASSERT(A.p != A.nwp);
 
-		std::cout << "size: " << size << " \"" << str << "\"" << std::endl;
-		//memset(buf, 0, size);
-		read_position_ = (read_position_ + size) % buf_size;
+		buf_[A.p % buf_size] = b;
+		A.p = (A.p + 1) % buf_size;
 	}
 
-	auto read_size(size_t& x, size_t p, size_t s) -> size_t
+	auto encode_uint16(buf_allocation_t& A, uint16 i) -> void
 	{
-		byte* b = reinterpret_cast<byte*>(&x);
-
-		for (size_t i = 0; i != s; ++i)
-			*b++ = buf_[(p + i) % buf_size];
-
-		return (p + s) % buf_size;
+		encode_byte(A, i & 0xff);
+		encode_byte(A, (i & 0xff00) >> 8);
 	}
 
-	auto read_string(atma::string& x, size_t p, size_t s) -> size_t
+	auto encode_mem(buf_allocation_t& A, byte const* buf, size_t size) -> void
+	{
+		for (size_t i = 0; i != size; ++i) {
+			encode_byte(A, buf[i]);
+		}
+	}
+
+	auto encode_string(byte const* buf, size_t size) -> void
+	{
+		ATMA_ASSERT(size < buf_size);
+
+		auto A = buf_allocate(size + 3);
+
+		encode_byte   (A, (byte)identifier_t::string);
+		encode_uint16 (A, uint16(size));
+		encode_mem    (A, buf, size);
+
+		buf_commit(A);
+	}
+
+	auto encode_color(byte color) -> void
+	{
+		auto A = buf_allocate(2);
+		encode_byte(A, (byte)identifier_t::color);
+		encode_byte(A, color);
+	}
+
+	//--------------------------------
+	//  decoding
+	//--------------------------------
+	auto decode_byte(byte& x, size_t p) -> size_t 
+	{
+		x = buf_[p % buf_size];
+		return (p + 1) % buf_size;
+	}
+
+	auto decode_uint16(uint16& x, size_t p) -> size_t
+	{
+		byte h, l;
+		p = decode_byte(l, p);
+		p = decode_byte(h, p);
+		x = (uint16(h) << 8) | l;
+		return p;
+	}
+
+	auto decode_string(atma::string& x, size_t p, size_t s) -> size_t
 	{
 		for (size_t i = 0; i != s; ++i)
 			x.push_back(buf_[(p + i) % buf_size]);
 
 		return (p + s) % buf_size;
+	}
+
+
+	auto write_command() -> void
+	{
+		auto rp = read_position_.load();
+
+		byte identifier;
+		uint16 size;
+		atma::string str;
+
+		rp = decode_byte(identifier, rp);
+		rp = decode_uint16(size, rp);
+		rp = decode_string(str, rp, size);
+
+		std::cout << "size: " << size << " \"" << str << "\"" << std::endl;
+
+		read_position_ = (read_position_ + size + 3) % buf_size;
 	}
 
 private:
