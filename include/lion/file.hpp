@@ -5,6 +5,7 @@
 #include <atma/string.hpp>
 #include <atma/unique_memory.hpp>
 
+#include <memory>
 
 namespace lion
 {
@@ -21,9 +22,6 @@ namespace lion
 	{
 		file_t();
 		file_t(atma::string const&, file_access_t = file_access_t::read);
-		file_t(file_t&&);
-		file_t(file_t const&) = delete;
-		~file_t();
 
 		auto valid() const -> bool;
 		auto size() const -> size_t;
@@ -54,10 +52,12 @@ namespace lion
 		auto p_move(int64) -> stream_status_t override;
 
 	private:
+		using handle_t = std::shared_ptr<FILE>;
+
 		atma::string filename_;
 		file_access_t access_;
 
-		FILE* handle_;
+		handle_t handle_;
 		size_t filesize_;
 	};
 

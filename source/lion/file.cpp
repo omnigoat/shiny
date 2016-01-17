@@ -8,6 +8,14 @@
 using namespace lion;
 using lion::file_t;
 
+namespace
+{
+	void close_file_handle(FILE* handle)
+	{
+		if (handle)
+			fclose(handle);
+	}
+}
 
 file_t::file_t()
 	: filename_()
@@ -21,29 +29,14 @@ file_t::file_t(atma::string const& filename, file_access_t access)
 	, filesize_()
 {
 	char const* fa[] = {"r", "w", "r+"};
-	handle_ = fopen(filename.c_str(), fa[(uint)access]);
+	handle_.reset(fopen(filename.c_str(), fa[(uint)access]), &close_file_handle);
 	if (handle_ == nullptr)
 		return;
 
 	// get filesize
-	fseek(handle_, 0, SEEK_END);
-	filesize_ = ftell(handle_);
-	fseek(handle_, 0, SEEK_SET);
-}
-
-file_t::file_t(file_t&& rhs)
-	: filename_(rhs.filename_)
-	, access_(rhs.access_)
-	, filesize_(rhs.filesize_)
-	, handle_(rhs.handle_)
-{
-	rhs.handle_ = nullptr;
-}
-
-file_t::~file_t()
-{
-	if (handle_)
-		fclose(handle_);
+	fseek(handle_.get(), 0, SEEK_END);
+	filesize_ = ftell(handle_.get());
+	fseek(handle_.get(), 0, SEEK_SET);
 }
 
 auto file_t::valid() const -> bool
@@ -58,12 +51,12 @@ auto file_t::size() const -> size_t
 
 auto file_t::position() const -> size_t
 {
-	return ftell(handle_);
+	return ftell(handle_.get());
 }
 
 auto file_t::seek(size_t x) -> stream_status_t
 {
-	auto r = fseek(handle_, (long)x, SEEK_SET);
+	auto r = fseek(handle_.get(), (long)x, SEEK_SET);
 	if (r == 0)
 		return stream_status_t::good;
 	else
@@ -72,7 +65,7 @@ auto file_t::seek(size_t x) -> stream_status_t
 
 auto file_t::move(int64 x) -> stream_status_t
 {
-	auto r = fseek(handle_, (long)x, SEEK_CUR);
+	auto r = fseek(handle_.get(), (long)x, SEEK_CUR);
 	if (r == 0)
 		return stream_status_t::good;
 	else
@@ -81,11 +74,11 @@ auto file_t::move(int64 x) -> stream_status_t
 
 auto file_t::read(void* buf, size_t size) -> read_result_t
 {
-	size_t r = fread(buf, 1, size, handle_);
+	size_t r = fread(buf, 1, size, handle_.get());
 
 	if (r == size)
 		return {stream_status_t::good, r};
-	else if (feof(handle_))
+	else if (feof(handle_.get()))
 		return {stream_status_t::eof, r};
 	else
 		return {stream_status_t::error, r};
@@ -93,11 +86,11 @@ auto file_t::read(void* buf, size_t size) -> read_result_t
 
 auto file_t::write(void const* data, size_t size) -> write_result_t
 {
-	size_t r = fwrite(data, 1, size, handle_);
+	size_t r = fwrite(data, 1, size, handle_.get());
 
 	if (r == size)
 		return {stream_status_t::good, r};
-	else if (feof(handle_))
+	else if (feof(handle_.get()))
 		return {stream_status_t::eof, r};
 	else
 		return {stream_status_t::error, r};
