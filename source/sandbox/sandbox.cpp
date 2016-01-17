@@ -37,6 +37,7 @@
 #include <atma/filesystem/file.hpp>
 #include <atma/algorithm.hpp>
 #include <atma/function.hpp>
+#include <atma/console.hpp>
 
 #include <regex>
 #include <atomic>
@@ -183,7 +184,7 @@ struct log_system_t
 			{
 				while (read_position_ != written_position_)
 				{
-					write_command();
+					decode_command();
 				}
 			}
 		});
@@ -199,18 +200,7 @@ struct log_system_t
 	auto signal_log(Args&&... args) -> void
 	{
 		int k[] = {0, (encode(args), void(), 0)...};
-	}
-
-private:
-	auto encode(byte color) -> void
-	{
-		encode_color(color);
-	}
-
-	auto encode(char const* string) -> void
-	{
-		size_t size = strlen(string);
-		encode_string((byte const*)string, size);
+		encode("\n");
 	}
 
 private:
@@ -235,9 +225,12 @@ private:
 			wp = write_position_.load();
 			rp = read_position_.load();
 
+			// size of available bytes. subtract one because we must never have
+			// the write-position and read-position equal the same value if the
+			// buffer is full, because we can't distinguish it from being empty
 			auto sz = (rp <= wp) ?
-				rp + (buf_size - wp) :
-				rp - wp;
+				rp + (buf_size - wp) - 1:
+				rp - wp - 1;
 
 			if (sz >= size)
 			{
@@ -306,6 +299,18 @@ private:
 		auto A = buf_allocate(2);
 		encode_byte(A, (byte)identifier_t::color);
 		encode_byte(A, color);
+		buf_commit(A);
+	}
+
+	auto encode(byte color) -> void
+	{
+		encode_color(color);
+	}
+
+	auto encode(char const* string) -> void
+	{
+		size_t size = strlen(string);
+		encode_string((byte const*)string, size);
 	}
 
 	//--------------------------------
@@ -313,7 +318,7 @@ private:
 	//--------------------------------
 	auto decode_byte(byte& x, size_t p) -> size_t 
 	{
-		x = buf_[p % buf_size];
+		x = buf_[p];
 		return (p + 1) % buf_size;
 	}
 
@@ -334,22 +339,50 @@ private:
 		return (p + s) % buf_size;
 	}
 
+	auto decode_color(byte& color) -> size_t
+	{
+		//decode_
+	}
 
-	auto write_command() -> void
+	auto decode_command() -> void
 	{
 		auto rp = read_position_.load();
 
 		byte identifier;
-		uint16 size;
-		atma::string str;
-
 		rp = decode_byte(identifier, rp);
-		rp = decode_uint16(size, rp);
-		rp = decode_string(str, rp, size);
 
-		std::cout << "size: " << size << " \"" << str << "\"" << std::endl;
+		switch (identifier)
+		{
+			case identifier_t::string:
+			{
+				uint16 size;
+				atma::string str;
 
-		read_position_ = (read_position_ + size + 3) % buf_size;
+				rp = decode_uint16(size, rp);
+				rp = decode_string(str, rp, size);
+
+				std::cout << str;
+
+				break;
+			}
+
+			case identifier_t::color:
+			{
+				byte color;
+				
+				rp = decode_byte(color, rp);
+
+				atma::console::set_std_out_color(atma::console::combined_color_t{color});
+
+				break;
+			}
+
+			default:
+				ATMA_HALT("bad~~");
+				break;
+		}
+
+		read_position_ = rp;
 	}
 
 private:
@@ -378,8 +411,8 @@ application_t::application_t()
 		//atma::log_color_t{log_system_t::warning, 0b00001110},
 	};
 
-	shiny_log_system.signal_log("here is a story about dragons.");
-	shiny_log_system.signal_log("once upon a time, they were everywhere.");
+	shiny_log_system.signal_log(0b11110000, "here is a story about ", 0b00001100, "dragons.");
+	shiny_log_system.signal_log(0b00000111, "once upon a time, they were everywhere.");
 	shiny_log_system.signal_log("then they learnt how to brew gin.");
 	shiny_log_system.signal_log("so now they're mostly,");
 	shiny_log_system.signal_log("at the bar.");
@@ -387,7 +420,7 @@ application_t::application_t()
  }
 	//auto shiny_logpipe_handle = atma::log::new_pipe("shiny");
 
-
+	exit(0);
 #if 0
 	int fds[2];
 	
