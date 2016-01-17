@@ -11,5 +11,6 @@ data/
 *.inc
 *.ipch
 *.cso
+*.VC.opendb
 
 fxc.exe
