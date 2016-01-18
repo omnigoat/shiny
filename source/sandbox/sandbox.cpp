@@ -36,9 +36,14 @@
 
 #include <atma/filesystem/file.hpp>
 #include <atma/algorithm.hpp>
+#include <atma/function.hpp>
+#include <atma/console.hpp>
 
 #include <regex>
+#include <atomic>
 
+#include <io.h>
+#include <fcntl.h>
 
 using namespace sandbox;
 using sandbox::application_t;
@@ -100,18 +105,342 @@ namespace lion
 
 using asset_handle_t = intptr; //asset_storage_t const*;
 
-// vertex_shader_t* blah = lion::lock_asset_as<shiny::vertex_shader_t>(asset_handle);
 
-// vertex_shader_t* vs = nullptr;
-// lion::scoped_asset_lock_t SL{asset_handle, vs};
-// auto SL = lion::scoped_asset_lock_t{asset_handle};
-// vertex_shader_t* blah2 = SL.ptr_as<shiny::vertex_shader_t>();
+
+char buf[256];
+
+
+struct stdio_catcher_t
+{
+	static int const bufsize = 4096;
+	static int const stdin_idx = 0, stdout_idx = 1, stderr_idx = 2, stdmax = 3;
+	static int const fd_read = 0, fd_write = 1;
+
+	stdio_catcher_t()
+		: stdio_filehandles_{
+			_fileno(stdin),
+			_fileno(stdout),
+			_fileno(stderr)
+		}
+	{
+		engine_.signal([&]
+		{
+			// pipe stdout, stdin, stderr to *new places*
+			//ATMA_ENSURE_IS(0, _pipe(fds_[0], 4096, _O_BINARY));
+			ATMA_ENSURE_IS(0, _pipe(fds_[stdout_idx], 4096, _O_BINARY));
+			ATMA_ENSURE_IS(0, _pipe(fds_[stderr_idx], 4096, _O_BINARY));
+
+			for (int i = stdout_idx; i != stdmax; ++i)
+			{
+				int r = _dup2(fds_[i][fd_write], stdio_filehandles_[i]);
+				ATMA_ASSERT(r != -1);
+			}
+		});
+
+		engine_.signal_evergreen([&]{
+			// do stderr first, because in the case of horrifying errors, we want
+			// to tell the world as fast as possible
+			int sz = _read(fds_[stderr_idx][fd_read], buf_[stderr_idx], sizeof(buf_[stderr_idx]) - 1);
+
+			//int sz = _read(fds_[0][0], buf_[0], bufsize);
+			//fwrite(buf_[0], 1, sz, stderr);
+		});
+	}
+
+private:
+	int stdio_filehandles_[3];
+	int fds_[3][2]; // stdout, stdin, stderr {read|write}
+	char buf_[3][bufsize];
+
+	atma::thread::engine_t engine_;
+};
+
+
+enum class log_levels_t : int
+{
+	fatal = 0,
+	error = 1,
+	warning = 2,
+	info = 3,
+	trace = 4,
+
+	size = 5
+};
+
+
+
+struct log_system_t
+{
+	static size_t const buf_size = 128;
+	static size_t const thread_buf_size = 2048;
+	
+
+	log_system_t()
+	{
+		memset(buf_, 0, buf_size);
+
+		handle_ = std::thread([&] {
+			while (running_)
+			{
+				while (read_position_ != written_position_)
+				{
+					decode_command();
+				}
+			}
+		});
+	}
+
+	~log_system_t()
+	{
+		running_ = false;
+		handle_.join();
+	}
+
+	template <typename... Args>
+	auto signal_log(Args&&... args) -> void
+	{
+		int k[] = {0, (encode(args), void(), 0)...};
+		encode("\n");
+	}
+
+private:
+	//--------------------------------
+	//  buffer mutations
+	//--------------------------------
+	static int const header_size = sizeof(size_t);
+
+	struct buf_allocation_t
+	{
+		size_t wp;
+		size_t nwp;
+		size_t p;
+	};
+	
+	auto buf_allocate(size_t size) -> buf_allocation_t
+	{
+		size_t wp = 0, rp = 0;
+		size_t nwp = 0;
+		for (;;)
+		{
+			wp = write_position_.load();
+			rp = read_position_.load();
+
+			// size of available bytes. subtract one because we must never have
+			// the write-position and read-position equal the same value if the
+			// buffer is full, because we can't distinguish it from being empty
+			auto sz = (rp <= wp) ?
+				rp + (buf_size - wp) - 1:
+				rp - wp - 1;
+
+			if (sz >= size)
+			{
+				nwp = (wp + size) % buf_size;
+
+				if (write_position_.compare_exchange_strong(wp, nwp))
+					break;
+			}
+		}
+
+		return buf_allocation_t{wp, nwp, wp};
+	}
+
+	auto buf_commit(buf_allocation_t& a) -> void
+	{
+		while (!written_position_.compare_exchange_strong(a.wp, a.nwp))
+			break;
+	}
+
+private:
+	//--------------------------------
+	//  encoding
+	//--------------------------------
+	enum class identifier_t : byte
+	{
+		string,
+		color,
+	};
+
+	auto encode_byte(buf_allocation_t& A, byte b) -> void
+	{
+		ATMA_ASSERT(A.p != A.nwp);
+
+		buf_[A.p % buf_size] = b;
+		A.p = (A.p + 1) % buf_size;
+	}
+
+	auto encode_uint16(buf_allocation_t& A, uint16 i) -> void
+	{
+		encode_byte(A, i & 0xff);
+		encode_byte(A, (i & 0xff00) >> 8);
+	}
+
+	auto encode_mem(buf_allocation_t& A, byte const* buf, size_t size) -> void
+	{
+		for (size_t i = 0; i != size; ++i) {
+			encode_byte(A, buf[i]);
+		}
+	}
+
+	auto encode_string(byte const* buf, size_t size) -> void
+	{
+		ATMA_ASSERT(size < buf_size);
+
+		auto A = buf_allocate(size + 3);
+
+		encode_byte   (A, (byte)identifier_t::string);
+		encode_uint16 (A, uint16(size));
+		encode_mem    (A, buf, size);
+
+		buf_commit(A);
+	}
+
+	auto encode_color(byte color) -> void
+	{
+		auto A = buf_allocate(2);
+		encode_byte(A, (byte)identifier_t::color);
+		encode_byte(A, color);
+		buf_commit(A);
+	}
+
+	auto encode(byte color) -> void
+	{
+		encode_color(color);
+	}
+
+	auto encode(char const* string) -> void
+	{
+		size_t size = strlen(string);
+		encode_string((byte const*)string, size);
+	}
+
+	//--------------------------------
+	//  decoding
+	//--------------------------------
+	auto decode_byte(byte& x, size_t p) -> size_t 
+	{
+		x = buf_[p];
+		return (p + 1) % buf_size;
+	}
+
+	auto decode_uint16(uint16& x, size_t p) -> size_t
+	{
+		byte h, l;
+		p = decode_byte(l, p);
+		p = decode_byte(h, p);
+		x = (uint16(h) << 8) | l;
+		return p;
+	}
+
+	auto decode_string(atma::string& x, size_t p, size_t s) -> size_t
+	{
+		for (size_t i = 0; i != s; ++i)
+			x.push_back(buf_[(p + i) % buf_size]);
+
+		return (p + s) % buf_size;
+	}
+
+	auto decode_color(byte& color) -> size_t
+	{
+		//decode_
+	}
+
+	auto decode_command() -> void
+	{
+		auto rp = read_position_.load();
+
+		byte identifier;
+		rp = decode_byte(identifier, rp);
+
+		switch (identifier)
+		{
+			case identifier_t::string:
+			{
+				uint16 size;
+				atma::string str;
+
+				rp = decode_uint16(size, rp);
+				rp = decode_string(str, rp, size);
+
+				std::cout << str;
+
+				break;
+			}
+
+			case identifier_t::color:
+			{
+				byte color;
+				
+				rp = decode_byte(color, rp);
+
+				atma::console::set_std_out_color(atma::console::combined_color_t{color});
+
+				break;
+			}
+
+			default:
+				ATMA_HALT("bad~~");
+				break;
+		}
+
+		read_position_ = rp;
+	}
+
+private:
+	atma::vector<void*> writers_;
+
+	std::thread handle_;
+	bool running_ = true;
+
+	byte buf_[buf_size];
+	std::atomic_size_t write_position_ = 0;
+	std::atomic_size_t written_position_ = 0;
+	std::atomic_size_t read_position_ = 0;
+};
+
+static int plus(int a, int b) { return a + b; }
 
 application_t::application_t()
 	: window_renderer(fooey::system_renderer())
 	, window(fooey::window("Excitement!", 800 + 16, 600 + 38))
 	, runtime{}
 {
+ {
+	log_system_t shiny_log_system{
+		//atma::log_color_t{log_system_t::fatal, 0b11001111},
+		//atma::log_color_t{log_system_t::error, 0b11001111},
+		//atma::log_color_t{log_system_t::warning, 0b00001110},
+	};
+
+	shiny_log_system.signal_log(0b11110000, "here is a story about ", 0b00001100, "dragons.");
+	shiny_log_system.signal_log(0b00000111, "once upon a time, they were everywhere.");
+	shiny_log_system.signal_log("then they learnt how to brew gin.");
+	shiny_log_system.signal_log("so now they're mostly,");
+	shiny_log_system.signal_log("at the bar.");
+	shiny_log_system.signal_log("but they're also everywhere. alcohol helps with the procreating.");
+ }
+	//auto shiny_logpipe_handle = atma::log::new_pipe("shiny");
+
+	exit(0);
+#if 0
+	int fds[2];
+	
+	int res = _pipe(fds, 4096, _O_BINARY);
+	ATMA_ASSERT(res == 0);
+
+	int so = _fileno(stdout);
+	res = _dup2(fds[1], so);
+	//ATMA_ASSERT(res != -1);
+	
+	char ttry[128];
+	setvbuf(stdout, ttry, _IOLBF, 128);
+	printf("blamalam\n");
+	printf("yay\n");
+	//fflush(stdout);
+	
+	res = _read(fds[0], buf, sizeof(buf) - 1);
+#endif
+	
+	
 	shiny::vertex_shader_t
 	  * vs_basic = nullptr,
 	  * vs_debug = nullptr,
