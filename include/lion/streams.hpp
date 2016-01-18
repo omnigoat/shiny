@@ -94,6 +94,7 @@ namespace lion
 		: random_access_input_stream_t
 		, random_access_output_stream_t
 	{
+		memory_stream_t();
 		memory_stream_t(void* data, size_t size_);
 
 		auto valid() const -> bool;
@@ -111,6 +112,9 @@ namespace lion
 
 		// output-stream
 		auto write(void const*, size_t) -> write_result_t override;
+
+	protected:
+		auto memory_stream_reset(void*, size_t size) -> void;
 
 	private:
 		// random-access-input-stream

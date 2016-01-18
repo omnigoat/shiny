@@ -133,21 +133,23 @@ auto physical_filesystem_t::open(path_t const& path, open_mask_t mask) -> stream
 	if (fsp->stream())
 		return fsp->stream();
 
-	// we can use a mmap for most cases, except where we need to write to a file.
-	// if we want to mutate the contents of a file, but don't care about having those
-	// changes actually written to disk, then we can use 'nonbacked', which will create
-	// a copy-on-write mmap (or something similar)
-	if ((mask & open_flags_t::read) || ((mask & open_flags_t::write) && (mask & open_flags_t::nonbacked)))
-	{
-		auto mmap = mmap_ptr::make(fsp->path());
-		return mmap_stream_ptr::make(mmap);
+	mmap_ptr mmap;
+	if (mask & open_flags_t::write) {
+		mmap = mmap_ptr::make(fsp->path(), access_flags_t::write);
 	}
-	else
-	{
-		return stream_ptr{new file_t{path.string(), file_access_t::write}};
+	else {
+		mmap = mmap_ptr::make(fsp->path(), access_flags_t::write);
 	}
 
-	return stream_ptr::null;
+	if (mask & open_flags_t::write) {
+		if (mask & open_flags_t::nonbacked)
+			return mmap_stream_ptr::make(mmap, mmap_stream_access_t::write_copy);
+		else
+			return mmap_stream_ptr::make(mmap, mmap_stream_access_t::write_commit);
+	}
+	else {
+		return mmap_stream_ptr::make(mmap, mmap_stream_access_t::read);
+	}
 }
 
 

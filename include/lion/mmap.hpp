@@ -13,14 +13,21 @@ namespace stdfs = std::experimental::filesystem;
 
 namespace lion
 {
+	enum class access_flags_t
+	{
+		read,
+		write,
+	};
+
+	ATMA_BITMASK(access_mask_t, access_flags_t);
+
 	struct mmap_t : atma::ref_counted
 	{
-		mmap_t(stdfs::path const&);
+		mmap_t(stdfs::path const&, access_mask_t = access_flags_t::read);
 		~mmap_t();
 
 		auto valid() const -> bool;
 		auto size() const -> size_t;
-		auto data() const -> void const*;
 
 		template <typename T>
 		auto data_view() const -> atma::memory_view_t<T const>
@@ -31,12 +38,12 @@ namespace lion
 
 	private:
 		stdfs::path path_;
-		void* data_;
+		access_mask_t access_mask_;
+
+		HANDLE handle_;
 		size_t size_;
 
-#if defined(WIN32)
-		HANDLE handle_;
-#endif
+		friend struct mmap_stream_t;
 	};
 
 	using mmap_ptr = atma::intrusive_ptr<mmap_t>;
@@ -44,15 +51,27 @@ namespace lion
 
 
 
-	struct mmap_stream_t
-		: memory_stream_t
+	enum class mmap_stream_access_t
 	{
-		mmap_stream_t(mmap_ptr const&);
+		read,
+		write_copy,
+		write_commit,
+	};
 
-		//auto stream_opers() const -> stream_opers_mask_t override;
+	ATMA_BITMASK(mmap_stream_access_mask_t, mmap_stream_access_t);
+
+	struct mmap_stream_t : memory_stream_t
+	{
+		mmap_stream_t(mmap_ptr const&, mmap_stream_access_mask_t);
+		mmap_stream_t(mmap_ptr const&, size_t offset, size_t size, mmap_stream_access_mask_t);
+
+		auto stream_opers() const -> stream_opers_mask_t override;
 
 	private:
 		mmap_ptr mmap_;
+		stream_opers_mask_t opers_;
+
+		void* data_;
 	};
 
 	using mmap_stream_ptr = atma::intrusive_ptr<mmap_stream_t>;

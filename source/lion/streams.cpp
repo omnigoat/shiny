@@ -86,7 +86,7 @@ auto lion::read_all(random_access_input_stream_ptr const& stream) -> atma::uniqu
 
 
 memory_stream_t::memory_stream_t(void* data, size_t size)
-	: data_(reinterpret_cast<void*>(data))
+	: data_(reinterpret_cast<byte*>(data))
 	, size_(size)
 	, position_()
 {
@@ -189,4 +189,9 @@ auto memory_stream_t::p_move(int64 x) -> stream_status_t
 	return move(x);
 }
 
-
+auto memory_stream_t::memory_stream_reset(void* data, size_t size) -> void
+{
+	data_ = reinterpret_cast<byte*>(data);
+	size_ = size;
+	position_ = 0;
+}
