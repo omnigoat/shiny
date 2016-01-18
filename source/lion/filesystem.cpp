@@ -1,5 +1,7 @@
 #include <lion/filesystem.hpp>
+
 #include <lion/mmap.hpp>
+#include <lion/file.hpp>
 
 #include <atma/algorithm.hpp>
 
@@ -142,6 +144,7 @@ auto physical_filesystem_t::open(path_t const& path, open_mask_t mask) -> stream
 	}
 	else
 	{
+		return stream_ptr{new file_t{path.string(), file_access_t::write}};
 	}
 
 	return stream_ptr::null;

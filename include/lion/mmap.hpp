@@ -45,21 +45,14 @@ namespace lion
 
 
 	struct mmap_stream_t
-		: random_access_input_stream_t
+		: memory_stream_t
 	{
 		mmap_stream_t(mmap_ptr const&);
 
-		auto stream_opers() const -> stream_opers_mask_t override;
-		auto read(void*, size_t) -> read_result_t override;
-
-	private:
-		auto g_size() const -> size_t override;
-		auto g_seek(size_t) -> stream_status_t override;
-		auto g_move(int64) -> stream_status_t override;
+		//auto stream_opers() const -> stream_opers_mask_t override;
 
 	private:
 		mmap_ptr mmap_;
-		size_t position_;
 	};
 
 	using mmap_stream_ptr = atma::intrusive_ptr<mmap_stream_t>;

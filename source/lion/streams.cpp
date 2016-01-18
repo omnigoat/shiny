@@ -1,5 +1,7 @@
 #include <lion/streams.hpp>
 
+#include <algorithm>
+
 using namespace lion;
 
 
@@ -78,4 +80,113 @@ auto lion::read_all(random_access_input_stream_ptr const& stream) -> atma::uniqu
 
 	return read_input_random(stream);
 }
+
+
+
+
+
+memory_stream_t::memory_stream_t(void* data, size_t size)
+	: data_(reinterpret_cast<void*>(data))
+	, size_(size)
+	, position_()
+{
+}
+
+auto memory_stream_t::valid() const -> bool
+{
+	return data_ != nullptr;
+}
+
+auto memory_stream_t::size() const -> size_t
+{
+	return size_;
+}
+
+auto memory_stream_t::position() const -> size_t
+{
+	return position_;
+}
+
+auto memory_stream_t::seek(size_t x) -> stream_status_t
+{
+	if (x < size_) {
+		position_ = x;
+		return stream_status_t::good;
+	}
+	else {
+		return stream_status_t::error;
+	}
+}
+
+auto memory_stream_t::move(int64 x) -> stream_status_t
+{
+	if (position_ + x < size_) {
+		position_ += x;
+		return stream_status_t::good;
+	}
+	else {
+		return stream_status_t::error;
+	}
+}
+
+auto memory_stream_t::read(void* buf, size_t size) -> read_result_t
+{
+	size_t r = std::min(size, size_ - position_);
+	memcpy(buf, data_ + position_, r);
+
+	if (r == size)
+		return {stream_status_t::good, r};
+	else
+		return {stream_status_t::eof, r};
+}
+
+auto memory_stream_t::write(void const* data, size_t size) -> write_result_t
+{
+	size_t r = std::min(size, size_ - position_);
+	memcpy(data_ + position_, data, r);
+
+	if (r == size)
+		return{stream_status_t::good, r};
+	else
+		return{stream_status_t::eof, r};
+}
+
+// absract-stream
+auto memory_stream_t::stream_opers() const -> stream_opers_mask_t
+{
+	return stream_opers_t::read | stream_opers_t::write | stream_opers_t::random_access;
+}
+
+// input-stream
+auto memory_stream_t::g_size() const -> size_t
+{
+	return size();
+}
+
+auto memory_stream_t::g_seek(size_t x) -> stream_status_t
+{
+	return seek(x);
+}
+
+auto memory_stream_t::g_move(int64 x) -> stream_status_t
+{
+	return move(x);
+}
+
+// output-stream
+auto memory_stream_t::p_size() const -> size_t
+{
+	return size();
+}
+
+auto memory_stream_t::p_seek(size_t x) -> stream_status_t
+{
+	return seek(x);
+}
+
+auto memory_stream_t::p_move(int64 x) -> stream_status_t
+{
+	return move(x);
+}
+
 
