@@ -78,6 +78,12 @@ mmap_stream_t::mmap_stream_t(mmap_ptr const& mmap, size_t offset, size_t size, m
 		memory_stream_reset(data_, size);
 }
 
+mmap_stream_t::~mmap_stream_t()
+{
+	if (data_)
+		UnmapViewOfFile(data_);
+}
+
 auto mmap_stream_t::stream_opers() const -> stream_opers_mask_t
 {
 	return opers_;
