@@ -404,6 +404,7 @@ application_t::application_t()
 	, window(fooey::window("Excitement!", 800 + 16, 600 + 38))
 	, runtime{}
 {
+#if 0
  {
 	log_system_t shiny_log_system{
 		//atma::log_color_t{log_system_t::fatal, 0b11001111},
@@ -421,7 +422,6 @@ application_t::application_t()
 	//auto shiny_logpipe_handle = atma::log::new_pipe("shiny");
 
 	exit(0);
-#if 0
 	int fds[2];
 	
 	int res = _pipe(fds, 4096, _O_BINARY);

@@ -6,7 +6,6 @@ using lion::mmap_stream_t;
 
 mmap_t::mmap_t(stdfs::path const& path, access_mask_t am)
 	: path_(path), access_mask_(am)
-	, size_()
 {
 	if (!stdfs::exists(path_))
 		return;
@@ -34,7 +33,7 @@ mmap_t::~mmap_t()
 
 auto mmap_t::valid() const -> bool
 {
-	return size_ != 0;
+	return handle_ != nullptr;
 }
 
 auto mmap_t::size() const -> size_t
@@ -54,6 +53,12 @@ mmap_stream_t::mmap_stream_t(mmap_ptr const& mmap, size_t offset, size_t size, m
 	, mmap_{mmap}
 	, opers_{stream_opers_t::random_access, stream_opers_t::read}
 {
+	ATMA_ASSERT(mmap_);
+	ATMA_ASSERT(mmap_->valid());
+
+	if (size == 0)
+		size = mmap->size();
+
 	uint32 lo = offset & 0xffffffff;
 	uint32 hi = (offset & 0xffffffff00000000) >> 32;
 

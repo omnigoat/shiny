@@ -138,7 +138,7 @@ auto physical_filesystem_t::open(path_t const& path, open_mask_t mask) -> stream
 		mmap = mmap_ptr::make(fsp->path(), access_flags_t::write);
 	}
 	else {
-		mmap = mmap_ptr::make(fsp->path(), access_flags_t::write);
+		mmap = mmap_ptr::make(fsp->path(), access_flags_t::read);
 	}
 
 	if (mask & open_flags_t::write) {

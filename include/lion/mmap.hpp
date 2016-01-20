@@ -40,8 +40,8 @@ namespace lion
 		stdfs::path path_;
 		access_mask_t access_mask_;
 
-		HANDLE handle_;
-		size_t size_;
+		HANDLE handle_ = 0;
+		size_t size_ = 0;
 
 		friend struct mmap_stream_t;
 	};
@@ -64,6 +64,7 @@ namespace lion
 	{
 		mmap_stream_t(mmap_ptr const&, mmap_stream_access_mask_t);
 		mmap_stream_t(mmap_ptr const&, size_t offset, size_t size, mmap_stream_access_mask_t);
+		~mmap_stream_t();
 
 		auto stream_opers() const -> stream_opers_mask_t override;
 
