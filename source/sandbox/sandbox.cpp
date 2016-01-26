@@ -250,7 +250,7 @@ auto mwsr_queue_t::commit(allocation_t const& a) -> void
 
 struct log_system_t
 {
-	static size_t const buf_size = 1024;
+	static size_t const buf_size = 76;
 	static size_t const thread_buf_size = 2048;
 	
 
@@ -320,6 +320,23 @@ private:
 
 private:
 	//--------------------------------
+	//  starvation prevention
+	//--------------------------------
+	auto strv_gate(size_t thread_id) -> size_t
+	{
+		size_t st = 0;
+		do {
+			st = starve_thread_.load();
+		} while (st != 0 && st != thread_id);
+
+		return st;
+	}
+
+	auto strv_emplace(std::chrono::microseconds const&) -> void;
+	//auto strv_
+
+private:
+	//--------------------------------
 	//  buffer mutations
 	//--------------------------------
 	static int const header_size = sizeof(size_t);
@@ -336,23 +353,22 @@ private:
 		// also need space for alloc header
 		size += 2;
 
+		ATMA_ASSERT(size <= buf_size, "queue can not allocate that much");
+
 		size_t wp = 0, rp = 0;
 		size_t nwp = 0;
 
 		size_t id = std::hash<std::thread::id>{}(std::this_thread::get_id());
 
-		size_t starvation = 0;
+		static std::chrono::microseconds timeout{1000};
+
+		std::chrono::high_resolution_clock hrc;
+		std::chrono::microseconds starvation{};
 		for (;;)
 		{
-			auto st = starve_thread_.load();
-			if (st != 0)
-			{
-				if (st != id)
-				{
-					while (starve_thread_ != 0)
-						;
-				}
-			}
+			auto time_start = hrc.now();
+
+			auto starve_id = strv_gate(id);
 
 			wp = write_position_.load();
 			rp = read_position_.load();
@@ -371,22 +387,21 @@ private:
 				if (write_position_.compare_exchange_strong(wp, nwp))
 					break;
 			}
-			else
-			{
-				if (++starvation > 10)
-				{
-					if (st != id)
-					{
-						uint64 exp = 0;
-						while (!starve_thread_.compare_exchange_strong(exp, id))
-							exp = 0;
-					}
-
-					starve_count_ = starvation;
-				}
-			}
-
 			
+
+			starvation += std::chrono::duration_cast<std::chrono::microseconds>(hrc.now() - time_start);
+
+			if (starvation > timeout)
+			{
+				if (starve_id != id)
+				{
+					uint64 exp = 0;
+					while (!starve_thread_.compare_exchange_strong(exp, id))
+						exp = 0;
+				}
+
+				starve_count_ = starvation.count();
+			}
 		}
 
 		if (starve_thread_ == id)
@@ -408,8 +423,6 @@ private:
 		auto exp = a.wp;
 		while (!written_position_.compare_exchange_strong(exp, a.nwp))
 			exp = a.wp;
-
-		//printf("thread %hu commit [wrp %zu => %zu]\n\0", (uint16)std::hash<std::thread::id>{}(std::this_thread::get_id()), a.wp, a.nwp);
 	}
 
 private:
@@ -586,21 +599,19 @@ application_t::application_t()
 
 	auto t2 = std::thread([&] {
 		for (;;)
-			shiny_log_system.signal_log(0b00000010, "thread 2: message of great importance. important because it's long and therefore slower!");
+			shiny_log_system.signal_log(0b00000010, "thread 2!");
 			//shiny_log_system.signal_test();
 	});
 
 	auto t3 = std::thread([&] {
 		for (;;)
-			shiny_log_system.signal_log(0b00001100, "thread 3: yay");
+			shiny_log_system.signal_log(0b00001100, "thread 3!");
 		//shiny_log_system.signal_test();
 	});
 
 	auto t4 = std::thread([&] {
 		for (;;)
-			shiny_log_system.signal_log(0b00001111, "thread 3: here is a lot of text, trying to saturate the buffer, to see how good"
-				" the starvation-prevention stuff I've written holds up. I wonder what sort of mechanical keyboard I should get. recently "
-				"I've been spending a bit too much, but I've been cutting down on food, so there's that");
+			shiny_log_system.signal_log(0b00001111, "thread 4: here is a lot of text, trying to saturate the buffer..");
 		//shiny_log_system.signal_test();
 	});
 
