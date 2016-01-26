@@ -168,10 +168,89 @@ enum class log_levels_t : int
 };
 
 
+struct mwsr_queue_t
+{
+	struct allocation_t;
+
+	mwsr_queue_t(void*, size_t);
+	mwsr_queue_t(size_t);
+
+	auto allocate(size_t size) -> allocation_t;
+	auto commit(allocation_t const&) -> void;
+
+	//auto encode_byte(allocation_t&, byte) -> void;
+
+private:
+	byte* buf_ = nullptr;
+	size_t buf_size_ = 0;
+	bool owner_ = false;
+
+	std::atomic_uint32_t write_position_ = 0;
+	std::atomic_uint32_t written_position_ = 0;
+	std::atomic_uint32_t read_position_ = 0;
+};
+
+struct mwsr_queue_t::allocation_t
+{
+private:
+	allocation_t(uint32 wp, uint32 nwp, uint32 p)
+		: wp(wp), nwp(nwp), p(p)
+	{}
+
+	uint32 wp, nwp, p;
+
+	friend struct mwsr_queue_t;
+};
+
+mwsr_queue_t::mwsr_queue_t(void* buf, size_t size)
+	: buf_((byte*)buf)
+	, buf_size_(size)
+{}
+
+mwsr_queue_t::mwsr_queue_t(size_t sz)
+	: buf_(new byte[sz])
+	, buf_size_(sz)
+	, owner_(true)
+{}
+
+auto mwsr_queue_t::allocate(size_t size) -> allocation_t
+{
+	uint32 wp = 0, rp = 0, nwp = 0;
+
+	for (;;)
+	{
+		wp = write_position_.load();
+		rp = read_position_.load();
+
+		// size of available bytes. subtract one because we must never have
+		// the write-position and read-position equal the same value if the
+		// buffer is full, because we can't distinguish it from being empty
+		uint32 sz = (rp <= wp ? rp + (uint32)buf_size_ - wp : rp - wp) - 1;
+
+		if (sz >= size)
+		{
+			nwp = (wp + (uint32)size) % buf_size_;
+
+			if (write_position_.compare_exchange_strong(wp, nwp))
+				break;
+		}
+	}
+
+	return allocation_t{wp, nwp, wp};
+}
+
+auto mwsr_queue_t::commit(allocation_t const& a) -> void
+{
+	auto exp = a.wp;
+	while (!written_position_.compare_exchange_strong(exp, a.nwp))
+		break;
+}
+
+
 
 struct log_system_t
 {
-	static size_t const buf_size = 128;
+	static size_t const buf_size = 1024;
 	static size_t const thread_buf_size = 2048;
 	
 
@@ -199,9 +278,45 @@ struct log_system_t
 	template <typename... Args>
 	auto signal_log(Args&&... args) -> void
 	{
-		int k[] = {0, (encode(args), void(), 0)...};
-		encode("\n");
+		// +1 size for newline appended to all logging
+		size_t reqsize = 0;
+		acc_size(reqsize, "\n");
+		ATMA_SPLAT_FN(acc_size(reqsize, args));
+
+		auto A = buf_allocate(reqsize);
+		ATMA_SPLAT_FN(encode(A, args));
+		encode(A, "\n");
+
+		buf_commit(A);
 	}
+
+	auto signal_test() -> void
+	{
+		auto A = buf_allocate(39);
+
+		char tidbuf[36];
+		auto n = sprintf(tidbuf, "thread %hu [wp %zu, nwp %zu]\n\0", (uint16)std::hash<std::thread::id>{}(std::this_thread::get_id()), A.wp, A.nwp);
+		//printf(tidbuf);
+
+		encode_byte   (A, (byte)identifier_t::string);
+		encode_uint16 (A, uint16(n));
+		encode_mem    (A, tidbuf, n);
+
+		if (n < 33)
+			encode_byte(A, 0);
+
+		//char membuf[24];
+		//auto n2 = sprintf(membuf, "u", );
+
+		//encode_byte   (A, (byte)identifier_t::string);
+		//encode_uint16 (A, uint16(n));
+		//encode_mem    (A, membuf, n);
+		buf_commit(A);
+	}
+
+private:
+	auto acc_size(size_t& s, char const* str) -> void { s += 3 + strlen(str); }
+	auto acc_size(size_t& s, byte) -> void { s += 2; }
 
 private:
 	//--------------------------------
@@ -218,10 +333,27 @@ private:
 	
 	auto buf_allocate(size_t size) -> buf_allocation_t
 	{
+		// also need space for alloc header
+		size += 2;
+
 		size_t wp = 0, rp = 0;
 		size_t nwp = 0;
+
+		size_t id = std::hash<std::thread::id>{}(std::this_thread::get_id());
+
+		size_t starvation = 0;
 		for (;;)
 		{
+			auto st = starve_thread_.load();
+			if (st != 0)
+			{
+				if (st != id)
+				{
+					while (starve_thread_ != 0)
+						;
+				}
+			}
+
 			wp = write_position_.load();
 			rp = read_position_.load();
 
@@ -239,15 +371,45 @@ private:
 				if (write_position_.compare_exchange_strong(wp, nwp))
 					break;
 			}
+			else
+			{
+				if (++starvation > 10)
+				{
+					if (st != id)
+					{
+						uint64 exp = 0;
+						while (!starve_thread_.compare_exchange_strong(exp, id))
+							exp = 0;
+					}
+
+					starve_count_ = starvation;
+				}
+			}
+
+			
 		}
 
-		return buf_allocation_t{wp, nwp, wp};
+		if (starve_thread_ == id)
+		{
+			auto exp = id;
+			auto r = starve_thread_.compare_exchange_strong(exp, 0);
+			ATMA_ASSERT(r, "shouldn't have contention over resetting starvation");
+		}
+
+		// encode chunk header
+		auto A = buf_allocation_t{wp, nwp, wp};
+		encode_uint16(A, (uint16)size);
+
+		return A;
 	}
 
-	auto buf_commit(buf_allocation_t& a) -> void
+	auto buf_commit(buf_allocation_t const& a) -> void
 	{
-		while (!written_position_.compare_exchange_strong(a.wp, a.nwp))
-			break;
+		auto exp = a.wp;
+		while (!written_position_.compare_exchange_strong(exp, a.nwp))
+			exp = a.wp;
+
+		//printf("thread %hu commit [wrp %zu => %zu]\n\0", (uint16)std::hash<std::thread::id>{}(std::this_thread::get_id()), a.wp, a.nwp);
 	}
 
 private:
@@ -256,6 +418,7 @@ private:
 	//--------------------------------
 	enum class identifier_t : byte
 	{
+		pad,
 		string,
 		color,
 	};
@@ -274,43 +437,26 @@ private:
 		encode_byte(A, (i & 0xff00) >> 8);
 	}
 
-	auto encode_mem(buf_allocation_t& A, byte const* buf, size_t size) -> void
+	auto encode_mem(buf_allocation_t& A, void const* buf, size_t size) -> void
 	{
 		for (size_t i = 0; i != size; ++i) {
-			encode_byte(A, buf[i]);
+			encode_byte(A, ((byte*)buf)[i]);
 		}
 	}
 
-	auto encode_string(byte const* buf, size_t size) -> void
+	auto encode(buf_allocation_t& A, byte color) -> void
 	{
-		ATMA_ASSERT(size < buf_size);
-
-		auto A = buf_allocate(size + 3);
-
-		encode_byte   (A, (byte)identifier_t::string);
-		encode_uint16 (A, uint16(size));
-		encode_mem    (A, buf, size);
-
-		buf_commit(A);
-	}
-
-	auto encode_color(byte color) -> void
-	{
-		auto A = buf_allocate(2);
 		encode_byte(A, (byte)identifier_t::color);
 		encode_byte(A, color);
-		buf_commit(A);
 	}
 
-	auto encode(byte color) -> void
-	{
-		encode_color(color);
-	}
-
-	auto encode(char const* string) -> void
+	auto encode(buf_allocation_t& A, char const* string) -> void
 	{
 		size_t size = strlen(string);
-		encode_string((byte const*)string, size);
+
+		encode_byte(A, (byte)identifier_t::string);
+		encode_uint16(A, uint16(size));
+		encode_mem(A, string, size);
 	}
 
 	//--------------------------------
@@ -339,50 +485,65 @@ private:
 		return (p + s) % buf_size;
 	}
 
-	auto decode_color(byte& color) -> size_t
-	{
-		//decode_
-	}
-
 	auto decode_command() -> void
 	{
 		auto rp = read_position_.load();
+		auto p = rp;
 
-		byte identifier;
-		rp = decode_byte(identifier, rp);
+		uint16 chunk_size;
+		p = decode_uint16(chunk_size, rp);
 
-		switch (identifier)
+		uint16 cp = 2;
+		while (cp != chunk_size)
 		{
-			case identifier_t::string:
+			ATMA_ASSERT(cp < chunk_size, "we overran our read-buffer");
+
+			byte identifier;
+			p = decode_byte(identifier, p);
+			++cp;
+
+			switch (identifier)
 			{
-				uint16 size;
-				atma::string str;
+				case identifier_t::pad:
+				{
+					p += (chunk_size - cp);
+					cp = chunk_size;
+					break;
+				}
 
-				rp = decode_uint16(size, rp);
-				rp = decode_string(str, rp, size);
+				case identifier_t::string:
+				{
+					uint16 size;
+					atma::string str;
 
-				std::cout << str;
+					p = decode_uint16(size, p);
+					p = decode_string(str, p, size);
+					cp += 2 + size;
 
-				break;
+					std::cout << str;
+
+					break;
+				}
+
+				case identifier_t::color:
+				{
+					byte color;
+
+					p = decode_byte(color, p);
+					++cp;
+
+					atma::console::set_std_out_color(atma::console::combined_color_t{color});
+
+					break;
+				}
+
+				default:
+					ATMA_HALT("bad~~");
+					break;
 			}
-
-			case identifier_t::color:
-			{
-				byte color;
-				
-				rp = decode_byte(color, rp);
-
-				atma::console::set_std_out_color(atma::console::combined_color_t{color});
-
-				break;
-			}
-
-			default:
-				ATMA_HALT("bad~~");
-				break;
 		}
 
-		read_position_ = rp;
+		read_position_ = (rp + chunk_size) % buf_size;
 	}
 
 private:
@@ -395,6 +556,9 @@ private:
 	std::atomic_size_t write_position_ = 0;
 	std::atomic_size_t written_position_ = 0;
 	std::atomic_size_t read_position_ = 0;
+
+	std::atomic_size_t starve_thread_ = 0;
+	std::atomic_size_t starve_count_ = 0;
 };
 
 static int plus(int a, int b) { return a + b; }
@@ -404,7 +568,9 @@ application_t::application_t()
 	, window(fooey::window("Excitement!", 800 + 16, 600 + 38))
 	, runtime{}
 {
-#if 0
+	//auto r1 = std::atomic_uint64_t::is_lock_free();
+	//InterlockedCompareExchange128();
+
  {
 	log_system_t shiny_log_system{
 		//atma::log_color_t{log_system_t::fatal, 0b11001111},
@@ -412,16 +578,46 @@ application_t::application_t()
 		//atma::log_color_t{log_system_t::warning, 0b00001110},
 	};
 
-	shiny_log_system.signal_log(0b11110000, "here is a story about ", 0b00001100, "dragons.");
-	shiny_log_system.signal_log(0b00000111, "once upon a time, they were everywhere.");
-	shiny_log_system.signal_log("then they learnt how to brew gin.");
-	shiny_log_system.signal_log("so now they're mostly,");
-	shiny_log_system.signal_log("at the bar.");
-	shiny_log_system.signal_log("but they're also everywhere. alcohol helps with the procreating.");
+	auto t1 = std::thread([&]{
+		for (;;)
+			shiny_log_system.signal_log(0b00001001, "thread 1: message!");
+			//shiny_log_system.signal_test();
+	});
+
+	auto t2 = std::thread([&] {
+		for (;;)
+			shiny_log_system.signal_log(0b00000010, "thread 2: message of great importance. important because it's long and therefore slower!");
+			//shiny_log_system.signal_test();
+	});
+
+	auto t3 = std::thread([&] {
+		for (;;)
+			shiny_log_system.signal_log(0b00001100, "thread 3: yay");
+		//shiny_log_system.signal_test();
+	});
+
+	auto t4 = std::thread([&] {
+		for (;;)
+			shiny_log_system.signal_log(0b00001111, "thread 3: here is a lot of text, trying to saturate the buffer, to see how good"
+				" the starvation-prevention stuff I've written holds up. I wonder what sort of mechanical keyboard I should get. recently "
+				"I've been spending a bit too much, but I've been cutting down on food, so there's that");
+		//shiny_log_system.signal_test();
+	});
+
+	t1.join();
+	t2.join();
+
+	//shiny_log_system.signal_log(0b11110000, "here is a story about ", 0b00001100, "dragons.");
+	//shiny_log_system.signal_log(0b00000111, "once upon a time, they were everywhere.");
+	//shiny_log_system.signal_log("then they learnt how to brew gin.");
+	//shiny_log_system.signal_log("so now they're mostly,");
+	//shiny_log_system.signal_log("at the bar.");
+	//shiny_log_system.signal_log("but they're also everywhere. alcohol helps with the procreating.");
  }
 	//auto shiny_logpipe_handle = atma::log::new_pipe("shiny");
 
 	exit(0);
+#if 0
 	int fds[2];
 	
 	int res = _pipe(fds, 4096, _O_BINARY);
