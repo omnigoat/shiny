@@ -38,6 +38,7 @@
 #include <atma/algorithm.hpp>
 #include <atma/function.hpp>
 #include <atma/console.hpp>
+#include <atma/atomic.hpp>
 
 #include <regex>
 #include <atomic>
@@ -253,7 +254,6 @@ struct log_system_t
 	static size_t const buf_size = 76;
 	static size_t const thread_buf_size = 2048;
 	
-
 	log_system_t()
 	{
 		memset(buf_, 0, buf_size);
@@ -326,14 +326,57 @@ private:
 	{
 		size_t st = 0;
 		do {
-			st = starve_thread_.load();
+			st = starve_.thread;
 		} while (st != 0 && st != thread_id);
 
 		return st;
 	}
 
-	auto strv_emplace(std::chrono::microseconds const&) -> void;
-	//auto strv_
+	auto strv_flag(size_t starve_id, size_t thread_id, std::chrono::microseconds const& starve_time) -> void
+	{
+		if (starve_time > starve_timeout)
+		{
+			auto q_starve_thread = starve_.thread;
+			auto q_starve_time = starve_.time;
+
+			// if we've been starved longer than anything else, we're first!
+			if (starve_time.count() > q_starve_time)
+			{
+				size_t exp[] = {q_starve_thread, q_starve_time};
+
+				uint16 k;
+				atma::atomic_exchange<uint16>(&k, 4);
+
+				// this only tries once!
+				InterlockedCompareExchange128((LONG64*)&starve_, thread_id, starve_time.count(), (LONG64*)exp);
+			}
+			else
+			// if we're the starving thread
+			if (q_starve_thread == thread_id)
+			{
+				starve_.time = starve_time;
+			}
+			else
+			{
+				//
+				//uint64 exp = 0;
+				//while (!starve_.thread.compare_exchange_strong(exp, thread_id))
+					//exp = 0;
+			}
+
+			stave_time_ = starve_time;
+		}
+	}
+
+	auto strv_unflag(size_t starve_id, size_t thread_id) -> void
+	{
+		if (starve_.thread == thread_id)
+		{
+			auto exp = thread_id;
+			auto r = starve_.thread.compare_exchange_strong(exp, 0);
+			ATMA_ASSERT(r, "shouldn't have contention over resetting starvation");
+		}
+	}
 
 private:
 	//--------------------------------
@@ -355,20 +398,17 @@ private:
 
 		ATMA_ASSERT(size <= buf_size, "queue can not allocate that much");
 
-		size_t wp = 0, rp = 0;
-		size_t nwp = 0;
+		// write-position, read-position, new-write-position
+		size_t wp = 0, rp = 0, nwp = 0;
 
-		size_t id = std::hash<std::thread::id>{}(std::this_thread::get_id());
+		size_t thread_id = std::hash<std::thread::id>{}(std::this_thread::get_id());
 
-		static std::chrono::microseconds timeout{1000};
-
-		std::chrono::high_resolution_clock hrc;
 		std::chrono::microseconds starvation{};
 		for (;;)
 		{
-			auto time_start = hrc.now();
+			auto time_start = std::chrono::high_resolution_clock::now();
 
-			auto starve_id = strv_gate(id);
+			auto starve_id = strv_gate(thread_id);
 
 			wp = write_position_.load();
 			rp = read_position_.load();
@@ -376,39 +416,23 @@ private:
 			// size of available bytes. subtract one because we must never have
 			// the write-position and read-position equal the same value if the
 			// buffer is full, because we can't distinguish it from being empty
-			auto sz = (rp <= wp) ?
-				rp + (buf_size - wp) - 1:
-				rp - wp - 1;
+			auto available = (rp <= wp ? rp + buf_size - wp : rp - wp) - 1;
 
-			if (sz >= size)
+			if (size <= available)
 			{
 				nwp = (wp + size) % buf_size;
 
 				if (write_position_.compare_exchange_strong(wp, nwp))
+				{
+					strv_unflag(starve_id, thread_id);
 					break;
+				}
 			}
 			
+			auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - time_start);
+			starvation += elapsed;
 
-			starvation += std::chrono::duration_cast<std::chrono::microseconds>(hrc.now() - time_start);
-
-			if (starvation > timeout)
-			{
-				if (starve_id != id)
-				{
-					uint64 exp = 0;
-					while (!starve_thread_.compare_exchange_strong(exp, id))
-						exp = 0;
-				}
-
-				starve_count_ = starvation.count();
-			}
-		}
-
-		if (starve_thread_ == id)
-		{
-			auto exp = id;
-			auto r = starve_thread_.compare_exchange_strong(exp, 0);
-			ATMA_ASSERT(r, "shouldn't have contention over resetting starvation");
+			strv_flag(starve_id, thread_id, starvation);
 		}
 
 		// encode chunk header
@@ -562,6 +586,8 @@ private:
 private:
 	atma::vector<void*> writers_;
 
+	std::chrono::microseconds const starve_timeout{100};
+
 	std::thread handle_;
 	bool running_ = true;
 
@@ -570,8 +596,10 @@ private:
 	std::atomic_size_t written_position_ = 0;
 	std::atomic_size_t read_position_ = 0;
 
-	std::atomic_size_t starve_thread_ = 0;
-	std::atomic_size_t starve_count_ = 0;
+	struct alignas(16) {
+		size_t thread = 0;
+		size_t time = 0;
+	} starve_;
 };
 
 static int plus(int a, int b) { return a + b; }
