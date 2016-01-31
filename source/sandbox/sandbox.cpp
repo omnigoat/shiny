@@ -107,7 +107,7 @@ namespace lion
 using asset_handle_t = intptr; //asset_storage_t const*;
 
 
-
+#if 0
 char buf[256];
 
 
@@ -168,86 +168,369 @@ enum class log_levels_t : int
 	size = 5
 };
 
+#endif
+
+
+
 
 struct mwsr_queue_t
 {
 	struct allocation_t;
+	struct decoder_t;
 
-	mwsr_queue_t(void*, size_t);
-	mwsr_queue_t(size_t);
+	mwsr_queue_t(void*, uint32);
+	mwsr_queue_t(uint32);
 
-	auto allocate(size_t size) -> allocation_t;
-	auto commit(allocation_t const&) -> void;
+	auto allocate(uint16 size, byte header) -> allocation_t;
+	auto commit(allocation_t&) -> void;
 
-	//auto encode_byte(allocation_t&, byte) -> void;
+	auto consume(decoder_t&) -> bool;
 
 private:
-	byte* buf_ = nullptr;
-	size_t buf_size_ = 0;
+	enum class command_t : byte;
+
+	// header is {2-bytes: size, 2-bytes: id}
+	static uint32 const header_szfield_size = 2;
+	static uint32 const header_idfield_size = 2;
+	static uint32 const header_size = header_szfield_size + header_idfield_size;
+
+	auto buf_encode_header(byte*, uint32 bufsize, allocation_t&, command_t, byte = 0) -> void;
+	auto buf_encode_byte  (byte*, uint32 bufsize, allocation_t&, byte) -> void;
+	auto buf_encode_uint16(byte*, uint32 bufsize, allocation_t&, uint16) -> void;
+	auto buf_encode_uint32(byte*, uint32 bufsize, allocation_t&, uint32) -> void;
+	auto buf_encode_uint64(byte*, uint32 bufsize, allocation_t&, uint64) -> void;
+
+private:
 	bool owner_ = false;
 
-	std::atomic_uint32_t write_position_ = 0;
-	std::atomic_uint32_t written_position_ = 0;
-	std::atomic_uint32_t read_position_ = 0;
+	union
+	{
+		struct
+		{
+			byte*  write_buf_;
+			uint32 write_buf_size_;
+			uint32 write_position_;
+		};
+
+		atma::atomic128_t  write_info_;
+	};
+
+	byte* read_buf_ = nullptr;
+	uint32 read_buf_size_ = 0;
+	uint32 read_position_ = 0;
+
+	struct alignas(16) {
+		size_t thread = 0;
+		size_t time = 0;
+	} starve_;
 };
 
 struct mwsr_queue_t::allocation_t
 {
-private:
-	allocation_t(uint32 wp, uint32 nwp, uint32 p)
-		: wp(wp), nwp(nwp), p(p)
-	{}
+	auto encode_byte  (byte) -> void;
+	auto encode_uint16(uint16) -> void;
+	auto encode_uint32(uint32) -> void;
+	auto encode_uint64(uint64) -> void;
 
-	uint32 wp, nwp, p;
+private:
+	allocation_t(byte* buf, uint32 bufsize, uint32 wp, uint16 size)
+		: buf(buf), bufsize(bufsize)
+		, wp(wp), p(wp + header_szfield_size)
+		, size(size)
+	{
+		ATMA_ASSERT(size > header_size, "bad command size");
+	}
+
+	byte*  buf;
+	uint32 bufsize;
+	uint32 wp, p;
+	uint16 size;
 
 	friend struct mwsr_queue_t;
 };
 
-mwsr_queue_t::mwsr_queue_t(void* buf, size_t size)
-	: buf_((byte*)buf)
-	, buf_size_(size)
-{}
-
-mwsr_queue_t::mwsr_queue_t(size_t sz)
-	: buf_(new byte[sz])
-	, buf_size_(sz)
-	, owner_(true)
-{}
-
-auto mwsr_queue_t::allocate(size_t size) -> allocation_t
+struct mwsr_queue_t::decoder_t
 {
-	uint32 wp = 0, rp = 0, nwp = 0;
+	decoder_t() {}
 
+	auto decode_byte(byte&) -> void;
+	auto decode_uint16(uint16&) -> void;
+	auto decode_uint32(uint32&) -> void;
+	auto decode_uint64(uint64&) -> void;
+
+private:
+	decoder_t(byte* buf, uint32 bufsize, uint32 rp)
+		: buf(buf), bufsize(bufsize)
+		, p(rp + header_szfield_size)
+		, size(*(uint16*)(buf + rp))
+	{
+	}
+
+	byte*  buf;
+	uint32 bufsize;
+	uint32 p;
+	uint16 size;
+};
+
+enum class mwsr_queue_t::command_t : byte
+{
+	nop,
+	jump,
+	user
+};
+
+mwsr_queue_t::mwsr_queue_t(void* buf, uint32 size)
+	: write_buf_((byte*)buf)
+	, write_buf_size_(size)
+	, write_position_()
+	, read_buf_((byte*)buf)
+	, read_buf_size_(size)
+{}
+
+mwsr_queue_t::mwsr_queue_t(uint32 sz)
+	: owner_(true)
+	, write_buf_(new byte[sz]{})
+	, write_buf_size_(sz)
+	, write_position_()
+	, read_buf_(write_buf_)
+	, read_buf_size_(write_buf_size_)
+{}
+
+auto mwsr_queue_t::allocate(uint16 size, byte user_header) -> allocation_t
+{
+	// also need space for alloc header
+	size += header_size;
+
+	ATMA_ASSERT(size <= write_buf_size_, "queue can not allocate that much");
+
+	size_t thread_id = std::hash<std::thread::id>{}(std::this_thread::get_id());
+
+
+	byte* wb = nullptr;
+	uint32 wbs = 0;
+	uint32 wp = 0;
+
+	std::chrono::microseconds starvation{};
 	for (;;)
 	{
-		wp = write_position_.load();
-		rp = read_position_.load();
+		auto time_start = std::chrono::high_resolution_clock::now();
+
+		//auto starve_id = strv_gate(thread_id);
+
+		// read 16 bytes of {write-buf, buf-size, write-pos}
+		atma::atomic128_t q_write_info;
+		atma::atomic_read128(&q_write_info, &write_info_);
+
+		// write-buffer, write-buffer-size, write-position
+		wb  = (byte*)q_write_info.ui64[0];
+		wbs = q_write_info.ui32[2];
+		wp  = q_write_info.ui32[3];
+
+		auto rb = (byte*)read_buf_;
+		auto rp = read_position_;
 
 		// size of available bytes. subtract one because we must never have
 		// the write-position and read-position equal the same value if the
 		// buffer is full, because we can't distinguish it from being empty
-		uint32 sz = (rp <= wp ? rp + (uint32)buf_size_ - wp : rp - wp) - 1;
+		//
+		// if our buffers are differing (because we are mid-rebase), then
+		// we can only allocate up to the end of the new buffer
+		uint32 available = 0;
+		if (wb == rb)
+			available = (rp <= wp ? rp + wbs - wp : rp - wp) - 1;
+		else
+			available = wbs - wp - 1;
 
-		if (sz >= size)
-		{
-			nwp = (wp + (uint32)size) % buf_size_;
 
-			if (write_position_.compare_exchange_strong(wp, nwp))
-				break;
+		// new-write-position can't be "one before" the end of the buffer,
+		// as we must write the first two bytes of the header atomically
+		auto nwp = (wp + size) % wbs;
+		if (nwp == wbs - 1) {
+			++nwp;
+			++size;
 		}
+
+		if (size <= available)
+		{
+			if (atma::atomic_compare_exchange(&write_position_, wp, nwp))
+			{
+				//strv_unflag(starve_id, thread_id);
+				break;
+			}
+		}
+		// not enough space for our command. we may eventually have to block (busy-wait),
+		// but first let's try to create a *new* buffer, atomically set all new writes to
+		// write into that buffer, and encode a jump command in our current buffer. jump
+		// commands are very small (16 bytes), so maybe that'll work.
+		else
+		{
+			static_assert(sizeof(uint64) >= sizeof(void*), "pointers too large! where are you?");
+
+			// new write-information
+			atma::atomic128_t nwi;
+			auto const nwbs = wbs * 2;
+			nwi.ui64[0] = (uint64)new byte[nwbs]();
+			nwi.ui32[2] = nwbs;
+			nwi.ui32[3] = 0;
+
+
+			uint16 const growcmd_size = 12 + 4;
+			if (growcmd_size <= available)
+			{
+				uint32 gnwp = (wp + growcmd_size) % wbs;
+
+				if (atma::atomic_compare_exchange(&write_position_, wp, gnwp))
+				{
+					auto A = allocation_t{wb, wbs, wp, growcmd_size};
+
+					// update "known" write-position
+					q_write_info.ui32[3] = gnwp;
+
+					if (atma::atomic_compare_exchange(&write_info_, q_write_info, nwi))
+					{
+						// successfully (atomically) moved to new buffer
+						// encode "jump" command to new buffer
+						A.encode_byte((byte)command_t::jump);
+						A.encode_byte(0);
+						A.encode_uint64(nwi.ui64[0]);
+						A.encode_uint32(nwbs);
+					}
+					else
+					{
+						// we failed to move to new buffer: encode a nop
+						buf_encode_header(wb, wbs, A, command_t::nop);
+					}
+
+					commit(A);
+				}
+			}
+		}
+
+		auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - time_start);
+		starvation += elapsed;
+
+		//strv_flag(starve_id, thread_id, starvation);
 	}
 
-	return allocation_t{wp, nwp, wp};
+	auto A = allocation_t{wb, wbs, wp, size};
+	A.encode_byte((byte)command_t::user);
+	A.encode_byte(user_header);
+	return A;
 }
 
-auto mwsr_queue_t::commit(allocation_t const& a) -> void
+auto mwsr_queue_t::commit(allocation_t& a) -> void
 {
-	auto exp = a.wp;
-	while (!written_position_.compare_exchange_strong(exp, a.nwp))
-		break;
+	// we have already guaranteed that the first two bytes of the header
+	// does not wrap around our buffer
+	atma::atomic_exchange(a.buf + a.wp, a.size);
+	a.wp = a.p = a.size = 0;
+}
+
+auto mwsr_queue_t::buf_encode_header(byte* buf, uint32 bufsize, allocation_t& A, command_t c, byte b) -> void
+{
+	buf_encode_byte(buf, bufsize, A, (byte)c);
+	buf_encode_byte(buf, bufsize, A, b);
+}
+
+auto mwsr_queue_t::buf_encode_byte(byte* buf, uint32 bufsize, allocation_t& A, byte b) -> void
+{
+	ATMA_ASSERT(A.p != (A.wp + A.size) % bufsize);
+	ATMA_ASSERT(0 <= A.p && A.p < bufsize);
+
+	buf[A.p] = b;
+	A.p = (A.p + 1) % bufsize;
+}
+
+auto mwsr_queue_t::buf_encode_uint16(byte* buf, uint32 bufsize, allocation_t& A, uint16 i) -> void
+{
+	buf_encode_byte(buf, bufsize, A, i & 0xff);
+	buf_encode_byte(buf, bufsize, A, (i & 0xff00) >> 8);
+}
+
+auto mwsr_queue_t::buf_encode_uint32(byte* buf, uint32 bufsize, allocation_t& A, uint32 i) -> void
+{
+	buf_encode_uint16(buf, bufsize, A, i & 0xffff);
+	buf_encode_uint16(buf, bufsize, A, (i & 0xffff0000) >> 16);
+}
+
+auto mwsr_queue_t::buf_encode_uint64(byte* buf, uint32 bufsize, allocation_t& A, uint64 i) -> void
+{
+	buf_encode_uint32(buf, bufsize, A, i & 0xffffffff);
+	buf_encode_uint32(buf, bufsize, A, i >> 32);
+}
+
+auto mwsr_queue_t::consume(decoder_t& D) -> bool
+{
+	
+}
+
+auto mwsr_queue_t::allocation_t::encode_byte(byte b) -> void
+{
+	ATMA_ASSERT(p != (wp + size) % bufsize);
+	ATMA_ASSERT(0 <= p && p < bufsize);
+
+	buf[p] = b;
+	p = (p + 1) % bufsize;
+}
+
+auto mwsr_queue_t::allocation_t::encode_uint16(uint16 i) -> void
+{
+	encode_byte(i & 0xff);
+	encode_byte(i >> 8);
+}
+
+auto mwsr_queue_t::allocation_t::encode_uint32(uint32 i) -> void
+{
+	encode_uint16(i & 0xffff);
+	encode_uint16(i >> 16);
+}
+
+auto mwsr_queue_t::allocation_t::encode_uint64(uint64 i) -> void
+{
+	encode_uint32(i & 0xffffffff);
+	encode_uint32(i >> 32);
+}
+
+auto mwsr_queue_t::decoder_t::decode_byte(byte& b) -> void
+{
+	b = buf[p];
+	p = (p + 1) % bufsize;
+}
+
+auto mwsr_queue_t::decoder_t::decode_uint16(uint16& i) -> void
+{
+	byte* bs = (byte*)&i;
+
+	decode_byte(bs[0]);
+	decode_byte(bs[1]);
+}
+
+auto mwsr_queue_t::decoder_t::decode_uint32(uint32& i) -> void
+{
+	byte* bs = (byte*)&i;
+
+	decode_byte(bs[0]);
+	decode_byte(bs[1]);
+	decode_byte(bs[2]);
+	decode_byte(bs[3]);
+}
+
+auto mwsr_queue_t::decoder_t::decode_uint64(uint64& i) -> void
+{
+	byte* bs = (byte*)&i;
+
+	decode_byte(bs[0]);
+	decode_byte(bs[1]);
+	decode_byte(bs[2]);
+	decode_byte(bs[3]);
+	decode_byte(bs[4]);
+	decode_byte(bs[5]);
+	decode_byte(bs[6]);
+	decode_byte(bs[7]);
 }
 
 
+#if 0
 
 struct log_system_t
 {
@@ -591,8 +874,11 @@ private:
 	std::thread handle_;
 	bool running_ = true;
 
-	byte buf_[buf_size];
+	//byte buf_[buf_size];
+	byte* write_buf_;
 	std::atomic_size_t write_position_ = 0;
+
+	byte* read_buf_;
 	std::atomic_size_t written_position_ = 0;
 	std::atomic_size_t read_position_ = 0;
 
@@ -601,6 +887,8 @@ private:
 		size_t time = 0;
 	} starve_;
 };
+#endif
+
 
 static int plus(int a, int b) { return a + b; }
 
@@ -613,24 +901,45 @@ application_t::application_t()
 	//InterlockedCompareExchange128();
 
  {
+	#if 0
 	log_system_t shiny_log_system{
 		//atma::log_color_t{log_system_t::fatal, 0b11001111},
 		//atma::log_color_t{log_system_t::error, 0b11001111},
 		//atma::log_color_t{log_system_t::warning, 0b00001110},
 	};
+	#endif
 
-	auto t1 = std::thread([&]{
-		for (;;)
-			shiny_log_system.signal_log(0b00001001, "thread 1: message!");
-			//shiny_log_system.signal_test();
+	mwsr_queue_t q{256};
+	
+	auto rt = std::thread([&] {
+		mwsr_queue_t::decoder_t D;
+
+		for (;;) {
+			if (q.consume(D)) {
+				uint64 p;
+				D.decode_uint64(p);
+				std::cout << "thread id: " << p << std::endl;
+			}
+		}
+	});
+
+	auto t1 = std::thread([&] {
+		for (;;) {
+			auto A = q.allocate(8, 0);
+			A.encode_uint64(std::hash<std::thread::id>{}(std::this_thread::get_id()));
+			q.commit(A);
+		}
 	});
 
 	auto t2 = std::thread([&] {
-		for (;;)
-			shiny_log_system.signal_log(0b00000010, "thread 2!");
-			//shiny_log_system.signal_test();
+		for (;;) {
+			auto A = q.allocate(8, 0);
+			A.encode_uint64(std::hash<std::thread::id>{}(std::this_thread::get_id()));
+			q.commit(A);
+		}
 	});
 
+#if 0
 	auto t3 = std::thread([&] {
 		for (;;)
 			shiny_log_system.signal_log(0b00001100, "thread 3!");
@@ -642,6 +951,7 @@ application_t::application_t()
 			shiny_log_system.signal_log(0b00001111, "thread 4: here is a lot of text, trying to saturate the buffer..");
 		//shiny_log_system.signal_test();
 	});
+#endif
 
 	t1.join();
 	t2.join();
