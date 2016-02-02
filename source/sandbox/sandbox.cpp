@@ -212,12 +212,20 @@ private:
 			uint32 write_position_;
 		};
 
-		atma::atomic128_t  write_info_;
+		atma::atomic128_t write_info_;
 	};
 
-	byte* read_buf_ = nullptr;
-	uint32 read_buf_size_ = 0;
-	uint32 read_position_ = 0;
+	union
+	{
+		struct
+		{
+			byte* read_buf_;
+			uint32 read_buf_size_;
+			uint32 read_position_;
+		};
+
+		atma::atomic128_t read_info_;
+	};
 
 	struct alignas(16) {
 		size_t thread = 0;
@@ -253,6 +261,8 @@ struct mwsr_queue_t::decoder_t
 {
 	decoder_t() {}
 
+	auto id() const -> byte { return id_; }
+
 	auto decode_byte(byte&) -> void;
 	auto decode_uint16(uint16&) -> void;
 	auto decode_uint32(uint32&) -> void;
@@ -270,6 +280,9 @@ private:
 	uint32 bufsize;
 	uint32 p;
 	uint16 size;
+	byte id_ = 0;
+
+	friend struct mwsr_queue_t;
 };
 
 enum class mwsr_queue_t::command_t : byte
@@ -285,6 +298,7 @@ mwsr_queue_t::mwsr_queue_t(void* buf, uint32 size)
 	, write_position_()
 	, read_buf_((byte*)buf)
 	, read_buf_size_(size)
+	, read_position_()
 {}
 
 mwsr_queue_t::mwsr_queue_t(uint32 sz)
@@ -294,6 +308,7 @@ mwsr_queue_t::mwsr_queue_t(uint32 sz)
 	, write_position_()
 	, read_buf_(write_buf_)
 	, read_buf_size_(write_buf_size_)
+	, read_position_()
 {}
 
 auto mwsr_queue_t::allocate(uint16 size, byte user_header) -> allocation_t
@@ -326,8 +341,11 @@ auto mwsr_queue_t::allocate(uint16 size, byte user_header) -> allocation_t
 		wbs = q_write_info.ui32[2];
 		wp  = q_write_info.ui32[3];
 
-		auto rb = (byte*)read_buf_;
-		auto rp = read_position_;
+		// read-buffer, read-position
+		atma::atomic128_t q_read_info;
+		atma::atomic_read128(&q_read_info, &read_info_);
+		auto rb  = (byte*)q_read_info.ui64[0];
+		auto rp  = q_read_info.ui32[3];
 
 		// size of available bytes. subtract one because we must never have
 		// the write-position and read-position equal the same value if the
@@ -461,7 +479,39 @@ auto mwsr_queue_t::buf_encode_uint64(byte* buf, uint32 bufsize, allocation_t& A,
 
 auto mwsr_queue_t::consume(decoder_t& D) -> bool
 {
-	
+	// read first 16 bytes of header
+	uint16 size = *(uint16*)(read_buf_ + read_position_);
+	if (size == 0)
+		return false;
+
+	D.buf = read_buf_;
+	D.bufsize = read_buf_size_;
+	D.p = read_position_ + 2;
+	D.size = size;
+
+	// read second 16 bytes of header
+	byte header;
+	D.decode_byte(header);
+	D.decode_byte(D.id_);
+
+	read_position_ = (read_position_ + size) % read_buf_size_;
+
+	switch ((command_t)header)
+	{
+		// nop means we move to the next location
+		case command_t::nop:
+			return consume(D);
+
+		case command_t::jump:
+			// lulz!
+			break;
+
+		// user
+		default:
+			break;
+	}
+
+	return true;
 }
 
 auto mwsr_queue_t::allocation_t::encode_byte(byte b) -> void
