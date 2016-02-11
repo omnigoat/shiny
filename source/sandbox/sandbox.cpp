@@ -417,10 +417,15 @@ auto mwsr_queue_t::allocate(uint16 size, byte user_header) -> allocation_t
 					{
 						// we failed to move to new buffer: encode a nop
 						buf_encode_header(wb, wbs, A, command_t::nop);
+						delete [] (byte*)nwi.ui64[0];
 					}
 
 					commit(A);
 				}
+			}
+			else
+			{
+				delete [] (byte*)nwi.ui64[0];
 			}
 		}
 
@@ -502,9 +507,20 @@ auto mwsr_queue_t::consume(decoder_t& D) -> bool
 		case command_t::nop:
 			return consume(D);
 
+		// jump to the encoded, larger, read-buffer
 		case command_t::jump:
-			// lulz!
-			break;
+		{
+			uint64 ptr;
+			uint32 size;
+			D.decode_uint64(ptr);
+			D.decode_uint32(size);
+			delete [] read_buf_;
+			read_buf_ = (byte*)ptr;
+			read_buf_size_ = size;
+			read_position_ = 0;
+			std::cout << "JUMPED TO SIZE " << size << std::endl;
+			return consume(D);
+		}
 
 		// user
 		default:
@@ -959,7 +975,7 @@ application_t::application_t()
 	};
 	#endif
 
-	mwsr_queue_t q{256};
+	mwsr_queue_t q{1024};
 	
 	auto rt = std::thread([&] {
 		mwsr_queue_t::decoder_t D;
@@ -968,7 +984,16 @@ application_t::application_t()
 			if (q.consume(D)) {
 				uint64 p;
 				D.decode_uint64(p);
-				std::cout << "thread id: " << p << std::endl;
+				std::cout << "thread id: " << std::hex << p << std::endl;
+			}
+		}
+	});
+
+	auto te = std::thread([&] {
+		for (;;) {
+			if (SHORT s = GetAsyncKeyState(VK_ESCAPE)) {
+				if (s & 0x8000)
+					exit(0);
 			}
 		}
 	});
@@ -983,7 +1008,7 @@ application_t::application_t()
 
 	auto t2 = std::thread([&] {
 		for (;;) {
-			auto A = q.allocate(8, 0);
+			auto A = q.allocate(80, 0);
 			A.encode_uint64(std::hash<std::thread::id>{}(std::this_thread::get_id()));
 			q.commit(A);
 		}
