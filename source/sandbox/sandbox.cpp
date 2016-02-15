@@ -172,7 +172,6 @@ enum class log_levels_t : int
 
 
 
-
 struct mwsr_queue_t
 {
 	struct allocation_t;
@@ -199,6 +198,10 @@ private:
 	auto buf_encode_uint16(byte*, uint32 bufsize, allocation_t&, uint16) -> void;
 	auto buf_encode_uint32(byte*, uint32 bufsize, allocation_t&, uint32) -> void;
 	auto buf_encode_uint64(byte*, uint32 bufsize, allocation_t&, uint64) -> void;
+
+	auto starve_flag(size_t starve_id, size_t thread_id, std::chrono::microseconds const& starve_time) -> void;
+	auto starve_unflag(size_t starve_id, size_t thread_id) -> void;
+	auto starve_gate(size_t thread_id) -> size_t;
 
 private:
 	bool owner_ = false;
@@ -227,7 +230,8 @@ private:
 		atma::atomic128_t read_info_;
 	};
 
-	struct alignas(16) {
+	struct alignas(16)
+	{
 		size_t thread = 0;
 		size_t time = 0;
 	} starve_;
@@ -480,6 +484,17 @@ auto mwsr_queue_t::buf_encode_uint64(byte* buf, uint32 bufsize, allocation_t& A,
 {
 	buf_encode_uint32(buf, bufsize, A, i & 0xffffffff);
 	buf_encode_uint32(buf, bufsize, A, i >> 32);
+}
+
+
+auto mwsr_queue_t::strv_gate(size_t thread_id) -> size_t
+{
+	size_t st = 0;
+	do {
+		st = starve_.thread;
+	} while (st != 0 && st != thread_id);
+
+	return st;
 }
 
 auto mwsr_queue_t::consume(decoder_t& D) -> bool
