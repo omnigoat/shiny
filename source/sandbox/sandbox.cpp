@@ -235,6 +235,8 @@ private:
 		size_t thread = 0;
 		size_t time = 0;
 	} starve_;
+
+	std::chrono::microseconds const starve_timeout{100};
 };
 
 struct mwsr_queue_t::allocation_t
@@ -487,7 +489,7 @@ auto mwsr_queue_t::buf_encode_uint64(byte* buf, uint32 bufsize, allocation_t& A,
 }
 
 
-auto mwsr_queue_t::strv_gate(size_t thread_id) -> size_t
+auto mwsr_queue_t::starve_gate(size_t thread_id) -> size_t
 {
 	size_t st = 0;
 	do {
@@ -496,6 +498,51 @@ auto mwsr_queue_t::strv_gate(size_t thread_id) -> size_t
 
 	return st;
 }
+
+auto mwsr_queue_t::starve_flag(size_t starve_id, size_t thread_id, std::chrono::microseconds const& starve_time) -> void
+{
+	if (starve_time > starve_timeout)
+	{
+		auto q_starve_thread = starve_.thread;
+		auto q_starve_time = starve_.time;
+
+		// if we've been starved longer than anything else, we're first!
+		if (starve_time.count() > q_starve_time)
+		{
+			atma::atomic128_t c{q_starve_thread, q_starve_time};
+			atma::atomic128_t v{thread_id, (uint64)starve_time.count()};
+
+			// this only tries once!
+			atma::atomic_compare_exchange(&starve_, c, v);
+		}
+		// if we're the starving thread
+		else if (q_starve_thread == thread_id)
+		{
+			starve_.time = starve_time.count();
+		}
+		else
+		{
+			//
+			//uint64 exp = 0;
+			//while (!starve_.thread.compare_exchange_strong(exp, thread_id))
+			//exp = 0;
+		}
+
+		starve_.time = starve_time.count();
+	}
+}
+
+#if 0
+auto strv_unflag(size_t starve_id, size_t thread_id) -> void
+{
+	if (starve_.thread == thread_id)
+	{
+		auto exp = thread_id;
+		auto r = starve_.thread.compare_exchange_strong(exp, 0);
+		ATMA_ASSERT(r, "shouldn't have contention over resetting starvation");
+	}
+}
+#endif
 
 auto mwsr_queue_t::consume(decoder_t& D) -> bool
 {
