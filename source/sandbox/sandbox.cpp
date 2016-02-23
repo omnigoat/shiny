@@ -230,11 +230,16 @@ private:
 		atma::atomic128_t read_info_;
 	};
 
-	struct alignas(16)
+	union
 	{
-		size_t thread = 0;
-		size_t time = 0;
-	} starve_;
+		struct
+		{
+			uint64 starve_thread_;
+			uint64 starve_time_;
+		};
+
+		atma::atomic128_t starve_info_;
+	};
 
 	std::chrono::microseconds const starve_timeout{100};
 };
@@ -305,6 +310,8 @@ mwsr_queue_t::mwsr_queue_t(void* buf, uint32 size)
 	, read_buf_((byte*)buf)
 	, read_buf_size_(size)
 	, read_position_()
+	, starve_thread_()
+	, starve_time_()
 {}
 
 mwsr_queue_t::mwsr_queue_t(uint32 sz)
@@ -315,6 +322,8 @@ mwsr_queue_t::mwsr_queue_t(uint32 sz)
 	, read_buf_(write_buf_)
 	, read_buf_size_(write_buf_size_)
 	, read_position_()
+	, starve_thread_()
+	, starve_time_()
 {}
 
 auto mwsr_queue_t::allocate(uint16 size, byte user_header) -> allocation_t
@@ -336,7 +345,9 @@ auto mwsr_queue_t::allocate(uint16 size, byte user_header) -> allocation_t
 	{
 		auto time_start = std::chrono::high_resolution_clock::now();
 
-		//auto starve_id = strv_gate(thread_id);
+		// starve_id is either zero or our thread-id, at any point
+		// during this function-call "starve_.thread" could change
+		auto starve_id = starve_gate(thread_id);
 
 		// read 16 bytes of {write-buf, buf-size, write-pos}
 		atma::atomic128_t q_write_info;
@@ -378,7 +389,7 @@ auto mwsr_queue_t::allocate(uint16 size, byte user_header) -> allocation_t
 		{
 			if (atma::atomic_compare_exchange(&write_position_, wp, nwp))
 			{
-				//strv_unflag(starve_id, thread_id);
+				starve_unflag(starve_id, thread_id);
 				break;
 			}
 		}
@@ -438,7 +449,8 @@ auto mwsr_queue_t::allocate(uint16 size, byte user_header) -> allocation_t
 		auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - time_start);
 		starvation += elapsed;
 
-		//strv_flag(starve_id, thread_id, starvation);
+		starve_unflag(starve_id, thread_id);
+		starve_flag(starve_id, thread_id, starvation);
 	}
 
 	auto A = allocation_t{wb, wbs, wp, size};
@@ -493,7 +505,7 @@ auto mwsr_queue_t::starve_gate(size_t thread_id) -> size_t
 {
 	size_t st = 0;
 	do {
-		st = starve_.thread;
+		st = starve_thread_;
 	} while (st != 0 && st != thread_id);
 
 	return st;
@@ -503,46 +515,32 @@ auto mwsr_queue_t::starve_flag(size_t starve_id, size_t thread_id, std::chrono::
 {
 	if (starve_time > starve_timeout)
 	{
-		auto q_starve_thread = starve_.thread;
-		auto q_starve_time = starve_.time;
+		atma::atomic128_t q;
+		atma::atomic_read128(&q, &starve_info_);
+		auto q_starve_thread = q.ui64[0];
+		auto q_starve_time = q.ui64[1];
 
-		// if we've been starved longer than anything else, we're first!
-		if (starve_time.count() > q_starve_time)
+		// we can update the starvation information if we're just updating ourselves, or
+		// we've been starved longer than what's already seen
+		if (q_starve_thread == thread_id || starve_time.count() > q_starve_time)
 		{
-			atma::atomic128_t c{q_starve_thread, q_starve_time};
 			atma::atomic128_t v{thread_id, (uint64)starve_time.count()};
 
 			// this only tries once!
-			atma::atomic_compare_exchange(&starve_, c, v);
+			atma::atomic_compare_exchange(&starve_info_, q, v);
 		}
-		// if we're the starving thread
-		else if (q_starve_thread == thread_id)
-		{
-			starve_.time = starve_time.count();
-		}
-		else
-		{
-			//
-			//uint64 exp = 0;
-			//while (!starve_.thread.compare_exchange_strong(exp, thread_id))
-			//exp = 0;
-		}
-
-		starve_.time = starve_time.count();
 	}
 }
 
-#if 0
-auto strv_unflag(size_t starve_id, size_t thread_id) -> void
+auto mwsr_queue_t::starve_unflag(size_t starve_id, size_t thread_id) -> void
 {
-	if (starve_.thread == thread_id)
-	{
-		auto exp = thread_id;
-		auto r = starve_.thread.compare_exchange_strong(exp, 0);
-		ATMA_ASSERT(r, "shouldn't have contention over resetting starvation");
-	}
+	atma::atomic_compare_exchange(&starve_thread_, (uint64)thread_id, uint64());
+
+	//if (starve_.thread == thread_id)
+	//{
+	//	ATMA_ENSURE(atma::atomic_compare_exchange(&starve_.thread, (uint64)thread_id, uint64()), "shouldn't have contention over resetting starvation");
+	//}
 }
-#endif
 
 auto mwsr_queue_t::consume(decoder_t& D) -> bool
 {
@@ -1073,6 +1071,7 @@ application_t::application_t()
 			auto A = q.allocate(80, 0);
 			A.encode_uint64(std::hash<std::thread::id>{}(std::this_thread::get_id()));
 			q.commit(A);
+			Sleep(10);
 		}
 	});
 
