@@ -241,7 +241,7 @@ private:
 		atma::atomic128_t starve_info_;
 	};
 
-	std::chrono::microseconds const starve_timeout{100};
+	std::chrono::microseconds const starve_timeout{5000};
 };
 
 struct mwsr_queue_t::allocation_t
@@ -389,7 +389,7 @@ auto mwsr_queue_t::allocate(uint16 size, byte user_header) -> allocation_t
 		{
 			if (atma::atomic_compare_exchange(&write_position_, wp, nwp))
 			{
-				starve_unflag(starve_id, thread_id);
+				//starve_unflag(starve_id, thread_id);
 				break;
 			}
 		}
@@ -449,9 +449,10 @@ auto mwsr_queue_t::allocate(uint16 size, byte user_header) -> allocation_t
 		auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - time_start);
 		starvation += elapsed;
 
-		starve_unflag(starve_id, thread_id);
 		starve_flag(starve_id, thread_id, starvation);
 	}
+
+	starve_unflag(starve_thread_, thread_id);
 
 	auto A = allocation_t{wb, wbs, wp, size};
 	A.encode_byte((byte)command_t::user);
@@ -503,17 +504,23 @@ auto mwsr_queue_t::buf_encode_uint64(byte* buf, uint32 bufsize, allocation_t& A,
 
 auto mwsr_queue_t::starve_gate(size_t thread_id) -> size_t
 {
-	size_t st = 0;
-	do {
-		st = starve_thread_;
-	} while (st != 0 && st != thread_id);
+	size_t st = starve_thread_;
+	if (st != 0)
+	{
+		if (st != thread_id)
+			while (starve_thread_ != 0)
+				;
+	}
+	//do {
+	//	st = starve_thread_;
+	//} while (st != 0 && st != thread_id);
 
 	return st;
 }
 
 auto mwsr_queue_t::starve_flag(size_t starve_id, size_t thread_id, std::chrono::microseconds const& starve_time) -> void
 {
-	if (starve_time > starve_timeout)
+	if (starve_time > starve_timeout && starve_time.count() > starve_time_)
 	{
 		atma::atomic128_t q;
 		atma::atomic_read128(&q, &starve_info_);
@@ -522,24 +529,30 @@ auto mwsr_queue_t::starve_flag(size_t starve_id, size_t thread_id, std::chrono::
 
 		// we can update the starvation information if we're just updating ourselves, or
 		// we've been starved longer than what's already seen
-		if (q_starve_thread == thread_id || starve_time.count() > q_starve_time)
+		if (starve_id != thread_id)
 		{
-			atma::atomic128_t v{thread_id, (uint64)starve_time.count()};
+			//atma::atomic128_t c{0, }
+			//atma::atomic128_t v{thread_id, (uint64)starve_time.count()};
 
 			// this only tries once!
-			atma::atomic_compare_exchange(&starve_info_, q, v);
+			//while (!atma::atomic_compare_exchange(&starve_info_, q, v))
+				//;
+			while (!atma::atomic_compare_exchange(&starve_thread_, 0ull, thread_id))
+				;
 		}
+
+		starve_time_ = starve_time.count();
 	}
 }
 
 auto mwsr_queue_t::starve_unflag(size_t starve_id, size_t thread_id) -> void
 {
-	atma::atomic_compare_exchange(&starve_thread_, (uint64)thread_id, uint64());
+	//atma::atomic_compare_exchange(&starve_thread_, (uint64)thread_id, uint64());
 
-	//if (starve_.thread == thread_id)
-	//{
-	//	ATMA_ENSURE(atma::atomic_compare_exchange(&starve_.thread, (uint64)thread_id, uint64()), "shouldn't have contention over resetting starvation");
-	//}
+	if (starve_thread_ == thread_id)
+	{
+		ATMA_ENSURE(atma::atomic_compare_exchange(&starve_thread_, (uint64)thread_id, uint64()), "shouldn't have contention over resetting starvation");
+	}
 }
 
 auto mwsr_queue_t::consume(decoder_t& D) -> bool
@@ -578,7 +591,7 @@ auto mwsr_queue_t::consume(decoder_t& D) -> bool
 			read_buf_ = (byte*)ptr;
 			read_buf_size_ = size;
 			read_position_ = 0;
-			std::cout << "JUMPED TO SIZE " << size << std::endl;
+			std::cout << "JUMPED TO SIZE " << std::dec << size << std::endl;
 			return consume(D);
 		}
 
@@ -1035,7 +1048,7 @@ application_t::application_t()
 	};
 	#endif
 
-	mwsr_queue_t q{1024};
+	mwsr_queue_t q{1024 * 1024};
 	
 	auto rt = std::thread([&] {
 		mwsr_queue_t::decoder_t D;
@@ -1043,8 +1056,10 @@ application_t::application_t()
 		for (;;) {
 			if (q.consume(D)) {
 				uint64 p;
+				uint64 t;
 				D.decode_uint64(p);
-				std::cout << "thread id: " << std::hex << p << std::endl;
+				D.decode_uint64(t);
+				std::cout << "thread id: " << std::hex << p << " took: " << std::dec << t << std::endl;
 			}
 		}
 	});
@@ -1060,18 +1075,42 @@ application_t::application_t()
 
 	auto t1 = std::thread([&] {
 		for (;;) {
-			auto A = q.allocate(8, 0);
+			auto start = std::chrono::high_resolution_clock::now();
+			auto A = q.allocate(16, 0);
+			auto end = std::chrono::high_resolution_clock::now();
+			auto d = end - start;
+
 			A.encode_uint64(std::hash<std::thread::id>{}(std::this_thread::get_id()));
+			A.encode_uint64(d.count());
 			q.commit(A);
 		}
 	});
 
 	auto t2 = std::thread([&] {
 		for (;;) {
+			auto start = std::chrono::high_resolution_clock::now();
 			auto A = q.allocate(80, 0);
+			auto end = std::chrono::high_resolution_clock::now();
+			auto d = end - start;
+
 			A.encode_uint64(std::hash<std::thread::id>{}(std::this_thread::get_id()));
+			A.encode_uint64(d.count());
 			q.commit(A);
-			Sleep(10);
+		}
+	});
+
+	auto t3 = std::thread([&] {
+		for (;;) {
+			auto start = std::chrono::high_resolution_clock::now();
+			auto A = q.allocate(800, 0);
+			auto end = std::chrono::high_resolution_clock::now();
+			auto d = end - start;
+
+			A.encode_uint64(std::hash<std::thread::id>{}(std::this_thread::get_id()));
+			A.encode_uint64(d.count());
+			q.commit(A);
+
+			Sleep(1);
 		}
 	});
 
