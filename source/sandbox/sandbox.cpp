@@ -193,10 +193,10 @@ application_t::application_t()
 	};
 	#endif
 
-	atma::mpsc_queue_t q{1024 * 1024};
+	atma::base_mpsc_queue_t q{1024 * 1024};
 	
 	auto rt = std::thread([&] {
-		atma::mpsc_queue_t::decoder_t D;
+		atma::base_mpsc_queue_t::decoder_t D;
 
 		for (;;) {
 			if (q.consume(D)) {
@@ -226,7 +226,7 @@ application_t::application_t()
 			auto d = end - start;
 
 			A.encode_uint64(std::hash<std::thread::id>{}(std::this_thread::get_id()));
-			A.encode_uint64(d.count());
+			A.encode_uint64(std::chrono::duration_cast<std::chrono::nanoseconds>(d).count());
 			q.commit(A);
 		}
 	});
@@ -239,11 +239,11 @@ application_t::application_t()
 			auto d = end - start;
 
 			A.encode_uint64(std::hash<std::thread::id>{}(std::this_thread::get_id()));
-			A.encode_uint64(d.count());
+			A.encode_uint64(std::chrono::duration_cast<std::chrono::nanoseconds>(d).count());
 			q.commit(A);
 		}
 	});
-
+/*
 	auto t3 = std::thread([&] {
 		for (;;) {
 			auto start = std::chrono::high_resolution_clock::now();
@@ -252,12 +252,12 @@ application_t::application_t()
 			auto d = end - start;
 
 			A.encode_uint64(std::hash<std::thread::id>{}(std::this_thread::get_id()));
-			A.encode_uint64(d.count());
+			A.encode_uint64(std::chrono::duration_cast<std::chrono::nanoseconds>(d).count());
 			q.commit(A);
 
 			Sleep(1);
 		}
-	});
+	});*/
 
 #if 0
 	auto t3 = std::thread([&] {

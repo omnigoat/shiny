@@ -124,7 +124,9 @@ auto runtime_t::dxgi_output_of(platform::dxgi_adapter_ptr const& adapter, uint o
 
 auto runtime_t::d3d_report_live_objects() -> void
 {
+#if ATMA_DEBUG
 	dxgi_debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_SUMMARY);
+#endif
 }
 
 auto runtime_t::make_data_declaration(shiny::data_streams_t const& streams) -> data_declaration_t const*

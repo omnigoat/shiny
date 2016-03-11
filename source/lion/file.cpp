@@ -4,7 +4,6 @@
 
 #include <atma/algorithm.hpp>
 
-
 using namespace lion;
 using lion::file_t;
 
