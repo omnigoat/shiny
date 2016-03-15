@@ -43,6 +43,7 @@
 
 #include <regex>
 #include <atomic>
+#include <iomanip>
 
 #include <io.h>
 #include <fcntl.h>
@@ -171,8 +172,27 @@ enum class log_levels_t : int
 
 #endif
 
+const DWORD MS_VC_EXCEPTION = 0x406D1388;
+typedef struct tagTHREADNAME_INFO
+{
+	DWORD dwType; // Must be 0x1000.
+	LPCSTR szName; // Pointer to name (in user addr space).
+	DWORD dwThreadID; // Thread ID (-1=caller thread).
+	DWORD dwFlags; // Reserved for future use, must be zero.
+} THREADNAME_INFO;
 
-
+void SetThreadName(DWORD dwThreadID, const char* threadName) {
+	THREADNAME_INFO info;
+	info.dwType = 0x1000;
+	info.szName = threadName;
+	info.dwThreadID = dwThreadID;
+	info.dwFlags = 0;
+	__try {
+		RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(ULONG_PTR), (ULONG_PTR*)&info);
+	}
+	__except (EXCEPTION_EXECUTE_HANDLER) {
+	}
+}
 
 static int plus(int a, int b) { return a + b; }
 
@@ -193,18 +213,28 @@ application_t::application_t()
 	};
 	#endif
 
-	atma::base_mpsc_queue_t q{1024 * 1024};
+	//atma::base_mpsc_queue_t q{1024 * 1024};
+	atma::basic_mpsc_queue_t<false, true> q{512};
 	
 	auto rt = std::thread([&] {
-		atma::base_mpsc_queue_t::decoder_t D;
+		SetThreadName(-1 , "consumer thread");
+
+		std::map<uint64, uint64> ids;
 
 		for (;;) {
-			if (q.consume(D)) {
+			if (auto D = q.consume())
+			{
 				uint64 p;
 				uint64 t;
+				uint64 i;
 				D.decode_uint64(p);
 				D.decode_uint64(t);
-				std::cout << "thread id: " << std::hex << p << " took: " << std::dec << t << std::endl;
+				D.decode_uint64(i);
+				if (ids[p] != i)
+					ATMA_HALT("bad thread input");
+				++ids[p];
+				std::cout << "thread id: " << std::hex << p << std::dec << " with value: " << std::setfill('0') << std::setw(4) << i << " took: " << t << std::endl;
+				q.finalize(D);
 			}
 		}
 	});
@@ -218,29 +248,41 @@ application_t::application_t()
 		}
 	});
 
-	auto t1 = std::thread([&] {
+	auto t1 = std::thread([&]
+	{
+		SetThreadName(-1, "producer thread #1");
+		uint64 i = 0;
+
 		for (;;) {
 			auto start = std::chrono::high_resolution_clock::now();
-			auto A = q.allocate(16, 0);
+			auto A = q.allocate(24);
 			auto end = std::chrono::high_resolution_clock::now();
 			auto d = end - start;
 
 			A.encode_uint64(std::hash<std::thread::id>{}(std::this_thread::get_id()));
 			A.encode_uint64(std::chrono::duration_cast<std::chrono::nanoseconds>(d).count());
+			A.encode_uint64(i);
 			q.commit(A);
+			++i;
 		}
 	});
 
-	auto t2 = std::thread([&] {
+	auto t2 = std::thread([&]
+	{
+		SetThreadName(-1, "producer thread #2");
+		uint64 i = 0;
+
 		for (;;) {
 			auto start = std::chrono::high_resolution_clock::now();
-			auto A = q.allocate(80, 0);
+			auto A = q.allocate(80);
 			auto end = std::chrono::high_resolution_clock::now();
 			auto d = end - start;
 
 			A.encode_uint64(std::hash<std::thread::id>{}(std::this_thread::get_id()));
 			A.encode_uint64(std::chrono::duration_cast<std::chrono::nanoseconds>(d).count());
+			A.encode_uint64(i);
 			q.commit(A);
+			++i;
 		}
 	});
 /*
