@@ -214,7 +214,7 @@ application_t::application_t()
 	#endif
 
 	//atma::base_mpsc_queue_t q{1024 * 1024};
-	atma::basic_mpsc_queue_t<false, true> q{512};
+	atma::basic_mpsc_queue_t<false, false> q{512};
 	
 	auto rt = std::thread([&] {
 		SetThreadName(-1 , "consumer thread");
@@ -255,7 +255,7 @@ application_t::application_t()
 
 		for (;;) {
 			auto start = std::chrono::high_resolution_clock::now();
-			auto A = q.allocate(24);
+			auto A = q.allocate(25, 16);
 			auto end = std::chrono::high_resolution_clock::now();
 			auto d = end - start;
 
@@ -274,7 +274,7 @@ application_t::application_t()
 
 		for (;;) {
 			auto start = std::chrono::high_resolution_clock::now();
-			auto A = q.allocate(80);
+			auto A = q.allocate(24);
 			auto end = std::chrono::high_resolution_clock::now();
 			auto d = end - start;
 
