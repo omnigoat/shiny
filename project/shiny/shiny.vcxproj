@@ -127,6 +127,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\..\shiny\vendor\zlib;$(SolutionDir)..\..\shiny\include;$(SolutionDir)..\..\atma\vendor;$(SolutionDir)..\..\atma\include;$(SolutionDir)..\..\fooey\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -168,6 +169,7 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\..\shiny\vendor\zlib;$(SolutionDir)..\..\shiny\include;$(SolutionDir)..\..\atma\vendor;$(SolutionDir)..\..\atma\include;$(SolutionDir)..\..\fooey\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

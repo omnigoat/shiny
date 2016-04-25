@@ -24,7 +24,7 @@ namespace shiny
 	uint32 const primary_output = 0;
 }
 
-#ifdef ATMA_PLATFORM_WIN32
+#ifdef ATMA_PLATFORM_WINDOWS
 #	include <shiny/platform/win32/output.hpp>
 #endif
 

@@ -13,6 +13,6 @@ namespace shiny
 	auto create_context(runtime_t&, fooey::window_ptr const&, uint32 adapter = primary_adapter) -> context_ptr;
 }
 
-#ifdef ATMA_PLATFORM_WIN32
+#ifdef ATMA_PLATFORM_WINDOWS
 #	include <shiny/platform/win32/context.hpp>
 #endif

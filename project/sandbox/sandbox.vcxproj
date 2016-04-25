@@ -114,7 +114,7 @@
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>d3dcompiler.lib;dxgi.lib;dwmapi.lib;d3d11.lib;user32.lib;gdi32.lib</AdditionalDependencies>
     </Link>
@@ -164,6 +164,9 @@
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\atma\project\rose\rose.vcxproj">
+      <Project>{58b3d2c1-0ab1-48cf-8b47-60dc3fc9adb6}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\fooey\project\fooey.vcxproj">
       <Project>{82b83f8f-a8cf-4720-9abd-f08682c1c325}</Project>
     </ProjectReference>

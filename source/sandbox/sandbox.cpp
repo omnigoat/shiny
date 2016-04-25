@@ -29,6 +29,9 @@
 #include <fooey/event_handler.hpp>
 #include <fooey/keys.hpp>
 
+#include <rose/runtime.hpp>
+#include <rose/console.hpp>
+
 #include <atma/math/matrix4f.hpp>
 #include <atma/math/vector4f.hpp>
 #include <atma/math/vector4i.hpp>
@@ -40,6 +43,8 @@
 #include <atma/console.hpp>
 #include <atma/atomic.hpp>
 #include <atma/mpsc_queue.hpp>
+#include <atma/threading.hpp>
+#include <atma/logging.hpp>
 
 #include <regex>
 #include <atomic>
@@ -172,37 +177,53 @@ enum class log_levels_t : int
 
 #endif
 
-const DWORD MS_VC_EXCEPTION = 0x406D1388;
-typedef struct tagTHREADNAME_INFO
-{
-	DWORD dwType; // Must be 0x1000.
-	LPCSTR szName; // Pointer to name (in user addr space).
-	DWORD dwThreadID; // Thread ID (-1=caller thread).
-	DWORD dwFlags; // Reserved for future use, must be zero.
-} THREADNAME_INFO;
-
-void SetThreadName(DWORD dwThreadID, const char* threadName) {
-	THREADNAME_INFO info;
-	info.dwType = 0x1000;
-	info.szName = threadName;
-	info.dwThreadID = dwThreadID;
-	info.dwFlags = 0;
-	__try {
-		RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(ULONG_PTR), (ULONG_PTR*)&info);
-	}
-	__except (EXCEPTION_EXECUTE_HANDLER) {
-	}
-}
-
 static int plus(int a, int b) { return a + b; }
+
+//atma::logsink_t soundlog;
+
+struct yay
+{
+	uint32 one : 1;
+	uint32 two : 2;
+	uint32 lots : 29;
+};
+
+
 
 application_t::application_t()
 	: window_renderer(fooey::system_renderer())
 	, window(fooey::window("Excitement!", 800 + 16, 600 + 38))
 	, runtime{}
 {
+
+	yay y;
+	y.one = 1;
+	y.two = 0b01;
+	y.lots = 567;
+	//atma::thread::inplace_engine_t<false> ie{1024};
+
 	//auto r1 = std::atomic_uint64_t::is_lock_free();
 	//InterlockedCompareExchange128();
+
+	//atma::
+#if 0
+	auto clh = atma::make_console_logging_handler();
+
+	atma::register_logging_handler(clh);
+
+	atma::logging::replicate(slc, )
+
+		//lion::logging::enable();
+		lion::logging::bridge_to(
+			atma::logging_director(),
+			atma::log_level_t::error | atma::log_level_t::warn);
+
+	atma::logging_thing lion_logging;
+	lion::logging::bridge_to(
+		shiny::logging_director());
+
+#endif // 0
+
 
  {
 	#if 0
@@ -214,10 +235,10 @@ application_t::application_t()
 	#endif
 
 	//atma::base_mpsc_queue_t q{1024 * 1024};
-	atma::basic_mpsc_queue_t<false, false> q{512};
+	atma::mpsc_queue_t<false> q{1024 * 1024};
 	
 	auto rt = std::thread([&] {
-		SetThreadName(-1 , "consumer thread");
+		atma::this_thread::set_debug_name("consumer thread");
 
 		std::map<uint64, uint64> ids;
 
@@ -240,6 +261,7 @@ application_t::application_t()
 	});
 
 	auto te = std::thread([&] {
+		atma::this_thread::set_debug_name("quitting thread");
 		for (;;) {
 			if (SHORT s = GetAsyncKeyState(VK_ESCAPE)) {
 				if (s & 0x8000)
@@ -250,12 +272,12 @@ application_t::application_t()
 
 	auto t1 = std::thread([&]
 	{
-		SetThreadName(-1, "producer thread #1");
+		atma::this_thread::set_debug_name("producer thread #1");
 		uint64 i = 0;
 
 		for (;;) {
 			auto start = std::chrono::high_resolution_clock::now();
-			auto A = q.allocate(25, 16);
+			auto A = q.allocate(28, 4, false);
 			auto end = std::chrono::high_resolution_clock::now();
 			auto d = end - start;
 
@@ -269,12 +291,12 @@ application_t::application_t()
 
 	auto t2 = std::thread([&]
 	{
-		SetThreadName(-1, "producer thread #2");
+		atma::this_thread::set_debug_name("producer thread #2");
 		uint64 i = 0;
 
 		for (;;) {
 			auto start = std::chrono::high_resolution_clock::now();
-			auto A = q.allocate(24);
+			auto A = q.allocate(28, 4, true);
 			auto end = std::chrono::high_resolution_clock::now();
 			auto d = end - start;
 
@@ -569,13 +591,27 @@ auto plugin_t::fs_flat() const -> shiny::fragment_shader_ptr const&
 	return app_->fs_flat;
 }
 
+#if 0
 int main()
+#else
+int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
+#endif
 {
+	rose::runtime_t RR;
+	RR.initialize_console();
+	RR.get_console().write("here is some words", 18);
+	//lion::console_logging_handler_t console_log{RR.console_handle()};
+
+	//atma::console_log_handler_t console_log;
+	//atma::logging_runtime_t SLR;
+	//SLR.attach_handler(&console_log);
+
+	//SLR.log(atma::log_level_t::error, "hello", 5);
+
+
 	sandbox::application_t app;
 
 	app.register_plugin(plugin_ptr(new sandbox::voxelization_plugin_t{&app}));
 
 	return app.run();
 }
-
-
