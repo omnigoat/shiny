@@ -23,6 +23,9 @@
     <ClInclude Include="..\..\include\lion\filesystem.hpp">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\lion\console_log_handler.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\source\lion\file.cpp">
@@ -35,6 +38,9 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\lion\filesystem.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\lion\console_log_handler.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>

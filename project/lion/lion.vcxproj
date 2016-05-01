@@ -19,12 +19,14 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\include\lion\console_log_handler.hpp" />
     <ClInclude Include="..\..\include\lion\file.hpp" />
     <ClInclude Include="..\..\include\lion\filesystem.hpp" />
     <ClInclude Include="..\..\include\lion\mmap.hpp" />
     <ClInclude Include="..\..\include\lion\streams.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\source\lion\console_log_handler.cpp" />
     <ClCompile Include="..\..\source\lion\file.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">

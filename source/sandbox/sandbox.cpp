@@ -17,8 +17,10 @@
 #include <shiny/blend_state.hpp>
 #include <shiny/generic_buffer.hpp>
 #include <shiny/draw_target.hpp>
+#include <shiny/logging.hpp>
 
 #include <lion/filesystem.hpp>
+#include <lion/console_log_handler.hpp>
 
 #include <pepper/freelook_camera_controller.hpp>
 
@@ -598,16 +600,41 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 #endif
 {
 	rose::runtime_t RR;
-	RR.initialize_console();
-	RR.get_console().write("here is some words", 18);
-	//lion::console_logging_handler_t console_log{RR.console_handle()};
+	//RR.initialize_console();
+	//RR.get_console().write("here is some words", 18);
+
+	lion::console_log_handler_t console_log{
+		RR.get_console()};
 
 	//atma::console_log_handler_t console_log;
 	//atma::logging_runtime_t SLR;
-	//SLR.attach_handler(&console_log);
+	shiny::logging::runtime_t SLR;
 
-	//SLR.log(atma::log_level_t::error, "hello", 5);
+	SLR.attach_handler(&console_log);
 
+	atma::logging_runtime_t LLR;
+	LLR.connect_replicant(&SLR);
+
+	//SLR.log(atma::log_level_t::error, "\1\2\3\0\5\0\0\0hello", 30);
+	SHINY_ERROR("lulz there's an error");
+	SHINY_WARN("some warning");
+	SHINY_DEBUG("some debug thing");
+	SHINY_WARN("some warning");
+	SHINY_INFO("hooray info");
+	SHINY_TRACE("yep trace");
+	SHINY_WARN("some warning");
+	SHINY_TRACE("yep trace");
+	SHINY_ERROR("lulz there's an error");
+	
+	LLR.log(atma::log_level_t::error, "\0\1\7\0\5\0hello", 30);
+
+	//shiny::logging::error(__FILE__, __LINE__, "lulz here is a message");
+	//shiny::logging::error("error 1");
+	//shiny::logging::error("error 2");
+	//shiny::logging::error("error 3");
+	//shiny::logging::error(__FILE__, __LINE__, "lulz here is a message");
+	//shiny::logging::error(__FILE__, __LINE__, "lulz here is a message");
+	//shiny::logging::error("error 4");
 
 	sandbox::application_t app;
 
