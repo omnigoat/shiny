@@ -41,7 +41,8 @@ namespace shiny { namespace logging
 			return false;
 
 		size_t p = 0;
-		char buf[8 * 1024];
+		size_t const bufsize = 8 * 1024;
+		char buf[bufsize];
 
 		char const* caption[] = {
 			"Trace:",
@@ -59,12 +60,21 @@ namespace shiny { namespace logging
 			0xcf,
 		};
 
-		buf[0] = (byte)atma::log_style_t::pretty_print;
-		p += 1;
-		p += atma::logging_encode_color(buf + p, colors[(int)level]);
-		p += atma::logging_encode_string(buf + p, "%s\n", caption[(int)level]);
-		p += atma::logging_encode_color(buf + p, 0x07);
-		p += atma::logging_encode_string(buf + p, " %s:%d\n %s\n", filename, line, message);
+		auto memstream = atma::intrusive_ptr<atma::memory_stream_t>::make(buf, bufsize);
+		atma::logging_encoder_t encoder{memstream};
+
+		p += encoder.encode_header(atma::log_style_t::pretty_print);
+		p += encoder.encode_color(colors[(int)level]);
+		p += encoder.encode_sprintf("%s\n", caption[(int)level]);
+		p += encoder.encode_color(0x07);
+		p += encoder.encode_sprintf(" %s:%d\n %s\n", filename, line, message);
+
+		//buf[0] = (byte)atma::log_style_t::pretty_print;
+		//p += 1;
+		//p += atma::logging_encode_color(buf + p, colors[(int)level]);
+		//p += atma::logging_encode_string(buf + p, "%s\n", caption[(int)level]);
+		//p += atma::logging_encode_color(buf + p, 0x07);
+		//p += atma::logging_encode_string(buf + p, " %s:%d\n %s\n", filename, line, message);
 
 		R->log(level_t::error, buf, (uint32)p);
 		return true;

@@ -51,7 +51,7 @@ mmap_stream_t::mmap_stream_t(mmap_ptr const& mmap, mmap_stream_access_mask_t acc
 mmap_stream_t::mmap_stream_t(mmap_ptr const& mmap, size_t offset, size_t size, mmap_stream_access_mask_t access)
 	: memory_stream_t{nullptr, 0}
 	, mmap_{mmap}
-	, opers_{stream_opers_t::random_access, stream_opers_t::read}
+	, opers_{atma::stream_opers_t::random_access, atma::stream_opers_t::read}
 {
 	ATMA_ASSERT(mmap_);
 	ATMA_ASSERT(mmap_->valid());
@@ -64,11 +64,11 @@ mmap_stream_t::mmap_stream_t(mmap_ptr const& mmap, size_t offset, size_t size, m
 
 	if (access & mmap_stream_access_t::write_commit) {
 		data_ = MapViewOfFile(mmap->handle_, FILE_MAP_WRITE, hi, lo, size);
-		opers_ |= stream_opers_t::write;
+		opers_ |= atma:: stream_opers_t::write;
 	}
 	else if (access & mmap_stream_access_t::write_copy) {
 		data_ = MapViewOfFile(mmap->handle_, FILE_MAP_COPY, hi, lo, size);
-		opers_ |= stream_opers_t::write;
+		opers_ |= atma::stream_opers_t::write;
 	}
 	else {
 		data_ = MapViewOfFile(mmap->handle_, FILE_MAP_READ, hi, lo, size);
@@ -84,7 +84,7 @@ mmap_stream_t::~mmap_stream_t()
 		UnmapViewOfFile(data_);
 }
 
-auto mmap_stream_t::stream_opers() const -> stream_opers_mask_t
+auto mmap_stream_t::stream_opers() const -> atma::stream_opers_mask_t
 {
 	return opers_;
 }

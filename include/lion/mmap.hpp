@@ -60,17 +60,17 @@ namespace lion
 
 	ATMA_BITMASK(mmap_stream_access_mask_t, mmap_stream_access_t);
 
-	struct mmap_stream_t : memory_stream_t
+	struct mmap_stream_t : atma::memory_stream_t
 	{
 		mmap_stream_t(mmap_ptr const&, mmap_stream_access_mask_t);
 		mmap_stream_t(mmap_ptr const&, size_t offset, size_t size, mmap_stream_access_mask_t);
 		~mmap_stream_t();
 
-		auto stream_opers() const -> stream_opers_mask_t override;
+		auto stream_opers() const -> atma::stream_opers_mask_t override;
 
 	private:
 		mmap_ptr mmap_;
-		stream_opers_mask_t opers_;
+		atma::stream_opers_mask_t opers_;
 
 		void* data_;
 	};

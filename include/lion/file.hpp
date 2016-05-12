@@ -17,8 +17,8 @@ namespace lion
 	};
 
 	struct file_t
-		: random_access_input_stream_t
-		, random_access_output_stream_t
+		: atma::random_access_input_stream_t
+		, atma::random_access_output_stream_t
 	{
 		file_t();
 		file_t(atma::string const&, file_access_t = file_access_t::read);
@@ -27,17 +27,17 @@ namespace lion
 		auto size() const -> size_t;
 		auto position() const -> size_t;
 
-		auto seek(size_t) -> stream_status_t;
-		auto move(int64) -> stream_status_t;
+		auto seek(size_t) -> atma::stream_status_t;
+		auto move(int64) -> atma::stream_status_t;
 
 		// abstract-stream
-		auto stream_opers() const -> stream_opers_mask_t override;
+		auto stream_opers() const -> atma::stream_opers_mask_t override;
 
 		// input-stream
-		auto read(void*, size_t) -> read_result_t override;
+		auto read(void*, size_t) -> atma::read_result_t override;
 
 		// output-stream
-		auto write(void const*, size_t) -> write_result_t override;
+		auto write(void const*, size_t) -> atma::write_result_t override;
 
 
 	private:
