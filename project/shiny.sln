@@ -23,6 +23,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "atma", "..\..\atma\project\atma\atma.vcxproj", "{3301E1FA-9F23-43C6-A5E1-183204867D44}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "atma_test", "..\..\atma\project\atma_test\atma_test.vcxproj", "{AD2E1D66-97F7-4E55-8277-0FAFA8B4CB0F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{3301E1FA-9F23-43C6-A5E1-183204867D44} = {3301E1FA-9F23-43C6-A5E1-183204867D44}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "rose", "..\..\atma\project\rose\rose.vcxproj", "{58B3D2C1-0AB1-48CF-8B47-60DC3FC9ADB6}"
 EndProject

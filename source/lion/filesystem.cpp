@@ -126,19 +126,19 @@ auto physical_filesystem_t::impl_subpath(fs_path_ptr const& fsp, char const* nam
 	return fs_path_ptr::make(shared_from_this<filesystem_t>(), fsp.get(), type, name);
 }
 
-auto physical_filesystem_t::open(path_t const& path, open_mask_t mask) -> stream_ptr
+auto physical_filesystem_t::open(path_t const& path, open_mask_t mask) -> atma::stream_ptr
 {
 	auto fsp = cd(root_, path.string());
 
 	if (fsp->stream())
 		return fsp->stream();
 
-	mmap_ptr mmap;
+	rose::mmap_ptr mmap;
 	if (mask & open_flags_t::write) {
-		mmap = mmap_ptr::make(fsp->path(), access_flags_t::write);
+		mmap = rose::mmap_ptr::make(fsp->path(), access_flags_t::write);
 	}
 	else {
-		mmap = mmap_ptr::make(fsp->path(), access_flags_t::read);
+		mmap = rose::mmap_ptr::make(fsp->path(), access_flags_t::read);
 	}
 
 	if (mask & open_flags_t::write) {
