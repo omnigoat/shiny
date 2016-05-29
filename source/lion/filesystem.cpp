@@ -3,6 +3,7 @@
 #include <lion/mmap.hpp>
 #include <lion/file.hpp>
 
+#include <rose/mmap.hpp>
 #include <atma/algorithm.hpp>
 
 #include <regex>
@@ -126,7 +127,7 @@ auto physical_filesystem_t::impl_subpath(fs_path_ptr const& fsp, char const* nam
 	return fs_path_ptr::make(shared_from_this<filesystem_t>(), fsp.get(), type, name);
 }
 
-auto physical_filesystem_t::open(path_t const& path, open_mask_t mask) -> atma::stream_ptr
+auto physical_filesystem_t::open(path_t const& path, file_access_mask_t mask) -> atma::stream_ptr
 {
 	auto fsp = cd(root_, path.string());
 
@@ -134,15 +135,15 @@ auto physical_filesystem_t::open(path_t const& path, open_mask_t mask) -> atma::
 		return fsp->stream();
 
 	rose::mmap_ptr mmap;
-	if (mask & open_flags_t::write) {
-		mmap = rose::mmap_ptr::make(fsp->path(), access_flags_t::write);
+	if (mask & file_access_t::write) {
+		mmap = rose::mmap_ptr::make(fsp->path(), file_access_t::write);
 	}
 	else {
-		mmap = rose::mmap_ptr::make(fsp->path(), access_flags_t::read);
+		mmap = rose::mmap_ptr::make(fsp->path(), file_access_t::read);
 	}
 
-	if (mask & open_flags_t::write) {
-		if (mask & open_flags_t::nonbacked)
+	if (mask & file_access_t::write) {
+		if (mask & file_access_t::nonbacked)
 			return mmap_stream_ptr::make(mmap, mmap_stream_access_t::write_copy);
 		else
 			return mmap_stream_ptr::make(mmap, mmap_stream_access_t::write_commit);
@@ -191,7 +192,7 @@ auto vfs_t::mount(path_t const& path, filesystem_ptr const& fs) -> void
 }
 
 
-auto vfs_t::open(path_t const& path) -> stream_ptr
+auto vfs_t::open(path_t const& path) -> atma::stream_ptr
 {
 	ATMA_ASSERT(path_is_valid_logical_path(path.string()));
 
@@ -224,9 +225,9 @@ auto vfs_t::open(path_t const& path) -> stream_ptr
 	}
 
 	if (m && m->filesystem)
-		return m->filesystem->open(fp, lion::open_flags_t::read);
+		return m->filesystem->open(fp, lion::file_access_t::read);
 
-	return stream_ptr::null;
+	return atma::stream_ptr::null;
 }
 
 

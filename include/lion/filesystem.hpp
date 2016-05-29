@@ -222,16 +222,8 @@ namespace lion
 //=====================================================================
 namespace lion
 {
-
-	enum class open_flags_t
-	{
-		read,
-		write,
-		exclusive,
-		nonbacked,
-	};
-
-	ATMA_BITMASK(open_mask_t, open_flags_t);
+	using file_access_t = rose::file_access_t;
+	using file_access_mask_t = rose::file_access_mask_t;
 
 
 	//
@@ -244,7 +236,7 @@ namespace lion
 
 		auto cd(fs_path_ptr const&, atma::string const&) -> fs_path_ptr;
 		virtual auto cd(atma::string const& path) -> fs_path_ptr { return cd(root_path(), path); }
-		virtual auto open(path_t const&, open_mask_t) -> atma::stream_ptr { return atma::stream_ptr::null; }
+		virtual auto open(path_t const&, file_access_mask_t) -> atma::stream_ptr { return atma::stream_ptr::null; }
 
 	protected:
 		// returns a fs_path_ptr to a 
@@ -267,7 +259,7 @@ namespace lion
 		auto physical_path() const -> path_t const& override { return physical_path_; }
 		auto root_path() const -> fs_path_ptr const& override { return root_; }
 
-		auto open(path_t const&, open_mask_t) -> atma::stream_ptr override;
+		auto open(path_t const&, file_access_mask_t) -> atma::stream_ptr override;
 
 	private:
 		auto impl_subpath(fs_path_ptr const&, char const*) -> fs_path_ptr override;
@@ -279,7 +271,7 @@ namespace lion
 
 	using physical_filesystem_ptr = atma::intrusive_ptr<physical_filesystem_t>;
 
-	
+
 
 
 	//
@@ -292,7 +284,7 @@ namespace lion
 		auto mount(path_t const&, filesystem_ptr const&) -> void;
 
 		auto open(path_t const&) -> atma::stream_ptr;
-		auto open(path_t const&, open_mask_t) -> atma::stream_ptr;
+		auto open(path_t const&, file_access_mask_t) -> atma::stream_ptr;
 
 	private:
 		struct mount_node_t
