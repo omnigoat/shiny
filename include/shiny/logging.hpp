@@ -46,17 +46,17 @@ namespace shiny { namespace logging
 
 		char const* caption[] = {
 			"Trace:",
-			"Info:",
-			"Debug:",
-			"Warning!",
-			"Error!"
+			"[info]",
+			"[debug]",
+			"[Warning]",
+			"[ERROR]"
 		};
 
 		byte colors[] = {
-			0x01,
-			0x07,
-			0x07,
-			0xe1,
+			0x08,
+			0x1f,
+			0x8f,
+			0xe4,
 			0xcf,
 		};
 
@@ -67,14 +67,7 @@ namespace shiny { namespace logging
 		p += encoder.encode_color(colors[(int)level]);
 		p += encoder.encode_sprintf("%s\n", caption[(int)level]);
 		p += encoder.encode_color(0x07);
-		p += encoder.encode_sprintf(" %s:%d\n %s\n", filename, line, message);
-
-		//buf[0] = (byte)atma::log_style_t::pretty_print;
-		//p += 1;
-		//p += atma::logging_encode_color(buf + p, colors[(int)level]);
-		//p += atma::logging_encode_string(buf + p, "%s\n", caption[(int)level]);
-		//p += atma::logging_encode_color(buf + p, 0x07);
-		//p += atma::logging_encode_string(buf + p, " %s:%d\n %s\n", filename, line, message);
+		p += encoder.encode_sprintf("%s:%d\n%s\n", filename, line, message);
 
 		R->log(level_t::error, buf, (uint32)p);
 		return true;
@@ -98,13 +91,13 @@ namespace shiny { namespace logging
 
 
 #define SHINY_TRACE(msg) \
-	::shiny::logging::log(::shiny::logging::level_t::warn, msg)
+	::shiny::logging::log(::shiny::logging::level_t::verbose, msg)
 
 #define SHINY_INFO(msg) \
-	::shiny::logging::log(::shiny::logging::level_t::warn, msg)
+	::shiny::logging::log(::shiny::logging::level_t::info, msg)
 
 #define SHINY_DEBUG(msg) \
-	::shiny::logging::log(::shiny::logging::level_t::warn, __FILE__, __LINE__, msg)
+	::shiny::logging::log(::shiny::logging::level_t::debug, __FILE__, __LINE__, msg)
 
 #define SHINY_WARN(msg) \
 	::shiny::logging::log(::shiny::logging::level_t::warn, __FILE__, __LINE__, msg)

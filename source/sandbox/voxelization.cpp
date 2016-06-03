@@ -17,6 +17,8 @@
 
 #include <moxi/morton.hpp>
 
+#include <rose/file.hpp>
+
 #include <atma/math/matrix4f.hpp>
 #include <atma/math/vector4f.hpp>
 #include <atma/math/vector4i.hpp>
@@ -41,7 +43,7 @@ struct obj_model_t
 	using verts_t = std::vector<aml::vector4f>;
 	using faces_t = std::vector<aml::vector4i>;
 
-	obj_model_t(lion::file_t&);
+	obj_model_t(rose::file_t&);
 
 	auto vertices() const -> verts_t const& { return verts_; }
 	auto faces() const -> faces_t const& { return faces_; }
@@ -52,9 +54,9 @@ private:
 	faces_t faces_;
 };
 
-obj_model_t::obj_model_t(lion::file_t& file)
+obj_model_t::obj_model_t(rose::file_t& file)
 {
-	lion::for_each_line<256>(file, 128, [&](char const* str, size_t size)
+	rose::for_each_line<256>(file, 128, [&](char const* str, size_t size)
 	{
 		switch (str[0])
 		{
@@ -121,7 +123,7 @@ auto fit_linear_dispatch_to_group(uint& x, uint& y, uint& z, uint xs, uint ys, u
 
 auto voxelization_plugin_t::setup_voxelization() -> void
 {
-	auto sf = lion::file_t{"../../data/dragon.obj"};
+	auto sf = rose::file_t{"../../data/dragon.obj"};
 	auto obj = obj_model_t{sf};
 	
 	{
@@ -269,8 +271,8 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 	}
 #endif
 
-	auto f2 = lion::file_t("../../shaders/gs_normal.hlsl");
-	auto fm2 = lion::read_into_memory(f2);
+	auto f2 = rose::file_t("../../shaders/gs_normal.hlsl");
+	auto fm2 = rose::read_into_memory(f2);
 	gs = shiny::create_geometry_shader(ctx, fm2, false);
 
 

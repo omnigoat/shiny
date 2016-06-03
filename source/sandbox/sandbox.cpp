@@ -183,13 +183,6 @@ static int plus(int a, int b) { return a + b; }
 
 //atma::logsink_t soundlog;
 
-struct yay
-{
-	uint32 one : 1;
-	uint32 two : 2;
-	uint32 lots : 29;
-};
-
 
 
 application_t::application_t()
@@ -197,161 +190,6 @@ application_t::application_t()
 	, window(fooey::window("Excitement!", 800 + 16, 600 + 38))
 	, runtime{}
 {
-
-	yay y;
-	y.one = 1;
-	y.two = 0b01;
-	y.lots = 567;
-	//atma::thread::inplace_engine_t<false> ie{1024};
-
-	//auto r1 = std::atomic_uint64_t::is_lock_free();
-	//InterlockedCompareExchange128();
-
-	//atma::
-#if 0
-	auto clh = atma::make_console_logging_handler();
-
-	atma::register_logging_handler(clh);
-
-	atma::logging::replicate(slc, )
-
-		//lion::logging::enable();
-		lion::logging::bridge_to(
-			atma::logging_director(),
-			atma::log_level_t::error | atma::log_level_t::warn);
-
-	atma::logging_thing lion_logging;
-	lion::logging::bridge_to(
-		shiny::logging_director());
-
-#endif // 0
-
-
- {
-	#if 0
-	log_system_t shiny_log_system{
-		//atma::log_color_t{log_system_t::fatal, 0b11001111},
-		//atma::log_color_t{log_system_t::error, 0b11001111},
-		//atma::log_color_t{log_system_t::warning, 0b00001110},
-	};
-	#endif
-
-	//atma::base_mpsc_queue_t q{1024 * 1024};
-	atma::mpsc_queue_t<false> q{1024 * 1024};
-	
-	auto rt = std::thread([&] {
-		atma::this_thread::set_debug_name("consumer thread");
-
-		std::map<uint64, uint64> ids;
-
-		for (;;) {
-			if (auto D = q.consume())
-			{
-				uint64 p;
-				uint64 t;
-				uint64 i;
-				D.decode_uint64(p);
-				D.decode_uint64(t);
-				D.decode_uint64(i);
-				if (ids[p] != i)
-					ATMA_HALT("bad thread input");
-				++ids[p];
-				std::cout << "thread id: " << std::hex << p << std::dec << " with value: " << std::setfill('0') << std::setw(4) << i << " took: " << t << std::endl;
-				q.finalize(D);
-			}
-		}
-	});
-
-	auto te = std::thread([&] {
-		atma::this_thread::set_debug_name("quitting thread");
-		for (;;) {
-			if (SHORT s = GetAsyncKeyState(VK_ESCAPE)) {
-				if (s & 0x8000)
-					exit(0);
-			}
-		}
-	});
-
-	auto t1 = std::thread([&]
-	{
-		atma::this_thread::set_debug_name("producer thread #1");
-		uint64 i = 0;
-
-		for (;;) {
-			auto start = std::chrono::high_resolution_clock::now();
-			auto A = q.allocate(28, 4, false);
-			auto end = std::chrono::high_resolution_clock::now();
-			auto d = end - start;
-
-			A.encode_uint64(std::hash<std::thread::id>{}(std::this_thread::get_id()));
-			A.encode_uint64(std::chrono::duration_cast<std::chrono::nanoseconds>(d).count());
-			A.encode_uint64(i);
-			q.commit(A);
-			++i;
-		}
-	});
-
-	auto t2 = std::thread([&]
-	{
-		atma::this_thread::set_debug_name("producer thread #2");
-		uint64 i = 0;
-
-		for (;;) {
-			auto start = std::chrono::high_resolution_clock::now();
-			auto A = q.allocate(28, 4, true);
-			auto end = std::chrono::high_resolution_clock::now();
-			auto d = end - start;
-
-			A.encode_uint64(std::hash<std::thread::id>{}(std::this_thread::get_id()));
-			A.encode_uint64(std::chrono::duration_cast<std::chrono::nanoseconds>(d).count());
-			A.encode_uint64(i);
-			q.commit(A);
-			++i;
-		}
-	});
-/*
-	auto t3 = std::thread([&] {
-		for (;;) {
-			auto start = std::chrono::high_resolution_clock::now();
-			auto A = q.allocate(800, 0);
-			auto end = std::chrono::high_resolution_clock::now();
-			auto d = end - start;
-
-			A.encode_uint64(std::hash<std::thread::id>{}(std::this_thread::get_id()));
-			A.encode_uint64(std::chrono::duration_cast<std::chrono::nanoseconds>(d).count());
-			q.commit(A);
-
-			Sleep(1);
-		}
-	});*/
-
-#if 0
-	auto t3 = std::thread([&] {
-		for (;;)
-			shiny_log_system.signal_log(0b00001100, "thread 3!");
-		//shiny_log_system.signal_test();
-	});
-
-	auto t4 = std::thread([&] {
-		for (;;)
-			shiny_log_system.signal_log(0b00001111, "thread 4: here is a lot of text, trying to saturate the buffer..");
-		//shiny_log_system.signal_test();
-	});
-#endif
-
-	t1.join();
-	t2.join();
-
-	//shiny_log_system.signal_log(0b11110000, "here is a story about ", 0b00001100, "dragons.");
-	//shiny_log_system.signal_log(0b00000111, "once upon a time, they were everywhere.");
-	//shiny_log_system.signal_log("then they learnt how to brew gin.");
-	//shiny_log_system.signal_log("so now they're mostly,");
-	//shiny_log_system.signal_log("at the bar.");
-	//shiny_log_system.signal_log("but they're also everywhere. alcohol helps with the procreating.");
- }
-	//auto shiny_logpipe_handle = atma::log::new_pipe("shiny");
-
-	exit(0);
 #if 0
 	int fds[2];
 	
@@ -388,8 +226,8 @@ application_t::application_t()
 
 	auto f = vfs.open("/res/shaders/vs_basic.hlsl");
 	auto m = lion::read_all(f);
-	//std::cout << (char*)m.begin() << std::endl;
-	printf("%.*s", (int)m.size(), m.begin());
+	SHINY_INFO((char*)m.begin());
+	//printf("%.*s", (int)m.size(), m.begin());
 
 	struct asset_pattern_t
 	{
@@ -445,7 +283,6 @@ application_t::application_t()
 
 	//auto vs = lion::lock_asset_ptr(vertex_shader_handle);
 
-	exit(0);
 
 	function_main();
 
@@ -593,48 +430,19 @@ auto plugin_t::fs_flat() const -> shiny::fragment_shader_ptr const&
 	return app_->fs_flat;
 }
 
-#if 0
-int main()
-#else
+
+
+
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
-#endif
 {
+	// platform runtime & console-logging-handler
 	rose::runtime_t RR;
-	//RR.initialize_console();
-	//RR.get_console().write("here is some words", 18);
+	lion::console_log_handler_t console_log{RR.get_console()};
 
-	lion::console_log_handler_t console_log{
-		RR.get_console()};
-
-	//atma::console_log_handler_t console_log;
-	//atma::logging_runtime_t SLR;
+	// shiny runtime & logging through console
 	shiny::logging::runtime_t SLR;
-
 	SLR.attach_handler(&console_log);
 
-	atma::logging_runtime_t LLR;
-	LLR.connect_replicant(&SLR);
-
-	//SLR.log(atma::log_level_t::error, "\1\2\3\0\5\0\0\0hello", 30);
-	SHINY_ERROR("lulz there's an error");
-	SHINY_WARN("some warning");
-	SHINY_DEBUG("some debug thing");
-	SHINY_WARN("some warning");
-	SHINY_INFO("hooray info");
-	SHINY_TRACE("yep trace");
-	SHINY_WARN("some warning");
-	SHINY_TRACE("yep trace");
-	SHINY_ERROR("lulz there's an error");
-	
-	LLR.log(atma::log_level_t::error, "\0\1\7\0\5\0hello", 30);
-
-	//shiny::logging::error(__FILE__, __LINE__, "lulz here is a message");
-	//shiny::logging::error("error 1");
-	//shiny::logging::error("error 2");
-	//shiny::logging::error("error 3");
-	//shiny::logging::error(__FILE__, __LINE__, "lulz here is a message");
-	//shiny::logging::error(__FILE__, __LINE__, "lulz here is a message");
-	//shiny::logging::error("error 4");
 
 	sandbox::application_t app;
 

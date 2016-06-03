@@ -9,9 +9,6 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="shaders">
-      <UniqueIdentifier>{69726e24-bf27-40cc-88f6-f6f41ad69449}</UniqueIdentifier>
-    </Filter>
     <Filter Include="include\shiny">
       <UniqueIdentifier>{0765283e-e4b3-488e-9908-c8c02ee3dec1}</UniqueIdentifier>
     </Filter>
@@ -370,41 +367,6 @@
     <ClInclude Include="..\..\include\shiny\logging.hpp">
       <Filter>include\shiny</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="..\..\shaders\cs_test.hlsl">
-      <Filter>shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="..\..\shaders\ps_basic.hlsl">
-      <Filter>shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="..\..\shaders\ps_voxels.hlsl">
-      <Filter>shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="..\..\shaders\vs_basic.hlsl">
-      <Filter>shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="..\..\shaders\vs_voxels.hlsl">
-      <Filter>shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="..\..\shaders\ps_debug.hlsl">
-      <Filter>shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="..\..\shaders\vs_debug.hlsl">
-      <Filter>shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="..\..\shaders\gs_normal.hlsl">
-      <Filter>shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="..\..\shaders\gs_voxelization.hlsl">
-      <Filter>shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="..\..\shaders\vs_voxelize.hlsl">
-      <Filter>shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="..\..\shaders\fs_voxelize.hlsl">
-      <Filter>shaders</Filter>
-    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\.gitignore" />
