@@ -435,6 +435,12 @@ auto plugin_t::fs_flat() const -> shiny::fragment_shader_ptr const&
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
 {
+	char buf[32];
+	sprintf(buf, "%#x", 0);
+
+	atma::string_encoder_t SE{buf, 32};
+	SE << "lulz " << "your face";
+
 	// platform runtime & console-logging-handler
 	rose::runtime_t RR;
 	lion::console_log_handler_t console_log{RR.get_console()};
@@ -442,7 +448,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	// shiny runtime & logging through console
 	shiny::logging::runtime_t SLR;
 	SLR.attach_handler(&console_log);
-
+	shiny::logging::set_runtime(&SLR);
 
 	sandbox::application_t app;
 

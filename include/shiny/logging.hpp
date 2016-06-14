@@ -7,36 +7,54 @@ namespace shiny { namespace logging
 {
 	using level_t = atma::log_level_t;
 
-	struct runtime_t;
-
-	auto current_runtime() -> runtime_t*&;
+	using runtime_t = atma::logging_runtime_t;
 
 	
-	struct runtime_t : atma::logging_runtime_t
+	namespace detail
 	{
-		runtime_t()
+		inline auto current_runtime() -> runtime_t*&
 		{
-			ATMA_ASSERT(current_runtime() == nullptr);
-			current_runtime() = this;
+			static runtime_t* R = nullptr;
+			return R;
 		}
 
-		~runtime_t()
+		inline auto log_impl(atma::logging_encoder_t&) -> void
 		{
-			ATMA_ASSERT(current_runtime() != nullptr);
-			current_runtime() = nullptr;
 		}
-	};
 
-	
-	inline auto current_runtime() -> runtime_t*&
-	{
-		static runtime_t* R = nullptr;
-		return R;
+		template <typename... Args>
+		inline auto log_impl(atma::logging_encoder_t& enc, atma::log_style_t style, Args&&... args) -> void
+		{
+			enc.encode_header(style);
+			log_impl(enc, std::forward<Args>(args)...);
+		}
+
+		template <typename... Args>
+		inline auto log_impl(atma::logging_encoder_t& enc, char const* t, Args&&... args) -> void
+		{
+			enc.encode_cstr(t);
+			log_impl(enc, std::forward<Args>(args)...);
+		}
+
+		template <typename... Args>
+		inline auto log_impl(atma::logging_encoder_t& enc, byte color, Args&&... args) -> void
+		{
+			enc.encode_color(color);
+			log_impl(enc, std::forward<Args>(args)...);
+		}
 	}
 
-	inline auto log(level_t level, char const* filename, uint32 line, char const* message) -> bool
+	inline auto set_runtime(runtime_t* R) -> void
 	{
-		auto* R = current_runtime();
+		detail::current_runtime() = R;
+	}
+
+
+
+	template <typename... Args>
+	inline auto log(level_t level) -> bool
+	{
+		auto* R = detail::current_runtime();
 		if (R == nullptr)
 			return false;
 
@@ -75,7 +93,7 @@ namespace shiny { namespace logging
 
 	inline auto log(level_t level, char const* message) -> bool
 	{
-		auto* R = current_runtime();
+		auto* R = detail::current_runtime();
 		if (R == nullptr)
 			return false;
 
@@ -89,6 +107,8 @@ namespace shiny { namespace logging
 		return true;
 	}
 
+#define SHINY_LOG(level, ...) \
+	::shiny::logging::log(level, __VA_ARGS__)
 
 #define SHINY_TRACE(msg) \
 	::shiny::logging::log(::shiny::logging::level_t::verbose, msg)
