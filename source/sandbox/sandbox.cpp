@@ -47,6 +47,7 @@
 #include <atma/mpsc_queue.hpp>
 #include <atma/threading.hpp>
 #include <atma/logging.hpp>
+#include <atma/string.hpp>
 
 #include <regex>
 #include <atomic>
@@ -438,8 +439,11 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	char buf[32];
 	sprintf(buf, "%#x", 0);
 
+	char k = -128;
+	unsigned char k2 = (unsigned  char)k;
+
 	atma::string_encoder_t SE{buf, 32};
-	SE << "lulz " << "your face";
+	SE.write(int64(12345));
 
 	// platform runtime & console-logging-handler
 	rose::runtime_t RR;

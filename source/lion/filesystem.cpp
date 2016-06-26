@@ -144,12 +144,12 @@ auto physical_filesystem_t::open(path_t const& path, file_access_mask_t mask) ->
 
 	if (mask & file_access_t::write) {
 		if (mask & file_access_t::nonbacked)
-			return mmap_stream_ptr::make(mmap, mmap_stream_access_t::write_copy);
+			return mmap_bytestream_ptr::make(mmap, mmap_bytestream_access_t::write_copy);
 		else
-			return mmap_stream_ptr::make(mmap, mmap_stream_access_t::write_commit);
+			return mmap_bytestream_ptr::make(mmap, mmap_bytestream_access_t::write_commit);
 	}
 	else {
-		return mmap_stream_ptr::make(mmap, mmap_stream_access_t::read);
+		return mmap_bytestream_ptr::make(mmap, mmap_bytestream_access_t::read);
 	}
 }
 

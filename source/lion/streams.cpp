@@ -3,16 +3,16 @@
 #include <algorithm>
 
 using namespace lion;
-using lion::mmap_stream_t;
+using lion::mmap_bytestream_t;
 
 
 
-mmap_stream_t::mmap_stream_t(rose::mmap_ptr const& mmap, mmap_stream_access_mask_t access)
-	: mmap_stream_t{mmap, 0, 0, access}
+mmap_bytestream_t::mmap_bytestream_t(rose::mmap_ptr const& mmap, mmap_bytestream_access_mask_t access)
+	: mmap_bytestream_t{mmap, 0, 0, access}
 {}
 
-mmap_stream_t::mmap_stream_t(rose::mmap_ptr const& mmap, size_t offset, size_t size, mmap_stream_access_mask_t access)
-	: memory_stream_t{nullptr, 0}
+mmap_bytestream_t::mmap_bytestream_t(rose::mmap_ptr const& mmap, size_t offset, size_t size, mmap_bytestream_access_mask_t access)
+	: memory_bytestream_t{nullptr, 0}
 	, mmap_{mmap}
 	, opers_{atma::stream_opers_t::random_access, atma::stream_opers_t::read}
 {
@@ -25,11 +25,11 @@ mmap_stream_t::mmap_stream_t(rose::mmap_ptr const& mmap, size_t offset, size_t s
 	uint32 lo = offset & 0xffffffff;
 	uint32 hi = (offset & 0xffffffff00000000) >> 32;
 
-	if (access & mmap_stream_access_t::write_commit) {
+	if (access & mmap_bytestream_access_t::write_commit) {
 		data_ = MapViewOfFile(mmap->handle(), FILE_MAP_WRITE, hi, lo, size);
 		opers_ |= atma:: stream_opers_t::write;
 	}
-	else if (access & mmap_stream_access_t::write_copy) {
+	else if (access & mmap_bytestream_access_t::write_copy) {
 		data_ = MapViewOfFile(mmap->handle(), FILE_MAP_COPY, hi, lo, size);
 		opers_ |= atma::stream_opers_t::write;
 	}
@@ -41,13 +41,13 @@ mmap_stream_t::mmap_stream_t(rose::mmap_ptr const& mmap, size_t offset, size_t s
 		memory_stream_reset(data_, size);
 }
 
-mmap_stream_t::~mmap_stream_t()
+mmap_bytestream_t::~mmap_bytestream_t()
 {
 	if (data_)
 		UnmapViewOfFile(data_);
 }
 
-auto mmap_stream_t::stream_opers() const -> atma::stream_opers_mask_t
+auto mmap_bytestream_t::stream_opers() const -> atma::stream_opers_mask_t
 {
 	return opers_;
 }
@@ -57,7 +57,7 @@ auto mmap_stream_t::stream_opers() const -> atma::stream_opers_mask_t
 
 namespace
 {
-	auto read_input(atma::input_stream_ptr const& stream) -> atma::unique_memory_t
+	auto read_input(atma::input_bytestream_ptr const& stream) -> atma::unique_memory_t
 	{
 		atma::unique_memory_t mem;
 		if (!stream)
@@ -84,7 +84,7 @@ namespace
 		return mem;
 	}
 
-	auto read_input_random(atma::random_access_input_stream_ptr const& rs) -> atma::unique_memory_t
+	auto read_input_random(atma::random_access_input_bytestream_ptr const& rs) -> atma::unique_memory_t
 	{
 		if (!rs)
 			return atma::unique_memory_t{};
@@ -102,21 +102,21 @@ auto lion::read_all(atma::stream_ptr const& stream) -> atma::unique_memory_t
 	
 	if (stream->stream_opers() & atma::stream_opers_t::random_access)
 	{
-		return read_input_random(atma::stream_cast<atma::random_access_input_stream_t>(stream));
+		return read_input_random(atma::stream_cast<atma::random_access_input_bytestream_t>(stream));
 	}
 	else
 	{
-		return read_input(atma::stream_cast<atma::input_stream_t>(stream));
+		return read_input(atma::stream_cast<atma::input_bytestream_t>(stream));
 	}
 }
 
-auto lion::read_all(atma::input_stream_ptr const& stream) -> atma::unique_memory_t
+auto lion::read_all(atma::input_bytestream_ptr const& stream) -> atma::unique_memory_t
 {
 	ATMA_ASSERT(stream);
 
 	if (stream->stream_opers() & atma::stream_opers_t::random_access)
 	{
-		return read_input_random(atma::stream_cast<atma::random_access_input_stream_t>(stream));
+		return read_input_random(atma::stream_cast<atma::random_access_input_bytestream_t>(stream));
 	}
 	else
 	{
@@ -124,7 +124,7 @@ auto lion::read_all(atma::input_stream_ptr const& stream) -> atma::unique_memory
 	}
 }
 
-auto lion::read_all(atma::random_access_input_stream_ptr const& stream) -> atma::unique_memory_t
+auto lion::read_all(atma::random_access_input_bytestream_ptr const& stream) -> atma::unique_memory_t
 {
 	ATMA_ASSERT(stream);
 
