@@ -433,75 +433,12 @@ auto plugin_t::fs_flat() const -> shiny::fragment_shader_ptr const&
 
 namespace atma
 {
-	auto string_encoder_t::write(int64 x) -> size_t
-	{
-		if (x < 0)
-			if (!(this->*put_fn_)('-'))
-				return 0;
-			else
-				return 1 + write(ULLONG_MAX - uint64(x) + 1);
-		else
-			return write(uint64(x));
-	}
-
-	auto string_encoder_t::write(uint64 x) -> size_t
-	{
-		// binary search for digits  (18,446,744,073,709,551,615)
-		//                                       LLLLLLLLLLLLLLL
-		uint64 digits = 0;
-		uint64 d = 0;
-		if (x < 100'000'000'000)
-			if (x < 1'000'000)
-				if (x < 1000)
-					if (x < 10) { digits = 1; d = 1; }
-					else if (x < 100) { digits = 2; d = 10; }
-					else { digits = 3; d = 100; }
-				else if (x < 10'000) { digits = 4; d = 1000; }
-				else if (x < 100'000) { digits = 5; d = 10'000; }
-				else { digits = 6; d = 100'000; }
-			else
-				if (x < 1'000'000'000)
-					if (x < 10'000'000) { digits = 7; d = 1'000'000; }
-					else if (x < 100'000'000) { digits = 8; d = 10'000'000; }
-					else { digits = 9; d = 100'000'000; }
-				else if (x < 10'000'000'000) { digits = 10; d = 1'000'000'000; }
-				else if (x < 100'000'000'000) { digits = 11; d = 10'000'000'000; }
-				else { digits = 12; d = 100'000'000'000; }
-		else if (x < 1'000'000'000'000'000)
-			if (x < 10'000'000'000'000) { digits = 13; d = 1'000'000'000'000; }
-			else if (x < 100'000'000'000'000) { digits = 14; d = 10'000'000'000'000; }
-			else { digits = 15; d = 100'000'000'000'000; }
-		else if (x < 100'000'000'000'000'000)
-			if (x < 10'000'000'000'000'000) { digits = 16; d = 1'000'000'000'000'000;}
-			else { digits = 17; d = 10'000'000'000'000'000; }
-		else if (x < 1'000'000'000'000'000'000) { digits = 18; d = 100'000'000'000'000'000; }
-		else if (x < 10'000'000'000'000'000'000) { digits = 19; d = 1'000'000'000'000'000'000; }
-		else { digits = 20; d = 10'000'000'000'000'000'000; }
-
-		size_t r = 0;
-		for ( ; d != 0; d /= 10, ++r)
-		{
-			char c = (x / d) % 10;
-			if (!(this->*put_fn_)('0' + c))
-				break;
-		}
-
-		return r;
-	}
+	
 }
 
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
 {
-	char buf[256];
-	sprintf(buf, "%#x", 0);
-
-	auto L = ULLONG_MAX;
-	atma::string_encoder_t SE{buf, 256};
-	auto r = SE.write(int64(LLONG_MIN));
-	     r += SE.write(int64(LLONG_MAX));
-		 r += SE.write(uint64(ULLONG_MAX));
-
 	// platform runtime & console-logging-handler
 	rose::runtime_t RR;
 	lion::console_log_handler_t console_log{RR.get_console()};
@@ -510,6 +447,91 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	shiny::logging::runtime_t SLR;
 	SLR.attach_handler(&console_log);
 	shiny::logging::set_runtime(&SLR);
+
+	int64 nums[] = {
+		-1,
+		-12,
+		-123,
+		-1234,
+		-12345,
+		-123456,
+		-1234567,
+		-12345678,
+		-123456789,
+		-1234567890,
+		-12345678901,
+		-123456789012,
+		-1234567890123,
+		-12345678901234,
+		-123456789012345,
+		-1234567890123456,
+		-12345678901234567,
+		-123456789012345678,
+		-1234567890123456789,
+		1,
+		12,
+		123,
+		1234,
+		12345,
+		123456,
+		1234567,
+		12345678,
+		123456789,
+		1234567890,
+		12345678901,
+		123456789012,
+		1234567890123,
+		12345678901234,
+		123456789012345,
+		1234567890123456,
+		12345678901234567,
+		123456789012345678,
+		1234567890123456789,
+	};
+
+	uint64 b = 18446744073709551615;
+	int64 mb = -9223372036854775808;
+
+#include <limits>
+	for (int i = 0; i != 19 * 2; ++i)
+	{
+		char buf[256];
+		char buf2[256];
+		atma::string_encoder_t SE{buf, 256};
+		buf[SE.write(nums[i])] = '\0';
+		sprintf(buf2, "%lli", nums[i]);
+
+		ATMA_ASSERT(strcmp(buf, buf2) == 0);
+		//std::cout << buf << " == " << buf2 << std::endl;
+		SHINY_INFO(buf);
+		//nums.push_back(nums.back() * 10 + ds[i % 10]);
+	}
+	
+	// largest uint64
+	{
+		char buf[256];
+		char buf2[256];
+		atma::string_encoder_t SE{buf, 256};
+		buf[SE.write(b)] = '\0';
+		sprintf(buf2, "%llu", b);
+
+		ATMA_ASSERT(strcmp(buf, buf2) == 0);
+		//std::cout << buf << " == " << buf2 << std::endl;
+		SHINY_INFO(buf);
+	}
+
+	// smallest int64
+	{
+		char buf[256];
+		char buf2[256];
+		atma::string_encoder_t SE{buf, 256};
+		buf[SE.write(mb)] = '\0';
+		sprintf(buf2, "%lli", mb);
+
+		ATMA_ASSERT(strcmp(buf, buf2) == 0);
+		//std::cout << buf << " == " << buf2 << std::endl;
+		SHINY_INFO(buf);
+	}
 
 	sandbox::application_t app;
 
