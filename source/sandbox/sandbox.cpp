@@ -225,11 +225,6 @@ application_t::application_t()
 	auto fs = lion::physical_filesystem_ptr::make("./resources/published");
 	vfs.mount("/res/", fs);
 
-	auto f = vfs.open("/res/shaders/vs_basic.hlsl");
-	auto m = lion::read_all(f);
-	SHINY_INFO((char*)m.begin());
-	//printf("%.*s", (int)m.size(), m.begin());
-
 	struct asset_pattern_t
 	{
 		std::regex regex;
@@ -245,12 +240,12 @@ application_t::application_t()
 	//auto f = vfs.open("/res/shaders/vs_basic.hlsl", file_bind_flags::read_only);
 #if 0
 	lion::asset_library_t library{vfs};
-	library.register_asset_thing("/res/shaders/",
+	library.register_asset_thing(
 		lion::open_flags_t::read,
 		lion::file_watching_flags_t::yes,
-		{ lion::asset_pattern{"vs_.+\\.hlsl", &load_vertex_shader},
-		  lion::asset_pattern{"fs_.+\\.hlsl", &load_fragment_shader},
-		  lion::asset_pattern{"cs_.+\\.hlsl", &load_compute_shader} });
+		{ lion::asset_pattern{"/res/shaders/vs_.+\\.hlsl", &load_vertex_shader},
+		  lion::asset_pattern{"/res/shaders/fs_.+\\.hlsl", &load_fragment_shader},
+		  lion::asset_pattern{"/res/shaders/cs_.+\\.hlsl", &load_compute_shader} });
 		
 	[](lion::input_stream_t const& stream) {
 		
@@ -261,7 +256,7 @@ application_t::application_t()
 		// do things with f, return an asset_ptr
 	//});
 
-	//auto sh = library.load_asset_as<shiny::vertex_shader_t>("/res/shaders/);
+	//auto sh = library.load_asset_as<shiny::vertex_shader_t>("/res/shaders/vs_basic.hlsl");
 
 	struct vertex_shader_backend_t
 	{
@@ -285,8 +280,6 @@ application_t::application_t()
 	//auto vs = lion::lock_asset_ptr(vertex_shader_handle);
 
 
-	function_main();
-
 	window_renderer->add_window(window);
 	ctx = shiny::create_context(runtime, window, shiny::primary_adapter);
 
@@ -302,6 +295,11 @@ application_t::application_t()
 
 	vb_cube = shiny::create_vertex_buffer(ctx, shiny::resource_storage_t::immutable, dd_position_color, 8, cube_vertices);
 	ib_cube = shiny::create_index_buffer(ctx, shiny::resource_storage_t::immutable, shiny::format_t::u16, 36, cube_indices);
+
+
+	auto f = vfs.open("/res/shaders/vs_basic.hlsl");
+	auto m = lion::read_all(f);
+	auto sdf = shiny::create_vertex_shader(ctx, dd_position, m, false);
 
 
 	// shaders
@@ -434,20 +432,110 @@ auto plugin_t::fs_flat() const -> shiny::fragment_shader_ptr const&
 
 
 
+
+namespace atma
+{
+	template <typename T, size_t N>
+	struct arena_allocator_t
+	{
+		using value_type = T;
+		using pointer = value_type*;
+		using const_pointer = value_type const*;
+
+		template <typename U>
+		struct rebind { using other = arena_allocator_t<U, N>; };
+
+
+		auto allocate(size_t n) -> T*;
+
+	private:
+		struct block_t;
+		using  block_ptr = std::unique_ptr<block_t>;
+
+		std::vector<block_ptr> blocks_;
+		size_t idx_ = 0;
+	};
+
+
+	template <typename T, size_t N>
+	struct arena_allocator_t<T, N>::block_t
+	{
+		block_t()
+			: data{reinterpret_cast<T*>(new char[sizeof(T) * N])}
+			, freelist{{0, (uint16)N}}
+		{}
+
+		auto allocate(size_t) -> T*;
+
+		size_t max_contiguous = N;
+		std::vector<std::pair<uint16, uint16>> freelist;
+		T* data = nullptr;
+	};
+
+
+
+
+	template <typename T, size_t N>
+	inline auto arena_allocator_t<T, N>::allocate(size_t n) -> T*
+	{
+		for (auto const& b : blocks_)
+		{
+			if (n <= b->max_contiguous)
+				return b->allocate(n);
+		}
+
+		blocks_.emplace_back(new block_t);
+		return blocks_.back()->allocate(n);
+	}
+
+
+	template <typename T, size_t N>
+	inline auto arena_allocator_t<T, N>::block_t::allocate(size_t n) -> T*
+	{
+		uint16 begin, end;
+		for (auto& x : freelist)
+		{
+			auto const xs = x.second - x.first;
+			if (n <= xs)
+			{
+				bool iseqcont = xs == max_contiguous;
+				auto r = x.second - n;
+				x.second -= n;
+
+				if (iseqcont)
+				{
+					max_contiguous = 0;
+					for (auto const& y : freelist)
+						max_contiguous = (y.second - y.first) > max_contiguous ? (y.second - y.first) : max_contiguous;
+				}
+
+				if (x.first == x.second) {
+					std::swap(x, freelist.back());
+					freelist.pop_back();
+				}
+
+				return data + r;
+			}
+		}
+
+		return nullptr;
+	}
+}
+
+
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
 {
-	char buf[32];
-	sprintf(buf, "%#x", 0);
-
-	char k = -128;
-	unsigned char k2 = (unsigned  char)k;
-
-	atma::string_encoder_t SE{buf, 32};
-	SE.write(int64(12345));
-
 	// platform runtime & console-logging-handler
 	rose::runtime_t RR;
 	lion::console_log_handler_t console_log{RR.get_console()};
+
+	atma::arena_allocator_t<int, 4> AA;
+	AA.allocate(2);
+	AA.allocate(4);
+	AA.allocate(1);
+	AA.allocate(3);
+	AA.allocate(1);
+	AA.allocate(1);
 
 	// shiny runtime & logging through console
 	shiny::logging::runtime_t SLR;

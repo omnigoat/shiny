@@ -11,9 +11,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\include\lion\file.hpp">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\lion\streams.hpp">
       <Filter>include</Filter>
     </ClInclude>
@@ -24,6 +21,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\lion\console_log_handler.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\lion\assets.hpp">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
@@ -38,6 +38,9 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\lion\console_log_handler.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\lion\assets.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>

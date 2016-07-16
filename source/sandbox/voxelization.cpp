@@ -13,8 +13,6 @@
 #include <shiny/texture2d.hpp>
 #include <shiny/draw_target.hpp>
 
-#include <lion/file.hpp>
-
 #include <moxi/morton.hpp>
 
 #include <rose/file.hpp>
