@@ -4,6 +4,9 @@
 
 #include <atma/intrusive_ptr.hpp>
 #include <atma/vector.hpp>
+#include <atma/atomic.hpp>
+
+#include <tuple>
 
 
 namespace lion
@@ -25,6 +28,10 @@ namespace lion
 
 	struct asset_id_t
 	{
+		asset_id_t()
+			: type(), generation(), unused(), idx()
+		{}
+
 		uint64 type : 8; // 256 different types of assets... enough?
 		uint64 generation : 8; // 256 generations... enough? 255 if 0x0 means "always latest"
 		uint64 unused : 16;
@@ -43,24 +50,80 @@ namespace lion
 	struct asset_library_t
 	{
 		asset_library_t();
-		auto gen_random() -> asset_handle_t;
 
-	private:
-		struct asset_storage_t;
-		struct asset_type_storage_t;
+		auto gen_random() -> std::tuple<uint32, uint32>;
+		auto release(std::tuple<uint32, uint32> const&) -> void;
 
-		using asset_storage_list_t = atma::vector<asset_storage_t>;
-		using asset_type_list_t = atma::vector<asset_storage_list_t>;
+		auto dump_ascii() -> void;
+
+	private: // table management
+		struct slot_t;
+		struct freelist_node_t;
+		struct freelist_head_t;
+		struct page_t;
+
+		//static uint32 const page_size;
+
+		auto get_slot() -> std::tuple<page_t*, uint32>;
+
+		static const uint32 pages_capacity_ = 256;
+		uint32 pages_size_ = 0;
+
+		uint32 page_slot_capacity_ = 4;
+
+		page_t* pages_[pages_capacity_] = {};
+		page_t* first_page_ = nullptr;
 
 	private:
 		vfs_t* vfs_;
-		asset_type_list_t types_;
+		//asset_type_list_t types_;
 	};
 
-	struct asset_library_t::asset_storage_t
+	struct asset_library_t::slot_t
 	{
 		asset_t* asset = nullptr;
 		uint32 ref_count = 0;
-		asset_storage_t* prev = nullptr;
+		asset_id_t prev;
 	};
+
+	struct asset_library_t::freelist_node_t
+	{
+		freelist_node_t()
+			: next{nullptr}
+		{}
+
+		freelist_node_t(uint32 idx, freelist_node_t* n)
+			: idx(idx), next(n)
+		{}
+
+		std::atomic<freelist_node_t*> next;
+		uint32 idx = 0;
+	};
+
+	struct alignas(16) asset_library_t::freelist_head_t
+	{
+		freelist_head_t()
+		{}
+
+		freelist_head_t(freelist_node_t* n, uint32 aba)
+			: node(n), aba(aba)
+		{}
+
+		freelist_node_t* node = nullptr;
+		uint32 aba = 0;
+	};
+
+	struct asset_library_t::page_t
+	{
+		page_t(uint32 id, uint32 size)
+			: id(id), memory{size}
+		{}
+
+		uint32 id = 0;
+		uint32 idx = 0;
+		freelist_head_t freelist;
+		atma::memory_t<slot_t> memory;
+		alignas(8) page_t* next = nullptr;
+	};
+
 }

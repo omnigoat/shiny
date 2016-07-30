@@ -21,6 +21,7 @@
 
 #include <lion/filesystem.hpp>
 #include <lion/console_log_handler.hpp>
+#include <lion/assets.hpp>
 
 #include <pepper/freelook_camera_controller.hpp>
 
@@ -101,17 +102,17 @@ private:
 
 namespace lion
 {
-	struct asset_t {};
-
-	struct asset_storage_t
-	{
-		//asset_ptr current;
-		asset_t* current;
-		//asset_ptr next;
-		std::atomic_int32_t current_use_count;
-		//std::atomic_int32_t next_use_count;
-		std::atomic<asset_t*> ptr;
-	};
+	//struct asset_t {};
+	//
+	//struct asset_storage_t
+	//{
+	//	//asset_ptr current;
+	//	asset_t* current;
+	//	//asset_ptr next;
+	//	std::atomic_int32_t current_use_count;
+	//	//std::atomic_int32_t next_use_count;
+	//	std::atomic<asset_t*> ptr;
+	//};
 }
 
 using asset_handle_t = intptr; //asset_storage_t const*;
@@ -430,9 +431,6 @@ auto plugin_t::fs_flat() const -> shiny::fragment_shader_ptr const&
 }
 
 
-
-
-
 namespace atma
 {
 	template <typename T, size_t N>
@@ -541,6 +539,144 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	shiny::logging::runtime_t SLR;
 	SLR.attach_handler(&console_log);
 	shiny::logging::set_runtime(&SLR);
+
+
+	lion::asset_library_t AL;
+
+	srand(time(nullptr));
+
+	int work = 4;
+	auto t4 = std::thread([&]{
+		for (;;)
+		{
+			++work;
+			Sleep(5000);
+		}
+	});
+
+	auto t3 = std::thread([&] {
+		for (;;) {
+			AL.dump_ascii(); Sleep(10);
+		}
+	});
+
+	auto tf = [&] {
+		std::vector< std::tuple<uint32, uint32> > handles;
+
+		atma::this_thread::set_debug_name("asset check");
+
+		for (int i = 0; ; ++i)
+		{
+			auto jc = rand() % work;
+			for (int j = 0; j != jc; ++j)
+				handles.push_back(AL.gen_random());
+
+			jc = rand() % (10);
+			for (int j = 0; j != jc; ++j)
+			{
+				if (!handles.empty())
+				{
+					auto kl = rand() % handles.size();
+					auto rv = handles[kl];
+					handles.erase(handles.begin() + kl);
+					AL.release(rv);
+				}
+			}
+		}
+	};
+
+	auto t1 = std::thread(tf);
+	auto t2 = std::thread(tf);
+	
+
+	t1.join();
+	t2.join();
+	t3.join();
+
+	int64 nums[] = {
+		-1,
+		-12,
+		-123,
+		-1234,
+		-12345,
+		-123456,
+		-1234567,
+		-12345678,
+		-123456789,
+		-1234567890,
+		-12345678901,
+		-123456789012,
+		-1234567890123,
+		-12345678901234,
+		-123456789012345,
+		-1234567890123456,
+		-12345678901234567,
+		-123456789012345678,
+		-1234567890123456789,
+		1,
+		12,
+		123,
+		1234,
+		12345,
+		123456,
+		1234567,
+		12345678,
+		123456789,
+		1234567890,
+		12345678901,
+		123456789012,
+		1234567890123,
+		12345678901234,
+		123456789012345,
+		1234567890123456,
+		12345678901234567,
+		123456789012345678,
+		1234567890123456789,
+	};
+
+	uint64 b = 18446744073709551615;
+	int64 mb = -9223372036854775808;
+
+#include <limits>
+	for (int i = 0; i != 19 * 2; ++i)
+	{
+		char buf[256];
+		char buf2[256];
+		atma::string_encoder_t SE{buf, 256};
+		buf[SE.write(nums[i])] = '\0';
+		sprintf(buf2, "%lli", nums[i]);
+
+		ATMA_ASSERT(strcmp(buf, buf2) == 0);
+		//std::cout << buf << " == " << buf2 << std::endl;
+		SHINY_INFO(buf);
+		//nums.push_back(nums.back() * 10 + ds[i % 10]);
+	}
+	
+	// largest uint64
+	{
+		char buf[256];
+		char buf2[256];
+		atma::string_encoder_t SE{buf, 256};
+		buf[SE.write(b)] = '\0';
+		sprintf(buf2, "%llu", b);
+
+		ATMA_ASSERT(strcmp(buf, buf2) == 0);
+		//std::cout << buf << " == " << buf2 << std::endl;
+		SHINY_INFO(buf);
+	}
+
+	// smallest int64
+	{
+		char buf[256];
+		char buf2[256];
+		atma::string_encoder_t SE{buf, 256};
+		buf[SE.write(mb)] = '\0';
+		sprintf(buf2, "%lli", mb);
+
+		ATMA_ASSERT(strcmp(buf, buf2) == 0);
+		//std::cout << buf << " == " << buf2 << std::endl;
+		SHINY_INFO(buf);
+	}
 
 	sandbox::application_t app;
 
