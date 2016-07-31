@@ -543,17 +543,57 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 	lion::asset_library_t AL;
 
-	srand(time(nullptr));
+	
 
+	
+	srand(4);
+
+#if 0
+	std::vector< std::tuple<uint32, uint32> > handles;
+
+	for (int i = 0; i != 10; ++i)
+	{
+		auto jc = rand() % 100;
+		for (int j = 0; j != jc; ++j)
+			handles.push_back(AL.gen_random());
+	
+		jc = rand() % (100);
+		for (int j = 0; j != jc; ++j)
+		{
+			if (!handles.empty())
+			{
+				auto kl = rand() % handles.size();
+				auto rv = handles[kl];
+				handles.erase(handles.begin() + kl);
+				AL.release(rv);
+			}
+		}
+	}
+	
+	//
+	std::chrono::nanoseconds acc(0);
+	for (int i = 0; i != 100; ++i)
+	{
+		auto start = std::chrono::high_resolution_clock::now();
+		handles.push_back(AL.gen_random());
+		auto end = std::chrono::high_resolution_clock::now();
+		acc += std::chrono::duration_cast<std::chrono::nanoseconds>((end - start));
+	}
+	std::cout << "total time: " << acc.count() << "ns" << std::endl;
+	acc /= 100;
+	std::cout << "average time: " << acc.count() << "ns" << std::endl;
+
+
+#else
 	int work = 4;
 	auto t4 = std::thread([&]{
 		for (;;)
 		{
-			++work;
+			//++work;
 			Sleep(5000);
 		}
 	});
-
+	
 	auto t3 = std::thread([&] {
 		for (;;) {
 			AL.dump_ascii(); Sleep(10);
@@ -561,8 +601,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	});
 
 	auto tf = [&] {
+		
 		std::vector< std::tuple<uint32, uint32> > handles;
-
 		atma::this_thread::set_debug_name("asset check");
 
 		for (int i = 0; ; ++i)
@@ -587,11 +627,12 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 	auto t1 = std::thread(tf);
 	auto t2 = std::thread(tf);
-	
 
 	t1.join();
 	t2.join();
 	t3.join();
+#endif
+
 
 	int64 nums[] = {
 		-1,

@@ -69,7 +69,7 @@ namespace lion
 		static const uint32 pages_capacity_ = 256;
 		uint32 pages_size_ = 0;
 
-		uint32 page_slot_capacity_ = 4;
+		uint32 page_slot_capacity_ = 128;
 
 		page_t* pages_[pages_capacity_] = {};
 		page_t* first_page_ = nullptr;
@@ -84,6 +84,7 @@ namespace lion
 		asset_t* asset = nullptr;
 		uint32 ref_count = 0;
 		asset_id_t prev;
+		std::atomic<bool> used;
 	};
 
 	struct asset_library_t::freelist_node_t
@@ -116,13 +117,21 @@ namespace lion
 	struct asset_library_t::page_t
 	{
 		page_t(uint32 id, uint32 size)
-			: id(id), memory{size}
+			: id(id)
+			, capacity{size}
+			, memory{size}
+			, freeslots{new uint32[std::max(size / 32, 1u)]()}
 		{}
 
 		uint32 id = 0;
-		uint32 idx = 0;
-		freelist_head_t freelist;
+
+		uint32 capacity = 0;
+		uint32 size = 0;
 		atma::memory_t<slot_t> memory;
+		
+		freelist_head_t freelist;
+		uint32* freeslots = nullptr;
+		
 		alignas(8) page_t* next = nullptr;
 	};
 

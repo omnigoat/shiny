@@ -21,17 +21,17 @@ auto lion::asset_library_t::gen_random() -> std::tuple<uint32, uint32>
 
 auto lion::asset_library_t::get_slot() -> std::tuple<page_t*, uint32>
 {
-begin:
+pages_begin:
 	page_t* p = first_page_;
 	page_t** pp = &first_page_;
 
 	while (p != nullptr)
 	{
 		// wait for in-progress page to be published or not
-		if (p->id == 256)
-			goto begin;
+		if (p->id == pages_capacity_)
+			goto pages_begin;
 
-		if (p->idx < page_slot_capacity_ || p->freelist.node != nullptr)
+		if (p->size < p->capacity)
 			break;
 
 		pp = &p->next;
@@ -54,62 +54,82 @@ begin:
 				{
 					// publish
 					pages_[pidx] = p;
-					atma::atomic_exchange(&p->id, pidx); // p->id = pidx;
+					atma::atomic_exchange(&p->id, pidx);
+					page_slot_capacity_ *= 2;
 				}
 				else
 				{
 					// unpublish
 					*pp = nullptr;
 					delete p;
-					goto begin;
+					goto pages_begin;
 				}
 			}
 			else
 			{
 				delete p;
-				goto begin;
+				goto pages_begin;
 			}
 		}
 		else
-			goto begin;
+		{
+			goto pages_begin;
+		}
 	}
 	else if (p->id == pages_capacity_)
 	{
-		goto begin;
+		goto pages_begin;
 	}
 
 
-	uint32 idx = page_slot_capacity_;
-	if (p->idx < page_slot_capacity_)
+	// get free slot in supposedly empty page
+	uint32 idx = p->capacity;
+	for (auto i = 0u, ie = p->capacity / 32; i != ie; ++i)
 	{
-		idx = atma::atomic_post_increment(&p->idx);
-	}
+		uint32 u32 = p->freeslots[i];
+		if (u32 == 0xffffffff)
+			continue;
 
-	if (idx >= page_slot_capacity_)
-	{
-		freelist_head_t ch;
-		atma::atomic_load_128(&ch, &p->freelist);
-
-		while (ch.node)
+freeslot_u32_retry:
+		for (auto j = 0; j != 4; ++j)
 		{
-			freelist_head_t nh{
-				ch.node->next.load(std::memory_order_relaxed),
-				ch.aba + 1};
+			byte b = (u32 >> ((3 - j) * 8)) & 0xff;
 
-			if (atma::atomic_compare_exchange(&p->freelist, ch, nh, &ch))
+			uint32 k;
+			if      ((b & 0b10000000) == 0) { k = 0; }
+			else if ((b & 0b01000000) == 0) { k = 1; }
+			else if ((b & 0b00100000) == 0) { k = 2; }
+			else if ((b & 0b00010000) == 0) { k = 3; }
+			else if ((b & 0b00001000) == 0) { k = 4; }
+			else if ((b & 0b00000100) == 0) { k = 5; }
+			else if ((b & 0b00000010) == 0) { k = 6; }
+			else if ((b & 0b00000001) == 0) { k = 7; }
+			else continue;
+
+			auto nu32 = u32 | (0x80000000 >> (j * 8) >> k);
+
+			if (atma::atomic_compare_exchange(&p->freeslots[i], u32, nu32, &u32))
 			{
-				idx = ch.node->idx;
-				delete ch.node;
-				break;
+				atma::atomic_pre_increment(&p->size);
+				idx = i * 32 + j * 8 + k;
+				goto freeslot_end;
+			}
+			else
+			{
+				goto freeslot_u32_retry;
 			}
 		}
 	}
 
-	if (idx >= page_slot_capacity_)
-		goto begin;
+	// page was filled whilst we were dawdling
+	goto pages_begin;
 
+freeslot_end:
+
+	// construct now-owned slot
 	p->memory.construct_default(idx, 1);
-	ATMA_ASSERT(p->memory[idx].ref_count == 0);
+
+	//ATMA_ASSERT(p->memory[idx].ref_count == 0);
 	return {p, idx};
 }
 
@@ -120,15 +140,17 @@ auto lion::asset_library_t::release(std::tuple<uint32, uint32> const& s) -> void
 
 	p->memory[std::get<1>(s)].ref_count--;
 
-	freelist_head_t ch;
-	atma::atomic_load_128(&ch, &p->freelist);
+	uint32 idx = std::get<1>(s);
+	uint32 i = idx / 32;
+	uint32 j = idx % 32;
 
-	freelist_head_t nh;
+	uint32 u32 = p->freeslots[i];
+	uint32 nu32;
 	do {
-		delete nh.node;
-		nh.node = new freelist_node_t{std::get<1>(s), ch.node};
-		nh.aba = ch.aba + 1;
-	} while (!atma::atomic_compare_exchange(&p->freelist, ch, nh, &ch));
+		nu32 = u32 & ~(0x80000000 >> j);
+	} while (!atma::atomic_compare_exchange(&p->freeslots[i], u32, nu32, &u32));
+
+	atma::atomic_pre_decrement(&p->size);
 }
 
 auto lion::asset_library_t::dump_ascii() -> void
@@ -138,9 +160,13 @@ auto lion::asset_library_t::dump_ascii() -> void
 		if (!pages_[i])
 			continue;
 
-		for (int j = 0; j != page_slot_capacity_ && j != pages_[i]->idx; ++j)
+		auto const* p = pages_[i];
+		for (int j = 0; j != p->capacity; ++j)
 		{
-			std::cout << pages_[i]->memory[j].ref_count;
+			if (p->freeslots[j / 32] & (0x80000000 >> (j % 32)))
+				std::cout << pages_[i]->memory[j].ref_count;
+			else
+				std::cout << ".";
 		}
 
 		std::cout << " ";
