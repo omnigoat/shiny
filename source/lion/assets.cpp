@@ -127,7 +127,6 @@ freeslot_u32_retry:
 freeslot_end:
 
 	// construct now-owned slot
-	p->memory.construct_default(idx, 1);
 
 	//ATMA_ASSERT(p->memory[idx].ref_count == 0);
 	return {p, idx};

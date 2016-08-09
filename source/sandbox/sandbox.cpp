@@ -21,7 +21,7 @@
 
 #include <lion/filesystem.hpp>
 #include <lion/console_log_handler.hpp>
-#include <lion/assets.hpp>
+//#include <lion/assets.hpp>
 
 #include <pepper/freelook_camera_controller.hpp>
 
@@ -49,6 +49,7 @@
 #include <atma/threading.hpp>
 #include <atma/logging.hpp>
 #include <atma/string.hpp>
+#include <atma/handle_table.hpp>
 
 #include <regex>
 #include <atomic>
@@ -431,6 +432,7 @@ auto plugin_t::fs_flat() const -> shiny::fragment_shader_ptr const&
 }
 
 
+#if 0
 namespace atma
 {
 	template <typename T, size_t N>
@@ -519,6 +521,7 @@ namespace atma
 		return nullptr;
 	}
 }
+#endif
 
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
@@ -527,6 +530,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	rose::runtime_t RR;
 	lion::console_log_handler_t console_log{RR.get_console()};
 
+#if 0
 	atma::arena_allocator_t<int, 4> AA;
 	AA.allocate(2);
 	AA.allocate(4);
@@ -534,14 +538,18 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	AA.allocate(3);
 	AA.allocate(1);
 	AA.allocate(1);
+#endif // 0
+
 
 	// shiny runtime & logging through console
 	shiny::logging::runtime_t SLR;
 	SLR.attach_handler(&console_log);
 	shiny::logging::set_runtime(&SLR);
 
+	atma::handle_table_t<int> AL;
 
-	lion::asset_library_t AL;
+
+	//lion::asset_library_t AL;
 
 	
 
@@ -584,7 +592,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	std::cout << "average time: " << acc.count() << "ns" << std::endl;
 
 
-#else
+#elif 1
 	int work = 4;
 	auto t4 = std::thread([&]{
 		for (;;)
@@ -596,20 +604,20 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	
 	auto t3 = std::thread([&] {
 		for (;;) {
-			AL.dump_ascii(); Sleep(10);
+			//AL.dump_ascii(); Sleep(10);
 		}
 	});
 
 	auto tf = [&] {
 		
-		std::vector< std::tuple<uint32, uint32> > handles;
+		std::vector<atma::handle_table_t<int>::handle_t> handles;
 		atma::this_thread::set_debug_name("asset check");
 
 		for (int i = 0; ; ++i)
 		{
 			auto jc = rand() % work;
 			for (int j = 0; j != jc; ++j)
-				handles.push_back(AL.gen_random());
+				handles.push_back(AL.construct());
 
 			jc = rand() % (10);
 			for (int j = 0; j != jc; ++j)
@@ -632,7 +640,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	t2.join();
 	t3.join();
 #endif
-
 
 	int64 nums[] = {
 		-1,
@@ -676,7 +683,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	};
 
 	uint64 b = 18446744073709551615;
-	int64 mb = -9223372036854775808;
+	int64 mb = -9223372036854775807 - 1;
 
 #include <limits>
 	for (int i = 0; i != 19 * 2; ++i)
