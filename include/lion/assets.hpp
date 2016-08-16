@@ -5,134 +5,192 @@
 #include <atma/intrusive_ptr.hpp>
 #include <atma/vector.hpp>
 #include <atma/atomic.hpp>
+#include <atma/handle_table.hpp>
+#include <atma/enable_if.hpp>
 
 #include <tuple>
+#include <type_traits>
 
 
 namespace lion
 {
 	struct asset_t;
-	struct asset_id_t;
-	struct asset_handle_t;
 	struct asset_library_t;
+	template <typename> struct asset_handle_t;
 
-	struct asset_t : atma::ref_counted
+	struct asset_t
 	{
 		auto path() const -> path_t const& { return path_; }
-
+		virtual ~asset_t() {}
 	private:
 		path_t path_;
 	};
+}
 
-	using asset_ptr = atma::intrusive_ptr<asset_t>;
-
-	struct asset_id_t
+// base_asset_handle_t
+#if 0
+namespace lion
+{
+	struct base_asset_handle_t
 	{
-		asset_id_t()
-			: type(), generation(), unused(), idx()
+		friend struct asset_library_t;
+
+		base_asset_handle_t(base_asset_handle_t const&);
+		base_asset_handle_t(base_asset_handle_t&&);
+
+		auto operator = (base_asset_handle_t const&) -> base_asset_handle_t&;
+		auto operator = (base_asset_handle_t&&) -> base_asset_handle_t&;
+
+	protected:
+		base_asset_handle_t(asset_library_t* library, uint32 id)
+			: library_(library), id_(id)
 		{}
 
-		uint64 type : 8; // 256 different types of assets... enough?
-		uint64 generation : 8; // 256 generations... enough? 255 if 0x0 means "always latest"
-		uint64 unused : 16;
-		uint64 idx : 32; // 32-bit number of this type. totes enough.
+		asset_library_t* library_ = nullptr;
+		uint32 id_;
 	};
 
+	inline base_asset_handle_t::base_asset_handle_t(base_asset_handle_t const& rhs)
+		: library_{rhs.library_}
+		, id_{rhs.id_}
+	{
+		library_->table_.retain(id_);
+	}
 
+	inline base_asset_handle_t::base_asset_handle_t(base_asset_handle_t&& rhs)
+		: library_{rhs.library_}
+		, id_{rhs.id_}
+	{
+		rhs.id_ = 0;
+	}
+}
+#endif // 0
+
+
+// asset_handle_t
+namespace lion
+{
+	template <typename T>
 	struct asset_handle_t
 	{
-		auto lock() -> asset_ptr; //{ return library_.lookup(id_); }
+		template <typename T>
+		asset_handle_t()
+		{}
+
+		asset_handle_t(asset_handle_t const& rhs)
+			: library_{rhs.library_}, id_{rhs.id_}
+		{
+			library_->table_.retain(id_);
+		}
+
+		asset_handle_t(asset_handle_t&& rhs)
+			: library_{rhs.library_}, id_{rhs.id_}
+		{
+			rhs.id_ = 0;
+		}
+
+		template <typename Y, typename = typename std::enable_if<std::is_convertible<Y*, T*>::value>::type>
+		asset_handle_t(asset_handle_t<Y> const& rhs)
+			: library_{rhs.library_}, id_{rhs.id_}
+		{
+			static_assert(std::is_convertible<Y*, T*>::value, "bad cast");
+			library_->table_.retain(id_);
+		}
+
+		template <typename Y, typename = atma::enable_if<std::is_convertible<Y*, T*>>>
+		asset_handle_t(asset_handle_t<Y>&& rhs)
+			: library_{rhs.library_}, id_{rhs.id_}
+		{
+			rhs.id_ = 0;
+		}
+
+		~asset_handle_t()
+		{
+			library_->table_.release(id_);
+		}
+
+		auto operator -> () const -> T const* { return library_->retrieve(*this); }
+		auto operator -> () -> T*             { return library_->retrieve(*this); }
+		auto operator *() const -> T const&   { return *this->operator ->(); }
+		auto operator *() -> T&               { return *this->operator ->(); }
+
 	private:
-		asset_library_t* library_;
-		asset_id_t id_;
+		asset_handle_t(asset_library_t* library, uint32 id)
+			: library_{library}, id_{id}
+		{}
+
+	private:
+		asset_library_t* library_ = nullptr;
+		uint32 id_ = 0;
+
+		friend struct asset_library_t;
+		template <typename> friend struct asset_handle_t;
+
+		template <typename Y, typename Y2>
+		friend auto dynamic_asset_cast(asset_handle_t<Y2> const&) -> asset_handle_t<Y>;
 	};
-	
+
+	using base_asset_handle_t = asset_handle_t<asset_t>;
+
+
+
+	template <typename Y, typename T>
+	inline auto dynamic_asset_cast(asset_handle_t<T> const& x) -> asset_handle_t<Y>
+	{
+		static_assert(std::is_base_of<T, Y>::value, "bad cast");
+		ATMA_ASSERT(nullptr != dynamic_cast<Y const*>(&*x), "bad cast");
+		return asset_handle_t<Y>{x.library_, x.id_};
+	}
+}
+
+namespace lion
+{
+
 	struct asset_library_t
 	{
 		asset_library_t();
+		asset_library_t(vfs_t*);
 
-		auto gen_random() -> std::tuple<uint32, uint32>;
-		auto release(std::tuple<uint32, uint32> const&) -> void;
+		auto register_loader(atma::string const& regex) -> void;
 
-		auto dump_ascii() -> void;
+		auto store(asset_t*) -> base_asset_handle_t;
+
+		template <typename T>
+		auto retrieve(asset_handle_t<T> const&) const -> T*;
 
 	private: // table management
-		struct slot_t;
-		struct freelist_node_t;
-		struct freelist_head_t;
-		struct page_t;
+		struct storage_t;
 
-		//static uint32 const page_size;
+		auto find(base_asset_handle_t const&) -> storage_t*;
+		auto find(base_asset_handle_t const&) const -> storage_t const*;
 
-		auto get_slot() -> std::tuple<page_t*, uint32>;
+		atma::handle_table_t<storage_t> table_;
 
-		static const uint32 pages_capacity_ = 256;
-		uint32 pages_size_ = 0;
-
-		uint32 page_slot_capacity_ = 128;
-
-		page_t* pages_[pages_capacity_] = {};
-		page_t* first_page_ = nullptr;
+	private: // vfs
+		vfs_t* vfs_ = nullptr;
 
 	private:
-		vfs_t* vfs_;
-		//asset_type_list_t types_;
+		template <typename> friend struct asset_handle_t;
 	};
 
-	struct asset_library_t::slot_t
+	template <typename T>
+	inline auto asset_library_t::retrieve(asset_handle_t<T> const& h) const -> T*
 	{
-		asset_t* asset = nullptr;
-		uint32 ref_count = 0;
-		asset_id_t prev;
-		std::atomic<bool> used;
-	};
+		auto s = find(h);
+		if (s == nullptr)
+			return nullptr;
+		return static_cast<T*>(s->asset.get());
+	}
 
-	struct asset_library_t::freelist_node_t
+	struct asset_library_t::storage_t
 	{
-		freelist_node_t()
-			: next{nullptr}
+		storage_t(asset_t* a)
+			: asset{a}
+			, generation{}
 		{}
 
-		freelist_node_t(uint32 idx, freelist_node_t* n)
-			: idx(idx), next(n)
-		{}
-
-		std::atomic<freelist_node_t*> next;
-		uint32 idx = 0;
-	};
-
-	struct alignas(16) asset_library_t::freelist_head_t
-	{
-		freelist_head_t()
-		{}
-
-		freelist_head_t(freelist_node_t* n, uint32 aba)
-			: node(n), aba(aba)
-		{}
-
-		freelist_node_t* node = nullptr;
-		uint32 aba = 0;
-	};
-
-	struct asset_library_t::page_t
-	{
-		page_t(uint32 id, uint32 size)
-			: id(id)
-			, capacity{size}
-			, memory{size}
-			, freeslots{new uint32[std::max(size / 32, 1u)]()}
-		{}
-
-		uint32 id = 0;
-
-		uint32 capacity = 0;
-		uint32 size = 0;
-		atma::memory_t<slot_t> memory;
-		
-		freelist_head_t freelist;
-		uint32* freeslots = nullptr;
-		
-		alignas(8) page_t* next = nullptr;
+		std::unique_ptr<asset_t> asset;
+		uint8 generation;
 	};
 
 }

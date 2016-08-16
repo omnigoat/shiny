@@ -21,7 +21,7 @@
 
 #include <lion/filesystem.hpp>
 #include <lion/console_log_handler.hpp>
-//#include <lion/assets.hpp>
+#include <lion/assets.hpp>
 
 #include <pepper/freelook_camera_controller.hpp>
 
@@ -523,6 +523,10 @@ namespace atma
 }
 #endif
 
+struct thing : lion::asset_t
+{
+	int bam = 4;
+};
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
 {
@@ -546,14 +550,21 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	SLR.attach_handler(&console_log);
 	shiny::logging::set_runtime(&SLR);
 
-	atma::handle_table_t<int> AL;
+	atma::handle_table_t<int> HT;
 
 
-	//lion::asset_library_t AL;
-
+	lion::asset_library_t AL;
+	auto h = AL.store(new thing);
 	
-
+	auto h2 = lion::dynamic_asset_cast<thing>(h);
+	thing* tat = AL.retrieve(h2);
+	tat->bam = 5;
+	thing* tat2 = AL.retrieve(h2);
+	ATMA_ASSERT(tat2->bam == 5, "bad 5");
 	
+	//auto h2 = lion::asset_handle_t<thing>(h);
+	auto h3 = lion::base_asset_handle_t(h2);
+
 	srand(4);
 
 #if 0
@@ -563,7 +574,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	{
 		auto jc = rand() % 100;
 		for (int j = 0; j != jc; ++j)
-			handles.push_back(AL.gen_random());
+			handles.push_back(HT.gen_random());
 	
 		jc = rand() % (100);
 		for (int j = 0; j != jc; ++j)
@@ -573,7 +584,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 				auto kl = rand() % handles.size();
 				auto rv = handles[kl];
 				handles.erase(handles.begin() + kl);
-				AL.release(rv);
+				HT.release(rv);
 			}
 		}
 	}
@@ -583,7 +594,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	for (int i = 0; i != 100; ++i)
 	{
 		auto start = std::chrono::high_resolution_clock::now();
-		handles.push_back(AL.gen_random());
+		handles.push_back(HT.gen_random());
 		auto end = std::chrono::high_resolution_clock::now();
 		acc += std::chrono::duration_cast<std::chrono::nanoseconds>((end - start));
 	}
@@ -604,7 +615,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	
 	auto t3 = std::thread([&] {
 		for (;;) {
-			//AL.dump_ascii(); Sleep(10);
+			//HT.dump_ascii(); Sleep(10);
 		}
 	});
 
@@ -617,7 +628,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 		{
 			auto jc = rand() % work;
 			for (int j = 0; j != jc; ++j)
-				handles.push_back(AL.construct());
+				handles.push_back(HT.construct());
 
 			jc = rand() % (10);
 			for (int j = 0; j != jc; ++j)
@@ -627,7 +638,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 					auto kl = rand() % handles.size();
 					auto rv = handles[kl];
 					handles.erase(handles.begin() + kl);
-					AL.release(rv);
+					HT.release(rv);
 				}
 			}
 		}
