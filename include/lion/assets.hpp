@@ -12,12 +12,18 @@
 #include <type_traits>
 
 
+// forward declares
 namespace lion
 {
 	struct asset_t;
 	struct asset_library_t;
 	template <typename> struct asset_handle_t;
+}
 
+
+// asset_t
+namespace lion
+{
 	struct asset_t
 	{
 		auto path() const -> path_t const& { return path_; }
@@ -109,10 +115,13 @@ namespace lion
 			library_->table_.release(id_);
 		}
 
-		auto operator -> () const -> T const* { return library_->retrieve(*this); }
-		auto operator -> () -> T*             { return library_->retrieve(*this); }
+		auto operator -> () const -> T const* { return (T const*)library_->find(id_)->asset.get(); }
+		auto operator -> () -> T*             { return (T      *)library_->find(id_)->asset.get(); }
 		auto operator *() const -> T const&   { return *this->operator ->(); }
 		auto operator *() -> T&               { return *this->operator ->(); }
+
+		auto library() const -> asset_library_t* { return library_; }
+		auto id() const -> uint32 { return id_; }
 
 	private:
 		asset_handle_t(asset_library_t* library, uint32 id)
@@ -127,7 +136,7 @@ namespace lion
 		template <typename> friend struct asset_handle_t;
 
 		template <typename Y, typename Y2>
-		friend auto dynamic_asset_cast(asset_handle_t<Y2> const&) -> asset_handle_t<Y>;
+		friend auto polymorphic_asset_cast(asset_handle_t<Y2> const&) -> asset_handle_t<Y>;
 	};
 
 	using base_asset_handle_t = asset_handle_t<asset_t>;
@@ -135,7 +144,7 @@ namespace lion
 
 
 	template <typename Y, typename T>
-	inline auto dynamic_asset_cast(asset_handle_t<T> const& x) -> asset_handle_t<Y>
+	inline auto polymorphic_asset_cast(asset_handle_t<T> const& x) -> asset_handle_t<Y>
 	{
 		static_assert(std::is_base_of<T, Y>::value, "bad cast");
 		ATMA_ASSERT(nullptr != dynamic_cast<Y const*>(&*x), "bad cast");
@@ -143,9 +152,12 @@ namespace lion
 	}
 }
 
+
+
+
+// asset_library_t
 namespace lion
 {
-
 	struct asset_library_t
 	{
 		asset_library_t();
@@ -155,14 +167,11 @@ namespace lion
 
 		auto store(asset_t*) -> base_asset_handle_t;
 
-		template <typename T>
-		auto retrieve(asset_handle_t<T> const&) const -> T*;
-
 	private: // table management
 		struct storage_t;
 
-		auto find(base_asset_handle_t const&) -> storage_t*;
-		auto find(base_asset_handle_t const&) const -> storage_t const*;
+		auto find(uint32) -> storage_t*;
+		auto find(uint32) const -> storage_t const*;
 
 		atma::handle_table_t<storage_t> table_;
 
@@ -173,14 +182,6 @@ namespace lion
 		template <typename> friend struct asset_handle_t;
 	};
 
-	template <typename T>
-	inline auto asset_library_t::retrieve(asset_handle_t<T> const& h) const -> T*
-	{
-		auto s = find(h);
-		if (s == nullptr)
-			return nullptr;
-		return static_cast<T*>(s->asset.get());
-	}
 
 	struct asset_library_t::storage_t
 	{

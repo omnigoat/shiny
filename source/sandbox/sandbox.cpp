@@ -526,7 +526,12 @@ namespace atma
 struct thing : lion::asset_t
 {
 	int bam = 4;
+
+	~thing()
+	{
+	}
 };
+
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
 {
@@ -551,20 +556,18 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	shiny::logging::set_runtime(&SLR);
 
 	atma::handle_table_t<int> HT;
-
+	{
+		auto hth = HT.construct(4);
+		HT.release(hth);
+	}
 
 	lion::asset_library_t AL;
-	auto h = AL.store(new thing);
+	{
+		auto h = AL.store(new thing);
+		auto h2 = lion::polymorphic_asset_cast<thing>(h);
+		h2->bam = 5;
+	}
 	
-	auto h2 = lion::dynamic_asset_cast<thing>(h);
-	thing* tat = AL.retrieve(h2);
-	tat->bam = 5;
-	thing* tat2 = AL.retrieve(h2);
-	ATMA_ASSERT(tat2->bam == 5, "bad 5");
-	
-	//auto h2 = lion::asset_handle_t<thing>(h);
-	auto h3 = lion::base_asset_handle_t(h2);
-
 	srand(4);
 
 #if 0

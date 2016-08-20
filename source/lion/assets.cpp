@@ -15,14 +15,14 @@ auto lion::asset_library_t::store(asset_t* a) -> base_asset_handle_t
 	return base_asset_handle_t{this, h};
 }
 
-auto lion::asset_library_t::find(base_asset_handle_t const& h) -> storage_t*
+auto lion::asset_library_t::find(uint32 h) -> storage_t*
 {
-	auto st = table_.get(h.id_);
+	auto st = table_.get(h);
 	return st;
 }
 
-auto lion::asset_library_t::find(base_asset_handle_t const& h) const -> storage_t const*
+auto lion::asset_library_t::find(uint32 h) const -> storage_t const*
 {
-	auto st = table_.get(h.id_);
+	auto st = table_.get(h);
 	return st;
 }
