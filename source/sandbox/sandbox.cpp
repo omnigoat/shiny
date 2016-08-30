@@ -565,6 +565,11 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	{
 		auto h = AL.store(new thing);
 		auto h2 = lion::polymorphic_asset_cast<thing>(h);
+		auto w2 = lion::asset_weak_handle_t<thing>{h2};
+		h2 = lion::asset_handle_t<thing>{};
+		h2 = w2.lock();
+		lion::base_asset_handle_t h3;
+		h3 = h2;
 		h2->bam = 5;
 	}
 	

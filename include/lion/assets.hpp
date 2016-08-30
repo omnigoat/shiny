@@ -18,6 +18,7 @@ namespace lion
 	struct asset_t;
 	struct asset_library_t;
 	template <typename> struct asset_handle_t;
+	template <typename> struct asset_weak_handle_t;
 }
 
 
@@ -33,92 +34,41 @@ namespace lion
 	};
 }
 
-// base_asset_handle_t
-#if 0
-namespace lion
-{
-	struct base_asset_handle_t
-	{
-		friend struct asset_library_t;
-
-		base_asset_handle_t(base_asset_handle_t const&);
-		base_asset_handle_t(base_asset_handle_t&&);
-
-		auto operator = (base_asset_handle_t const&) -> base_asset_handle_t&;
-		auto operator = (base_asset_handle_t&&) -> base_asset_handle_t&;
-
-	protected:
-		base_asset_handle_t(asset_library_t* library, uint32 id)
-			: library_(library), id_(id)
-		{}
-
-		asset_library_t* library_ = nullptr;
-		uint32 id_;
-	};
-
-	inline base_asset_handle_t::base_asset_handle_t(base_asset_handle_t const& rhs)
-		: library_{rhs.library_}
-		, id_{rhs.id_}
-	{
-		library_->table_.retain(id_);
-	}
-
-	inline base_asset_handle_t::base_asset_handle_t(base_asset_handle_t&& rhs)
-		: library_{rhs.library_}
-		, id_{rhs.id_}
-	{
-		rhs.id_ = 0;
-	}
-}
-#endif // 0
 
 
-// asset_handle_t
+// asset_handle_t / asset_weak_handle_t
 namespace lion
 {
 	template <typename T>
 	struct asset_handle_t
 	{
-		template <typename T>
-		asset_handle_t()
-		{}
+		constexpr asset_handle_t();
+		asset_handle_t(asset_handle_t const& rhs);
+		asset_handle_t(asset_handle_t&& rhs);
+		~asset_handle_t();
 
-		asset_handle_t(asset_handle_t const& rhs)
-			: library_{rhs.library_}, id_{rhs.id_}
-		{
-			library_->table_.retain(id_);
-		}
+		explicit asset_handle_t(asset_weak_handle_t<T> const&);
 
-		asset_handle_t(asset_handle_t&& rhs)
-			: library_{rhs.library_}, id_{rhs.id_}
-		{
-			rhs.id_ = 0;
-		}
-
-		template <typename Y, typename = typename std::enable_if<std::is_convertible<Y*, T*>::value>::type>
-		asset_handle_t(asset_handle_t<Y> const& rhs)
-			: library_{rhs.library_}, id_{rhs.id_}
-		{
-			static_assert(std::is_convertible<Y*, T*>::value, "bad cast");
-			library_->table_.retain(id_);
-		}
-
+		template <typename Y, typename = std::enable_if_t<std::is_convertible<Y*, T*>::value>>
+		asset_handle_t(asset_handle_t<Y> const& rhs);
 		template <typename Y, typename = atma::enable_if<std::is_convertible<Y*, T*>>>
-		asset_handle_t(asset_handle_t<Y>&& rhs)
-			: library_{rhs.library_}, id_{rhs.id_}
-		{
-			rhs.id_ = 0;
-		}
+		asset_handle_t(asset_handle_t<Y>&& rhs);
 
-		~asset_handle_t()
-		{
-			library_->table_.release(id_);
-		}
+
+		auto operator = (asset_handle_t const& rhs) -> asset_handle_t&;
+		auto operator = (asset_handle_t&& rhs) -> asset_handle_t&;
+
+		template <typename Y, typename = std::enable_if_t<std::is_convertible<Y*, T*>::value>>
+		auto operator = (asset_handle_t<Y> const& rhs) -> asset_handle_t&;
+		template <typename Y, typename = std::enable_if_t<std::is_convertible<Y*, T*>::value>>
+		auto operator = (asset_handle_t<Y>&& rhs) -> asset_handle_t&;
 
 		auto operator -> () const -> T const* { return (T const*)library_->find(id_)->asset.get(); }
 		auto operator -> () -> T*             { return (T      *)library_->find(id_)->asset.get(); }
 		auto operator *() const -> T const&   { return *this->operator ->(); }
 		auto operator *() -> T&               { return *this->operator ->(); }
+
+		operator bool() const { return id_ != 0; }
 
 		auto library() const -> asset_library_t* { return library_; }
 		auto id() const -> uint32 { return id_; }
@@ -134,12 +84,139 @@ namespace lion
 
 		friend struct asset_library_t;
 		template <typename> friend struct asset_handle_t;
+		template <typename> friend struct asset_weak_handle_t;
 
 		template <typename Y, typename Y2>
 		friend auto polymorphic_asset_cast(asset_handle_t<Y2> const&) -> asset_handle_t<Y>;
 	};
 
 	using base_asset_handle_t = asset_handle_t<asset_t>;
+}
+
+
+namespace lion
+{
+	template <typename T>
+	struct asset_weak_handle_t
+	{
+		constexpr asset_weak_handle_t();
+		asset_weak_handle_t(asset_weak_handle_t const&);
+		asset_weak_handle_t(asset_weak_handle_t&&);
+		~asset_weak_handle_t();
+
+		asset_weak_handle_t(asset_handle_t<T> const&);
+
+		template <typename Y, typename = std::enable_if_t<std::is_convertible<Y*, T*>::value>>
+		asset_weak_handle_t(asset_weak_handle_t<Y> const& rhs);
+		template <typename Y, typename = atma::enable_if<std::is_convertible<Y*, T*>>>
+		asset_weak_handle_t(asset_weak_handle_t<Y>&& rhs);
+
+		auto operator = (asset_weak_handle_t const&) -> asset_weak_handle_t&;
+		auto operator = (asset_weak_handle_t&&) -> asset_weak_handle_t&;
+
+		template <typename Y, typename = std::enable_if_t<std::is_convertible<Y*, T*>::value>>
+		auto operator = (asset_weak_handle_t<Y> const& rhs) -> asset_weak_handle_t&;
+		template <typename Y, typename = std::enable_if_t<std::is_convertible<Y*, T*>::value>>
+		auto operator = (asset_weak_handle_t<Y>&& rhs) -> asset_weak_handle_t&;
+
+		auto library() const -> asset_library_t* { return library_; }
+		auto id() const -> uint32 { return id_; }
+
+		auto expired() const -> bool;
+		auto lock() const -> asset_handle_t<T>;
+
+	private:
+		asset_library_t* library_ = nullptr;
+		uint32 id_ = 0;
+	};
+}
+
+
+namespace lion
+{
+	template <typename T>
+	inline constexpr asset_handle_t<T>::asset_handle_t()
+	{}
+
+	template <typename T>
+	inline asset_handle_t<T>::asset_handle_t(asset_handle_t const& rhs)
+		: library_{rhs.library_}, id_{rhs.id_}
+	{
+		library_->table_.retain(id_);
+	}
+
+	template <typename T>
+	inline asset_handle_t<T>::asset_handle_t(asset_handle_t&& rhs)
+		: library_{rhs.library_}, id_{rhs.id_}
+	{
+		rhs.id_ = 0;
+	}
+
+	template <typename T>
+	inline asset_handle_t<T>::asset_handle_t(asset_weak_handle_t<T> const& rhs)
+		: library_{rhs.library_}
+		, id_{rhs.expired() ? 0 : rhs.id_}
+	{
+		library_->table_.release(id_);
+	}
+
+	template <typename T>
+	template <typename Y, typename>
+	inline asset_handle_t<T>::asset_handle_t(asset_handle_t<Y> const& rhs)
+		: library_{rhs.library_}, id_{rhs.id_}
+	{
+		//static_assert(std::is_convertible<Y*, T*>::value, "bad cast");
+		library_->table_.retain(id_);
+	}
+
+	template <typename T>
+	template <typename Y, typename>
+	inline asset_handle_t<T>::asset_handle_t(asset_handle_t<Y>&& rhs)
+		: library_{rhs.library_}, id_{rhs.id_}
+	{
+		rhs.id_ = 0;
+	}
+
+	template <typename T>
+	inline asset_handle_t<T>::~asset_handle_t()
+	{
+		library_->table_.release(id_);
+	}
+
+	template <typename T>
+	inline auto asset_handle_t<T>::operator = (asset_handle_t const& rhs) -> asset_handle_t&
+	{
+		this->~asset_handle_t();
+		new (this) asset_handle_t{rhs};
+		return *this;
+	}
+
+	template <typename T>
+	inline auto asset_handle_t<T>::operator = (asset_handle_t&& rhs) -> asset_handle_t&
+	{
+		this->~asset_handle_t();
+		new (this) asset_handle_t{std::move(rhs)};
+		return *this;
+	}
+
+	template <typename T>
+	template <typename Y, typename>
+	inline auto asset_handle_t<T>::operator = (asset_handle_t<Y> const& rhs) -> asset_handle_t&
+	{
+		this->~asset_handle_t();
+		new (this) asset_handle_t{rhs};
+		return *this;
+	}
+
+	template <typename T>
+	template <typename Y, typename>
+	inline auto asset_handle_t<T>::operator = (asset_handle_t<Y>&& rhs) -> asset_handle_t&
+	{
+		this->~asset_handle_t();
+		new (this) asset_handle_t{std::move(rhs)};
+		return *this;
+	}
+
 
 
 
@@ -151,6 +228,112 @@ namespace lion
 		return asset_handle_t<Y>{x.library_, x.id_};
 	}
 }
+
+
+namespace lion
+{
+	template <typename T>
+	inline constexpr asset_weak_handle_t<T>::asset_weak_handle_t()
+	{}
+
+	template <typename T>
+	inline asset_weak_handle_t<T>::asset_weak_handle_t(asset_weak_handle_t const& rhs)
+		: library_{rhs.library_}, id_{rhs.id_}
+	{
+		library_->table_.weak_retain(id_);
+	}
+
+	template <typename T>
+	inline asset_weak_handle_t<T>::asset_weak_handle_t(asset_weak_handle_t&& rhs)
+		: library_{rhs.library_}, id_{rhs.id_}
+	{
+		rhs.id_ = 0;
+	}
+
+	template <typename T>
+	inline asset_weak_handle_t<T>::asset_weak_handle_t(asset_handle_t<T> const& rhs)
+		: library_{rhs.library_}, id_{rhs.id_}
+	{
+		library_->table_.weak_retain(id_);
+	}
+
+	template <typename T>
+	template <typename Y, typename>
+	inline asset_weak_handle_t<T>::asset_weak_handle_t(asset_weak_handle_t<Y> const& rhs)
+		: library_{rhs.library_}, id_{rhs.id_}
+	{
+		static_assert(std::is_convertible<Y*, T*>::value, "bad cast");
+		library_->table_.weak_retain(id_);
+	}
+
+	template <typename T>
+	template <typename Y, typename>
+	inline asset_weak_handle_t<T>::asset_weak_handle_t(asset_weak_handle_t<Y>&& rhs)
+		: library_{rhs.library_}, id_{rhs.id_}
+	{
+		rhs.id_ = 0;
+	}
+
+	template <typename T>
+	inline asset_weak_handle_t<T>::~asset_weak_handle_t()
+	{
+		library_->table_.release(id_);
+	}
+
+	template <typename T>
+	inline auto asset_weak_handle_t<T>::operator = (asset_weak_handle_t const& rhs) -> asset_weak_handle_t&
+	{
+		this->~asset_weak_handle_t();
+		new (this) asset_weak_handle_t{rhs};
+		return *this;
+	}
+
+	template <typename T>
+	inline auto asset_weak_handle_t<T>::operator = (asset_weak_handle_t&& rhs) -> asset_weak_handle_t&
+	{
+		this->~asset_weak_handle_t();
+		new (this) asset_weak_handle_t{std::move(rhs)};
+		return *this;
+	}
+
+	template <typename T>
+	template <typename Y, typename>
+	inline auto asset_weak_handle_t<T>::operator = (asset_weak_handle_t<Y> const& rhs) -> asset_weak_handle_t&
+	{
+		this->~asset_weak_handle_t();
+		new (this) asset_weak_handle_t{rhs};
+		return *this;
+	}
+
+	template <typename T>
+	template <typename Y, typename>
+	inline auto asset_weak_handle_t<T>::operator = (asset_weak_handle_t<Y>&& rhs) -> asset_weak_handle_t&
+	{
+		this->~asset_weak_handle_t();
+		new (this) asset_weak_handle_t{std::move(rhs)};
+		return *this;
+	}
+
+	template <typename T>
+	inline auto asset_weak_handle_t<T>::expired() const -> bool
+	{
+		return library_->table_.expired(id_);
+	}
+
+	template <typename T>
+	inline auto asset_weak_handle_t<T>::lock() const -> asset_handle_t<T>
+	{
+		if (expired())
+			return asset_handle_t<T>{library_, 0};
+		else
+			return asset_handle_t<T>{library_, id_};
+	}
+}
+
+
+
+
+
 
 
 
@@ -180,6 +363,7 @@ namespace lion
 
 	private:
 		template <typename> friend struct asset_handle_t;
+		template <typename> friend struct asset_weak_handle_t;
 	};
 
 
