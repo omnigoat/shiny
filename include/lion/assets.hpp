@@ -350,6 +350,9 @@ namespace lion
 
 		auto store(asset_t*) -> base_asset_handle_t;
 
+		//auto load(atma::string const& path) -> base_asset_handle_t;
+		//auto load(asset_collection_t, atma::string const& path) -> base_asset_handle_t;
+
 	private: // table management
 		struct storage_t;
 
