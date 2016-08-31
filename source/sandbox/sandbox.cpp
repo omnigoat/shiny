@@ -708,7 +708,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 		ATMA_ASSERT(strcmp(buf, buf2) == 0);
 		//std::cout << buf << " == " << buf2 << std::endl;
-		SHINY_LOG(atma::log_level_t(i % 5), buf, shiny::log::color::error_text, buf);
+		SHINY_LOG(atma::log_level_t(i % 5), shiny::log::color::highlight_text, buf);
 		//nums.push_back(nums.back() * 10 + ds[i % 10]);
 	}
 	
