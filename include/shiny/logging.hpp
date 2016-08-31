@@ -3,10 +3,9 @@
 #include <atma/logging.hpp>
 
 
-namespace shiny { namespace logging
-{
-	using level_t = atma::log_level_t;
+namespace shiny { namespace logging {
 
+	using level_t = atma::log_level_t;
 	using runtime_t = atma::logging_runtime_t;
 
 	
@@ -51,16 +50,11 @@ namespace shiny { namespace logging
 
 
 
-	template <typename... Args>
-	inline auto log(level_t level) -> bool
+	inline auto log_header(atma::logging_encoder_t& encoder, level_t level, char const* filename, int line) -> size_t
 	{
 		auto* R = detail::current_runtime();
 		if (R == nullptr)
 			return false;
-
-		size_t p = 0;
-		size_t const bufsize = 8 * 1024;
-		char buf[bufsize];
 
 		char const* caption[] = {
 			"Trace:",
@@ -78,51 +72,55 @@ namespace shiny { namespace logging
 			0xcf,
 		};
 
-		auto memstream = atma::intrusive_ptr<atma::memory_stream_t>::make(buf, bufsize);
-		atma::logging_encoder_t encoder{memstream};
-
+		size_t p = 0;
 		p += encoder.encode_header(atma::log_style_t::pretty_print);
 		p += encoder.encode_color(colors[(int)level]);
 		p += encoder.encode_sprintf("%s\n", caption[(int)level]);
 		p += encoder.encode_color(0x07);
-		p += encoder.encode_sprintf("%s:%d\n%s\n", filename, line, message);
+		p += encoder.encode_sprintf("%s:%d\n", filename, line);
 
-		R->log(level_t::error, buf, (uint32)p);
-		return true;
+		return p;
 	}
 
-	inline auto log(level_t level, char const* message) -> bool
+	template <typename... Args>
+	inline auto log(level_t level, char const* filename, int line, Args&&... args) -> bool
 	{
 		auto* R = detail::current_runtime();
 		if (R == nullptr)
 			return false;
 
-		size_t p = 0;
-		char buf[8 * 1024];
+		// allocate static buffer & encoder
+		size_t const bufsize = 8 * 1024;
+		char buf[bufsize];
+		auto memstream = atma::intrusive_ptr<atma::memory_bytestream_t>::make(buf, bufsize);
+		atma::logging_encoder_t encoder{memstream};
 
-		buf[0] = (byte)atma::log_style_t::oneline;
-		p += 1;
-		p += atma::logging_encode_string(buf + p, "%s\n", message);
+		// encode
+		size_t p = 
+			log_header(encoder, level, filename, line) +
+			encoder.encode_all(std::forward<Args>(args)...);
+
 		R->log(level, buf, (uint32)p);
+
 		return true;
 	}
 
 #define SHINY_LOG(level, ...) \
 	::shiny::logging::log(level, __VA_ARGS__)
 
-#define SHINY_TRACE(msg) \
-	::shiny::logging::log(::shiny::logging::level_t::verbose, msg)
+#define SHINY_TRACE(...) \
+	::shiny::logging::log(::shiny::logging::level_t::verbose, __FILE__, __LINE__, __VA_ARGS__, "\n")
 
-#define SHINY_INFO(msg) \
-	::shiny::logging::log(::shiny::logging::level_t::info, msg)
+#define SHINY_INFO(...) \
+	::shiny::logging::log(::shiny::logging::level_t::info, __FILE__, __LINE__, __VA_ARGS__, "\n")
 
-#define SHINY_DEBUG(msg) \
-	::shiny::logging::log(::shiny::logging::level_t::debug, __FILE__, __LINE__, msg)
+#define SHINY_DEBUG(...) \
+	::shiny::logging::log(::shiny::logging::level_t::debug, __FILE__, __LINE__, __VA_ARGS__, "\n")
 
-#define SHINY_WARN(msg) \
-	::shiny::logging::log(::shiny::logging::level_t::warn, __FILE__, __LINE__, msg)
+#define SHINY_WARN(...) \
+	::shiny::logging::log(::shiny::logging::level_t::warn, __FILE__, __LINE__, __VA_ARGS__, "\n")
 
-#define SHINY_ERROR(msg) \
-	::shiny::logging::log(::shiny::logging::level_t::error, __FILE__, __LINE__, msg)
+#define SHINY_ERROR(...) \
+	::shiny::logging::log(::shiny::logging::level_t::error, __FILE__, __LINE__, __VA_ARGS__, "\n")
 
 }}

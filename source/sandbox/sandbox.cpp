@@ -54,6 +54,7 @@
 #include <regex>
 #include <atomic>
 #include <iomanip>
+#include <limits>
 
 #include <io.h>
 #include <fcntl.h>
@@ -539,22 +540,13 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	rose::runtime_t RR;
 	lion::console_log_handler_t console_log{RR.get_console()};
 
-#if 0
-	atma::arena_allocator_t<int, 4> AA;
-	AA.allocate(2);
-	AA.allocate(4);
-	AA.allocate(1);
-	AA.allocate(3);
-	AA.allocate(1);
-	AA.allocate(1);
-#endif // 0
-
-
 	// shiny runtime & logging through console
 	shiny::logging::runtime_t SLR;
 	SLR.attach_handler(&console_log);
 	shiny::logging::set_runtime(&SLR);
 
+
+#if 0
 	atma::handle_table_t<int> HT;
 	{
 		auto hth = HT.construct(4);
@@ -572,10 +564,11 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 		h3 = h2;
 		h2->bam = 5;
 	}
-	
-	srand(4);
+#endif
+
 
 #if 0
+	srand(4);
 	std::vector< std::tuple<uint32, uint32> > handles;
 
 	for (int i = 0; i != 10; ++i)
@@ -611,7 +604,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	std::cout << "average time: " << acc.count() << "ns" << std::endl;
 
 
-#elif 1
+#elif 0
 	int work = 4;
 	auto t4 = std::thread([&]{
 		for (;;)
@@ -660,6 +653,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	t3.join();
 #endif
 
+#if 1
 	int64 nums[] = {
 		-1,
 		-12,
@@ -704,7 +698,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	uint64 b = 18446744073709551615;
 	int64 mb = -9223372036854775807 - 1;
 
-#include <limits>
 	for (int i = 0; i != 19 * 2; ++i)
 	{
 		char buf[256];
@@ -715,7 +708,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 		ATMA_ASSERT(strcmp(buf, buf2) == 0);
 		//std::cout << buf << " == " << buf2 << std::endl;
-		SHINY_INFO(buf);
+		SHINY_ERROR(buf, buf);
 		//nums.push_back(nums.back() * 10 + ds[i % 10]);
 	}
 	
@@ -744,6 +737,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 		//std::cout << buf << " == " << buf2 << std::endl;
 		SHINY_INFO(buf);
 	}
+#endif
 
 	sandbox::application_t app;
 
