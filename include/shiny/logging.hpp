@@ -16,31 +16,6 @@ namespace shiny { namespace logging {
 			static runtime_t* R = nullptr;
 			return R;
 		}
-
-		inline auto log_impl(atma::logging_encoder_t&) -> void
-		{
-		}
-
-		template <typename... Args>
-		inline auto log_impl(atma::logging_encoder_t& enc, atma::log_style_t style, Args&&... args) -> void
-		{
-			enc.encode_header(style);
-			log_impl(enc, std::forward<Args>(args)...);
-		}
-
-		template <typename... Args>
-		inline auto log_impl(atma::logging_encoder_t& enc, char const* t, Args&&... args) -> void
-		{
-			enc.encode_cstr(t);
-			log_impl(enc, std::forward<Args>(args)...);
-		}
-
-		template <typename... Args>
-		inline auto log_impl(atma::logging_encoder_t& enc, byte color, Args&&... args) -> void
-		{
-			enc.encode_color(color);
-			log_impl(enc, std::forward<Args>(args)...);
-		}
 	}
 
 	inline auto set_runtime(runtime_t* R) -> void
@@ -49,41 +24,8 @@ namespace shiny { namespace logging {
 	}
 
 
-
-	inline auto log_header(atma::logging_encoder_t& encoder, level_t level, char const* filename, int line) -> size_t
-	{
-		auto* R = detail::current_runtime();
-		if (R == nullptr)
-			return false;
-
-		char const* caption[] = {
-			"Trace:",
-			"[info]",
-			"[debug]",
-			"[Warning]",
-			"[ERROR]"
-		};
-
-		byte colors[] = {
-			0x08,
-			0x1f,
-			0x8f,
-			0xe4,
-			0xcf,
-		};
-
-		size_t p = 0;
-		p += encoder.encode_header(atma::log_style_t::pretty_print);
-		p += encoder.encode_color(colors[(int)level]);
-		p += encoder.encode_sprintf("%s\n", caption[(int)level]);
-		p += encoder.encode_color(0x07);
-		p += encoder.encode_sprintf("%s:%d\n", filename, line);
-
-		return p;
-	}
-
 	template <typename... Args>
-	inline auto log(level_t level, char const* filename, int line, Args&&... args) -> bool
+	inline auto send_log(level_t level, char const* filename, int line, Args&&... args) -> bool
 	{
 		auto* R = detail::current_runtime();
 		if (R == nullptr)
@@ -95,10 +37,56 @@ namespace shiny { namespace logging {
 		auto memstream = atma::intrusive_ptr<atma::memory_bytestream_t>::make(buf, bufsize);
 		atma::logging_encoder_t encoder{memstream};
 
-		// encode
-		size_t p = 
-			log_header(encoder, level, filename, line) +
-			encoder.encode_all(std::forward<Args>(args)...);
+		atma::log_style_t styles[] = {
+			atma::log_style_t::oneline,
+			atma::log_style_t::oneline,
+			atma::log_style_t::oneline,
+			atma::log_style_t::pretty_print,
+			atma::log_style_t::pretty_print,
+		};
+
+		atma::colorbyte colors[] = {
+			atma::colorbyte{0x08},
+			atma::colorbyte{0x1f},
+			atma::colorbyte{0x8f},
+			atma::colorbyte{0xe4},
+			atma::colorbyte{0xcf},
+		};
+
+		atma::colorbyte location_colors[] = {
+			atma::colorbyte{0x07},
+			atma::colorbyte{0x07},
+			atma::colorbyte{0x07},
+			atma::colorbyte{0x0e},
+			atma::colorbyte{0x0c},
+		};
+
+		char const* caption[] = {
+			"Trace:",
+			"[info]",
+			"[debug]",
+			"[Warning]",
+			"[ERROR]"
+		};
+
+
+		size_t p = 0;
+		p += encoder.encode_header(styles[(int)level]);
+		p += encoder.encode_color(colors[(int)level]);
+		p += encoder.encode_sprintf("%s", caption[(int)level]);
+		p += encoder.encode_color(location_colors[(int)level]);
+
+		if ((int)level >= (int)level_t::warn)
+		{
+			p += encoder.encode_sprintf("\n%s:%d\n", filename, line);
+			p += encoder.encode_color(atma::colorbyte{0x07});
+		}
+		else
+		{
+			p += encoder.encode_cstr(" ", 1);
+		}
+
+		p += encoder.encode_all(std::forward<Args>(args)...);
 
 		R->log(level, buf, (uint32)p);
 
@@ -106,21 +94,33 @@ namespace shiny { namespace logging {
 	}
 
 #define SHINY_LOG(level, ...) \
-	::shiny::logging::log(level, __VA_ARGS__)
+	::shiny::logging::send_log(level, __FILE__, __LINE__, __VA_ARGS__, "\n")
 
 #define SHINY_TRACE(...) \
-	::shiny::logging::log(::shiny::logging::level_t::verbose, __FILE__, __LINE__, __VA_ARGS__, "\n")
+	::shiny::logging::send_log(::shiny::logging::level_t::verbose, __FILE__, __LINE__, __VA_ARGS__, "\n")
 
 #define SHINY_INFO(...) \
-	::shiny::logging::log(::shiny::logging::level_t::info, __FILE__, __LINE__, __VA_ARGS__, "\n")
+	::shiny::logging::send_log(::shiny::logging::level_t::info, __FILE__, __LINE__, __VA_ARGS__, "\n")
 
 #define SHINY_DEBUG(...) \
-	::shiny::logging::log(::shiny::logging::level_t::debug, __FILE__, __LINE__, __VA_ARGS__, "\n")
+	::shiny::logging::send_log(::shiny::logging::level_t::debug, __FILE__, __LINE__, __VA_ARGS__, "\n")
 
 #define SHINY_WARN(...) \
-	::shiny::logging::log(::shiny::logging::level_t::warn, __FILE__, __LINE__, __VA_ARGS__, "\n")
+	::shiny::logging::send_log(::shiny::logging::level_t::warn, __FILE__, __LINE__, __VA_ARGS__, "\n")
 
 #define SHINY_ERROR(...) \
-	::shiny::logging::log(::shiny::logging::level_t::error, __FILE__, __LINE__, __VA_ARGS__, "\n")
+	::shiny::logging::send_log(::shiny::logging::level_t::error, __FILE__, __LINE__, __VA_ARGS__, "\n")
 
 }}
+
+namespace shiny { namespace log { namespace color {
+
+	namespace
+	{
+		atma::colorbyte error_text{0xcf};
+		atma::colorbyte warn_text{0xe4};
+		atma::colorbyte debug_text{0x8f};
+	}
+
+} } }
+
