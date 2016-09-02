@@ -1,5 +1,7 @@
 #include <lion/streams.hpp>
 
+#include <atma/intrusive_ptr.hpp>
+
 #include <algorithm>
 
 using namespace lion;
@@ -47,6 +49,14 @@ mmap_bytestream_t::~mmap_bytestream_t()
 		UnmapViewOfFile(data_);
 }
 
+auto mmap_bytestream_t::stream_status() const -> atma::stream_status_t
+{
+	if (mmap_ == nullptr || data_ == nullptr)
+		return atma::stream_status_t::error;
+	else
+		return memory_bytestream_t::stream_status();
+}
+
 auto mmap_bytestream_t::stream_opers() const -> atma::stream_opers_mask_t
 {
 	return opers_;
@@ -71,7 +81,7 @@ namespace
 		for (size_t offset = 0;;)
 		{
 			rr = stream->read(mem.begin(), sz);
-			if (rr.status == atma::stream_status_t::eof)
+			if (rr.status == atma::stream_status_t::exhausted)
 				break;
 
 			atma::unique_memory_t tmp{sz + sz * 2};

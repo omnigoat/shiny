@@ -4,6 +4,8 @@
 
 #include <rose/mmap.hpp>
 
+
+// mmap-bytestream
 namespace lion
 {
 	enum class mmap_bytestream_access_t
@@ -15,12 +17,14 @@ namespace lion
 
 	ATMA_BITMASK(mmap_bytestream_access_mask_t, mmap_bytestream_access_t);
 
-	struct mmap_bytestream_t : atma::memory_bytestream_t
+	struct mmap_bytestream_t
+		: atma::memory_bytestream_t
 	{
 		mmap_bytestream_t(rose::mmap_ptr const&, mmap_bytestream_access_mask_t);
 		mmap_bytestream_t(rose::mmap_ptr const&, size_t offset, size_t size, mmap_bytestream_access_mask_t);
 		~mmap_bytestream_t();
 
+		auto stream_status() const -> atma::stream_status_t override;
 		auto stream_opers() const -> atma::stream_opers_mask_t override;
 
 	private:

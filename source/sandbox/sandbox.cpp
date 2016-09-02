@@ -194,73 +194,56 @@ application_t::application_t()
 	, window(fooey::window("Excitement!", 800 + 16, 600 + 38))
 	, runtime{}
 {
-#if 0
-	int fds[2];
-	
-	int res = _pipe(fds, 4096, _O_BINARY);
-	ATMA_ASSERT(res == 0);
-
-	int so = _fileno(stdout);
-	res = _dup2(fds[1], so);
-	//ATMA_ASSERT(res != -1);
-	
-	char ttry[128];
-	setvbuf(stdout, ttry, _IOLBF, 128);
-	printf("blamalam\n");
-	printf("yay\n");
-	//fflush(stdout);
-	
-	res = _read(fds[0], buf, sizeof(buf) - 1);
-#endif
-	
-	
-	shiny::vertex_shader_t
-	  * vs_basic = nullptr,
-	  * vs_debug = nullptr,
-	  * vs_voxel = nullptr;
-
-	//LION_SCOPE_LOCK_ASSETS(
-	//	(h1, vs_basic),
-	//	(h2, vs_debug),
-	//	(h2, vs_debug));
-
+	// virtual file system, mount res folder
 	lion::vfs_t vfs;
 	auto fs = lion::physical_filesystem_ptr::make("./resources/published");
 	vfs.mount("/res/", fs);
 
-	struct asset_pattern_t
-	{
-		std::regex regex;
-		std::function<void()> callback;
+	// Windows window
+	window_renderer->add_window(window);
+
+	// shiny contex
+	ctx = shiny::create_context(runtime, window, shiny::primary_adapter);
+
+
+	// CURRENT
+	//auto vs_basic_file = atma::filesystem::file_t("../../shaders/vs_basic.hlsl");
+	//auto vs_basic_mem = vs_basic_file.read_into_memory();
+	//vs_flat = shiny::create_vertex_shader(ctx, dd_position, vs_basic_mem, false);
+
+	// DESIRED
+	// auto vs_basic = library.load_asset_as<shiny::vertex_shader_t>("/res/shaders/vs_basic.hlsl");
+
+	
+
+#if 1
+	lion::asset_library_t library{&vfs};
+
+	auto load_vertex_shader = [&](lion::path_t const&, atma::input_bytestream_ptr const& stream) -> lion::asset_t* {
+		// read stream...
+		auto mem = lion::read_all(stream);
+		//vs_flat = ctx->create_vertex_shader(dd_position, vs_basic_mem, false); // shiny::create_vertex_shader(ctx, dd_position, vs_basic_mem, false);
+		return nullptr;
 	};
 
-	//std::regex R{"^vs_.+\\.hlsl"};
-	//bool b = std::regex_match("vs_love.hlsl", R);
+	//lion::asset_pattern_t p{std::regex{"/res/shaders/vs_.+\\.hlsl"}, lion::asset_pattern_t::callback_t{load_vertex_shader}};
 
-	//char buf[8000];
-	//auto r = f2->read(buf, 1200);
-	
-	//auto f = vfs.open("/res/shaders/vs_basic.hlsl", file_bind_flags::read_only);
-#if 0
-	lion::asset_library_t library{vfs};
-	library.register_asset_thing(
-		lion::open_flags_t::read,
-		lion::file_watching_flags_t::yes,
-		{ lion::asset_pattern{"/res/shaders/vs_.+\\.hlsl", &load_vertex_shader},
-		  lion::asset_pattern{"/res/shaders/fs_.+\\.hlsl", &load_fragment_shader},
-		  lion::asset_pattern{"/res/shaders/cs_.+\\.hlsl", &load_compute_shader} });
+
+	auto shader_asset_type = library.register_asset_type(
+		{ lion::asset_pattern_t{std::regex{"/res/shaders/vs_.+\\.hlsl"}, load_vertex_shader},
+		  lion::asset_pattern_t{std::regex{"/res/shaders/fs_.+\\.hlsl"}, load_vertex_shader},
+		  lion::asset_pattern_t{std::regex{"/res/shaders/cs_.+\\.hlsl"}, load_vertex_shader} });
 		
-	[](lion::input_stream_t const& stream) {
-		
-	});
+	//
 #endif
 
+	library.load("/res/shaders/vs_basic.hlsl");
 	//library.register_asset_type("*\\.hlsl$", [](lion::input_stream_t const& stream) {
 		// do things with f, return an asset_ptr
 	//});
 
 	//auto sh = library.load_asset_as<shiny::vertex_shader_t>("/res/shaders/vs_basic.hlsl");
-
+	
 	struct vertex_shader_backend_t
 	{
 		auto d3d_vs() const -> shiny::platform::d3d_vertex_shader_ptr { return {}; }
@@ -282,9 +265,6 @@ application_t::application_t()
 
 	//auto vs = lion::lock_asset_ptr(vertex_shader_handle);
 
-
-	window_renderer->add_window(window);
-	ctx = shiny::create_context(runtime, window, shiny::primary_adapter);
 
 	// geometry
 	dd_position = runtime.make_data_declaration({
@@ -653,7 +633,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	t3.join();
 #endif
 
-#if 1
+#if 0
 	int64 nums[] = {
 		-1,
 		-12,
@@ -737,9 +717,9 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 		//std::cout << buf << " == " << buf2 << std::endl;
 		SHINY_INFO(buf);
 	}
-#endif
 
 	SLR.flush();
+#endif
 
 	sandbox::application_t app;
 

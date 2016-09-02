@@ -7,9 +7,13 @@
 #include <atma/atomic.hpp>
 #include <atma/handle_table.hpp>
 #include <atma/enable_if.hpp>
+#include <atma/function.hpp>
+#include <atma/streams.hpp>
 
 #include <tuple>
 #include <type_traits>
+#include <regex>
+#include <set>
 
 
 // forward declares
@@ -341,16 +345,36 @@ namespace lion
 // asset_library_t
 namespace lion
 {
+	struct path_t;
+
+	struct asset_pattern_t
+	{
+		using callback_t = atma::function<asset_t*(path_t const&, atma::input_bytestream_ptr const&)>;
+
+		asset_pattern_t(std::regex const& regex, callback_t const& callback)
+			: regex{regex}, callback{callback}
+		{}
+
+		std::regex regex;
+		callback_t callback;
+	};
+
 	struct asset_library_t
 	{
+		struct asset_type_t;
+
+		using asset_patterns_t = atma::vector<asset_pattern_t>;
+		using asset_types_t = std::set<asset_type_t>;
+		using asset_type_handle_t = asset_types_t::iterator;
+
 		asset_library_t();
 		asset_library_t(vfs_t*);
 
-		auto register_loader(atma::string const& regex) -> void;
+		auto register_asset_type(asset_patterns_t) -> asset_type_handle_t;
 
 		auto store(asset_t*) -> base_asset_handle_t;
 
-		//auto load(atma::string const& path) -> base_asset_handle_t;
+		auto load(path_t const&) -> base_asset_handle_t;
 		//auto load(asset_collection_t, atma::string const& path) -> base_asset_handle_t;
 
 	private: // table management
@@ -364,11 +388,20 @@ namespace lion
 	private: // vfs
 		vfs_t* vfs_ = nullptr;
 
+	private: // assets
+		asset_types_t asset_types_;
+
 	private:
 		template <typename> friend struct asset_handle_t;
 		template <typename> friend struct asset_weak_handle_t;
 	};
 
+	struct asset_library_t::asset_type_t
+	{
+		asset_patterns_t patterns;
+	};
+
+	auto operator < (asset_library_t::asset_type_t const&, asset_library_t::asset_type_t const&) -> bool;
 
 	struct asset_library_t::storage_t
 	{
