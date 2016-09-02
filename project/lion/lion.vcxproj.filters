@@ -14,9 +14,6 @@
     <ClInclude Include="..\..\include\lion\streams.hpp">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\lion\mmap.hpp">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\lion\filesystem.hpp">
       <Filter>include</Filter>
     </ClInclude>
@@ -28,9 +25,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\source\lion\mmap.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\source\lion\streams.cpp">
       <Filter>source</Filter>
     </ClCompile>
