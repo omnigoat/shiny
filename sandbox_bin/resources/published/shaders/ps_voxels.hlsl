@@ -62,7 +62,7 @@ SamplerState brick_sampler
 
 
 // volume delta, because floating-point
-static const float vdelta = 0.00001f;
+static const float vdelta = 0.0001f;
 
 static const float3 axis_lookup[] = {
 	float3(-1.f, -1.f, -1.f),
@@ -88,13 +88,13 @@ class aabb_t
 	float3 max() { return data.xyz + axis_lookup[7] * radius(); }
 
 	float width() { return data.w; }
-	float radius() { return data.w * .5f; }
+	float radius() { return data.w * .5f + vdelta; }
 
 	bool contains(in float3 pos)
 	{
-		return (pos.x >= data.x - radius() - vdelta && pos.x < data.x + radius() + vdelta)
-			&& (pos.y >= data.y - radius() - vdelta && pos.y < data.y + radius() + vdelta)
-			&& (pos.z >= data.z - radius() - vdelta && pos.z < data.z + radius() + vdelta)
+		return (pos.x >= data.x - radius() - vdelta && pos.x <= data.x + radius() + vdelta)
+			&& (pos.y >= data.y - radius() - vdelta && pos.y <= data.y + radius() + vdelta)
+			&& (pos.z >= data.z - radius() - vdelta && pos.z <= data.z + radius() + vdelta)
 			;
 	}
 
@@ -132,7 +132,7 @@ bool intersection(in aabb_t box, in float3 position, in float3 dir, out float3 e
 	enter = position + dir * max(rmin, 0.f);
 	exit  = position + dir * max(rmax, 0.f);
 
-	return rmin < rmax && 0.f < rmax;
+	return rmin <= rmax && 0.f < rmax;
 }
 
 uint brick_index(in aabb_t box, float3 pos, float size, out aabb_t leaf_box)
@@ -299,19 +299,19 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 		float3 leaf_exit;
 
 		uint brick_id = brick_index(box, hit_enter, size, leaf_box);
-		if (!intersection(leaf_box, position, normal, leaf_enter, leaf_exit))
+		if (!intersection(leaf_box, hit_enter, normal, leaf_enter, leaf_exit))
 			break;
 
 		float len = length(leaf_exit - hit_enter);
 
-		if (brick_id != 0 /*&& !leaf_box.contains(position)*/)
+		if (brick_id != 0)
 		{
 			float3 brick_enter = (leaf_enter - leaf_box.min()) / leaf_box.width();
 			float3 brick_exit  = (leaf_exit  - leaf_box.min()) / leaf_box.width();
 			brick_ray(brick_id, brick_enter, brick_exit, color);
 		}
 
-		hit_enter = hit_enter + len * normal * 1.01f;
+		hit_enter = hit_enter + len * normal * 1.001f;
 	}
 
 	// debug: number of nodes traversed
