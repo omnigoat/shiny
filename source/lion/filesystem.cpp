@@ -1,7 +1,5 @@
 #include <lion/filesystem.hpp>
 
-#include <lion/mmap.hpp>
-
 #include <rose/mmap.hpp>
 #include <atma/algorithm.hpp>
 

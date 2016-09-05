@@ -42,7 +42,6 @@ using shiny::context_t;
 //======================================================================
 auto shiny::create_context(runtime_t& runtime, fooey::window_ptr const& window, uint adapter) -> shiny::context_ptr
 {
-	//return context_ptr(new context_t(runtime, window, adapter));
 	return atma::make_intrusive<context_t>(runtime, window, adapter);
 }
 
@@ -482,7 +481,7 @@ auto context_t::immediate_draw() -> void
 	// input-assembly-stage 
 	{
 		ATMA_ENSURE(vs_shader_);
-		auto d3d_il = get_d3d_input_layout(vs_shader_->data_declaration(), vs_shader_);
+		auto d3d_il = get_d3d_input_layout(ia_vb_->data_declaration(), vs_shader_);
 		d3d_immediate_context_->IASetInputLayout(d3d_il.get());
 
 		ATMA_ENSURE(ia_vb_);
@@ -504,7 +503,6 @@ auto context_t::immediate_draw() -> void
 	// vertex-stage
 	{
 		ATMA_ENSURE(vs_shader_);
-		ATMA_ENSURE(vs_shader_->data_declaration() == ia_vb_->data_declaration());
 		d3d_immediate_context_->VSSetShader(vs_shader_->d3d_vs().get(), nullptr, 0);
 		
 		ID3D11Buffer* cbs[D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT]{};

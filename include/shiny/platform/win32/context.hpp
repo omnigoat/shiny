@@ -168,13 +168,13 @@ namespace shiny
 
 
 	private:
+		using input_layouts_t = std::map<std::tuple<data_declaration_t const*, vertex_shader_cptr>, platform::d3d_input_layout_ptr>;
+		using blend_states_t = std::unordered_map<blend_state_t, platform::d3d_blend_state_ptr, atma::std_hash_functor_adaptor_t>;
+		using depth_stencil_states_t = std::unordered_map<depth_stencil_state_t, platform::d3d_depth_stencil_state_ptr, atma::std_hash_functor_adaptor_t>;
+
 		auto get_d3d_input_layout(data_declaration_t const*, vertex_shader_cptr const&) -> platform::d3d_input_layout_ptr const&;
 		auto get_d3d_blend(blend_state_t const&) -> platform::d3d_blend_state_ptr const&;
 		auto get_d3d_depth_stencil(depth_stencil_state_t const&) -> platform::d3d_depth_stencil_state_ptr const&;
-
-		using input_layouts_t        = std::map<std::tuple<data_declaration_t const*, vertex_shader_cptr>, platform::d3d_input_layout_ptr>;
-		using blend_states_t         = std::unordered_map<blend_state_t, platform::d3d_blend_state_ptr, atma::std_hash_functor_adaptor_t>;
-		using depth_stencil_states_t = std::unordered_map<depth_stencil_state_t, platform::d3d_depth_stencil_state_ptr, atma::std_hash_functor_adaptor_t>;
 
 		input_layouts_t        built_input_layouts_;
 		blend_states_t         built_blend_states_;
