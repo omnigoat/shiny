@@ -282,13 +282,13 @@ application_t::application_t()
 
 	auto f = vfs.open("/res/shaders/vs_basic.hlsl");
 	auto m = lion::read_all(f);
-	auto sdf = shiny::create_vertex_shader(ctx, dd_position, m, false);
+	auto sdf = shiny::create_vertex_shader(ctx, m, false);
 
 
 	// shaders
 	auto vs_basic_file = atma::filesystem::file_t("../../shaders/vs_basic.hlsl");
 	auto vs_basic_mem = vs_basic_file.read_into_memory();
-	vs_flat = shiny::create_vertex_shader(ctx, dd_position, vs_basic_mem, false);
+	vs_flat = shiny::create_vertex_shader(ctx, vs_basic_mem, false);
 
 	auto ps_basic_file = atma::filesystem::file_t("../../shaders/ps_basic.hlsl");
 	auto ps_basic_mem = ps_basic_file.read_into_memory();

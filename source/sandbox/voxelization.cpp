@@ -285,7 +285,7 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 	// vertex-shader
 	{
 		auto f = atma::filesystem::file_t("../../shaders/vs_voxelize.hlsl");
-		vs_voxelize = shiny::create_vertex_shader(ctx, vb->data_declaration(), f.read_into_memory(), false);
+		vs_voxelize = shiny::create_vertex_shader(ctx, f.read_into_memory(), false);
 	}
 
 	// geometry-shader
@@ -614,7 +614,7 @@ auto voxelization_plugin_t::setup_rendering() -> void
 	{
 		auto f = atma::filesystem::file_t("../shiny/x64/Debug/vs_voxels.cso");
 		auto fm = f.read_into_memory();
-		vs_voxels = shiny::create_vertex_shader(ctx, dd, fm, true);
+		vs_voxels = shiny::create_vertex_shader(ctx, fm, true);
 	}
 
 	{
