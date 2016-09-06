@@ -10,17 +10,19 @@ namespace shiny { namespace logging {
 
 	namespace detail
 	{
-		inline auto current_runtime() -> runtime_t*&
-		{
-			static runtime_t* R = nullptr;
-			return R;
-		}
+		inline auto current_runtime() -> runtime_t*& { static runtime_t* R = nullptr; return R; }
+		inline auto flush_after_error() -> std::atomic<bool>& { static std::atomic<bool> _{true}; return _; }
 	}
 
 	inline auto set_runtime(runtime_t* R) -> void
 	{
 		detail::current_runtime() = R;
 	}
+
+	extern std::atomic<bool> flush_after_error;
+	//extern std::atomic<bool> flush_after_warning;
+
+	inline auto set_flush_after_error(bool flush) { detail::flush_after_error() = flush; }
 
 }}
 
@@ -61,5 +63,9 @@ namespace shiny { namespace log { namespace color {
 		::shiny::logging::level_t::warn, "shiny", __FILE__, __LINE__, __VA_ARGS__, "\n")
 
 #define SHINY_ERROR(...) \
-	::atma::send_log(::shiny::logging::detail::current_runtime(), \
-		::shiny::logging::level_t::error, "shiny", __FILE__, __LINE__, __VA_ARGS__, "\n")
+	do { \
+		::atma::send_log(::shiny::logging::detail::current_runtime(), \
+			::shiny::logging::level_t::error, "shiny", __FILE__, __LINE__, __VA_ARGS__, "\n"); \
+		if (::shiny::logging::detail::flush_after_error()) \
+			::shiny::logging::detail::current_runtime()->flush(); \
+	} while (0)
