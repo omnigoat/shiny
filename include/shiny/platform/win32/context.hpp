@@ -250,7 +250,7 @@ namespace shiny
 
 
 	private:
-		friend struct atma::intrusive_ptr_expose_constructor;
+		friend struct atma::enable_intrusive_ptr_make;
 	};
 
 

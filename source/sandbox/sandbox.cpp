@@ -207,7 +207,7 @@ application_t::application_t()
 
 
 	// CURRENT
-	//auto vs_basic_file = atma::filesystem::file_t("../../shaders/vs_basic.hlsl");
+	//auto vs_basic_file = atma::filesystem::file_t("../shaders/vs_basic.hlsl");
 	//auto vs_basic_mem = vs_basic_file.read_into_memory();
 	//vs_flat = shiny::create_vertex_shader(ctx, dd_position, vs_basic_mem, false);
 
@@ -280,19 +280,14 @@ application_t::application_t()
 	ib_cube = shiny::create_index_buffer(ctx, shiny::resource_storage_t::immutable, shiny::format_t::u16, 36, cube_indices);
 
 
-	auto f = vfs.open("/res/shaders/vs_basic.hlsl");
-	auto m = lion::read_all(f);
-	auto sdf = shiny::create_vertex_shader(ctx, m, false);
+	//auto f = vfs.open("/res/shaders/vs_basic.hlsl");
+	//auto m = lion::read_all(f);
+	//auto sdf = shiny::create_vertex_shader(ctx, m, false);
 
 
 	// shaders
-	auto vs_basic_file = atma::filesystem::file_t("../../shaders/vs_basic.hlsl");
-	auto vs_basic_mem = vs_basic_file.read_into_memory();
-	vs_flat = shiny::create_vertex_shader(ctx, vs_basic_mem, false);
-
-	auto ps_basic_file = atma::filesystem::file_t("../../shaders/ps_basic.hlsl");
-	auto ps_basic_mem = ps_basic_file.read_into_memory();
-	fs_flat = shiny::create_fragment_shader(ctx, ps_basic_mem, false);
+	vs_flat = shiny::create_vertex_shader(ctx, "../shaders/vs_basic.hlsl", false);
+	fs_flat = shiny::create_fragment_shader(ctx, "../shaders/ps_basic.hlsl", false);
 }
 
 auto application_t::run() -> int

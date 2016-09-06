@@ -209,7 +209,7 @@ namespace lion
 		//asset_ptr asset_;
 
 		friend struct filesystem_t;
-		friend struct atma::intrusive_ptr_expose_constructor;
+		friend struct atma::enable_intrusive_ptr_make;
 	};
 
 }

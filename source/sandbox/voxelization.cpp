@@ -121,7 +121,7 @@ auto fit_linear_dispatch_to_group(uint& x, uint& y, uint& z, uint xs, uint ys, u
 
 auto voxelization_plugin_t::setup_voxelization() -> void
 {
-	auto sf = rose::file_t{"../../data/dragon.obj"};
+	auto sf = rose::file_t{"../data/dragon.obj"};
 	auto obj = obj_model_t{sf};
 	
 	{
@@ -164,7 +164,7 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 	// expand to a cube
 	auto gridwidth = std::max({tri_dp.x, tri_dp.y, tri_dp.z});
 	auto voxelwidth = (gridwidth / gridsize);
-	auto voxel_halfwidth = std::sqrtf(voxelwidth * voxelwidth) / 0.5f;
+	//auto voxel_halfwidth = std::sqrtf(voxelwidth * voxelwidth) / 0.5f;
 
 
 	auto render_target = shiny::make_texture2d(ctx,
@@ -269,36 +269,11 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 	}
 #endif
 
-	auto f2 = rose::file_t("../../shaders/gs_normal.hlsl");
-	auto fm2 = rose::read_into_memory(f2);
-	gs = shiny::create_geometry_shader(ctx, fm2, false);
 
 
-
-	auto gs_from_file = [&](atma::string const& filename)
-	{
-		auto f = atma::filesystem::file_t(filename.c_str());
-		auto fmem = f.read_into_memory();
-		return shiny::create_geometry_shader(ctx, fmem, true);
-	};
-
-	// vertex-shader
-	{
-		auto f = atma::filesystem::file_t("../../shaders/vs_voxelize.hlsl");
-		vs_voxelize = shiny::create_vertex_shader(ctx, f.read_into_memory(), false);
-	}
-
-	// geometry-shader
-	{
-		auto f = atma::filesystem::file_t("../../shaders/gs_voxelization.hlsl");
-		gs_voxelize = shiny::create_geometry_shader(ctx, f.read_into_memory(), false);
-	}
-
-	// fragment-shader
-	{
-		auto f = atma::filesystem::file_t("../shiny/x64/Debug/fs_voxelize.cso");
-		fs_voxelize = shiny::create_fragment_shader(ctx, f.read_into_memory(), true);
-	}
+	vs_voxelize = shiny::create_vertex_shader(ctx, "../shaders/vs_voxelize.hlsl", false);
+	gs_voxelize = shiny::create_geometry_shader(ctx, "../shaders/gs_voxelization.hlsl", false);
+	fs_voxelize = shiny::create_fragment_shader(ctx, "../shaders/fs_voxelize.hlsl", false);
 
 	// fragments buffer (64mb)
 	fragments_buf = shiny::make_buffer(ctx,
@@ -333,7 +308,7 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 			shiny::format_t::unknown);
 
 		auto mid = (bbmin + bbmax) / 2.f;
-		mid.w = gridwidth / 2.f;
+		mid.w = gridwidth * 0.5f;
 		auto cb = shiny::make_constant_buffer(ctx, mid);
 
 		aml::vector4f dimensions{(float)gridsize, (float)gridsize, (float)gridsize, 0.f};
@@ -372,8 +347,6 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 			sdc::output_merger_stage(
 				shiny::depth_stencil_state_t::off
 			)
-			
-			//, sdc::draw_indexed_range(18905*3, 1*3, 0)
 		);
 
 		ctx->signal_draw_scene(voxelization_scene);
@@ -439,17 +412,10 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 
 auto voxelization_plugin_t::setup_svo() -> void
 {
-	auto cs_from_file = [&](atma::string const& filename) -> shiny::compute_shader_ptr
-	{
-		auto f = atma::filesystem::file_t(filename.c_str());
-		auto fmem = f.read_into_memory();
-		return shiny::make_compute_shader(ctx, fmem.begin(), fmem.size());
-	};
-
-	cs_clear           = cs_from_file("x64/Debug/sparse_octree_clear.cso");
-	cs_mark            = cs_from_file("x64/Debug/sparse_octree_mark.cso");
-	cs_allocate        = cs_from_file("x64/Debug/sparse_octree_allocate.cso");
-	cs_write_fragments = cs_from_file("x64/Debug/sparse_octree_write_fragments.cso");
+	cs_clear           = shiny::create_compute_shader(ctx, "../shaders/sparse_octree_clear.hlsl", false);
+	cs_mark            = shiny::create_compute_shader(ctx, "../shaders/sparse_octree_mark.hlsl", false);
+	cs_allocate        = shiny::create_compute_shader(ctx, "../shaders/sparse_octree_allocate.hlsl", false);
+	cs_write_fragments = shiny::create_compute_shader(ctx, "../shaders/sparse_octree_write_fragments.hlsl", false);
 
 
 	auto const brick_edge_size = 8u;
@@ -610,18 +576,8 @@ auto voxelization_plugin_t::setup_rendering() -> void
 
 	vb_quad = shiny::create_vertex_buffer(ctx, shiny::resource_storage_t::persistant, dd, 8, vbd);
 
-
-	{
-		auto f = atma::filesystem::file_t("../shiny/x64/Debug/vs_voxels.cso");
-		auto fm = f.read_into_memory();
-		vs_voxels = shiny::create_vertex_shader(ctx, fm, true);
-	}
-
-	{
-		auto f = atma::filesystem::file_t("../shiny/x64/Debug/ps_voxels.cso");
-		auto fm = f.read_into_memory();
-		fs_voxels = shiny::create_fragment_shader(ctx, fm, true);
-	}
+	vs_voxels = shiny::create_vertex_shader(ctx, "../shaders/vs_voxels.hlsl", false);
+	fs_voxels = shiny::create_fragment_shader(ctx, "../shaders/ps_voxels.hlsl", false);
 }
 
 auto voxelization_plugin_t::gfx_ctx_draw(shiny::context_ptr const& ctx) -> void
