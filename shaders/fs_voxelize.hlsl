@@ -141,8 +141,8 @@ float4 main(FSInput input) : SV_Target
 	float2 maxzdxy = p.z + dzdxy;
 
 	// round z and make sure it's within bounds
-	float minz = max(0,                  floor(min(minzdxy.x, minzdxy.y) * dimensions.z))       / dimensions.z;
-	float maxz = min(dimensions.z - 1.f, floor(max(maxzdxy.x, maxzdxy.y) * dimensions.z) + 1.f) / dimensions.z;
+	float minz = max(0,            floor(min(minzdxy.x, minzdxy.y) * dimensions.z))       / dimensions.z;
+	float maxz = min(dimensions.z, floor(max(maxzdxy.x, maxzdxy.y) * dimensions.z) + 1.f) / dimensions.z;
 
 	const float zstep = 1.f / dimensions.z;
 
