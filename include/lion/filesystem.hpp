@@ -30,6 +30,7 @@ namespace lion
 
 		auto string() const -> atma::string const& { return string_; }
 		auto c_str() const -> char const* { return string_.c_str(); }
+		auto extension() const -> atma::string;
 
 		operator stdfs::path() const { return stdfs::path{string_.c_str()}; }
 

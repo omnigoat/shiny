@@ -3,6 +3,8 @@
 #include <shiny/context.hpp>
 #include <shiny/logging.hpp>
 
+#include <lion/streams.hpp>
+
 #include <rose/file.hpp>
 
 
@@ -16,6 +18,13 @@ auto shiny::create_fragment_shader(context_ptr const& context, atma::string cons
 	auto m = rose::read_into_memory(f);
 	return fragment_shader_ptr::make(context, path, m.begin(), m.size(), precompiled, entrypoint);
 }
+
+auto shiny::create_fragment_shader(context_ptr const& context, atma::string const& path, atma::input_bytestream_ptr const& stream, bool precompiled, atma::string const& entrypoint) -> fragment_shader_ptr
+{
+	auto m = lion::read_all(stream);
+	return fragment_shader_ptr::make(context, path, m.begin(), m.size(), precompiled, entrypoint);
+}
+
 
 fragment_shader_t::fragment_shader_t(context_ptr const& ctx, atma::string const& path, void const* data, size_t data_length, bool precompiled, atma::string const& entrypoint)
 	: context_(ctx)

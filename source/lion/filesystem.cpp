@@ -12,6 +12,7 @@ using namespace lion;
 namespace
 {
 	std::regex logical_path_regex{"/([ a-zA-Z0-9_.]+/)+([ a-zA-Z0-9_.]+)?"};
+	std::regex extension_regex{R"&(.+?\.(.+)$)&"};
 
 	auto path_is_valid_logical_path(atma::string const& path) -> bool
 	{
@@ -19,6 +20,17 @@ namespace
 	}
 }
 
+// path_t
+auto lion::path_t::extension() const -> atma::string
+{
+	std::cmatch results;
+	if (std::regex_match(string_.c_str(), results, extension_regex))
+	{
+		return atma::string{results[1].first, results[1].second};
+	}
+
+	return atma::string{};
+}
 
 fs_path_t::fs_path_t(filesystem_ptr const& fs, fs_path_t* parent, path_type_t type, atma::string const& pathleaf)
 	: fs_(fs), parent_(parent), type_(type), leaf_(pathleaf)

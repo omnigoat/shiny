@@ -219,20 +219,21 @@ application_t::application_t()
 #if 1
 	lion::asset_library_t library{&vfs};
 
-	auto load_vertex_shader = [&](lion::path_t const&, atma::input_bytestream_ptr const& stream) -> lion::asset_t* {
-		// read stream...
-		auto mem = lion::read_all(stream);
-		//vs_flat = ctx->create_vertex_shader(dd_position, vs_basic_mem, false); // shiny::create_vertex_shader(ctx, dd_position, vs_basic_mem, false);
-		return nullptr;
+	auto load_fragment_shader = [&](lion::path_t const& path, lion::input_stream_ptr const& stream) -> lion::asset_t*
+	{
+		bool precompiled = path.extension() == "cso";
+		auto m = lion::read_all(stream);
+		auto r = new shiny::fragment_shader_t{ctx, path.c_str(), m.begin(), m.size(), precompiled, "main"};
+		return r;
 	};
 
 	//lion::asset_pattern_t p{std::regex{"/res/shaders/vs_.+\\.hlsl"}, lion::asset_pattern_t::callback_t{load_vertex_shader}};
-
+	load_fragment_shader("/res/shaders/vs_hoory.hlsl", atma::input_bytestream_ptr::null);
 
 	auto shader_asset_type = library.register_asset_type(
-		{ lion::asset_pattern_t{std::regex{"/res/shaders/vs_.+\\.hlsl"}, load_vertex_shader},
-		  lion::asset_pattern_t{std::regex{"/res/shaders/fs_.+\\.hlsl"}, load_vertex_shader},
-		  lion::asset_pattern_t{std::regex{"/res/shaders/cs_.+\\.hlsl"}, load_vertex_shader} });
+		{ lion::asset_pattern_t{std::regex{"/res/shaders/vs_.+\\.hlsl"}, load_fragment_shader},
+		  lion::asset_pattern_t{std::regex{"/res/shaders/fs_.+\\.hlsl"}, load_fragment_shader},
+		  lion::asset_pattern_t{std::regex{"/res/shaders/cs_.+\\.hlsl"}, load_fragment_shader} });
 		
 	//
 #endif
