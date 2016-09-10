@@ -19,6 +19,13 @@ auto lion::asset_library_t::store(asset_t* a) -> base_asset_handle_t
 	return base_asset_handle_t{this, h};
 }
 
+auto lion::asset_library_t::retain_copy(base_asset_handle_t const& h) -> base_asset_handle_t
+{
+	auto h2 = table_.construct(nullptr);
+	find(h2)->asset = h.library()->find(h.id())->asset;
+	return base_asset_handle_t{this, h2};
+}
+
 auto lion::asset_library_t::find(uint32 h) -> storage_t*
 {
 	auto st = table_.get(h);

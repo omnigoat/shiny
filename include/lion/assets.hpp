@@ -9,6 +9,7 @@
 #include <atma/enable_if.hpp>
 #include <atma/function.hpp>
 #include <atma/streams.hpp>
+#include <atma/hash_map.hpp>
 
 #include <tuple>
 #include <type_traits>
@@ -37,7 +38,6 @@ namespace lion
 		path_t path_;
 	};
 }
-
 
 
 // asset_handle_t / asset_weak_handle_t
@@ -139,6 +139,41 @@ namespace lion
 namespace lion
 {
 	template <typename T>
+	struct asset_raw_handle_t
+	{
+		constexpr asset_raw_handle_t();
+		asset_raw_handle_t(asset_raw_handle_t const&);
+		asset_raw_handle_t(asset_raw_handle_t&&);
+
+		asset_raw_handle_t(asset_handle_t<T> const&);
+		asset_raw_handle_t(asset_weak_handle_t<T> const&);
+
+		template <typename Y, typename = std::enable_if_t<std::is_convertible<Y*, T*>::value>>
+		asset_raw_handle_t(asset_raw_handle_t<Y> const& rhs);
+		template <typename Y, typename = atma::enable_if<std::is_convertible<Y*, T*>>>
+		asset_raw_handle_t(asset_raw_handle_t<Y>&& rhs);
+
+		auto operator = (asset_raw_handle_t const&) -> asset_raw_handle_t&;
+		auto operator = (asset_raw_handle_t&&) -> asset_raw_handle_t&;
+
+		template <typename Y, typename = std::enable_if_t<std::is_convertible<Y*, T*>::value>>
+		auto operator = (asset_raw_handle_t<Y> const& rhs) -> asset_raw_handle_t&;
+		template <typename Y, typename = std::enable_if_t<std::is_convertible<Y*, T*>::value>>
+		auto operator = (asset_raw_handle_t<Y>&& rhs) -> asset_raw_handle_t&;
+
+		auto library() const -> asset_library_t* { return library_; }
+		auto id() const -> uint32 { return id_; }
+
+	private:
+		asset_library_t* library_ = nullptr;
+		uint32 id_ = 0;
+	};
+}
+
+
+namespace lion
+{
+	template <typename T>
 	inline constexpr asset_handle_t<T>::asset_handle_t()
 	{}
 
@@ -169,7 +204,6 @@ namespace lion
 	inline asset_handle_t<T>::asset_handle_t(asset_handle_t<Y> const& rhs)
 		: library_{rhs.library_}, id_{rhs.id_}
 	{
-		//static_assert(std::is_convertible<Y*, T*>::value, "bad cast");
 		library_->table_.retain(id_);
 	}
 
@@ -335,12 +369,95 @@ namespace lion
 }
 
 
+namespace lion
+{
+	template <typename T>
+	inline constexpr asset_raw_handle_t<T>::asset_raw_handle_t()
+	{}
+
+	template <typename T>
+	inline asset_raw_handle_t<T>::asset_raw_handle_t(asset_raw_handle_t const& rhs)
+		: library_{rhs.library_}, id_{rhs.id_}
+	{}
+
+	template <typename T>
+	inline asset_raw_handle_t<T>::asset_raw_handle_t(asset_raw_handle_t&& rhs)
+		: library_{rhs.library_}, id_{rhs.id_}
+	{}
+
+	template <typename T>
+	inline asset_raw_handle_t<T>::asset_raw_handle_t(asset_handle_t<T> const& rhs)
+		: library_{rhs.library_}, id_{rhs.id_}
+	{}
+
+	template <typename T>
+	inline asset_raw_handle_t<T>::asset_raw_handle_t(asset_weak_handle_t<T> const& rhs)
+		: library_{rhs.library_}, id_{rhs.id_}
+	{}
+
+	template <typename T>
+	template <typename Y, typename>
+	inline asset_raw_handle_t<T>::asset_raw_handle_t(asset_raw_handle_t<Y> const& rhs)
+		: library_{rhs.library_}, id_{rhs.id_}
+	{}
+
+	template <typename T>
+	template <typename Y, typename>
+	inline asset_raw_handle_t<T>::asset_raw_handle_t(asset_raw_handle_t<Y>&& rhs)
+		: library_{rhs.library_}, id_{rhs.id_}
+	{
+		rhs.id_ = 0;
+	}
+
+	template <typename T>
+	inline auto asset_raw_handle_t<T>::operator = (asset_raw_handle_t const& rhs) -> asset_raw_handle_t&
+	{
+		library_ = rhs.library_;
+		id_ = rhs.id_;
+		return *this;
+	}
+
+	template <typename T>
+	inline auto asset_raw_handle_t<T>::operator = (asset_raw_handle_t&& rhs) -> asset_raw_handle_t&
+	{
+		library_ = rhs.library_;
+		id_ = rhs.id_;
+		rhs.id_ = 0;
+		return *this;
+	}
+
+	template <typename T>
+	template <typename Y, typename>
+	inline auto asset_raw_handle_t<T>::operator = (asset_raw_handle_t<Y> const& rhs) -> asset_raw_handle_t&
+	{
+		library_ = rhs.library_;
+		id_ = rhs.id_;
+		return *this;
+	}
+
+	template <typename T>
+	template <typename Y, typename>
+	inline auto asset_raw_handle_t<T>::operator = (asset_raw_handle_t<Y>&& rhs) -> asset_raw_handle_t&
+	{
+		library_ = rhs.library_;
+		id_ = rhs.id_;
+		rhs.id_ = 0;
+		return *this;
+	}
+}
 
 
+// asset_collection_t
+namespace lion
+{
+	struct asset_collection_t
+	{
+		template <typename T> auto retain(asset_handle_t<T> const&) -> asset_raw_handle_t<T>;
 
-
-
-
+	private:
+		atma::hash_set<uint32> handles_;
+	};
+}
 
 // asset_library_t
 namespace lion
@@ -373,9 +490,11 @@ namespace lion
 		auto register_asset_type(asset_patterns_t) -> asset_type_handle_t;
 
 		auto store(asset_t*) -> base_asset_handle_t;
+		auto retain_copy(base_asset_handle_t const&) -> base_asset_handle_t;
 
 		auto load(path_t const&) -> base_asset_handle_t;
 		//auto load(asset_collection_t, atma::string const& path) -> base_asset_handle_t;
+
 
 	private: // table management
 		struct storage_t;
@@ -410,7 +529,7 @@ namespace lion
 			, generation{}
 		{}
 
-		std::unique_ptr<asset_t> asset;
+		std::shared_ptr<asset_t> asset;
 		uint8 generation;
 	};
 
