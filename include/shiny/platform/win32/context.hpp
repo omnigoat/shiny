@@ -30,6 +30,7 @@
 #include <atma/math/vector4f.hpp>
 #include <atma/hash.hpp>
 
+#include <deque>
 #include <thread>
 #include <mutex>
 #include <unordered_map>
@@ -111,7 +112,7 @@ namespace shiny
 		auto immediate_gs_set_input_views(bound_input_views_t const&) -> void;
 
 		// fragment-stage
-		auto immediate_fs_set_fragment_shader(fragment_shader_cptr const&) -> void;
+		auto immediate_fs_set_fragment_shader(fragment_shader_handle const&) -> void;
 		auto immediate_fs_set_constant_buffers(bound_constant_buffers_t const&) -> void;
 		auto immediate_fs_set_input_views(bound_input_views_t const&) -> void;
 		auto immediate_fs_set_compute_views(bound_compute_views_t const&) -> void;
@@ -181,28 +182,39 @@ namespace shiny
 		depth_stencil_states_t built_depth_stencil_states_;
 
 	private:
-		// compute pipeline
-		bound_constant_buffers_t cs_cbs_;
-		bound_resource_views_t cs_uavs_;
-		bound_resource_views_t cs_srvs_;
-		compute_shader_cptr cs_shader_;
+		//struct frame_resources_t
+		//{
+			lion::asset_library_t library;
 
-		// draw pipeline
-		data_declaration_t const* ia_dd_;
-		index_buffer_cptr         ia_ib_;
-		vertex_buffer_cptr        ia_vb_;
-		vertex_shader_cptr        vs_shader_;
-		bound_constant_buffers_t  vs_cbs_;
-		bound_resource_views_t    vs_srvs_;
-		geometry_shader_cptr      gs_shader_;
-		bound_constant_buffers_t  gs_cbs_;
-		fragment_shader_cptr      fs_shader_;
-		bound_constant_buffers_t  fs_cbs_;
-		bound_resource_views_t    fs_srvs_;
-		bound_resource_views_t    fs_uavs_;
-		bound_resource_views_t    om_rtvs_;
-		depth_stencil_state_t     om_depth_stencil_;
-		draw_range_t              draw_range_;
+			// compute pipeline
+			bound_constant_buffers_t cs_cbs_;
+			bound_resource_views_t cs_uavs_;
+			bound_resource_views_t cs_srvs_;
+			compute_shader_cptr cs_shader_;
+
+			// draw pipeline
+			data_declaration_t const* ia_dd_;
+			index_buffer_cptr         ia_ib_;
+			vertex_buffer_cptr        ia_vb_;
+			vertex_shader_cptr        vs_shader_;
+			bound_constant_buffers_t  vs_cbs_;
+			bound_resource_views_t    vs_srvs_;
+			geometry_shader_cptr      gs_shader_;
+			bound_constant_buffers_t  gs_cbs_;
+			fragment_shader_handle    fs_shader_;
+			bound_constant_buffers_t  fs_cbs_;
+			bound_resource_views_t    fs_srvs_;
+			bound_resource_views_t    fs_uavs_;
+			bound_resource_views_t    om_rtvs_;
+			depth_stencil_state_t     om_depth_stencil_;
+			draw_range_t              draw_range_;
+
+			// render-targets & depth-stencil
+			resource_view_ptr current_render_target_view_[4];
+			resource_view_ptr current_depth_stencil_view_;
+		//};
+		//
+		//std::deque<frame_resources_t> frames_;
 
 	private:
 		runtime_t& runtime_;
@@ -227,9 +239,7 @@ namespace shiny
 		texture2d_ptr                    default_depth_stencil_texture_;
 		resource_view_ptr                default_depth_stencil_view_;
 
-		// render-targets & depth-stencil
-		resource_view_ptr                current_render_target_view_[4];
-		resource_view_ptr                current_depth_stencil_view_;
+		
 		
 		// fooey
 		fooey::window_ptr window_;

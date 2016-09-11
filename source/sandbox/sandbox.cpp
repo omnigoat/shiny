@@ -195,9 +195,8 @@ application_t::application_t()
 	, runtime{}
 {
 	// virtual file system, mount res folder
-	lion::vfs_t vfs;
 	auto fs = lion::physical_filesystem_ptr::make("./resources/published");
-	vfs.mount("/res/", fs);
+	vfs_.mount("/res/", fs);
 
 	// Windows window
 	window_renderer->add_window(window);
@@ -217,7 +216,7 @@ application_t::application_t()
 	
 
 #if 1
-	lion::asset_library_t library{&vfs};
+	lion::asset_library_t library{&vfs_};
 
 	auto load_fragment_shader = [&](lion::path_t const& path, lion::input_stream_ptr const& stream) -> lion::asset_t*
 	{
@@ -228,7 +227,7 @@ application_t::application_t()
 	};
 
 	//lion::asset_pattern_t p{std::regex{"/res/shaders/vs_.+\\.hlsl"}, lion::asset_pattern_t::callback_t{load_vertex_shader}};
-	load_fragment_shader("/res/shaders/vs_hoory.hlsl", atma::input_bytestream_ptr::null);
+	//load_fragment_shader("/res/shaders/vs_hoory.hlsl", atma::input_bytestream_ptr::null);
 
 	auto shader_asset_type = library.register_asset_type(
 		{ lion::asset_pattern_t{std::regex{"/res/shaders/vs_.+\\.hlsl"}, load_fragment_shader},
@@ -238,7 +237,7 @@ application_t::application_t()
 	//
 #endif
 
-	library.load("/res/shaders/vs_basic.hlsl");
+	//library.load("/res/shaders/vs_basic.hlsl");
 	//library.register_asset_type("*\\.hlsl$", [](lion::input_stream_t const& stream) {
 		// do things with f, return an asset_ptr
 	//});

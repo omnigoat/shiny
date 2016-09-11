@@ -78,9 +78,12 @@ namespace lion
 		auto id() const -> uint32 { return id_; }
 
 	private:
-		asset_handle_t(asset_library_t* library, uint32 id)
+		asset_handle_t(asset_library_t* library, uint32 id, bool incref = false)
 			: library_{library}, id_{id}
-		{}
+		{
+			if (incref)
+				library_->table_.retain(id_);
+		}
 
 	private:
 		asset_library_t* library_ = nullptr;
@@ -261,9 +264,12 @@ namespace lion
 	template <typename Y, typename T>
 	inline auto polymorphic_asset_cast(asset_handle_t<T> const& x) -> asset_handle_t<Y>
 	{
+		if (x.library_ == nullptr || x.id_ == 0)
+			return asset_handle_t<Y>{x.library_, 0};
+
 		static_assert(std::is_base_of<T, Y>::value, "bad cast");
 		ATMA_ASSERT(nullptr != dynamic_cast<Y const*>(&*x), "bad cast");
-		return asset_handle_t<Y>{x.library_, x.id_};
+		return asset_handle_t<Y>{x.library_, x.id_, true};
 	}
 }
 
@@ -495,6 +501,8 @@ namespace lion
 		auto load(path_t const&) -> base_asset_handle_t;
 		//auto load(asset_collection_t, atma::string const& path) -> base_asset_handle_t;
 
+		template <typename T> auto load_as(path_t const&) -> asset_handle_t<T>;
+
 
 	private: // table management
 		struct storage_t;
@@ -532,5 +540,13 @@ namespace lion
 		std::shared_ptr<asset_t> asset;
 		uint8 generation;
 	};
+
+
+	template <typename T>
+	auto asset_library_t::load_as(path_t const& path) -> asset_handle_t<T>
+	{
+		auto h = load(path);
+		return polymorphic_asset_cast<T>(h);
+	}
 
 }

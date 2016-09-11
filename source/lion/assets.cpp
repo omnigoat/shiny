@@ -22,7 +22,9 @@ auto lion::asset_library_t::store(asset_t* a) -> base_asset_handle_t
 auto lion::asset_library_t::retain_copy(base_asset_handle_t const& h) -> base_asset_handle_t
 {
 	auto h2 = table_.construct(nullptr);
-	find(h2)->asset = h.library()->find(h.id())->asset;
+	auto os = h.library()->find(h.id());
+	auto& n = find(h2)->asset;
+	n = os->asset;
 	return base_asset_handle_t{this, h2};
 }
 
@@ -53,11 +55,14 @@ auto lion::asset_library_t::load(path_t const& path) -> base_asset_handle_t
 		{
 			if (std::regex_match(path.c_str(), p.regex))
 			{
-				auto stream = vfs_->open(path);
+				atma::string filepath;
+				auto stream = vfs_->open(path, &filepath);
 				auto istream = atma::stream_cast<atma::input_bytestream_t>(stream);
 				if (stream->stream_status() != atma::stream_status_t::error)
 				{
-					p.callback(path, istream);
+					auto a = p.callback(filepath, istream);
+					auto h = store(a);
+					return h;
 				}
 			}
 		}

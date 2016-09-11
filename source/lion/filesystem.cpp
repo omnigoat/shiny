@@ -201,7 +201,7 @@ auto vfs_t::mount(path_t const& path, filesystem_ptr const& fs) -> void
 }
 
 
-auto vfs_t::open(path_t const& path) -> atma::stream_ptr
+auto vfs_t::open(path_t const& path, atma::string* filepath) -> atma::stream_ptr
 {
 	ATMA_ASSERT(path_is_valid_logical_path(path.string()));
 
@@ -216,6 +216,7 @@ auto vfs_t::open(path_t const& path) -> atma::stream_ptr
 		if (x == "/")
 		{
 			m = &root_;
+			//fp = m->filesystem->physical_path().string();
 		}
 		else
 		{
@@ -234,7 +235,12 @@ auto vfs_t::open(path_t const& path) -> atma::stream_ptr
 	}
 
 	if (m && m->filesystem)
+	{
+		if (filepath)
+			*filepath = (m->filesystem->physical_path() / fp).string();
+
 		return m->filesystem->open(fp, lion::file_access_t::read);
+	}
 
 	return atma::stream_ptr::null;
 }

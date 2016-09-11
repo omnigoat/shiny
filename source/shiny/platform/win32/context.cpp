@@ -369,7 +369,7 @@ auto context_t::immediate_draw_pipeline_reset() -> void
 {
 	vs_shader_.reset();
 	gs_shader_.reset();
-	fs_shader_.reset();
+	fs_shader_ = fragment_shader_handle{};
 	draw_range_ = draw_range_t{};
 }
 
@@ -433,10 +433,9 @@ auto shiny::context_t::immediate_gs_set_input_views(bound_input_views_t const &)
 	
 }
 
-auto context_t::immediate_fs_set_fragment_shader(fragment_shader_cptr const& fs) -> void
+auto context_t::immediate_fs_set_fragment_shader(fragment_shader_handle const& fs) -> void
 {
-	ATMA_ASSERT(fs);
-	fs_shader_ = fs;
+	fs_shader_ = lion::polymorphic_asset_cast<fragment_shader_t>(library.retain_copy(fs));
 }
 
 auto context_t::immediate_fs_set_constant_buffers(bound_constant_buffers_t const& cbs) -> void

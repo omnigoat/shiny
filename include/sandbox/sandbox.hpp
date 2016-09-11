@@ -17,8 +17,8 @@ namespace sandbox
 
 		auto run() -> int;
 
-	private:
-		
+		auto vfs() -> lion::vfs_t& { return vfs_; }
+
 	private:
 		fooey::renderer_ptr window_renderer;
 		fooey::window_ptr window;
@@ -27,6 +27,8 @@ namespace sandbox
 		shiny::context_ptr ctx;
 
 		std::vector<plugin_ptr> plugins_;
+
+		lion::vfs_t vfs_;
 
 	private:
 		// data-declarations

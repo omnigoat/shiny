@@ -36,7 +36,7 @@ namespace shiny
 
 	struct fragment_stage_t
 	{
-		fragment_shader_cptr fs;
+		fragment_shader_handle fs;
 		bound_constant_buffers_t cbs;
 		bound_input_views_t ivs;
 		bound_compute_views_t cvs;
@@ -82,7 +82,7 @@ namespace shiny
 			inline auto gs_set(geometry_stage_t& gs, bound_constant_buffers_t const& cbs) -> void { gs.cbs = cbs; }
 			inline auto gs_set(geometry_stage_t& gs, bound_input_views_t const& ivs) -> void      { gs.ivs = ivs; }
 
-			inline auto fs_set(fragment_stage_t& fs, fragment_shader_cptr const& fsh) -> void     { fs.fs  = fsh; }
+			inline auto fs_set(fragment_stage_t& fs, fragment_shader_handle const& fsh) -> void   { fs.fs  = fsh; }
 			inline auto fs_set(fragment_stage_t& fs, bound_constant_buffers_t const& cbs) -> void { fs.cbs = cbs; }
 			inline auto fs_set(fragment_stage_t& fs, bound_input_views_t const& ivs) -> void      { fs.ivs = ivs; }
 			inline auto fs_set(fragment_stage_t& fs, bound_compute_views_t const& cvs) -> void    { fs.cvs = cvs; }

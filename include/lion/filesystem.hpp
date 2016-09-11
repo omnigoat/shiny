@@ -284,7 +284,7 @@ namespace lion
 
 		auto mount(path_t const&, filesystem_ptr const&) -> void;
 
-		auto open(path_t const&) -> atma::stream_ptr;
+		auto open(path_t const&, atma::string* filepath = nullptr) -> atma::stream_ptr;
 		auto open(path_t const&, file_access_mask_t) -> atma::stream_ptr;
 
 	private:
