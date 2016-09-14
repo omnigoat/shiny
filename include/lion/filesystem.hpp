@@ -3,6 +3,8 @@
 
 #include <lion/streams.hpp>
 
+#include <rose/runtime.hpp>
+
 #include <atma/intrusive_ptr.hpp>
 #include <atma/bitmask.hpp>
 #include <atma/string.hpp>
@@ -280,7 +282,7 @@ namespace lion
 	//
 	struct vfs_t
 	{
-		vfs_t();
+		vfs_t(rose::runtime_t*);
 
 		auto mount(path_t const&, filesystem_ptr const&) -> void;
 
@@ -299,6 +301,7 @@ namespace lion
 		};
 
 	private:
+		rose::runtime_t* rose_runtime_;
 		mount_node_t root_;
 	};
 

@@ -93,7 +93,9 @@ voxelization_plugin_t::voxelization_plugin_t(application_t* app)
 	: plugin_t{app}
 	, library_{&app->vfs()}
 {
-	library_.register_asset_type({lion::asset_pattern_t{std::regex{"/res/shaders/(f|p)s_.+\\.hlsl"}, atma::curry(&load_fragment_shader, std::ref(ctx))}});
+	library_.register_asset_type(
+		{ lion::asset_pattern_t{std::regex{"/res/shaders/(f|p)s_.+\\.hlsl"},
+			atma::curry(&load_fragment_shader, std::ref(ctx))}});
 }
 
 auto voxelization_plugin_t::gfx_setup(shiny::context_ptr const& ctx2) -> void

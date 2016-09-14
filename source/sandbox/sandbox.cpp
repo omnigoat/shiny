@@ -189,10 +189,12 @@ static int plus(int a, int b) { return a + b; }
 
 
 
-application_t::application_t()
+application_t::application_t(rose::runtime_t* rr)
 	: window_renderer(fooey::system_renderer())
 	, window(fooey::window("Excitement!", 800 + 16, 600 + 38))
 	, runtime{}
+	, rose_runtime_{rr}
+	, vfs_{rr}
 {
 	// virtual file system, mount res folder
 	auto fs = lion::physical_filesystem_ptr::make("./resources/published");
@@ -716,7 +718,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	SLR.flush();
 #endif
 
-	sandbox::application_t app;
+	sandbox::application_t app{&RR};
 
 	app.register_plugin(plugin_ptr(new sandbox::voxelization_plugin_t{&app}));
 

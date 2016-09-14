@@ -7,11 +7,14 @@
 
 #include <fooey/fooey_fwd.hpp>
 
+#include <rose/runtime.hpp>
+
+
 namespace sandbox
 {
 	struct application_t
 	{
-		application_t();
+		application_t(rose::runtime_t*);
 
 		auto register_plugin(plugin_ptr const&) -> void;
 
@@ -27,6 +30,8 @@ namespace sandbox
 		shiny::context_ptr ctx;
 
 		std::vector<plugin_ptr> plugins_;
+
+		rose::runtime_t* rose_runtime_;
 
 		lion::vfs_t vfs_;
 

@@ -93,10 +93,9 @@ auto filesystem_t::cd(fs_path_ptr const& fsp, atma::string const& p) -> fs_path_
 
 
 physical_filesystem_t::physical_filesystem_t(atma::string const& path)
-	: physical_path_(path)
+	: physical_path_(stdfs::absolute(path.c_str()).u8string().c_str())
 {
 	ATMA_ASSERT(stdfs::exists(physical_path_.c_str()));
-
 	root_ = fs_path_ptr::make(shared_from_this<filesystem_t>(), nullptr, path_type_t::dir, path);
 }
 
@@ -163,9 +162,11 @@ auto physical_filesystem_t::open(path_t const& path, file_access_mask_t mask) ->
 }
 
 
-vfs_t::vfs_t()
-	: root_{"/"}
+vfs_t::vfs_t(rose::runtime_t* rr)
+	: rose_runtime_{rr}
+	, root_{"/"}
 {
+	ATMA_ASSERT(rose_runtime_);
 }
 
 auto vfs_t::mount(path_t const& path, filesystem_ptr const& fs) -> void
@@ -216,7 +217,6 @@ auto vfs_t::open(path_t const& path, atma::string* filepath) -> atma::stream_ptr
 		if (x == "/")
 		{
 			m = &root_;
-			//fp = m->filesystem->physical_path().string();
 		}
 		else
 		{
