@@ -146,7 +146,7 @@ float4 main(FSInput input) : SV_Target
 
 	const float zstep = 1.f / dimensions.z;
 
-	for (float f = minz; f < maxz; f += zstep)
+	for (float f = minz; f <= maxz; f += zstep)
 	{
 		if (intersect(input.tri, float3(rp.x, rp.y, f)))
 		{

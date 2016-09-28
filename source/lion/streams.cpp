@@ -141,8 +141,3 @@ auto lion::read_all(random_access_input_stream_ptr const& stream) -> atma::uniqu
 	return read_input_random(stream);
 }
 
-
-
-
-
-

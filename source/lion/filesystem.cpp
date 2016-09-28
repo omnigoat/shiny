@@ -20,18 +20,6 @@ namespace
 	}
 }
 
-// path_t
-auto lion::path_t::extension() const -> atma::string
-{
-	std::cmatch results;
-	if (std::regex_match(string_.c_str(), results, extension_regex))
-	{
-		return atma::string{results[1].first, results[1].second};
-	}
-
-	return atma::string{};
-}
-
 fs_path_t::fs_path_t(filesystem_ptr const& fs, fs_path_t* parent, path_type_t type, atma::string const& pathleaf)
 	: fs_(fs), parent_(parent), type_(type), leaf_(pathleaf)
 {
@@ -50,7 +38,7 @@ auto filesystem_t::cd(fs_path_ptr const& fsp, atma::string const& p) -> fs_path_
 {
 	fs_path_t* r = root_path().get();
 
-	for (auto const& x : path_split_range(p))
+	for (auto const& x : rose::path_split_range(p))
 	{
 		if (x == "/")
 		{
@@ -93,7 +81,7 @@ auto filesystem_t::cd(fs_path_ptr const& fsp, atma::string const& p) -> fs_path_
 
 
 physical_filesystem_t::physical_filesystem_t(atma::string const& path)
-	: physical_path_(stdfs::absolute(path.c_str()).u8string().c_str())
+	: physical_path_(stdfs::absolute(path.c_str()).generic_u8string().c_str())
 {
 	ATMA_ASSERT(stdfs::exists(physical_path_.c_str()));
 	root_ = fs_path_ptr::make(shared_from_this<filesystem_t>(), nullptr, path_type_t::dir, path);
@@ -245,4 +233,57 @@ auto vfs_t::open(path_t const& path, atma::string* filepath) -> atma::stream_ptr
 	return atma::stream_ptr::null;
 }
 
+
+auto vfs_t::add_filewatch(path_t const& path, filewatch_callback_t const& callback) -> void
+{
+	mount_node_t* mount = nullptr;
+	path_t physpath;
+	std::tie(mount, physpath) = get_physical_path(path);
+
+	rose_runtime_->register_directory_watch(physpath, false, rose::file_change_t::changed,
+		[=](path_t const& p, rose::file_change_t change) {
+			auto stream = mount->filesystem->open(physpath, lion::file_access_t::read);
+		});
+
+}
+
+auto vfs_t::get_physical_path(path_t const& logical) -> std::tuple<mount_node_t*, path_t>
+{
+	ATMA_ASSERT(path_is_valid_logical_path(logical.string()));
+
+	mount_node_t* m = nullptr;
+
+	atma::string fp;
+	auto r = path_split_range(logical);
+	for (auto pi = r.begin(); pi != r.end(); ++pi)
+	{
+		auto const& x = *pi;
+
+		if (x == "/")
+		{
+			m = &root_;
+		}
+		else
+		{
+			auto it = std::find_if(m->children.begin(), m->children.end(), [&x](mount_node_t const& c) {
+				return c.name == x;
+			});
+
+			if (it != m->children.end()) {
+				m = &*it;
+			}
+			else {
+				atma::for_each(pi, r.end(), atma::utf8_appender_t{fp});
+				break;
+			}
+		}
+	}
+
+	if (m && m->filesystem)
+	{
+		return {m, m->filesystem->physical_path() / fp};
+	}
+
+	return {};
+}
 

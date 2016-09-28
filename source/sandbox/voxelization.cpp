@@ -81,7 +81,7 @@ auto obj_model_t::triangle_of(aml::vector4i const& f) const -> aml::triangle_t
 }
 
 
-auto load_fragment_shader(shiny::context_ptr const& ctx, lion::path_t const& path, lion::input_stream_ptr const& stream) -> lion::asset_t*
+auto load_fragment_shader(shiny::context_ptr const& ctx, rose::path_t const& path, lion::input_stream_ptr const& stream) -> lion::asset_t*
 {
 	bool precompiled = path.extension() == "cso";
 	auto m = lion::read_all(stream);
@@ -94,8 +94,8 @@ voxelization_plugin_t::voxelization_plugin_t(application_t* app)
 	, library_{&app->vfs()}
 {
 	library_.register_asset_type(
-		{ lion::asset_pattern_t{std::regex{"/res/shaders/(f|p)s_.+\\.hlsl"},
-			atma::curry(&load_fragment_shader, std::ref(ctx))}});
+		{ lion::asset_pattern_t{"/res/shaders/(f|p)s_.+\\.hlsl", atma::curry(&load_fragment_shader, std::ref(ctx)), atma::curry(&load_fragment_shader, std::ref(ctx))}
+		});
 }
 
 auto voxelization_plugin_t::gfx_setup(shiny::context_ptr const& ctx2) -> void

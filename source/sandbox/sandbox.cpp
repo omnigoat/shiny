@@ -197,7 +197,7 @@ application_t::application_t(rose::runtime_t* rr)
 	, vfs_{rr}
 {
 	// virtual file system, mount res folder
-	auto fs = lion::physical_filesystem_ptr::make("./resources/published");
+	auto fs = lion::physical_filesystem_ptr::make("resources/published");
 	vfs_.mount("/res/", fs);
 
 	// Windows window
@@ -220,7 +220,7 @@ application_t::application_t(rose::runtime_t* rr)
 #if 1
 	lion::asset_library_t library{&vfs_};
 
-	auto load_fragment_shader = [&](lion::path_t const& path, lion::input_stream_ptr const& stream) -> lion::asset_t*
+	auto load_fragment_shader = [&](rose::path_t const& path, lion::input_stream_ptr const& stream) -> lion::asset_t*
 	{
 		bool precompiled = path.extension() == "cso";
 		auto m = lion::read_all(stream);
@@ -232,9 +232,9 @@ application_t::application_t(rose::runtime_t* rr)
 	//load_fragment_shader("/res/shaders/vs_hoory.hlsl", atma::input_bytestream_ptr::null);
 
 	auto shader_asset_type = library.register_asset_type(
-		{ lion::asset_pattern_t{std::regex{"/res/shaders/vs_.+\\.hlsl"}, load_fragment_shader},
-		  lion::asset_pattern_t{std::regex{"/res/shaders/fs_.+\\.hlsl"}, load_fragment_shader},
-		  lion::asset_pattern_t{std::regex{"/res/shaders/cs_.+\\.hlsl"}, load_fragment_shader} });
+		{ lion::asset_pattern_t{"/res/shaders/vs_.+\\.hlsl", load_fragment_shader},
+		  lion::asset_pattern_t{"/res/shaders/fs_.+\\.hlsl", load_fragment_shader},
+		  lion::asset_pattern_t{"/res/shaders/cs_.+\\.hlsl", load_fragment_shader} });
 		
 	//
 #endif

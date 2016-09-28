@@ -468,18 +468,25 @@ namespace lion
 // asset_library_t
 namespace lion
 {
-	struct path_t;
-
 	struct asset_pattern_t
 	{
-		using callback_t = atma::function<asset_t*(path_t const&, atma::input_bytestream_ptr const&)>;
+		using load_callback_t   = atma::function<asset_t*(rose::path_t const&, lion::input_stream_ptr const&)>;
+		using reload_callback_t = atma::function<asset_t*(rose::path_t const&, lion::input_stream_ptr const&)>;
 
-		asset_pattern_t(std::regex const& regex, callback_t const& callback)
-			: regex{regex}, callback{callback}
+		asset_pattern_t(atma::string const& regex, load_callback_t const& load)
+			: path{rose::path_t{regex}.directory()}
+			, regex{regex.c_str()}, load{load}
 		{}
 
+		asset_pattern_t(atma::string const& regex, load_callback_t const& load, reload_callback_t const& reload)
+			: path{rose::path_t{regex}.directory()}
+			, regex{regex.c_str()}, load{load}, reload{reload}
+		{}
+
+		rose::path_t path;
 		std::regex regex;
-		callback_t callback;
+		load_callback_t load;
+		reload_callback_t reload;
 	};
 
 	struct asset_library_t
@@ -498,10 +505,10 @@ namespace lion
 		auto store(asset_t*) -> base_asset_handle_t;
 		auto retain_copy(base_asset_handle_t const&) -> base_asset_handle_t;
 
-		auto load(path_t const&) -> base_asset_handle_t;
+		auto load(rose::path_t const&) -> base_asset_handle_t;
 		//auto load(asset_collection_t, atma::string const& path) -> base_asset_handle_t;
 
-		template <typename T> auto load_as(path_t const&) -> asset_handle_t<T>;
+		template <typename T> auto load_as(rose::path_t const&) -> asset_handle_t<T>;
 
 
 	private: // table management
@@ -543,7 +550,7 @@ namespace lion
 
 
 	template <typename T>
-	auto asset_library_t::load_as(path_t const& path) -> asset_handle_t<T>
+	auto asset_library_t::load_as(rose::path_t const& path) -> asset_handle_t<T>
 	{
 		auto h = load(path);
 		return polymorphic_asset_cast<T>(h);

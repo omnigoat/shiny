@@ -44,6 +44,21 @@ auto lion::asset_library_t::register_asset_type(asset_patterns_t patterns) -> as
 {
 	auto r = asset_types_.insert(asset_type_t{std::move(patterns)});
 	ATMA_ASSERT(r.second, "bad insert");
+	
+	for (auto const& pattern : r.first->patterns)
+	{
+		if (pattern.reload)
+		{
+			vfs_->add_filewatch(pattern.path, [&](rose::path_t const& path, rose::file_change_t change, lion::input_stream_ptr const& stream)
+			{
+				if (change == rose::file_change_t::changed)
+				{
+					pattern.reload(path, stream);
+				}
+			});
+		}
+	}
+
 	return r.first;
 }
 
@@ -56,13 +71,16 @@ auto lion::asset_library_t::load(path_t const& path) -> base_asset_handle_t
 			if (std::regex_match(path.c_str(), p.regex))
 			{
 				atma::string filepath;
+
 				auto stream = vfs_->open(path, &filepath);
-				auto istream = atma::stream_cast<atma::input_bytestream_t>(stream);
-				if (stream->stream_status() != atma::stream_status_t::error)
+				if (stream && stream->stream_status() != atma::stream_status_t::error)
 				{
-					auto a = p.callback(filepath, istream);
-					auto h = store(a);
-					return h;
+					if (auto istream = atma::stream_cast<atma::input_bytestream_t>(stream))
+					{
+						auto a = p.load(filepath, istream);
+						auto h = store(a);
+						return h;
+					}
 				}
 			}
 		}
@@ -77,6 +95,6 @@ auto lion::operator < (lion::asset_library_t::asset_type_t const& lhs, lion::ass
 		lhs.patterns.begin(), lhs.patterns.end(),
 		rhs.patterns.begin(), rhs.patterns.end(),
 		[](lion::asset_pattern_t const& lhs, lion::asset_pattern_t const& rhs) {
-			return lhs.callback < rhs.callback;
+			return lhs.load < rhs.load;
 		});
 }
