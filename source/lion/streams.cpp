@@ -10,7 +10,7 @@ using lion::mmap_bytestream_t;
 
 
 mmap_bytestream_t::mmap_bytestream_t(rose::mmap_ptr const& mmap, mmap_bytestream_access_mask_t access)
-	: mmap_bytestream_t{mmap, 0, 0, access}
+	: mmap_bytestream_t{mmap, 0, mmap->size(), access}
 {}
 
 mmap_bytestream_t::mmap_bytestream_t(rose::mmap_ptr const& mmap, size_t offset, size_t size, mmap_bytestream_access_mask_t access)

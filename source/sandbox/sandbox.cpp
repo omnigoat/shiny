@@ -358,14 +358,14 @@ auto application_t::run() -> int
 
 		// all plugins draw to same scene
 		ctx->immediate_set_stage(shiny::renderer_stage_t::render);
-#if 1
+
 		auto&& scene = shiny::scene_t{ctx, cc.camera(), shiny::rendertarget_clear_t{aml::vector4f{0.2f, 0.2f, 0.2f}, 1.f}};
 		for (auto const& x : plugins_) {
 			x->gfx_ctx_draw(ctx);
 			x->gfx_draw(scene);
 		}
 		ctx->signal_draw_scene(scene);
-#endif
+
 		ctx->signal_present();
 		ctx->signal_block();
 	}

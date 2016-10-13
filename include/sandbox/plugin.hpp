@@ -26,6 +26,8 @@ namespace sandbox
 		virtual auto gfx_ctx_draw(shiny::context_ptr const&) -> void {}
 		virtual auto gfx_teardown() -> void {}
 
+		virtual auto end_frame() -> void {}
+
 		virtual auto main_setup() -> void {}
 
 		virtual auto result() const -> int = 0;

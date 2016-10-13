@@ -51,6 +51,7 @@ auto lion::asset_library_t::register_asset_type(asset_patterns_t patterns) -> as
 		{
 			vfs_->add_filewatch(pattern.path, [&](rose::path_t const& path, rose::file_change_t change, lion::input_stream_ptr const& stream)
 			{
+				std::cout << "BAM" << std::endl;
 				if (change == rose::file_change_t::changed)
 				{
 					pattern.reload(path, stream);

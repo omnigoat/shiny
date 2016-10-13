@@ -241,8 +241,11 @@ auto vfs_t::add_filewatch(path_t const& path, filewatch_callback_t const& callba
 	std::tie(mount, physpath) = get_physical_path(path);
 
 	rose_runtime_->register_directory_watch(physpath, false, rose::file_change_t::changed,
-		[=](path_t const& p, rose::file_change_t change) {
-			auto stream = mount->filesystem->open(physpath, lion::file_access_t::read);
+		[=](path_t const& filename, rose::file_change_t change) {
+			auto stream = mount->filesystem->open(path/filename, lion::file_access_t::read);
+			while (stream->stream_status() != stream_status_t::good)
+				stream = mount->filesystem->open(path / filename, lion::file_access_t::read);
+			callback(physpath/filename, change, atma::stream_cast<lion::input_stream_t>(stream));
 		});
 
 }

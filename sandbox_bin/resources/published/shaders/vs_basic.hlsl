@@ -5,7 +5,7 @@ cbuffer buf_scene : register(b0)
 	matrix proj;
 	matrix inverse_vp;
 	float time;
-};
+}; 
 
 struct VSOutput
 {
