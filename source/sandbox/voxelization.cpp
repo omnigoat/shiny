@@ -289,9 +289,9 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 
 
 
-	vs_voxelize = shiny::create_vertex_shader(ctx, "../shaders/vs_voxelize.hlsl", false);
-	gs_voxelize = shiny::create_geometry_shader(ctx, "../shaders/gs_voxelization.hlsl", false);
-	//fs_voxelize = shiny::create_fragment_shader(ctx, "../shaders/fs_voxelize.hlsl", false);
+	vs_voxelize = shiny::create_vertex_shader(ctx, "resources/published/shaders/vs_voxelize.hlsl", false);
+	gs_voxelize = shiny::create_geometry_shader(ctx, "resources/published/shaders/gs_voxelization.hlsl", false);
+	//fs_voxelize = shiny::create_fragment_shader(ctx, "resources/published/shaders/fs_voxelize.hlsl", false);
 	fs_voxelize = library_.load_as<shiny::fragment_shader_t>("/res/shaders/fs_voxelize.hlsl");
 
 	// fragments buffer (64mb)
@@ -431,10 +431,10 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 
 auto voxelization_plugin_t::setup_svo() -> void
 {
-	cs_clear           = shiny::create_compute_shader(ctx, "../shaders/sparse_octree_clear.hlsl", false);
-	cs_mark            = shiny::create_compute_shader(ctx, "../shaders/sparse_octree_mark.hlsl", false);
-	cs_allocate        = shiny::create_compute_shader(ctx, "../shaders/sparse_octree_allocate.hlsl", false);
-	cs_write_fragments = shiny::create_compute_shader(ctx, "../shaders/sparse_octree_write_fragments.hlsl", false);
+	cs_clear           = shiny::create_compute_shader(ctx, "resources/published/shaders/sparse_octree_clear.hlsl", false);
+	cs_mark            = shiny::create_compute_shader(ctx, "resources/published/shaders/sparse_octree_mark.hlsl", false);
+	cs_allocate        = shiny::create_compute_shader(ctx, "resources/published/shaders/sparse_octree_allocate.hlsl", false);
+	cs_write_fragments = shiny::create_compute_shader(ctx, "resources/published/shaders/sparse_octree_write_fragments.hlsl", false);
 
 
 	auto const brick_edge_size = 8u;
@@ -595,7 +595,7 @@ auto voxelization_plugin_t::setup_rendering() -> void
 
 	vb_quad = shiny::create_vertex_buffer(ctx, shiny::resource_storage_t::persistant, dd, 8, vbd);
 
-	vs_voxels = shiny::create_vertex_shader(ctx, "../shaders/vs_voxels.hlsl", false);
+	vs_voxels = shiny::create_vertex_shader(ctx, "resources/published/shaders/vs_voxels.hlsl", false);
 	fs_voxels = library_.load_as<shiny::fragment_shader_t>("/res/shaders/ps_voxels.hlsl");
 }
 
