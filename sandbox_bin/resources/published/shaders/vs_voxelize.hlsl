@@ -1,5 +1,5 @@
 
-cbuffer lulz : register(c0)
+cbuffer lulz : register(b0)
 {
 	float4 bounds;
 };

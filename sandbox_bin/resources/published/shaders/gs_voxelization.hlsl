@@ -25,7 +25,7 @@ struct GSOutput
 };
 
 
-cbuffer buf_voxelize : register(c0)
+cbuffer buf_voxelize : register(b0)
 {
 	float4 dimensions;
 };

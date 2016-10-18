@@ -10,7 +10,7 @@ struct triangle_intersection_info_t
 	float d1, d2;
 	float4 ne0xy, ne1xy, ne2xy, ne0yz, ne1yz, ne2yz, ne0zx, ne1zx, ne2zx;
 	float de0xy, de1xy, de2xy, de0yz, de1yz, de2yz, de0zx, de1zx, de2zx;
-};         
+};           
 
 struct FSInput
 {
