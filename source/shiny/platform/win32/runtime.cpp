@@ -93,19 +93,27 @@ auto shiny::runtime_t::dxgid3d_for_adapter(uint32 adapter_index) -> std::tuple<d
 	else
 	{
 #if _DEBUG
-#	define FLAG D3D11_CREATE_DEVICE_DEBUG
-#else
-#	define FLAG 0
-#endif
-		ATMA_ENSURE_IS(S_OK, D3D11CreateDevice(
+		if (S_OK != D3D11CreateDevice(
 			adapter.get(), D3D_DRIVER_TYPE_UNKNOWN,
-			NULL, FLAG,
+			NULL, D3D11_CREATE_DEVICE_DEBUG,
 			NULL, 0,
 			D3D11_SDK_VERSION,
 			device.assign(),
 			NULL,
 			context.assign()
-		));
+		))
+#endif
+		{
+			ATMA_ENSURE_IS(S_OK, D3D11CreateDevice(
+				adapter.get(), D3D_DRIVER_TYPE_UNKNOWN,
+				NULL, 0,
+				NULL, 0,
+				D3D11_SDK_VERSION,
+				device.assign(),
+				NULL,
+				context.assign()
+			));
+		}
 
 		d3d_devices_[adapter] = device;
 	}
