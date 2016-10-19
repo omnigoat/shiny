@@ -86,6 +86,7 @@ auto load_fragment_shader(shiny::context_ptr const& ctx, rose::path_t const& pat
 	bool precompiled = path.extension() == "cso";
 	auto m = lion::read_all(stream);
 	auto r = new shiny::fragment_shader_t{ctx, path.c_str(), m.begin(), m.size(), precompiled, "main"};
+
 	return r;
 }
 
