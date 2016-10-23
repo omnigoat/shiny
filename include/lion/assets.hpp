@@ -30,13 +30,22 @@ namespace lion
 // asset_t
 namespace lion
 {
-	struct asset_t
+	struct asset_t : atma::ref_counted
 	{
+		asset_t(path_t const& path)
+			: path_(path)
+		{}
+
+		virtual ~asset_t()
+		{}
+
 		auto path() const -> path_t const& { return path_; }
-		virtual ~asset_t() {}
+
 	private:
 		path_t path_;
 	};
+
+	using asset_ptr = atma::intrusive_ptr<asset_t>;
 }
 
 
@@ -76,6 +85,7 @@ namespace lion
 
 		auto library() const -> asset_library_t* { return library_; }
 		auto id() const -> uint32 { return id_; }
+		auto address() const -> T const* { return operator ->(); }
 
 	private:
 		asset_handle_t(asset_library_t* library, uint32 id, bool incref = false)
@@ -128,6 +138,7 @@ namespace lion
 
 		auto library() const -> asset_library_t* { return library_; }
 		auto id() const -> uint32 { return id_; }
+		auto address() const -> T const* { return operator ->(); }
 
 		auto expired() const -> bool;
 		auto lock() const -> asset_handle_t<T>;
@@ -166,6 +177,7 @@ namespace lion
 
 		auto library() const -> asset_library_t* { return library_; }
 		auto id() const -> uint32 { return id_; }
+		auto address() const -> T const* { return operator ->(); }
 
 	private:
 		asset_library_t* library_ = nullptr;
@@ -268,7 +280,7 @@ namespace lion
 			return asset_handle_t<Y>{x.library_, 0};
 
 		static_assert(std::is_base_of<T, Y>::value, "bad cast");
-		ATMA_ASSERT(nullptr != dynamic_cast<Y const*>(&*x), "bad cast");
+		ATMA_ASSERT(&*x == nullptr || nullptr != dynamic_cast<Y const*>(&*x), "bad cast");
 		return asset_handle_t<Y>{x.library_, x.id_, true};
 	}
 }
@@ -470,8 +482,8 @@ namespace lion
 {
 	struct asset_pattern_t
 	{
-		using load_callback_t   = atma::function<asset_t*(rose::path_t const&, lion::input_stream_ptr const&)>;
-		using reload_callback_t = atma::function<asset_t*(rose::path_t const&, lion::input_stream_ptr const&)>;
+		using load_callback_t   = atma::function<asset_ptr(rose::path_t const&, lion::input_stream_ptr const&)>;
+		using reload_callback_t = atma::function<asset_ptr(rose::path_t const&, lion::input_stream_ptr const&)>;
 
 		asset_pattern_t(atma::string const& regex, load_callback_t const& load)
 			: path{rose::path_t{regex}.directory()}
@@ -502,7 +514,7 @@ namespace lion
 
 		auto register_asset_type(asset_patterns_t) -> asset_type_handle_t;
 
-		auto store(asset_t*) -> base_asset_handle_t;
+		auto store(asset_ptr const&) -> base_asset_handle_t;
 		auto retain_copy(base_asset_handle_t const&) -> base_asset_handle_t;
 
 		auto load(rose::path_t const&) -> base_asset_handle_t;
@@ -524,6 +536,7 @@ namespace lion
 
 	private: // assets
 		asset_types_t asset_types_;
+		std::map<rose::path_t, uint32> pathed_assets_;
 
 	private:
 		template <typename> friend struct asset_handle_t;
@@ -539,14 +552,22 @@ namespace lion
 
 	struct asset_library_t::storage_t
 	{
-		storage_t(asset_t* a)
+		storage_t(asset_ptr const& a)
 			: asset{a}
 			, generation{}
 		{}
 
-		std::shared_ptr<asset_t> asset;
+		friend void swap(lion::asset_library_t::storage_t& lhs, lion::asset_library_t::storage_t& rhs)
+		{
+			std::swap(lhs.asset, rhs.asset);
+			++lhs.generation;
+			++rhs.generation;
+		}
+
+		asset_ptr asset;
 		uint8 generation;
 	};
+
 
 
 	template <typename T>

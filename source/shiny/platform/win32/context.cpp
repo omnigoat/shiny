@@ -532,7 +532,7 @@ auto context_t::immediate_draw() -> void
 
 	// fragment-stage
 	{
-		ATMA_ENSURE(fs_shader_);
+		ATMA_ENSURE(fs_shader_ && fs_shader_.address());
 		d3d_immediate_context_->PSSetShader(fs_shader_->d3d_fs().get(), nullptr, 0);
 
 		ID3D11Buffer* cbs[D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT]{};

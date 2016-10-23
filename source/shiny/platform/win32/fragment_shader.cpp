@@ -12,44 +12,63 @@ using namespace shiny;
 using shiny::fragment_shader_t;
 
 
-auto shiny::create_fragment_shader(context_ptr const& context, atma::string const& path, bool precompiled, atma::string const& entrypoint) -> fragment_shader_ptr
+auto fragment_shader_t::make(context_ptr const& context, lion::path_t const& path, bool precompiled, atma::string const& entrypoint) -> fragment_shader_ptr
 {
-	auto f = rose::file_t{path};
+	auto f = rose::file_t{path.string()};
 	auto m = rose::read_into_memory(f);
 	return fragment_shader_ptr::make(context, path, m.begin(), m.size(), precompiled, entrypoint);
 }
 
-auto shiny::create_fragment_shader(context_ptr const& context, atma::string const& path, atma::input_bytestream_ptr const& stream, bool precompiled, atma::string const& entrypoint) -> fragment_shader_ptr
+auto fragment_shader_t::make(shiny::context_ptr const& ctx, lion::path_t const& path, void const* data, size_t data_size, bool precompiled, atma::string const& entrypoint) -> fragment_shader_ptr
 {
-	auto m = lion::read_all(stream);
-	return fragment_shader_ptr::make(context, path, m.begin(), m.size(), precompiled, entrypoint);
+	return fragment_shader_ptr::make(ctx, path, data, data_size, precompiled, entrypoint);
 }
 
 
-fragment_shader_t::fragment_shader_t(context_ptr const& ctx, atma::string const& path, void const* data, size_t data_length, bool precompiled, atma::string const& entrypoint)
-	: context_(ctx)
-	, path_{path}
+fragment_shader_t::fragment_shader_t(context_ptr const& ctx, lion::path_t const& path, platform::d3d_blob_ptr const& blob, platform::d3d_fragment_shader_ptr const& shader)
+	: asset_t{path}
+	, context_{ctx}
+	, d3d_blob_{blob}
+	, d3d_fs_{shader}
+{}
+
+
+auto atma::intrusive_ptr_make<shiny::fragment_shader_t>::make(context_ptr const& ctx, lion::path_t const& path, void const* data, size_t data_size, bool precompiled, atma::string const& entrypoint) -> fragment_shader_t*
 {
+	using namespace shiny;
+	namespace platform = shiny::platform;
+
+	platform::d3d_blob_ptr d3d_blob;
+	platform::d3d_fragment_shader_ptr d3d_vs;
+
 	if (precompiled)
 	{
-		ATMA_ENSURE_IS(S_OK, D3DCreateBlob(data_length, d3d_blob_.assign()));
-		memcpy(d3d_blob_->GetBufferPointer(), data, data_length);
+		ATMA_ENSURE_IS(S_OK, D3DCreateBlob(data_size, d3d_blob.assign()));
+		memcpy(d3d_blob->GetBufferPointer(), data, data_size);
 	}
 	else
 	{
 		platform::d3d_blob_ptr errors;
-		ATMA_ENSURE_IS(S_OK, D3DCompile(data, data_length, path.c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, entrypoint.c_str(), "ps_5_0", D3DCOMPILE_PREFER_FLOW_CONTROL | D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, d3d_blob_.assign(), errors.assign()));
-		if (errors)
+		if (S_OK != D3DCompile(data, data_size, path.c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, entrypoint.raw_begin(), "ps_5_0", D3DCOMPILE_PREFER_FLOW_CONTROL | D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, d3d_blob.assign(), errors.assign()))
 		{
 			SHINY_ERROR("fragment-shader errors:\n", (char*)errors->GetBufferPointer());
+			return nullptr;
+		}
+		else if (errors)
+		{
+			SHINY_WARN("fragment-shader warnings:\n", (char*)errors->GetBufferPointer());
 		}
 	}
 
-	auto const& device = context_->d3d_device();
-	ATMA_ENSURE_IS(S_OK, device->CreatePixelShader(d3d_blob_->GetBufferPointer(), d3d_blob_->GetBufferSize(), nullptr, d3d_fs_.assign()));
+	// create fragment-shader
+	auto const& device = ctx->d3d_device();
+	if (S_OK == device->CreatePixelShader(d3d_blob->GetBufferPointer(), d3d_blob->GetBufferSize(), nullptr, d3d_vs.assign()))
+	{
+		return new fragment_shader_t{ctx, path, d3d_blob, d3d_vs};
+	}
+	else
+	{
+		return nullptr;
+	}
 }
 
-fragment_shader_t::~fragment_shader_t()
-{
-
-}

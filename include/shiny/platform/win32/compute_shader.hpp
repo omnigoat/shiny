@@ -24,7 +24,7 @@ namespace shiny
 		platform::d3d_compute_shader_ptr d3d_cs_;
 
 
-		friend struct atma::enable_intrusive_ptr_make;
+		friend struct atma::enable_default_intrusive_ptr_make;
 	};
 }
 

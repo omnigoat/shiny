@@ -12,16 +12,15 @@ lion::asset_library_t::asset_library_t(vfs_t* vfs)
 	: vfs_{vfs}
 {}
 
-auto lion::asset_library_t::store(asset_t* a) -> base_asset_handle_t
+auto lion::asset_library_t::store(asset_ptr const& a) -> base_asset_handle_t
 {
 	auto h = table_.construct(a);
-
 	return base_asset_handle_t{this, h};
 }
 
 auto lion::asset_library_t::retain_copy(base_asset_handle_t const& h) -> base_asset_handle_t
 {
-	auto h2 = table_.construct(nullptr);
+	auto h2 = table_.construct(asset_ptr::null);
 	auto os = h.library()->find(h.id());
 	auto& n = find(h2)->asset;
 	n = os->asset;
@@ -47,19 +46,26 @@ auto lion::asset_library_t::register_asset_type(asset_patterns_t patterns) -> as
 	
 	for (auto const& pattern : r.first->patterns)
 	{
-		if (pattern.reload)
+		if (!pattern.reload)
+			continue;
+
+		vfs_->add_filewatch(pattern.path, [&](rose::path_t const& path, rose::file_change_t change, lion::input_stream_ptr const& stream)
 		{
-			vfs_->add_filewatch(pattern.path, [&](rose::path_t const& path, rose::file_change_t change, lion::input_stream_ptr const& stream)
+			if (change != rose::file_change_t::changed)
+				return;
+
+			auto candidate = pathed_assets_.find(path);
+			if (candidate == pathed_assets_.end())
+				return;
+
+			auto old_handle = candidate->second;
+
+			if (auto asset = pattern.reload(path, stream))
 			{
-				if (change == rose::file_change_t::changed)
-				{
-					if (auto asset = pattern.reload(path, stream))
-					{
-						
-					}
-				}
-			});
-		}
+				auto h = store(asset);
+				table_.swap(old_handle, h.id());
+			}
+		});
 	}
 
 	return r.first;
@@ -82,6 +88,8 @@ auto lion::asset_library_t::load(path_t const& path) -> base_asset_handle_t
 					{
 						auto a = p.load(filepath, istream);
 						auto h = store(a);
+						auto r = pathed_assets_.insert(std::make_pair(filepath, h.id()));
+						ATMA_ASSERT(r.second);
 						return h;
 					}
 				}

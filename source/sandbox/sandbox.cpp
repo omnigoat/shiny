@@ -215,58 +215,6 @@ application_t::application_t(rose::runtime_t* rr)
 	// DESIRED
 	// auto vs_basic = library.load_asset_as<shiny::vertex_shader_t>("/res/shaders/vs_basic.hlsl");
 
-	
-
-#if 1
-	lion::asset_library_t library{&vfs_};
-
-	auto load_fragment_shader = [&](rose::path_t const& path, lion::input_stream_ptr const& stream) -> lion::asset_t*
-	{
-		bool precompiled = path.extension() == "cso";
-		auto m = lion::read_all(stream);
-		auto r = new shiny::fragment_shader_t{ctx, path.c_str(), m.begin(), m.size(), precompiled, "main"};
-		return r;
-	};
-
-	//lion::asset_pattern_t p{std::regex{"/res/shaders/vs_.+\\.hlsl"}, lion::asset_pattern_t::callback_t{load_vertex_shader}};
-	//load_fragment_shader("/res/shaders/vs_hoory.hlsl", atma::input_bytestream_ptr::null);
-
-	auto shader_asset_type = library.register_asset_type(
-		{ lion::asset_pattern_t{"/res/shaders/vs_.+\\.hlsl", load_fragment_shader},
-		  lion::asset_pattern_t{"/res/shaders/fs_.+\\.hlsl", load_fragment_shader},
-		  lion::asset_pattern_t{"/res/shaders/cs_.+\\.hlsl", load_fragment_shader} });
-		
-	//
-#endif
-
-	//library.load("/res/shaders/vs_basic.hlsl");
-	//library.register_asset_type("*\\.hlsl$", [](lion::input_stream_t const& stream) {
-		// do things with f, return an asset_ptr
-	//});
-
-	//auto sh = library.load_asset_as<shiny::vertex_shader_t>("/res/shaders/vs_basic.hlsl");
-	
-	struct vertex_shader_backend_t
-	{
-		auto d3d_vs() const -> shiny::platform::d3d_vertex_shader_ptr { return {}; }
-	};
-
-	using vertex_shader_backend_ptr = indirect_ptr<vertex_shader_backend_t>;
-
-	struct vertex_shader_tx
-	{
-		auto d3d_vs() const -> shiny::platform::d3d_vertex_shader_ptr
-		{
-			return backend_->d3d_vs();
-		}
-
-	private:
-		//vertex_shader_backend_t const* const* backend_;
-		vertex_shader_backend_ptr backend_;
-	};
-
-	//auto vs = lion::lock_asset_ptr(vertex_shader_handle);
-
 
 	// geometry
 	dd_position = runtime.make_data_declaration({
@@ -285,11 +233,11 @@ application_t::application_t(rose::runtime_t* rr)
 	//auto f = vfs.open("/res/shaders/vs_basic.hlsl");
 	//auto m = lion::read_all(f);
 	//auto sdf = shiny::create_vertex_shader(ctx, m, false);
-
+	//shiny::vertex_shader_t::make()
 
 	// shaders
-	vs_flat = shiny::create_vertex_shader(ctx, "../shaders/vs_basic.hlsl", false);
-	fs_flat = shiny::create_fragment_shader(ctx, "../shaders/ps_basic.hlsl", false);
+	vs_flat = shiny::vertex_shader_t::make(ctx, "../shaders/vs_basic.hlsl", false);
+	fs_flat = shiny::fragment_shader_t::make(ctx, "../shaders/ps_basic.hlsl", false);
 }
 
 auto application_t::run() -> int

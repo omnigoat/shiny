@@ -10,11 +10,11 @@ struct triangle_intersection_info_t
 	float d1, d2;
 	float4 ne0xy, ne1xy, ne2xy, ne0yz, ne1yz, ne2yz, ne0zx, ne1zx, ne2zx;
 	float de0xy, de1xy, de2xy, de0yz, de1yz, de2yz, de0zx, de1zx, de2zx;
-}; 
+};                        
 
 struct FSInput
 {
-	float4 position : SV_Position;
+	float4 position : SV_Position;  
 
 	nointerpolation uint proj : ProjIdx;
 	triangle_intersection_info_t tri : tri;
@@ -141,12 +141,12 @@ float4 main(FSInput input) : SV_Target
 	float2 maxzdxy = p.z + dzdxy;
 
 	// round z and make sure it's within bounds
-	float minz = max(0,                  floor(min(minzdxy.x, minzdxy.y) * dimensions.z))       / dimensions.z;
-	float maxz = min(dimensions.z - 1.f, floor(max(maxzdxy.x, maxzdxy.y) * dimensions.z) + 1.f) / dimensions.z;
+	float minz = max(0,            floor(min(minzdxy.x, minzdxy.y) * dimensions.z))       / dimensions.z;
+	float maxz = min(dimensions.z, floor(max(maxzdxy.x, maxzdxy.y) * dimensions.z) + 1.f) / dimensions.z;
 
 	const float zstep = 1.f / dimensions.z;
 
-	for (float f = minz; f <= maxz; f += zstep)
+	for (float f = minz; f < maxz; f += zstep)
 	{
 		if (intersect(input.tri, float3(rp.x, rp.y, f)))
 		{

@@ -81,12 +81,10 @@ auto obj_model_t::triangle_of(aml::vector4i const& f) const -> aml::triangle_t
 }
 
 
-auto load_fragment_shader(shiny::context_ptr const& ctx, rose::path_t const& path, lion::input_stream_ptr const& stream) -> lion::asset_t*
+auto load_fragment_shader(shiny::context_ptr const& ctx, rose::path_t const& path, lion::input_stream_ptr const& stream) -> lion::asset_ptr
 {
 	bool precompiled = path.extension() == "cso";
-	auto m = lion::read_all(stream);
-	auto r = new shiny::fragment_shader_t{ctx, path.c_str(), m.begin(), m.size(), precompiled, "main"};
-
+	auto r = shiny::fragment_shader_t::make(ctx, path, precompiled, "main");
 	return r;
 }
 
@@ -290,9 +288,8 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 
 
 
-	vs_voxelize = shiny::create_vertex_shader(ctx, "resources/published/shaders/vs_voxelize.hlsl", false);
+	vs_voxelize = shiny::vertex_shader_t::make(ctx, "resources/published/shaders/vs_voxelize.hlsl", false);
 	gs_voxelize = shiny::create_geometry_shader(ctx, "resources/published/shaders/gs_voxelization.hlsl", false);
-	//fs_voxelize = shiny::create_fragment_shader(ctx, "resources/published/shaders/fs_voxelize.hlsl", false);
 	fs_voxelize = library_.load_as<shiny::fragment_shader_t>("/res/shaders/fs_voxelize.hlsl");
 
 	// fragments buffer (64mb)
@@ -596,7 +593,7 @@ auto voxelization_plugin_t::setup_rendering() -> void
 
 	vb_quad = shiny::create_vertex_buffer(ctx, shiny::resource_storage_t::persistant, dd, 8, vbd);
 
-	vs_voxels = shiny::create_vertex_shader(ctx, "resources/published/shaders/vs_voxels.hlsl", false);
+	vs_voxels = shiny::vertex_shader_t::make(ctx, "resources/published/shaders/vs_voxels.hlsl", false);
 	fs_voxels = library_.load_as<shiny::fragment_shader_t>("/res/shaders/ps_voxels.hlsl");
 }
 

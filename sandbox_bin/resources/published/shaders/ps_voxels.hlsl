@@ -7,8 +7,8 @@ float4 u32x1_to_f(uint x)
 		((x >> 8) & 0xff) / 255.f,
 		((x >> 16) & 0xff) / 255.f,
 		((x >> 24) & 0xff) / 255.f
-	);
-}
+	);  
+}    
 
 cbuffer buf_scene : register(b0)
 {
@@ -281,7 +281,7 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 	float3 hit_enter, hit_exit;
 
 	if (!intersection(box, position, normal, hit_enter, hit_exit))
-		discard;
+		discard; //return float4(0.f, 1.f, 0.f, 1.f);
 
 	// debug: hit-enter
 	//return float4(hit_enter, 1.f);
@@ -332,10 +332,11 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 	color += float4(i * lpwr, 0);
 #endif
 
+	//return float4(1.f, 0.f, 0.f, 1.f);
 	return color;
 }
 
-static const float pi = 3.14159265f;
+static const float pi = 3.14159265f;  
 
 float4 main(ps_input_t input) : SV_Target
 {
