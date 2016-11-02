@@ -20,10 +20,8 @@ auto lion::asset_library_t::store(asset_ptr const& a) -> base_asset_handle_t
 
 auto lion::asset_library_t::retain_copy(base_asset_handle_t const& h) -> base_asset_handle_t
 {
-	auto h2 = table_.construct(asset_ptr::null);
 	auto os = h.library()->find(h.id());
-	auto& n = find(h2)->asset;
-	n = os->asset;
+	auto h2 = table_.construct(os->asset);
 	return base_asset_handle_t{this, h2};
 }
 
@@ -108,4 +106,36 @@ auto lion::operator < (lion::asset_library_t::asset_type_t const& lhs, lion::ass
 		[](lion::asset_pattern_t const& lhs, lion::asset_pattern_t const& rhs) {
 			return lhs.load < rhs.load;
 		});
+}
+
+
+namespace lion
+{
+	void swap(lion::asset_library_t::storage_t& lhs, lion::asset_library_t::storage_t& rhs)
+	{
+		static_assert(sizeof(lhs.asset) == sizeof(uintptr), "bad sizes");
+
+		// this could deadlock if two threads are trying to swap
+		// the same two assets in the opposite order
+		while (!atma::atomic_compare_exchange(&lhs.semaphore, (uint16)0u, (uint16)1u));
+		while (!atma::atomic_compare_exchange(&rhs.semaphore, (uint16)0u, (uint16)1u));
+
+		atma::atomic128_t nlhs;
+		nlhs.uptr[0] = (uintptr)rhs.asset.get();
+		nlhs.ui16[4] = lhs.generation + 1;
+		nlhs.ui16[5] = lhs.semaphore;
+		nlhs.ui32[3] = lhs.next_generation_handle;
+
+		atma::atomic128_t nrhs;
+		nrhs.uptr[0] = (uintptr)lhs.asset.get();
+		nrhs.ui16[4] = rhs.generation + 1;
+		nrhs.ui16[5] = rhs.semaphore;
+		nrhs.ui32[3] = rhs.next_generation_handle;
+
+		atma::atomic_exchange(&lhs.atom, nlhs);
+		atma::atomic_exchange(&rhs.atom, nrhs);
+
+		atma::atomic_pre_decrement(&lhs.semaphore);
+		atma::atomic_pre_decrement(&rhs.semaphore);
+	}
 }

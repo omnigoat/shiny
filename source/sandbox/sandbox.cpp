@@ -665,6 +665,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 	SLR.flush();
 #endif
+	
+	atma::mpsc_queue_t<true> yay_queue{512};
 
 	sandbox::application_t app{&RR};
 

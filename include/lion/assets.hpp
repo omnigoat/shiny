@@ -541,7 +541,10 @@ namespace lion
 	private:
 		template <typename> friend struct asset_handle_t;
 		template <typename> friend struct asset_weak_handle_t;
+
+		friend void swap(storage_t& lhs, storage_t&);
 	};
+
 
 	struct asset_library_t::asset_type_t
 	{
@@ -555,20 +558,25 @@ namespace lion
 		storage_t(asset_ptr const& a)
 			: asset{a}
 			, generation{}
+			, semaphore{}
+			, next_generation_handle{}
 		{}
 
-		friend void swap(lion::asset_library_t::storage_t& lhs, lion::asset_library_t::storage_t& rhs)
-		{
-			std::swap(lhs.asset, rhs.asset);
-			++lhs.generation;
-			++rhs.generation;
-		}
+		~storage_t() {}
 
-		asset_ptr asset;
-		uint8 generation;
+		union {
+			struct {
+				asset_ptr asset;
+				uint16 generation;
+				uint16 semaphore;
+				uint32 next_generation_handle;
+			};
+
+			atma::atomic128_t atom;
+		};
 	};
 
-
+	void swap(asset_library_t::storage_t& lhs, asset_library_t::storage_t&);
 
 	template <typename T>
 	auto asset_library_t::load_as(rose::path_t const& path) -> asset_handle_t<T>
