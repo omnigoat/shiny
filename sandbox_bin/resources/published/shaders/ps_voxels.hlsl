@@ -336,7 +336,7 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 	return color;
 }
 
-static const float pi = 3.14159265f;  
+static const float pi = 3.14159265f;   
 
 float4 main(ps_input_t input) : SV_Target
 {

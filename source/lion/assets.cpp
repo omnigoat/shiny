@@ -1,6 +1,10 @@
 #include <lion/assets.hpp>
 
+#include <atma/algorithm/filter.hpp>
+
 #include <memory>
+
+
 
 lion::asset_library_t::asset_library_t()
 	//: types_{256}
@@ -42,11 +46,8 @@ auto lion::asset_library_t::register_asset_type(asset_patterns_t patterns) -> as
 	auto r = asset_types_.insert(asset_type_t{std::move(patterns)});
 	ATMA_ASSERT(r.second, "bad insert");
 	
-	for (auto const& pattern : r.first->patterns)
+	for (auto const& pattern : atma::filter_by(&asset_pattern_t::reload, r.first->patterns))
 	{
-		if (!pattern.reload)
-			continue;
-
 		vfs_->add_filewatch(pattern.path, [&](rose::path_t const& path, rose::file_change_t change, lion::input_stream_ptr const& stream)
 		{
 			if (change != rose::file_change_t::changed)
@@ -75,21 +76,21 @@ auto lion::asset_library_t::load(path_t const& path) -> base_asset_handle_t
 	{
 		for (auto const& p : at.patterns)
 		{
-			if (std::regex_match(path.c_str(), p.regex))
-			{
-				atma::string filepath;
+			if (!std::regex_match(path.c_str(), p.regex))
+				continue;
 
-				auto stream = vfs_->open(path, &filepath);
-				if (stream && stream->stream_status() != atma::stream_status_t::error)
+			atma::string filepath;
+
+			auto stream = vfs_->open(path, &filepath);
+			if (stream && stream->stream_status() != atma::stream_status_t::error)
+			{
+				if (auto istream = atma::stream_cast<atma::input_bytestream_t>(stream))
 				{
-					if (auto istream = atma::stream_cast<atma::input_bytestream_t>(stream))
-					{
-						auto a = p.load(filepath, istream);
-						auto h = store(a);
-						auto r = pathed_assets_.insert(std::make_pair(filepath, h.id()));
-						ATMA_ASSERT(r.second);
-						return h;
-					}
+					auto a = p.load(filepath, istream);
+					auto h = store(a);
+					auto r = pathed_assets_.insert(std::make_pair(filepath, h.id()));
+					ATMA_ASSERT(r.second);
+					return h;
 				}
 			}
 		}
