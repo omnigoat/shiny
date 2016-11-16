@@ -46,26 +46,13 @@ namespace shiny { namespace log { namespace color {
 	::atma::send_log(::shiny::logging::detail::current_runtime(), \
 		level, nullptr, __FILE__, __LINE__, __VA_ARGS__, "\n")
 
-#define SHINY_TRACE(...) \
-	::atma::send_log(::shiny::logging::detail::current_runtime(), \
-		::shiny::logging::level_t::verbose, nullptr, __FILE__, __LINE__, __VA_ARGS__, "\n")
-
-#define SHINY_INFO(...) \
-	::atma::send_log(::shiny::logging::detail::current_runtime(), \
-		::shiny::logging::level_t::info, nullptr, __FILE__, __LINE__, __VA_ARGS__, "\n")
-
-#define SHINY_DEBUG(...) \
-	::atma::send_log(::shiny::logging::detail::current_runtime(), \
-		::shiny::logging::level_t::debug, nullptr, __FILE__, __LINE__, __VA_ARGS__, "\n")
-
-#define SHINY_WARN(...) \
-	::atma::send_log(::shiny::logging::detail::current_runtime(), \
-		::shiny::logging::level_t::warn, "shiny", __FILE__, __LINE__, __VA_ARGS__, "\n")
-
+#define SHINY_TRACE(...) SHINY_LOG(::shiny::logging::level_t::verbose, __VA_ARGS__)
+#define SHINY_INFO(...) SHINY_LOG(::shiny::logging::level_t::info,     __VA_ARGS__)
+#define SHINY_DEBUG(...) SHINY_LOG(::shiny::logging::level_t::debug,   __VA_ARGS__)
+#define SHINY_WARN(...) SHINY_LOG(::shiny::logging::level_t::warn,     __VA_ARGS__)
 #define SHINY_ERROR(...) \
 	do { \
-		::atma::send_log(::shiny::logging::detail::current_runtime(), \
-			::shiny::logging::level_t::error, "shiny", __FILE__, __LINE__, __VA_ARGS__, "\n"); \
+		SHINY_LOG(::shiny::logging::level_t::error, __VA_ARGS__); \
 		if (::shiny::logging::detail::flush_after_error()) \
 			::shiny::logging::detail::current_runtime()->flush(); \
 	} while (0)
