@@ -7,7 +7,7 @@ namespace shiny
 {
 	struct index_buffer_t : buffer_t
 	{
-		index_buffer_t(context_ptr const&, resource_storage_t, format_t, uint index_count, void const* data, uint data_indexcount);
+		index_buffer_t(renderer_ptr const&, resource_storage_t, format_t, uint index_count, void const* data, uint data_indexcount);
 		~index_buffer_t();
 
 		auto index_count() const -> uint { return index_count_; }
@@ -31,12 +31,12 @@ namespace shiny
 	//   not-null, of course.
 	//
 	inline auto create_index_buffer(
-		context_ptr const& ctx, resource_storage_t usage,
+		renderer_ptr const& rndr, resource_storage_t usage,
 		format_t format, uint index_count,
 		void const* data, uint data_indexcount = 0)
 		-> index_buffer_ptr
 	{
-		return index_buffer_ptr(new index_buffer_t(ctx, usage, format, index_count, data, data_indexcount));
+		return index_buffer_ptr(new index_buffer_t(rndr, usage, format, index_count, data, data_indexcount));
 	}
 }
 

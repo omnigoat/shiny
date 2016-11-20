@@ -7,26 +7,33 @@
 
 #include <fooey/fooey_fwd.hpp>
 
+#include <rose/runtime.hpp>
+
+
 namespace sandbox
 {
 	struct application_t
 	{
-		application_t();
+		application_t(rose::runtime_t*);
 
 		auto register_plugin(plugin_ptr const&) -> void;
 
 		auto run() -> int;
 
-	private:
-		
+		auto vfs() -> lion::vfs_t& { return vfs_; }
+
 	private:
 		fooey::renderer_ptr window_renderer;
 		fooey::window_ptr window;
 
 		shiny::runtime_t runtime;
-		shiny::context_ptr ctx;
+		shiny::renderer_ptr rndr;
 
 		std::vector<plugin_ptr> plugins_;
+
+		rose::runtime_t* rose_runtime_;
+
+		lion::vfs_t vfs_;
 
 	private:
 		// data-declarations

@@ -127,6 +127,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\..\shiny\vendor\zlib;$(SolutionDir)..\..\shiny\include;$(SolutionDir)..\..\atma\vendor;$(SolutionDir)..\..\atma\include;$(SolutionDir)..\..\fooey\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -168,6 +169,7 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\..\shiny\vendor\zlib;$(SolutionDir)..\..\shiny\include;$(SolutionDir)..\..\atma\vendor;$(SolutionDir)..\..\atma\include;$(SolutionDir)..\..\fooey\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -190,13 +192,13 @@
     <ClCompile Include="..\..\source\shiny\platform\win32\buffer.cpp" />
     <ClCompile Include="..\..\source\shiny\platform\win32\compute_shader.cpp" />
     <ClCompile Include="..\..\source\shiny\platform\win32\constant_buffer.cpp" />
-    <ClCompile Include="..\..\source\shiny\platform\win32\context.cpp" />
     <ClCompile Include="..\..\source\shiny\platform\win32\depth_stencil_view.cpp" />
     <ClCompile Include="..\..\source\shiny\platform\win32\generic_buffer.cpp" />
     <ClCompile Include="..\..\source\shiny\platform\win32\geometry_shader.cpp" />
     <ClCompile Include="..\..\source\shiny\platform\win32\index_buffer.cpp" />
     <ClCompile Include="..\..\source\shiny\platform\win32\output.cpp" />
     <ClCompile Include="..\..\source\shiny\platform\win32\fragment_shader.cpp" />
+    <ClCompile Include="..\..\source\shiny\platform\win32\renderer.cpp" />
     <ClCompile Include="..\..\source\shiny\platform\win32\render_target_view.cpp" />
     <ClCompile Include="..\..\source\shiny\platform\win32\resource.cpp" />
     <ClCompile Include="..\..\source\shiny\platform\win32\resource_view.cpp" />
@@ -206,7 +208,6 @@
     <ClCompile Include="..\..\source\shiny\platform\win32\vertex_buffer.cpp" />
     <ClCompile Include="..\..\source\shiny\platform\win32\vertex_shader.cpp" />
     <ClCompile Include="..\..\source\shiny\scene.cpp" />
-    <ClCompile Include="..\..\source\shelf\file.cpp" />
     <ClCompile Include="..\..\vendor\zlib\adler32.c" />
     <ClCompile Include="..\..\vendor\zlib\compress.c" />
     <ClCompile Include="..\..\vendor\zlib\crc32.c" />
@@ -232,7 +233,6 @@
     <ClInclude Include="..\..\include\shiny\compute.hpp" />
     <ClInclude Include="..\..\include\shiny\compute_shader.hpp" />
     <ClInclude Include="..\..\include\shiny\constant_buffer.hpp" />
-    <ClInclude Include="..\..\include\shiny\context.hpp" />
     <ClInclude Include="..\..\include\shiny\data_declaration.hpp" />
     <ClInclude Include="..\..\include\shiny\data_stream.hpp" />
     <ClInclude Include="..\..\include\shiny\depth_state.hpp" />
@@ -242,6 +242,7 @@
     <ClInclude Include="..\..\include\shiny\generic_buffer.hpp" />
     <ClInclude Include="..\..\include\shiny\geometry_declaration.hpp" />
     <ClInclude Include="..\..\include\shiny\geometry_shader.hpp" />
+    <ClInclude Include="..\..\include\shiny\logging.hpp" />
     <ClInclude Include="..\..\include\shiny\platform\win32\blender.hpp" />
     <ClInclude Include="..\..\include\shiny\platform\win32\buffer.hpp" />
     <ClInclude Include="..\..\include\shiny\platform\win32\compute_shader.hpp" />
@@ -249,11 +250,13 @@
     <ClInclude Include="..\..\include\shiny\platform\win32\dxgid3d_convert.hpp" />
     <ClInclude Include="..\..\include\shiny\platform\win32\generic_buffer.hpp" />
     <ClInclude Include="..\..\include\shiny\platform\win32\geometry_shader.hpp" />
+    <ClInclude Include="..\..\include\shiny\platform\win32\renderer.hpp" />
     <ClInclude Include="..\..\include\shiny\platform\win32\render_target_view.hpp" />
     <ClInclude Include="..\..\include\shiny\platform\win32\resource.hpp" />
     <ClInclude Include="..\..\include\shiny\platform\win32\resource_view.hpp" />
     <ClInclude Include="..\..\include\shiny\platform\win32\structured_buffer.hpp" />
     <ClInclude Include="..\..\include\shiny\platform\win32\texture3d.hpp" />
+    <ClInclude Include="..\..\include\shiny\renderer.hpp" />
     <ClInclude Include="..\..\include\shiny\rendertarget_clear.hpp" />
     <ClInclude Include="..\..\include\shiny\render_target_view.hpp" />
     <ClInclude Include="..\..\include\shiny\resource.hpp" />
@@ -265,7 +268,6 @@
     <ClInclude Include="..\..\include\shiny\fragment_shader.hpp" />
     <ClInclude Include="..\..\include\shiny\platform\win32\adapter.hpp" />
     <ClInclude Include="..\..\include\shiny\platform\win32\constant_buffer.hpp" />
-    <ClInclude Include="..\..\include\shiny\platform\win32\context.hpp" />
     <ClInclude Include="..\..\include\shiny\platform\win32\index_buffer.hpp" />
     <ClInclude Include="..\..\include\shiny\platform\win32\fragment_shader.hpp" />
     <ClInclude Include="..\..\include\shiny\platform\win32\runtime.hpp" />
@@ -282,129 +284,12 @@
     <ClInclude Include="..\..\include\shiny\texture3d.hpp" />
     <ClInclude Include="..\..\include\shiny\vertex_buffer.hpp" />
     <ClInclude Include="..\..\include\shiny\vertex_shader.hpp" />
-    <ClInclude Include="..\..\include\shelf\file.hpp" />
     <ClInclude Include="..\..\vendor\zlib\deflate.h" />
     <ClInclude Include="..\..\vendor\zlib\inffast.h" />
     <ClInclude Include="..\..\vendor\zlib\inftrees.h" />
     <ClInclude Include="..\..\vendor\zlib\zconf.h" />
     <ClInclude Include="..\..\vendor\zlib\zlib.h" />
     <ClInclude Include="..\..\vendor\zlib\zutil.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="..\..\shaders\cs_test.hlsl">
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">5.0</ShaderModel>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
-      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)%(Filename).cso</ObjectFileOutput>
-      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)%(Filename).cso</ObjectFileOutput>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
-    </FxCompile>
-    <FxCompile Include="..\..\shaders\fs_voxelize.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
-    </FxCompile>
-    <FxCompile Include="..\..\shaders\gs_normal.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Geometry</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Geometry</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Geometry</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Geometry</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
-      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)%(Filename).cso</ObjectFileOutput>
-      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)%(Filename).cso</ObjectFileOutput>
-    </FxCompile>
-    <FxCompile Include="..\..\shaders\gs_voxelization.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Geometry</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Geometry</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Geometry</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Geometry</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
-    </FxCompile>
-    <FxCompile Include="..\..\shaders\ps_basic.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">5.0</ShaderModel>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.1</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
-      <DisableOptimizations Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DisableOptimizations>
-      <EnableDebuggingInformation Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</EnableDebuggingInformation>
-      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)%(Filename).cso</ObjectFileOutput>
-      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)%(Filename).cso</ObjectFileOutput>
-    </FxCompile>
-    <FxCompile Include="..\..\shaders\ps_debug.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
-      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)%(Filename).cso</ObjectFileOutput>
-      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)%(Filename).cso</ObjectFileOutput>
-    </FxCompile>
-    <FxCompile Include="..\..\shaders\ps_voxels.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">5.0</ShaderModel>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">5.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
-      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)%(Filename).cso</ObjectFileOutput>
-      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)%(Filename).cso</ObjectFileOutput>
-    </FxCompile>
-    <FxCompile Include="..\..\shaders\vs_basic.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">5.0</ShaderModel>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">5.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
-      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)%(Filename).cso</ObjectFileOutput>
-      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)%(Filename).cso</ObjectFileOutput>
-    </FxCompile>
-    <FxCompile Include="..\..\shaders\vs_debug.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
-      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)%(Filename).cso</ObjectFileOutput>
-      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)%(Filename).cso</ObjectFileOutput>
-    </FxCompile>
-    <FxCompile Include="..\..\shaders\vs_voxelize.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
-    </FxCompile>
-    <FxCompile Include="..\..\shaders\vs_voxels.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">5.0</ShaderModel>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">5.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
-      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)%(Filename).cso</ObjectFileOutput>
-      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)%(Filename).cso</ObjectFileOutput>
-    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\.gitignore" />

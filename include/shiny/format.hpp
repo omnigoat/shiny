@@ -32,12 +32,12 @@ namespace shiny
 	//    t: has 8-bit stencil
 	//     : unused
 	//
-	#define  G 0x0 //0b0000
-	#define  F 0x1 //0b0001
-	#define  U 0x2 //0b0010
-	#define  S 0x6 //0b0110
-	#define NU 0xa //0b1010
-	#define NS 0xe //0b1110
+	#define  G 0b0000
+	#define  F 0b0001
+	#define  U 0b0010
+	#define  S 0b0110
+	#define NU 0b1010
+	#define NS 0b1110
 
 	#define MK(t, s, c) \
 		((s << 8) | (c << 4) | (t))

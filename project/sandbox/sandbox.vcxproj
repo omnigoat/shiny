@@ -114,7 +114,7 @@
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>d3dcompiler.lib;dxgi.lib;dwmapi.lib;d3d11.lib;user32.lib;gdi32.lib</AdditionalDependencies>
     </Link>
@@ -164,8 +164,14 @@
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\atma\project\rose\rose.vcxproj">
+      <Project>{58b3d2c1-0ab1-48cf-8b47-60dc3fc9adb6}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\fooey\project\fooey.vcxproj">
       <Project>{82b83f8f-a8cf-4720-9abd-f08682c1c325}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\lion\lion.vcxproj">
+      <Project>{86dfa87f-4570-47f6-9c4c-6c21efb610b7}</Project>
     </ProjectReference>
     <ProjectReference Include="..\shiny\shiny.vcxproj">
       <Project>{8e03b685-d9ce-45bf-8597-e7ef57e62b8d}</Project>
@@ -179,53 +185,6 @@
     <ClInclude Include="..\..\include\sandbox\plugin.hpp" />
     <ClInclude Include="..\..\include\sandbox\sandbox.hpp" />
     <ClInclude Include="..\..\include\sandbox\voxelization.hpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="..\..\shaders\sparse_octree_allocate.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
-    </FxCompile>
-    <FxCompile Include="..\..\shaders\sparse_octree_clear.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
-    </FxCompile>
-    <FxCompile Include="..\..\shaders\sparse_octree_mark.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">main</EntryPointName>
-    </FxCompile>
-    <FxCompile Include="..\..\shaders\sparse_octree_write_fragments.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
-    </FxCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\shaders\morton.hlsli" />
-    <None Include="..\..\shaders\svo_traversal.hlsli" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

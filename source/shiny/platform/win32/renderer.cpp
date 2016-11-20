@@ -1,4 +1,4 @@
-#include <shiny/context.hpp>
+#include <shiny/renderer.hpp>
 
 #include <shiny/platform/win32/dxgid3d_convert.hpp>
 #include <shiny/platform/win32/d3d_fwd.hpp>
@@ -34,20 +34,19 @@
 
 
 using namespace shiny;
-using shiny::context_t;
+using shiny::renderer_t;
 
 
 //======================================================================
-// context_t
+// renderer_t
 //======================================================================
-auto shiny::create_context(runtime_t& runtime, fooey::window_ptr const& window, uint adapter) -> shiny::context_ptr
+auto shiny::create_context(runtime_t& runtime, fooey::window_ptr const& window, uint adapter) -> shiny::renderer_ptr
 {
-	//return context_ptr(new context_t(runtime, window, adapter));
-	return atma::make_intrusive<context_t>(runtime, window, adapter);
+	return atma::make_intrusive<renderer_t>(runtime, window, adapter);
 }
 
 
-context_t::context_t(runtime_t& runtime, fooey::window_ptr const& window, uint adapter)
+renderer_t::renderer_t(runtime_t& runtime, fooey::window_ptr const& window, uint adapter)
 	: runtime_(runtime), stage_(), window_(window), current_display_mode_(), requested_display_mode_()
 {
 	std::tie(dxgi_adapter_, d3d_device_, d3d_immediate_context_) = runtime_.dxgid3d_for_adapter(adapter);
@@ -97,7 +96,7 @@ context_t::context_t(runtime_t& runtime, fooey::window_ptr const& window, uint a
 	}
 }
 
-context_t::~context_t()
+renderer_t::~renderer_t()
 {
 	engine_.signal([&]{
 		if (window_)
@@ -107,12 +106,12 @@ context_t::~context_t()
 	engine_.signal_block();
 }
 
-auto context_t::immediate_set_stage(renderer_stage_t rs) -> void
+auto renderer_t::immediate_set_stage(renderer_stage_t rs) -> void
 {
 	stage_ = rs;
 }
 
-auto context_t::pull_display_format(display_mode_t& mode, DXGI_SWAP_CHAIN_DESC& desc) -> void
+auto renderer_t::pull_display_format(display_mode_t& mode, DXGI_SWAP_CHAIN_DESC& desc) -> void
 {
 	mode.width = desc.BufferDesc.Width;
 	mode.height = desc.BufferDesc.Height;
@@ -122,7 +121,7 @@ auto context_t::pull_display_format(display_mode_t& mode, DXGI_SWAP_CHAIN_DESC& 
 	mode.refreshrate_period = desc.BufferDesc.RefreshRate.Denominator;
 }
 
-auto context_t::push_display_format(DXGI_MODE_DESC& dxgimode, display_mode_t const& mode) -> void
+auto renderer_t::push_display_format(DXGI_MODE_DESC& dxgimode, display_mode_t const& mode) -> void
 {
 	dxgimode.Width = mode.width;
 	dxgimode.Height = mode.height;
@@ -132,14 +131,14 @@ auto context_t::push_display_format(DXGI_MODE_DESC& dxgimode, display_mode_t con
 	dxgimode.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 }
 
-auto context_t::bind_events(fooey::window_ptr const& window) -> void
+auto renderer_t::bind_events(fooey::window_ptr const& window) -> void
 {
 	/*bound_events_ = */window->on({
-		{"resize-dc.shiny.context", [this](fooey::events::resize_t& e) { on_resize(e); }}
+		{"resize-dc.shiny.renderer", [this](fooey::events::resize_t& e) { on_resize(e); }}
 	});
 }
 
-auto context_t::create_swapchain() -> void
+auto renderer_t::create_swapchain() -> void
 {
 	auto desc = DXGI_SWAP_CHAIN_DESC{
 		// DXGI_MODE_DESC
@@ -161,7 +160,7 @@ auto context_t::create_swapchain() -> void
 	current_display_mode_ = &windowed_display_mode_;
 }
 
-auto context_t::setup_rendertarget(uint width, uint height) -> void
+auto renderer_t::setup_rendertarget(uint width, uint height) -> void
 {
 	// remove reference to old render-target
 	d3d_immediate_context_->OMSetRenderTargets(0, nullptr, nullptr);
@@ -173,7 +172,7 @@ auto context_t::setup_rendertarget(uint width, uint height) -> void
 
 	// create default render-target
 	backbuffer_texture_ = texture2d_ptr{new texture2d_t{
-		shared_from_this<context_t>(), d3d_backbuffer_,
+		shared_from_this<renderer_t>(), d3d_backbuffer_,
 		resource_usage_t::render_target,
 		format_t::nu8x4,
 		backbuffer_desc.Width, backbuffer_desc.Height, 1}};
@@ -185,7 +184,7 @@ auto context_t::setup_rendertarget(uint width, uint height) -> void
 	
 	// create default depth-stencil
 	default_depth_stencil_texture_ = texture2d_ptr{new texture2d_t{
-		shared_from_this<context_t>(),
+		shared_from_this<renderer_t>(),
 		resource_usage_t::depth_stencil,
 		format_t::dnu24s8,
 		backbuffer_desc.Width, backbuffer_desc.Height, 1}};
@@ -204,7 +203,7 @@ auto context_t::setup_rendertarget(uint width, uint height) -> void
 	d3d_immediate_context_->RSSetViewports(1, &vp);
 }
 
-auto context_t::recreate_backbuffer() -> void
+auto renderer_t::recreate_backbuffer() -> void
 {
 	d3d_backbuffer_.reset();
 	backbuffer_texture_.reset();
@@ -218,7 +217,7 @@ auto context_t::recreate_backbuffer() -> void
 	ATMA_ENSURE_IS(S_OK, dxgi_swap_chain_->ResizeBuffers(1, 0, 0, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH));
 }
 
-auto context_t::update_display_mode() -> void
+auto renderer_t::update_display_mode() -> void
 {
 	if (!requested_display_mode_)
 		return;
@@ -253,7 +252,7 @@ auto context_t::update_display_mode() -> void
 	// fullscreen to fullscreen, let's not support this yet
 	else if (current_display_mode_ == &fullscreen_display_mode_ && requested_display_mode_ == &requested_fullscreen_display_mode_)
 	{
-		ATMA_ASSERT_MSG(false, "fullscreen -> fullscreen resolution change not supported yet");
+		ATMA_ASSERT(false, "fullscreen -> fullscreen resolution change not supported yet");
 	}
 
 	// windowed to windowed
@@ -283,12 +282,12 @@ auto context_t::update_display_mode() -> void
 	requested_display_mode_ = nullptr;
 }
 
-auto context_t::signal_block() -> void
+auto renderer_t::signal_block() -> void
 {
 	engine_.signal_block();
 }
 
-auto context_t::signal_fullscreen_toggle(uint output_index) -> void
+auto renderer_t::signal_fullscreen_toggle(uint output_index) -> void
 {
 	engine_.signal([&, output_index]
 	{
@@ -324,14 +323,14 @@ auto context_t::signal_fullscreen_toggle(uint output_index) -> void
 	});
 }
 
-auto context_t::signal_d3d_buffer_upload(platform::d3d_buffer_ptr const& buffer, void const* data, uint row_pitch, uint depth_pitch) -> void
+auto renderer_t::signal_d3d_buffer_upload(platform::d3d_buffer_ptr const& buffer, void const* data, uint row_pitch, uint depth_pitch) -> void
 {
 	engine_.signal([&, buffer, data, row_pitch, depth_pitch] {
 		d3d_immediate_context_->UpdateSubresource(buffer.get(), 0, nullptr, data, row_pitch, depth_pitch);
 	});
 }
 
-auto context_t::signal_present() -> void
+auto renderer_t::signal_present() -> void
 {
 	engine_.signal([&] {
 		ATMA_ENSURE_IS(S_OK, dxgi_swap_chain_->Present(DXGI_SWAP_EFFECT_DISCARD, 0));
@@ -340,7 +339,7 @@ auto context_t::signal_present() -> void
 	});
 }
 
-auto context_t::signal_clear(atma::math::vector4f const& color) -> void
+auto renderer_t::signal_clear(atma::math::vector4f const& color) -> void
 {
 	engine_.signal([&] {
 		float f4c[4] = {color.x, color.y, color.z, color.w};
@@ -349,51 +348,51 @@ auto context_t::signal_clear(atma::math::vector4f const& color) -> void
 	});
 }
 
-auto context_t::signal_draw_scene(scene_t& scene) -> void
+auto renderer_t::signal_draw_scene(scene_t& scene) -> void
 {
 	engine_.signal_batch(scene.batch_);
 }
 
-auto context_t::signal(atma::thread::engine_t::queue_t::batch_t& batch) -> void
+auto renderer_t::signal(atma::thread::engine_t::queue_t::batch_t& batch) -> void
 {
 	engine_.signal_batch(batch);
 }
 
-auto context_t::immediate_clear(rendertarget_clear_t const& rtc) -> void
+auto renderer_t::immediate_clear(rendertarget_clear_t const& rtc) -> void
 {
 	float color[4] = {rtc.color().x, rtc.color().y, rtc.color().z, rtc.color().w};
 	d3d_immediate_context_->ClearRenderTargetView((ID3D11RenderTargetView*)current_render_target_view_[0]->d3d_view().get(), color);
 	d3d_immediate_context_->ClearDepthStencilView((ID3D11DepthStencilView*)current_depth_stencil_view_->d3d_view().get(), D3D11_CLEAR_DEPTH, rtc.depth(), rtc.stencil());
 }
 
-auto context_t::immediate_draw_pipeline_reset() -> void
+auto renderer_t::immediate_draw_pipeline_reset() -> void
 {
 	vs_shader_.reset();
 	gs_shader_.reset();
-	fs_shader_.reset();
+	fs_shader_ = fragment_shader_handle{};
 	draw_range_ = draw_range_t{};
 }
 
-auto context_t::immediate_ia_set_data_declaration(data_declaration_t const* dd) -> void
+auto renderer_t::immediate_ia_set_data_declaration(data_declaration_t const* dd) -> void
 {
 	ATMA_ASSERT(dd);
 	ia_dd_ = dd;
 }
 
-auto context_t::immediate_ia_set_vertex_buffer(vertex_buffer_cptr const& vb) -> void
+auto renderer_t::immediate_ia_set_vertex_buffer(vertex_buffer_cptr const& vb) -> void
 {
 	ATMA_ASSERT(vb);
 	ATMA_ASSERT(vb->data_declaration() == ia_dd_);
 	ia_vb_ = vb;
 }
 
-auto context_t::immediate_ia_set_index_buffer(index_buffer_cptr const& ib) -> void
+auto renderer_t::immediate_ia_set_index_buffer(index_buffer_cptr const& ib) -> void
 {
 	ATMA_ASSERT(ib);
 	ia_ib_ = ib;
 }
 
-auto context_t::immediate_ia_set_topology(topology_t t) -> void
+auto renderer_t::immediate_ia_set_topology(topology_t t) -> void
 {
 	auto d3dt =
 		(t == topology_t::point) ? D3D11_PRIMITIVE_TOPOLOGY_POINTLIST :
@@ -403,86 +402,85 @@ auto context_t::immediate_ia_set_topology(topology_t t) -> void
 	d3d_immediate_context_->IASetPrimitiveTopology(d3dt);
 }
 
-auto context_t::immediate_vs_set_vertex_shader(vertex_shader_cptr const& vs) -> void
+auto renderer_t::immediate_vs_set_vertex_shader(vertex_shader_cptr const& vs) -> void
 {
 	ATMA_ASSERT(vs);
 	vs_shader_ = vs;
 }
 
-auto context_t::immediate_vs_set_constant_buffers(bound_constant_buffers_t const& cbs) -> void
+auto renderer_t::immediate_vs_set_constant_buffers(bound_constant_buffers_t const& cbs) -> void
 {
 	vs_cbs_ = cbs;
 }
 
-auto context_t::immediate_vs_set_input_views(bound_input_views_t const& ivs) -> void
+auto renderer_t::immediate_vs_set_input_views(bound_input_views_t const& ivs) -> void
 {
 	vs_srvs_ = ivs.views;
 }
 
-auto context_t::immediate_gs_set_geometry_shader(geometry_shader_cptr const& gs) -> void
+auto renderer_t::immediate_gs_set_geometry_shader(geometry_shader_cptr const& gs) -> void
 {
 	gs_shader_ = gs;
 }
 
-auto shiny::context_t::immediate_gs_set_constant_buffers(bound_constant_buffers_t const& cbs) -> void
+auto shiny::renderer_t::immediate_gs_set_constant_buffers(bound_constant_buffers_t const& cbs) -> void
 {
 	gs_cbs_ = cbs;
 }
 
-auto shiny::context_t::immediate_gs_set_input_views(bound_input_views_t const &) -> void
+auto shiny::renderer_t::immediate_gs_set_input_views(bound_input_views_t const &) -> void
 {
 	
 }
 
-auto context_t::immediate_fs_set_fragment_shader(fragment_shader_cptr const& fs) -> void
+auto renderer_t::immediate_fs_set_fragment_shader(fragment_shader_handle const& fs) -> void
 {
-	ATMA_ASSERT(fs);
-	fs_shader_ = fs;
+	fs_shader_ = lion::polymorphic_asset_cast<fragment_shader_t>(library.retain_copy(fs));
 }
 
-auto context_t::immediate_fs_set_constant_buffers(bound_constant_buffers_t const& cbs) -> void
+auto renderer_t::immediate_fs_set_constant_buffers(bound_constant_buffers_t const& cbs) -> void
 {
 	fs_cbs_ = cbs;
 }
 
-auto context_t::immediate_fs_set_input_views(bound_input_views_t const& ivs) -> void
+auto renderer_t::immediate_fs_set_input_views(bound_input_views_t const& ivs) -> void
 {
 	fs_srvs_ = ivs.views;
 }
 
-auto context_t::immediate_fs_set_compute_views(bound_compute_views_t const& cvs) -> void
+auto renderer_t::immediate_fs_set_compute_views(bound_compute_views_t const& cvs) -> void
 {
 	fs_uavs_ = cvs.views;
 }
 
-auto context_t::immediate_draw_set_range(draw_range_t const& dr) -> void
+auto renderer_t::immediate_draw_set_range(draw_range_t const& dr) -> void
 {
 	draw_range_ = dr;
 }
 
-auto shiny::context_t::immediate_om_set_render_target(resource_view_ptr const& rv) -> void
+auto shiny::renderer_t::immediate_om_set_render_target(resource_view_ptr const& rv) -> void
 {
 	current_render_target_view_[0] = rv;
 }
 
-auto shiny::context_t::immediate_om_set_depth_stencil(resource_view_ptr const& ds) -> void
+auto shiny::renderer_t::immediate_om_set_depth_stencil(resource_view_ptr const& ds) -> void
 {
 	current_depth_stencil_view_ = ds;
 }
 
-auto context_t::immediate_om_set_blending(blender_cptr const& b) -> void
+auto renderer_t::immediate_om_set_blending(blender_cptr const& b) -> void
 {
 	//d3d_immediate_context_->OMSetBlendState(b->d3d_blend_state().get(), nullptr, 0xffffffff);
 }
 
 
 
-auto context_t::immediate_draw() -> void
+auto renderer_t::immediate_draw() -> void
 {
 	// input-assembly-stage 
 	{
 		ATMA_ENSURE(vs_shader_);
-		auto d3d_il = get_d3d_input_layout(vs_shader_->data_declaration(), vs_shader_);
+		auto d3d_il = get_d3d_input_layout(ia_vb_->data_declaration(), vs_shader_);
 		d3d_immediate_context_->IASetInputLayout(d3d_il.get());
 
 		ATMA_ENSURE(ia_vb_);
@@ -504,7 +502,6 @@ auto context_t::immediate_draw() -> void
 	// vertex-stage
 	{
 		ATMA_ENSURE(vs_shader_);
-		ATMA_ENSURE(vs_shader_->data_declaration() == ia_vb_->data_declaration());
 		d3d_immediate_context_->VSSetShader(vs_shader_->d3d_vs().get(), nullptr, 0);
 		
 		ID3D11Buffer* cbs[D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT]{};
@@ -535,7 +532,7 @@ auto context_t::immediate_draw() -> void
 
 	// fragment-stage
 	{
-		ATMA_ENSURE(fs_shader_);
+		ATMA_ENSURE(fs_shader_ && fs_shader_.address());
 		d3d_immediate_context_->PSSetShader(fs_shader_->d3d_fs().get(), nullptr, 0);
 
 		ID3D11Buffer* cbs[D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT]{};
@@ -610,7 +607,7 @@ auto context_t::immediate_draw() -> void
 #endif
 }
 
-auto context_t::immediate_compute_pipeline_reset() -> void
+auto renderer_t::immediate_compute_pipeline_reset() -> void
 {
 	cs_cbs_.clear();
 	cs_srvs_.clear();
@@ -625,27 +622,27 @@ auto context_t::immediate_compute_pipeline_reset() -> void
 		1, D3D11_PS_CS_UAV_REGISTER_COUNT - 1, uavs, atomic_counters);
 }
 
-auto context_t::immediate_cs_set_constant_buffers(bound_constant_buffers_t const& bufs) -> void
+auto renderer_t::immediate_cs_set_constant_buffers(bound_constant_buffers_t const& bufs) -> void
 {
 	cs_cbs_ = bufs;
 }
 
-auto context_t::immediate_cs_set_input_views(bound_resource_views_t const& views) -> void
+auto renderer_t::immediate_cs_set_input_views(bound_resource_views_t const& views) -> void
 {
 	cs_srvs_ = views;
 }
 
-auto context_t::immediate_cs_set_compute_views(bound_resource_views_t const& views) -> void
+auto renderer_t::immediate_cs_set_compute_views(bound_resource_views_t const& views) -> void
 {
 	cs_uavs_ = views;
 }
 
-auto context_t::immediate_cs_set_compute_shader(compute_shader_cptr const& cs) -> void
+auto renderer_t::immediate_cs_set_compute_shader(compute_shader_cptr const& cs) -> void
 {
 	cs_shader_ = cs;
 }
 
-auto context_t::immediate_compute(uint x, uint y, uint z) -> void
+auto renderer_t::immediate_compute(uint x, uint y, uint z) -> void
 {
 	// constant-buffers
 	auto const cbs_count = D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT;
@@ -692,7 +689,7 @@ auto context_t::immediate_compute(uint x, uint y, uint z) -> void
 	d3d_immediate_context_->CSSetUnorderedAccessViews(0, uavs_count, uavs, nullptr);
 }
 
-auto context_t::signal_rs_map(resource_ptr const& rs, uint subresource, map_type_t maptype, map_callback_t const& fn) -> void
+auto renderer_t::signal_rs_map(resource_ptr const& rs, uint subresource, map_type_t maptype, map_callback_t const& fn) -> void
 {
 	auto d3dmap =
 		maptype == map_type_t::read ? D3D11_MAP_READ :
@@ -710,7 +707,7 @@ auto context_t::signal_rs_map(resource_ptr const& rs, uint subresource, map_type
 	});
 }
 
-auto context_t::create_d3d_input_layout(vertex_shader_cptr const& vs, data_declaration_t const* vd) -> platform::d3d_input_layout_ptr
+auto renderer_t::create_d3d_input_layout(vertex_shader_cptr const& vs, data_declaration_t const* vd) -> platform::d3d_input_layout_ptr
 {
 	size_t offset = 0;
 	std::vector<D3D11_INPUT_ELEMENT_DESC> d3d_elements;
@@ -733,7 +730,7 @@ auto context_t::create_d3d_input_layout(vertex_shader_cptr const& vs, data_decla
 	return result;
 }
 
-auto context_t::get_d3d_input_layout(data_declaration_t const* dd, vertex_shader_cptr const& vs) -> platform::d3d_input_layout_ptr const&
+auto renderer_t::get_d3d_input_layout(data_declaration_t const* dd, vertex_shader_cptr const& vs) -> platform::d3d_input_layout_ptr const&
 {
 	auto key = input_layouts_t::key_type{dd, vs};
 	auto candidate = built_input_layouts_.find(key);
@@ -764,7 +761,7 @@ auto context_t::get_d3d_input_layout(data_declaration_t const* dd, vertex_shader
 	return r.first->second;
 }
 
-auto context_t::get_d3d_blend(blend_state_t const& bs) -> platform::d3d_blend_state_ptr const&
+auto renderer_t::get_d3d_blend(blend_state_t const& bs) -> platform::d3d_blend_state_ptr const&
 {
 	// cached?
 	auto candidate = built_blend_states_.find(bs);
@@ -799,7 +796,7 @@ auto context_t::get_d3d_blend(blend_state_t const& bs) -> platform::d3d_blend_st
 	return r.first->second;
 }
 
-auto context_t::get_d3d_depth_stencil(depth_stencil_state_t const& ds) -> platform::d3d_depth_stencil_state_ptr const&
+auto renderer_t::get_d3d_depth_stencil(depth_stencil_state_t const& ds) -> platform::d3d_depth_stencil_state_ptr const&
 {
 	auto candidate = built_depth_stencil_states_.find(ds);
 	if (candidate != built_depth_stencil_states_.end())
@@ -825,22 +822,22 @@ auto context_t::get_d3d_depth_stencil(depth_stencil_state_t const& ds) -> platfo
 	return r.first->second;
 }
 
-auto shiny::context_t::backbuffer_render_target() -> resource_view_ptr const &
+auto shiny::renderer_t::backbuffer_render_target() -> resource_view_ptr const &
 {
 	return backbuffer_view_;
 }
 
-auto shiny::context_t::backbuffer_depth_stencil() -> resource_view_ptr const &
+auto shiny::renderer_t::backbuffer_depth_stencil() -> resource_view_ptr const &
 {
 	return default_depth_stencil_view_;
 }
 
-auto context_t::make_generic_buffer(resource_usage_mask_t const& rs, resource_storage_t bu, size_t stride, uint elements, void const* data, uint data_elemcount) -> generic_buffer_ptr
+auto renderer_t::make_generic_buffer(resource_usage_mask_t const& rs, resource_storage_t bu, size_t stride, uint elements, void const* data, uint data_elemcount) -> generic_buffer_ptr
 {
-	return generic_buffer_ptr(new generic_buffer_t(shared_from_this<context_t>(), rs, bu, stride, elements, data, data_elemcount));
+	return generic_buffer_ptr(new generic_buffer_t(shared_from_this<renderer_t>(), rs, bu, stride, elements, data, data_elemcount));
 }
 
-auto context_t::on_resize(fooey::events::resize_t& e) -> void
+auto renderer_t::on_resize(fooey::events::resize_t& e) -> void
 {
 	if (requested_display_mode_ == &requested_fullscreen_display_mode_)
 		return;
@@ -851,19 +848,19 @@ auto context_t::on_resize(fooey::events::resize_t& e) -> void
 	requested_display_mode_ = &requested_windowed_display_mode_;
 }
 
-auto context_t::signal_copy_buffer(resource_ptr const& dest, resource_cptr const& src) -> void
+auto renderer_t::signal_copy_buffer(resource_ptr const& dest, resource_cptr const& src) -> void
 {
 	engine_.signal([&, dest, src]{
 		d3d_immediate_context_->CopyResource(dest->d3d_resource().get(), src->d3d_resource().get());
 	});
 }
 
-auto context_t::signal_rs_upload(resource_ptr const& rs, buffer_data_t const& bd) -> void
+auto renderer_t::signal_rs_upload(resource_ptr const& rs, buffer_data_t const& bd) -> void
 {
 	signal_rs_upload(rs, 0, bd);
 }
 
-auto context_t::signal_rs_upload(resource_ptr const& rs, uint subresource, buffer_data_t const& bd) -> void
+auto renderer_t::signal_rs_upload(resource_ptr const& rs, uint subresource, buffer_data_t const& bd) -> void
 {
 	if (stage_ == renderer_stage_t::render)
 	{
@@ -906,7 +903,7 @@ auto context_t::signal_rs_upload(resource_ptr const& rs, uint subresource, buffe
 	}
 }
 
-//auto context_t::signal_rs_upload(resource_ptr const&, resource_subset_t const&, buffer_data_t const&) -> void;
+//auto renderer_t::signal_rs_upload(resource_ptr const&, resource_subset_t const&, buffer_data_t const&) -> void;
 //template <typename T> auto signal_rs_upload(resource_ptr const&, T const&) -> void;
 
 

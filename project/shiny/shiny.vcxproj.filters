@@ -5,13 +5,6 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
-    <Filter Include="source">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="shaders">
-      <UniqueIdentifier>{69726e24-bf27-40cc-88f6-f6f41ad69449}</UniqueIdentifier>
-    </Filter>
     <Filter Include="include\shiny">
       <UniqueIdentifier>{0765283e-e4b3-488e-9908-c8c02ee3dec1}</UniqueIdentifier>
     </Filter>
@@ -27,23 +20,21 @@
     <Filter Include="vendor\zlib">
       <UniqueIdentifier>{e98436a5-640f-4186-96dd-4a7572289df1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\shelf">
-      <UniqueIdentifier>{82679630-1638-4ba9-ab13-c504af59b576}</UniqueIdentifier>
+    <Filter Include="include\pepper">
+      <UniqueIdentifier>{a7317f47-27e6-41e4-97b6-1e032791b321}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
     <Filter Include="source\shiny">
       <UniqueIdentifier>{14079420-de18-4597-80fe-c99aa0f42f3f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="source\shelf">
-      <UniqueIdentifier>{97a5e9b6-c71a-419f-a4b3-8468b7dca168}</UniqueIdentifier>
     </Filter>
     <Filter Include="source\shiny\platform">
       <UniqueIdentifier>{12a41398-3e52-463b-9511-7b7d7694b954}</UniqueIdentifier>
     </Filter>
     <Filter Include="source\shiny\platform\win32">
       <UniqueIdentifier>{37dcddbd-688b-4d43-b54b-6a7f2c8fc705}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\pepper">
-      <UniqueIdentifier>{a7317f47-27e6-41e4-97b6-1e032791b321}</UniqueIdentifier>
     </Filter>
     <Filter Include="source\pepper">
       <UniqueIdentifier>{18e8745c-d8b7-420f-9b42-690bef13824c}</UniqueIdentifier>
@@ -54,9 +45,6 @@
       <Filter>source\shiny\platform\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\shiny\platform\win32\output.cpp">
-      <Filter>source\shiny\platform\win32</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\source\shiny\platform\win32\context.cpp">
       <Filter>source\shiny\platform\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\shiny\platform\win32\vertex_buffer.cpp">
@@ -140,9 +128,6 @@
     <ClCompile Include="..\..\source\shiny\platform\win32\geometry_shader.cpp">
       <Filter>source\shiny\platform\win32</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\shelf\file.cpp">
-      <Filter>source\shelf</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\source\shiny\camera.cpp">
       <Filter>source\shiny</Filter>
     </ClCompile>
@@ -182,11 +167,11 @@
     <ClCompile Include="..\..\source\shiny\format.cpp">
       <Filter>source\shiny</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\source\shiny\platform\win32\renderer.cpp">
+      <Filter>source\shiny\platform\win32</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\include\shiny\context.hpp">
-      <Filter>include\shiny</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\shiny\lock.hpp">
       <Filter>include\shiny</Filter>
     </ClInclude>
@@ -209,9 +194,6 @@
       <Filter>include\shiny</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\shiny\platform\win32\runtime.hpp">
-      <Filter>include\shiny\platform\win32</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\shiny\platform\win32\context.hpp">
       <Filter>include\shiny\platform\win32</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\shiny\platform\win32\adapter.hpp">
@@ -304,9 +286,6 @@
     <ClInclude Include="..\..\include\shiny\generic_buffer.hpp">
       <Filter>include\shiny</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\shelf\file.hpp">
-      <Filter>include\shelf</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\shiny\platform\win32\fragment_shader.hpp">
       <Filter>include\shiny\platform\win32</Filter>
     </ClInclude>
@@ -379,41 +358,15 @@
     <ClInclude Include="..\..\include\shiny\format.hpp">
       <Filter>include\shiny</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="..\..\shaders\cs_test.hlsl">
-      <Filter>shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="..\..\shaders\ps_basic.hlsl">
-      <Filter>shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="..\..\shaders\ps_voxels.hlsl">
-      <Filter>shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="..\..\shaders\vs_basic.hlsl">
-      <Filter>shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="..\..\shaders\vs_voxels.hlsl">
-      <Filter>shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="..\..\shaders\ps_debug.hlsl">
-      <Filter>shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="..\..\shaders\vs_debug.hlsl">
-      <Filter>shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="..\..\shaders\gs_normal.hlsl">
-      <Filter>shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="..\..\shaders\gs_voxelization.hlsl">
-      <Filter>shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="..\..\shaders\vs_voxelize.hlsl">
-      <Filter>shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="..\..\shaders\fs_voxelize.hlsl">
-      <Filter>shaders</Filter>
-    </FxCompile>
+    <ClInclude Include="..\..\include\shiny\logging.hpp">
+      <Filter>include\shiny</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\shiny\platform\win32\renderer.hpp">
+      <Filter>include\shiny\platform\win32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\shiny\renderer.hpp">
+      <Filter>include\shiny</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\.gitignore" />

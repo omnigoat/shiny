@@ -78,39 +78,47 @@ auto runtime_t::enumerate_backbuffers(platform::dxgi_output_ptr const& output) -
 	}
 }
 
-auto shiny::runtime_t::dxgid3d_for_adapter(uint32 adapter_index) -> std::tuple<dxgi_adapter_ptr, d3d_device_ptr, d3d_context_ptr>
+auto shiny::runtime_t::dxgid3d_for_adapter(uint32 adapter_index) -> std::tuple<dxgi_adapter_ptr, d3d_device_ptr, d3d_renderer_ptr>
 {
 	dxgi_adapter_ptr const& adapter = dxgi_adapters_[adapter_index];
 	d3d_device_ptr device;
-	d3d_context_ptr context;
+	d3d_renderer_ptr renderer;
 
 	// get or craete device for adapter
 	auto i = d3d_devices_.find(adapter);
 	if (i != d3d_devices_.end()) {
 		device = i->second;
-		device->GetImmediateContext(context.assign());
+		device->GetImmediateContext(renderer.assign());
 	}
 	else
 	{
 #if _DEBUG
-#	define FLAG D3D11_CREATE_DEVICE_DEBUG
-#else
-#	define FLAG 0
-#endif
-		ATMA_ENSURE_IS(S_OK, D3D11CreateDevice(
+		if (S_OK != D3D11CreateDevice(
 			adapter.get(), D3D_DRIVER_TYPE_UNKNOWN,
-			NULL, FLAG,
+			NULL, D3D11_CREATE_DEVICE_DEBUG,
 			NULL, 0,
 			D3D11_SDK_VERSION,
 			device.assign(),
 			NULL,
-			context.assign()
-		));
+			renderer.assign()
+		))
+#endif
+		{
+			ATMA_ENSURE_IS(S_OK, D3D11CreateDevice(
+				adapter.get(), D3D_DRIVER_TYPE_UNKNOWN,
+				NULL, 0,
+				NULL, 0,
+				D3D11_SDK_VERSION,
+				device.assign(),
+				NULL,
+				renderer.assign()
+			));
+		}
 
 		d3d_devices_[adapter] = device;
 	}
 
-	return std::make_tuple(dxgi_adapters_[adapter_index], device, context);
+	return std::make_tuple(dxgi_adapters_[adapter_index], device, renderer);
 }
 
 auto runtime_t::dxgi_output_of(platform::dxgi_adapter_ptr const& adapter, uint output_index) -> platform::dxgi_output_ptr const&
@@ -124,7 +132,9 @@ auto runtime_t::dxgi_output_of(platform::dxgi_adapter_ptr const& adapter, uint o
 
 auto runtime_t::d3d_report_live_objects() -> void
 {
+#if ATMA_DEBUG
 	dxgi_debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_SUMMARY);
+#endif
 }
 
 auto runtime_t::make_data_declaration(shiny::data_streams_t const& streams) -> data_declaration_t const*

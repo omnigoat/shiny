@@ -1,6 +1,6 @@
 #include <sandbox/voxelization.hpp>
 
-#include <shiny/context.hpp>
+#include <shiny/renderer.hpp>
 #include <shiny/scene.hpp>
 #include <shiny/draw.hpp>
 #include <shiny/compute.hpp>
@@ -13,9 +13,9 @@
 #include <shiny/texture2d.hpp>
 #include <shiny/draw_target.hpp>
 
-#include <shelf/file.hpp>
-
 #include <moxi/morton.hpp>
+
+#include <rose/file.hpp>
 
 #include <atma/math/matrix4f.hpp>
 #include <atma/math/vector4f.hpp>
@@ -41,7 +41,7 @@ struct obj_model_t
 	using verts_t = std::vector<aml::vector4f>;
 	using faces_t = std::vector<aml::vector4i>;
 
-	obj_model_t(shelf::file_t&);
+	obj_model_t(rose::file_t&);
 
 	auto vertices() const -> verts_t const& { return verts_; }
 	auto faces() const -> faces_t const& { return faces_; }
@@ -52,9 +52,9 @@ private:
 	faces_t faces_;
 };
 
-obj_model_t::obj_model_t(shelf::file_t& file)
+obj_model_t::obj_model_t(rose::file_t& file)
 {
-	shelf::for_each_line<256>(file, 128, [&](char const* str, size_t size)
+	rose::for_each_line<256>(file, 128, [&](char const* str, size_t size)
 	{
 		switch (str[0])
 		{
@@ -80,9 +80,26 @@ auto obj_model_t::triangle_of(aml::vector4i const& f) const -> aml::triangle_t
 	return aml::triangle_t{verts_[f.x], verts_[f.y], verts_[f.z]};
 }
 
-auto voxelization_plugin_t::gfx_setup(shiny::context_ptr const& ctx2) -> void
+
+auto load_fragment_shader(shiny::renderer_ptr const& rndr, rose::path_t const& path, lion::input_stream_ptr const& stream) -> lion::asset_ptr
 {
-	ctx = ctx2;
+	bool precompiled = path.extension() == "cso";
+	auto r = shiny::fragment_shader_t::make(rndr, path, precompiled, "main");
+	return r;
+}
+
+voxelization_plugin_t::voxelization_plugin_t(application_t* app)
+	: plugin_t{app}
+	, library_{&app->vfs()}
+{
+	library_.register_asset_type(
+		{ lion::asset_pattern_t{"/res/shaders/(f|p)s_.+\\.hlsl", atma::curry(&load_fragment_shader, std::ref(rndr)), atma::curry(&load_fragment_shader, std::ref(rndr))}
+		});
+}
+
+auto voxelization_plugin_t::gfx_setup(shiny::renderer_ptr const& ctx2) -> void
+{
+	rndr = ctx2;
 }
 
 
@@ -121,7 +138,7 @@ auto fit_linear_dispatch_to_group(uint& x, uint& y, uint& z, uint xs, uint ys, u
 
 auto voxelization_plugin_t::setup_voxelization() -> void
 {
-	auto sf = shelf::file_t{"../../data/dragon.obj"};
+	auto sf = rose::file_t{"../data/dragon.obj"};
 	auto obj = obj_model_t{sf};
 	
 	{
@@ -137,8 +154,8 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 			++i;
 		}
 
-		vb = shiny::create_vertex_buffer(ctx, shiny::resource_storage_t::immutable, dd_position(), (uint)obj.vertices().size(), &obj.vertices()[0]);
-		ib = shiny::create_index_buffer(ctx, shiny::resource_storage_t::immutable, shiny::format_t::u32, (uint)obj.faces().size() * 3, mi.begin());
+		vb = shiny::create_vertex_buffer(rndr, shiny::resource_storage_t::immutable, dd_position(), (uint)obj.vertices().size(), &obj.vertices()[0]);
+		ib = shiny::create_index_buffer(rndr, shiny::resource_storage_t::immutable, shiny::format_t::u32, (uint)obj.faces().size() * 3, mi.begin());
 	}
 
 	
@@ -164,10 +181,10 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 	// expand to a cube
 	auto gridwidth = std::max({tri_dp.x, tri_dp.y, tri_dp.z});
 	auto voxelwidth = (gridwidth / gridsize);
-	auto voxel_halfwidth = std::sqrtf(voxelwidth * voxelwidth) / 0.5f;
+	//auto voxel_halfwidth = std::sqrtf(voxelwidth * voxelwidth) / 0.5f;
 
 
-	auto render_target = shiny::make_texture2d(ctx,
+	auto render_target = shiny::make_texture2d(rndr,
 		shiny::resource_usage_t::render_target,
 		shiny::format_t::nu8x4,
 		gridsize, gridsize);
@@ -179,7 +196,7 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 	auto draw_target = shiny::draw_target_t{
 		render_target_view};
 
-	shiny::scene_t voxelization_scene{ctx, draw_target};
+	shiny::scene_t voxelization_scene{rndr, draw_target};
 
 
 
@@ -236,7 +253,7 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 		fragments.end());
 
 #if 0
-	voxelbuf = shiny::make_buffer(ctx,
+	voxelbuf = shiny::make_buffer(rndr,
 		shiny::resource_type_t::structured_buffer,
 		shiny::resource_usage_t::shader_resource,
 		shiny::resource_storage_t::persistant,
@@ -264,44 +281,19 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 			++i;
 		}
 
-		vb = shiny::create_vertex_buffer(ctx, shiny::resource_storage_t::immutable, dd_position(), (uint)obj.vertices().size(), &obj.vertices()[0]);
-		ib = shiny::create_index_buffer(ctx, shiny::resource_storage_t::immutable, shiny::format_t::u32, (uint)obj.faces().size() * 3, mi.begin());
+		vb = shiny::create_vertex_buffer(rndr, shiny::resource_storage_t::immutable, dd_position(), (uint)obj.vertices().size(), &obj.vertices()[0]);
+		ib = shiny::create_index_buffer(rndr, shiny::resource_storage_t::immutable, shiny::format_t::u32, (uint)obj.faces().size() * 3, mi.begin());
 	}
 #endif
 
-	auto f2 = atma::filesystem::file_t("../../shaders/gs_normal.hlsl");
-	auto fm2 = f2.read_into_memory();
-	gs = shiny::create_geometry_shader(ctx, fm2, false);
 
 
-
-	auto gs_from_file = [&](atma::string const& filename)
-	{
-		auto f = atma::filesystem::file_t(filename.c_str());
-		auto fmem = f.read_into_memory();
-		return shiny::create_geometry_shader(ctx, fmem, true);
-	};
-
-	// vertex-shader
-	{
-		auto f = atma::filesystem::file_t("../../shaders/vs_voxelize.hlsl");
-		vs_voxelize = shiny::create_vertex_shader(ctx, vb->data_declaration(), f.read_into_memory(), false);
-	}
-
-	// geometry-shader
-	{
-		auto f = atma::filesystem::file_t("../../shaders/gs_voxelization.hlsl");
-		gs_voxelize = shiny::create_geometry_shader(ctx, f.read_into_memory(), false);
-	}
-
-	// fragment-shader
-	{
-		auto f = atma::filesystem::file_t("../shiny/x64/Debug/fs_voxelize.cso");
-		fs_voxelize = shiny::create_fragment_shader(ctx, f.read_into_memory(), true);
-	}
+	vs_voxelize = shiny::vertex_shader_t::make(rndr, "resources/published/shaders/vs_voxelize.hlsl", false);
+	gs_voxelize = shiny::create_geometry_shader(rndr, "resources/published/shaders/gs_voxelization.hlsl", false);
+	fs_voxelize = library_.load_as<shiny::fragment_shader_t>("/res/shaders/fs_voxelize.hlsl");
 
 	// fragments buffer (64mb)
-	fragments_buf = shiny::make_buffer(ctx,
+	fragments_buf = shiny::make_buffer(rndr,
 		shiny::resource_type_t::structured_buffer,
 		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
 		shiny::resource_storage_t::persistant,
@@ -321,7 +313,7 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 
 
 		uint32 counters[2] = {0, 0};
-		auto countbuf = shiny::make_buffer(ctx,
+		auto countbuf = shiny::make_buffer(rndr,
 			shiny::resource_type_t::structured_buffer,
 			shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
 			shiny::resource_storage_t::persistant,
@@ -333,11 +325,11 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 			shiny::format_t::unknown);
 
 		auto mid = (bbmin + bbmax) / 2.f;
-		mid.w = gridwidth / 2.f;
-		auto cb = shiny::make_constant_buffer(ctx, mid);
+		mid.w = gridwidth * 0.5f;
+		auto cb = shiny::make_constant_buffer(rndr, mid);
 
 		aml::vector4f dimensions{(float)gridsize, (float)gridsize, (float)gridsize, 0.f};
-		auto cb2 = shiny::make_constant_buffer(ctx, dimensions);
+		auto cb2 = shiny::make_constant_buffer(rndr, dimensions);
 
 		voxelization_scene.draw
 		(
@@ -372,46 +364,44 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 			sdc::output_merger_stage(
 				shiny::depth_stencil_state_t::off
 			)
-			
-			//, sdc::draw_indexed_range(18905*3, 1*3, 0)
 		);
 
-		ctx->signal_draw_scene(voxelization_scene);
+		rndr->signal_draw_scene(voxelization_scene);
 
-		auto counter_scratch = shiny::make_buffer(ctx,
+		auto counter_scratch = shiny::make_buffer(rndr,
 			shiny::resource_type_t::staging_buffer,
 			shiny::resource_usage_mask_t::none,
 			shiny::resource_storage_t::staging,
 			shiny::buffer_dimensions_t{sizeof(uint32), 2},
 			shiny::buffer_data_t{});
 
-		ctx->signal_copy_buffer(counter_scratch, countbuf);
+		rndr->signal_copy_buffer(counter_scratch, countbuf);
 
-		ctx->signal_rs_map(counter_scratch, 0, shiny::map_type_t::read, [&](shiny::mapped_subresource_t const& ms) {
+		rndr->signal_rs_map(counter_scratch, 0, shiny::map_type_t::read, [&](shiny::mapped_subresource_t const& ms) {
 			fragments_count = *(uint*)ms.data;
 		});
 
-		ctx->signal_block();
+		rndr->signal_block();
 		
 		std::cout << "fragments_count: " << fragments_count << std::endl;
 
 #if 0
 
-		auto scratch = shiny::make_buffer(ctx,
+		auto scratch = shiny::make_buffer(rndr,
 			shiny::resource_type_t::staging_buffer,
 			shiny::resource_usage_mask_t::none,
 			shiny::resource_storage_t::staging,
 			shiny::buffer_dimensions_t{sizeof(uint32), 5 * 1024 * 1024},
 			shiny::buffer_data_t{});
 
-		ctx->signal_copy_buffer(scratch, fragments_buf);
+		rndr->signal_copy_buffer(scratch, fragments_buf);
 
 		shiny::buffer_t::aligned_data_t<uint> gpu_fragments(fragments_count);
-		ctx->signal_rs_map(scratch, 0, shiny::map_type_t::read, [&](shiny::mapped_subresource_t const& ms) {
+		rndr->signal_rs_map(scratch, 0, shiny::map_type_t::read, [&](shiny::mapped_subresource_t const& ms) {
 			memcpy(gpu_fragments.data(), ms.data, sizeof(uint) * fragments_count);
 		});
 
-		ctx->signal_block();
+		rndr->signal_block();
 #endif
 
 #if 0
@@ -423,7 +413,7 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 #endif
 
 #if 0
-		voxelbuf = shiny::make_buffer(ctx,
+		voxelbuf = shiny::make_buffer(rndr,
 			shiny::resource_type_t::structured_buffer,
 			shiny::resource_usage_t::shader_resource,
 			shiny::resource_storage_t::persistant,
@@ -439,17 +429,10 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 
 auto voxelization_plugin_t::setup_svo() -> void
 {
-	auto cs_from_file = [&](atma::string const& filename) -> shiny::compute_shader_ptr
-	{
-		auto f = atma::filesystem::file_t(filename.c_str());
-		auto fmem = f.read_into_memory();
-		return shiny::make_compute_shader(ctx, fmem.begin(), fmem.size());
-	};
-
-	cs_clear           = cs_from_file("x64/Debug/sparse_octree_clear.cso");
-	cs_mark            = cs_from_file("x64/Debug/sparse_octree_mark.cso");
-	cs_allocate        = cs_from_file("x64/Debug/sparse_octree_allocate.cso");
-	cs_write_fragments = cs_from_file("x64/Debug/sparse_octree_write_fragments.cso");
+	cs_clear           = shiny::create_compute_shader(rndr, "resources/published/shaders/sparse_octree_clear.hlsl", false);
+	cs_mark            = shiny::create_compute_shader(rndr, "resources/published/shaders/sparse_octree_mark.hlsl", false);
+	cs_allocate        = shiny::create_compute_shader(rndr, "resources/published/shaders/sparse_octree_allocate.hlsl", false);
+	cs_write_fragments = shiny::create_compute_shader(rndr, "resources/published/shaders/sparse_octree_write_fragments.hlsl", false);
 
 
 	auto const brick_edge_size = 8u;
@@ -477,13 +460,13 @@ auto voxelization_plugin_t::setup_svo() -> void
 		uint32 pad;
 	};
 
-	auto cb = shiny::make_constant_buffer(ctx,
+	auto cb = shiny::make_constant_buffer(rndr,
 		sizeof(cbuf),
 		nullptr);
 
 	// atomic counters
 	uint32 counters[2] ={1, 1};
-	countbuf = shiny::make_buffer(ctx,
+	countbuf = shiny::make_buffer(rndr,
 		shiny::resource_type_t::structured_buffer,
 		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
 		shiny::resource_storage_t::persistant,
@@ -495,7 +478,7 @@ auto voxelization_plugin_t::setup_svo() -> void
 		shiny::format_t::unknown);
 
 	// node-cache
-	nodecache = shiny::make_buffer(ctx,
+	nodecache = shiny::make_buffer(rndr,
 		shiny::resource_type_t::structured_buffer,
 		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
 		shiny::resource_storage_t::persistant,
@@ -512,7 +495,7 @@ auto voxelization_plugin_t::setup_svo() -> void
 	auto const grid_size_500mb = 400;
 
 	// brick-cache
-	brickcache = shiny::make_texture3d(ctx,
+	brickcache = shiny::make_texture3d(rndr,
 		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
 		shiny::resource_storage_t::persistant,
 		shiny::texture3d_dimensions_t::cube(shiny::format_t::f32x2, grid_size_500mb, 1));
@@ -526,13 +509,13 @@ auto voxelization_plugin_t::setup_svo() -> void
 		shiny::format_t::f32x2);
 
 #if 0
-	auto brick_readback = shiny::make_texture3d(ctx,
+	auto brick_readback = shiny::make_texture3d(rndr,
 		shiny::resource_usage_mask_t::none,
 		shiny::resource_storage_t::staging,
 		shiny::texture3d_dimensions_t::cube(shiny::format_t::f32x2, brickcache->width() / 2, 1));
 
 	// staging buffer
-	stb = shiny::make_buffer(ctx,
+	stb = shiny::make_buffer(rndr,
 		shiny::resource_type_t::staging_buffer,
 		shiny::resource_usage_mask_t::none,
 		shiny::resource_storage_t::staging,
@@ -555,7 +538,7 @@ auto voxelization_plugin_t::setup_svo() -> void
 	// mark & allocate tiles in the node-cache
 	for (int i = 0; i != levels_required; ++i)
 	{
-		ctx->signal_rs_upload(cb, cbuf{
+		rndr->signal_rs_upload(cb, cbuf{
 			(uint32)fragments_count,
 			(uint32)levels_required,
 			(uint32)i
@@ -563,7 +546,7 @@ auto voxelization_plugin_t::setup_svo() -> void
 
 		auto d = aml::pow(2, i);
 
-		shiny::signal_compute(ctx,
+		shiny::signal_compute(rndr,
 			bound_constant_buffers,
 			bound_input_views,
 			bound_compute_views,
@@ -575,14 +558,14 @@ auto voxelization_plugin_t::setup_svo() -> void
 	// 2) allocate bricks from the brick-cache
 	// 3) write fragments into 3d texture
 	{
-		ctx->signal_rs_upload(cb, cbuf{
+		rndr->signal_rs_upload(cb, cbuf{
 			(uint32)fragments_count,
 			(uint32)levels_required,
 			(uint32)levels_required
 		});
 
 		auto dim = aml::pow(2, (int)levels_required);
-		shiny::signal_compute(ctx,
+		shiny::signal_compute(rndr,
 			bound_constant_buffers,
 			bound_input_views,
 			bound_compute_views,
@@ -604,27 +587,17 @@ auto voxelization_plugin_t::setup_rendering() -> void
 		-1.f,  1.f, 0.f, 1.f,
 	};
 
-	auto dd = ctx->runtime().make_data_declaration({
+	auto dd = rndr->runtime().make_data_declaration({
 		{"position", 0, shiny::format_t::f32x4}
 	});
 
-	vb_quad = shiny::create_vertex_buffer(ctx, shiny::resource_storage_t::persistant, dd, 8, vbd);
+	vb_quad = shiny::create_vertex_buffer(rndr, shiny::resource_storage_t::persistant, dd, 8, vbd);
 
-
-	{
-		auto f = atma::filesystem::file_t("../shiny/x64/Debug/vs_voxels.cso");
-		auto fm = f.read_into_memory();
-		vs_voxels = shiny::create_vertex_shader(ctx, dd, fm, true);
-	}
-
-	{
-		auto f = atma::filesystem::file_t("../shiny/x64/Debug/ps_voxels.cso");
-		auto fm = f.read_into_memory();
-		fs_voxels = shiny::create_fragment_shader(ctx, fm, true);
-	}
+	vs_voxels = shiny::vertex_shader_t::make(rndr, "resources/published/shaders/vs_voxels.hlsl", false);
+	fs_voxels = library_.load_as<shiny::fragment_shader_t>("/res/shaders/ps_voxels.hlsl");
 }
 
-auto voxelization_plugin_t::gfx_ctx_draw(shiny::context_ptr const& ctx) -> void
+auto voxelization_plugin_t::gfx_ctx_draw(shiny::renderer_ptr const& rndr) -> void
 {
 	
 }
@@ -651,7 +624,7 @@ auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
 		uint32 brickcache_width, brick_size;
 	};
 
-	auto cb = shiny::make_constant_buffer(scene.context(), blah{
+	auto cb = shiny::make_constant_buffer(scene.renderer(), blah{
 		scene.camera().position(),
 		scene.camera().yaw(), scene.camera().pitch(),
 		(uint32)brickcache->width() / 8, 8

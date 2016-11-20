@@ -30,6 +30,7 @@
 #include <atma/math/vector4f.hpp>
 #include <atma/hash.hpp>
 
+#include <deque>
 #include <thread>
 #include <mutex>
 #include <unordered_map>
@@ -51,11 +52,11 @@ namespace shiny
 		//teardown,
 	};
 
-	struct context_t : atma::ref_counted
+	struct renderer_t : atma::ref_counted
 	{
 		using map_callback_t = std::function<void(mapped_subresource_t&)>;
 
-		~context_t();
+		~renderer_t();
 
 		auto runtime() -> runtime_t& { return runtime_; }
 		auto runtime() const -> runtime_t const& { return runtime_; }
@@ -111,7 +112,7 @@ namespace shiny
 		auto immediate_gs_set_input_views(bound_input_views_t const&) -> void;
 
 		// fragment-stage
-		auto immediate_fs_set_fragment_shader(fragment_shader_cptr const&) -> void;
+		auto immediate_fs_set_fragment_shader(fragment_shader_handle const&) -> void;
 		auto immediate_fs_set_constant_buffers(bound_constant_buffers_t const&) -> void;
 		auto immediate_fs_set_input_views(bound_input_views_t const&) -> void;
 		auto immediate_fs_set_compute_views(bound_compute_views_t const&) -> void;
@@ -140,11 +141,11 @@ namespace shiny
 		auto signal_d3d_buffer_upload(platform::d3d_buffer_ptr const&, void const* data, uint row_pitch, uint depth_pitch) -> void;
 		
 		auto d3d_device() const -> platform::d3d_device_ptr const& { return d3d_device_; }
-		auto d3d_immediate_context() const -> platform::d3d_context_ptr const& { return d3d_immediate_context_; }
+		auto d3d_immediate_context() const -> platform::d3d_renderer_ptr const& { return d3d_immediate_context_; }
 
 
 	private:
-		context_t(runtime_t&, fooey::window_ptr const&, uint adapter);
+		renderer_t(runtime_t&, fooey::window_ptr const&, uint adapter);
 
 		auto bind_events(fooey::window_ptr const&) -> void;
 		auto create_swapchain() -> void; 
@@ -168,41 +169,52 @@ namespace shiny
 
 
 	private:
+		using input_layouts_t = std::map<std::tuple<data_declaration_t const*, vertex_shader_cptr>, platform::d3d_input_layout_ptr>;
+		using blend_states_t = std::unordered_map<blend_state_t, platform::d3d_blend_state_ptr, atma::std_hash_functor_adaptor_t>;
+		using depth_stencil_states_t = std::unordered_map<depth_stencil_state_t, platform::d3d_depth_stencil_state_ptr, atma::std_hash_functor_adaptor_t>;
+
 		auto get_d3d_input_layout(data_declaration_t const*, vertex_shader_cptr const&) -> platform::d3d_input_layout_ptr const&;
 		auto get_d3d_blend(blend_state_t const&) -> platform::d3d_blend_state_ptr const&;
 		auto get_d3d_depth_stencil(depth_stencil_state_t const&) -> platform::d3d_depth_stencil_state_ptr const&;
-
-		using input_layouts_t        = std::map<std::tuple<data_declaration_t const*, vertex_shader_cptr>, platform::d3d_input_layout_ptr>;
-		using blend_states_t         = std::unordered_map<blend_state_t, platform::d3d_blend_state_ptr, atma::std_hash_functor_adaptor_t>;
-		using depth_stencil_states_t = std::unordered_map<depth_stencil_state_t, platform::d3d_depth_stencil_state_ptr, atma::std_hash_functor_adaptor_t>;
 
 		input_layouts_t        built_input_layouts_;
 		blend_states_t         built_blend_states_;
 		depth_stencil_states_t built_depth_stencil_states_;
 
 	private:
-		// compute pipeline
-		bound_constant_buffers_t cs_cbs_;
-		bound_resource_views_t cs_uavs_;
-		bound_resource_views_t cs_srvs_;
-		compute_shader_cptr cs_shader_;
+		//struct frame_resources_t
+		//{
+			lion::asset_library_t library;
 
-		// draw pipeline
-		data_declaration_t const* ia_dd_;
-		index_buffer_cptr         ia_ib_;
-		vertex_buffer_cptr        ia_vb_;
-		vertex_shader_cptr        vs_shader_;
-		bound_constant_buffers_t  vs_cbs_;
-		bound_resource_views_t    vs_srvs_;
-		geometry_shader_cptr      gs_shader_;
-		bound_constant_buffers_t  gs_cbs_;
-		fragment_shader_cptr      fs_shader_;
-		bound_constant_buffers_t  fs_cbs_;
-		bound_resource_views_t    fs_srvs_;
-		bound_resource_views_t    fs_uavs_;
-		bound_resource_views_t    om_rtvs_;
-		depth_stencil_state_t     om_depth_stencil_;
-		draw_range_t              draw_range_;
+			// compute pipeline
+			bound_constant_buffers_t cs_cbs_;
+			bound_resource_views_t cs_uavs_;
+			bound_resource_views_t cs_srvs_;
+			compute_shader_cptr cs_shader_;
+
+			// draw pipeline
+			data_declaration_t const* ia_dd_;
+			index_buffer_cptr         ia_ib_;
+			vertex_buffer_cptr        ia_vb_;
+			vertex_shader_cptr        vs_shader_;
+			bound_constant_buffers_t  vs_cbs_;
+			bound_resource_views_t    vs_srvs_;
+			geometry_shader_cptr      gs_shader_;
+			bound_constant_buffers_t  gs_cbs_;
+			fragment_shader_handle    fs_shader_;
+			bound_constant_buffers_t  fs_cbs_;
+			bound_resource_views_t    fs_srvs_;
+			bound_resource_views_t    fs_uavs_;
+			bound_resource_views_t    om_rtvs_;
+			depth_stencil_state_t     om_depth_stencil_;
+			draw_range_t              draw_range_;
+
+			// render-targets & depth-stencil
+			resource_view_ptr current_render_target_view_[4];
+			resource_view_ptr current_depth_stencil_view_;
+		//};
+		//
+		//std::deque<frame_resources_t> frames_;
 
 	private:
 		runtime_t& runtime_;
@@ -210,7 +222,7 @@ namespace shiny
 
 		platform::dxgi_adapter_ptr dxgi_adapter_;
 		platform::d3d_device_ptr   d3d_device_;
-		platform::d3d_context_ptr  d3d_immediate_context_;
+		platform::d3d_renderer_ptr  d3d_immediate_context_;
 
 
 	private:
@@ -227,9 +239,7 @@ namespace shiny
 		texture2d_ptr                    default_depth_stencil_texture_;
 		resource_view_ptr                default_depth_stencil_view_;
 
-		// render-targets & depth-stencil
-		resource_view_ptr                current_render_target_view_[4];
-		resource_view_ptr                current_depth_stencil_view_;
+		
 		
 		// fooey
 		fooey::window_ptr window_;
@@ -250,12 +260,12 @@ namespace shiny
 
 
 	private:
-		friend struct atma::intrusive_ptr_expose_constructor;
+		friend struct atma::enable_default_intrusive_ptr_make;
 	};
 
 
 	template <typename T>
-	inline auto context_t::signal_rs_upload(resource_ptr const& res, T const& t) -> void
+	inline auto renderer_t::signal_rs_upload(resource_ptr const& res, T const& t) -> void
 	{
 		signal_rs_upload(res, buffer_data_t{&t, sizeof(t)});
 	}

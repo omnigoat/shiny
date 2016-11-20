@@ -4,6 +4,8 @@
 #include <atma/intrusive_ptr.hpp>
 #include <atma/bitmask.hpp>
 
+#include <lion/assets.hpp>
+
 #include <vector>
 
 
@@ -17,8 +19,8 @@ namespace shiny
 	struct output_t;
 	typedef atma::intrusive_ptr<output_t> output_ptr;
 
-	struct context_t;
-	typedef atma::intrusive_ptr<context_t> context_ptr;
+	struct renderer_t;
+	typedef atma::intrusive_ptr<renderer_t> renderer_ptr;
 
 	struct geometry_shader_t;
 	using  geometry_shader_ptr = atma::intrusive_ptr<geometry_shader_t>;
@@ -31,6 +33,7 @@ namespace shiny
 	struct fragment_shader_t;
 	typedef atma::intrusive_ptr<fragment_shader_t> fragment_shader_ptr;
 	typedef atma::intrusive_ptr<fragment_shader_t const> fragment_shader_cptr;
+	using  fragment_shader_handle = lion::asset_handle_t<fragment_shader_t>;
 
 	struct geometry_stream_t;
 	using  geometry_streams_t = std::vector<geometry_stream_t>;

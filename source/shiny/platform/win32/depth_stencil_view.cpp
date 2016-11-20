@@ -1,13 +1,13 @@
 #include <shiny/platform/win32/depth_stencil_view.hpp>
 
-#include <shiny/context.hpp>
+#include <shiny/renderer.hpp>
 
 
 using namespace shiny;
 using shiny::depth_stencil_view_t;
 
 depth_stencil_view_t::depth_stencil_view_t(texture2d_ptr const& tx, uint mip)
-	: ctx_{tx->context()}
+	: ctx_{tx->renderer()}
 	, texture_{tx}
 	, mip_{mip}
 {

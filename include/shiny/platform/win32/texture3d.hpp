@@ -32,7 +32,7 @@ namespace shiny
 
 	struct texture3d_t : resource_t
 	{
-		texture3d_t(context_ptr const&, resource_usage_mask_t, resource_storage_t, texture3d_dimensions_t const&);
+		texture3d_t(renderer_ptr const&, resource_usage_mask_t, resource_storage_t, texture3d_dimensions_t const&);
 
 		auto format() const -> format_t;
 		auto mips() const -> uint;
@@ -54,7 +54,7 @@ namespace shiny
 
 
 	auto make_texture3d(
-		context_ptr const&,
+		renderer_ptr const&,
 		resource_usage_mask_t,
 		resource_storage_t,
 		texture3d_dimensions_t const&) -> texture3d_ptr;

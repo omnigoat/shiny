@@ -1,67 +1,68 @@
 #include <shiny/vertex_shader.hpp>
 
-#include <shiny/platform/win32/dxgid3d_convert.hpp>
+#include <shiny/renderer.hpp>
+#include <shiny/logging.hpp>
 
-#include <shiny/data_declaration.hpp>
-#include <shiny/context.hpp>
+#include <rose/file.hpp>
+
 
 using namespace shiny;
 using shiny::vertex_shader_t;
 
 
-auto shiny::create_vertex_shader(context_ptr const& context, data_declaration_t const* vd, atma::unique_memory_t const& memory, bool precompiled, atma::string const& entrypoint) -> vertex_shader_ptr
+auto vertex_shader_t::make(renderer_ptr const& rndr, lion::path_t const& path, bool precompiled, atma::string const& entrypoint) -> vertex_shader_ptr
 {
-	return vertex_shader_ptr(new vertex_shader_t(context, vd, memory.begin(), memory.size(), precompiled, entrypoint));
+	auto f = rose::file_t{path.string()};
+	auto m = rose::read_into_memory(f);
+	return vertex_shader_ptr::make(rndr, path, m.begin(), m.size(), precompiled, entrypoint);
 }
 
-vertex_shader_t::vertex_shader_t(context_ptr const& ctx, data_declaration_t const* vd, void const* data, size_t data_length, bool precompiled, atma::string const& entrypoint)
-: context_(ctx), data_declaration_(vd)
+auto vertex_shader_t::make(shiny::renderer_ptr const& rndr, lion::path_t const& path, void const* data, size_t data_size, bool precompiled, atma::string const& entrypoint) -> vertex_shader_ptr
 {
-	// create blob
+	return vertex_shader_ptr::make(rndr, path, data, data_size, precompiled, entrypoint);
+}
+
+
+vertex_shader_t::vertex_shader_t(renderer_ptr const& rndr, lion::path_t const& path, platform::d3d_blob_ptr const& blob, platform::d3d_vertex_shader_ptr const& shader)
+	: asset_t{path}
+	, rndr_{rndr}
+	, d3d_blob_{blob}
+	, d3d_vs_{shader}
+{}
+
+
+auto atma::intrusive_ptr_make<shiny::vertex_shader_t>::make(renderer_ptr const& rndr, lion::path_t const& path, void const* data, size_t data_size, bool precompiled, atma::string const& entrypoint) -> vertex_shader_t*
+{
+	using namespace shiny;
+	namespace platform = shiny::platform;
+
+	platform::d3d_blob_ptr d3d_blob;
+	platform::d3d_vertex_shader_ptr d3d_vs;
+
 	if (precompiled)
 	{
-		ATMA_ENSURE_IS(S_OK, D3DCreateBlob(data_length, d3d_blob_.assign()));
-		memcpy(d3d_blob_->GetBufferPointer(), data, data_length);
-#if 0
-		wchar_t buf[1234]{};
-		auto s = mbstowcs(buf, entrypoint.c_str(), entrypoint.raw_size());
-		buf[s] = '\0';
-		auto hr = D3DReadFileToBlob(buf, d3d_blob_.assign());
-#endif
+		ATMA_ENSURE_IS(S_OK, D3DCreateBlob(data_size, d3d_blob.assign()));
+		memcpy(d3d_blob->GetBufferPointer(), data, data_size);
 	}
 	else
 	{
 		platform::d3d_blob_ptr errors;
-		char* errs = nullptr;
-		ATMA_ENSURE_IS(S_OK, D3DCompile(data, data_length, nullptr, nullptr, nullptr, entrypoint.raw_begin(), "vs_5_0", D3DCOMPILE_PREFER_FLOW_CONTROL | D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, d3d_blob_.assign(), errors.assign()));
+		ATMA_ENSURE_IS(S_OK, D3DCompile(data, data_size, path.c_str(), nullptr, nullptr, entrypoint.raw_begin(), "vs_5_0", D3DCOMPILE_PREFER_FLOW_CONTROL | D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, d3d_blob.assign(), errors.assign()));
 		if (errors)
 		{
-			errs = (char*)errors->GetBufferPointer();
+			SHINY_ERROR("vertex-shader errors:\n", (char*)errors->GetBufferPointer());
 		}
 	}
 
-	
 	// create vertex-shader
-	auto const& device = context_->d3d_device();
-	auto size =  d3d_blob_->GetBufferSize();
-	ATMA_ENSURE_IS(S_OK, device->CreateVertexShader(d3d_blob_->GetBufferPointer(), size, nullptr, d3d_vs_.assign()));
-
-
-	// create input-layout
-	size_t offset = 0;
-	std::vector<D3D11_INPUT_ELEMENT_DESC> d3d_elements;
-	for (auto const& x : data_declaration_->streams())
+	auto const& device = rndr->d3d_device();
+	if (S_OK == device->CreateVertexShader(d3d_blob->GetBufferPointer(), d3d_blob->GetBufferSize(), nullptr, d3d_vs.assign()))
 	{
-		d3d_elements.push_back({
-			x.semantic().c_str(),
-			0, platform::dxgi_format_of(x.element_format()), 0, (UINT)offset, D3D11_INPUT_PER_VERTEX_DATA, 0
-		});
-
-		offset += x.size();
+		return new vertex_shader_t{rndr, path, d3d_blob, d3d_vs};
 	}
-
-	ATMA_ENSURE_IS(S_OK, context_->d3d_device()->CreateInputLayout(&d3d_elements[0], (uint)d3d_elements.size(),
-		d3d_blob_->GetBufferPointer(), d3d_blob_->GetBufferSize(), d3d_input_layout_.assign()));
+	else
+	{
+		return nullptr;
+	}
 }
-
 

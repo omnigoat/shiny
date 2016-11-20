@@ -15,9 +15,6 @@
     <Filter Include="include\plugins">
       <UniqueIdentifier>{14b6de9c-7eb9-49ce-a18e-ac2dcb68e0db}</UniqueIdentifier>
     </Filter>
-    <Filter Include="shaders">
-      <UniqueIdentifier>{7e73581f-5843-4238-aafc-9182fb93ae80}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\sandbox\sandbox.hpp">
@@ -37,27 +34,5 @@
     <ClCompile Include="..\..\source\sandbox\voxelization.cpp">
       <Filter>source\plugins</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="..\..\shaders\sparse_octree_allocate.hlsl">
-      <Filter>shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="..\..\shaders\sparse_octree_clear.hlsl">
-      <Filter>shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="..\..\shaders\sparse_octree_write_fragments.hlsl">
-      <Filter>shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="..\..\shaders\sparse_octree_mark.hlsl">
-      <Filter>shaders</Filter>
-    </FxCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\shaders\svo_traversal.hlsli">
-      <Filter>shaders</Filter>
-    </None>
-    <None Include="..\..\shaders\morton.hlsli">
-      <Filter>shaders</Filter>
-    </None>
   </ItemGroup>
 </Project>

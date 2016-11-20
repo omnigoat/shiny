@@ -95,12 +95,22 @@ void main(triangle VSOutput input[3], inout TriangleStream<GSOutput> output)
 	// pick projection axis
 	float3 pn = abs(wsn);
 	int proj_idx;
+	float4 dims;
 	if (pn.x > pn.y && pn.x > pn.z)
+	{
 		proj_idx = 0;
+		dims = dimensions.yzxw;
+	}
 	else if (pn.y > pn.x && pn.y > pn.z)
+	{
 		proj_idx = 1;
+		dims = dimensions.zxyw;
+	}
 	else
+	{
 		proj_idx = 2;
+		dims = dimensions.xyzw;
+	}
 
 	// projected verts [-1.f, 1.f]
 	float4 pv0 = mul(projs[proj_idx], input[0].world_position);
@@ -116,8 +126,8 @@ void main(triangle VSOutput input[3], inout TriangleStream<GSOutput> output)
 	float4 aabb = v0.xyxy;
 	aabb = float4(min(aabb.xy, v1.xy), max(aabb.zw, v1.xy));
 	aabb = float4(min(aabb.xy, v2.xy), max(aabb.zw, v2.xy));
-	aabb.xy -= 0.5f / dimensions.xy;
-	aabb.zw += 0.5f / dimensions.xy;
+	aabb.xy -= 0.5f / dims.xy;
+	aabb.zw += 0.5f / dims.xy;
 
 	// triangle intersection values
 	//  n: normal
@@ -125,7 +135,7 @@ void main(triangle VSOutput input[3], inout TriangleStream<GSOutput> output)
 	//  c: critical-point
 	//  d1 & d2: just like, some values that we'll need
 	tri.n = cross(v1 - v0, v2 - v1);
-	tri.dp = 1.f / dimensions.xyz;
+	tri.dp = 1.f / dims.xyz;
 	tri.c = float3(tri.n.x > 0.f ? tri.dp.x : 0.f, tri.n.y > 0.f ? tri.dp.y : 0.f, tri.n.z > 0.f ? tri.dp.z : 0.f);
 	tri.d1 = dot(tri.n, tri.c - v0);
 	tri.d2 = dot(tri.n, tri.dp - tri.c - v0);
@@ -183,7 +193,7 @@ void main(triangle VSOutput input[3], inout TriangleStream<GSOutput> output)
 	//  = v * 0.5 * sqrt(2) / d
 	//    where v = viewport width = 2  (-1 to 1)
 	//  = sqrt(2) / d
-	const float2 hpixel = 1.4142135637309f / dimensions.xy;
+	const float2 hpixel = 1.4142135637309f / dims.xy;
 
 	float2 e0ss = pv1.xy - pv0.xy;
 	float2 e1ss = pv2.xy - pv1.xy;

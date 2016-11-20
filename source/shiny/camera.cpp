@@ -9,7 +9,7 @@ camera_t::camera_t()
 	: camera_t(
 		aml::look_at(aml::point4f(), aml::point4f(0.f, 0.f, 1.f),
 		aml::vector4f(0.f, 1.f, 0.f, 0.f)),
-		aml::perspective_fov(aml::pi_over_two, 360/480, 0.03434f, 120.f))
+		aml::perspective_fov(aml::pi_over_two, 360.f/480.f, 0.03434f, 120.f))
 {
 }
 

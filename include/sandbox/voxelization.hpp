@@ -37,12 +37,10 @@ namespace sandbox
 	struct voxelization_plugin_t : plugin_t
 	{
 		voxelization_plugin_t() = delete;
-		voxelization_plugin_t(application_t* app)
-			: plugin_t{app}
-		{}
+		voxelization_plugin_t(application_t*);
 
-		auto gfx_setup(shiny::context_ptr const&) -> void override;
-		auto gfx_ctx_draw(shiny::context_ptr const&) -> void override;
+		auto gfx_setup(shiny::renderer_ptr const&) -> void override;
+		auto gfx_ctx_draw(shiny::renderer_ptr const&) -> void override;
 		auto gfx_draw(shiny::scene_t&) -> void override;
 		
 		auto main_setup() -> void override;
@@ -53,7 +51,7 @@ namespace sandbox
 		auto result() const -> int override { return EXIT_SUCCESS; }
 
 	private:
-		shiny::context_ptr ctx;
+		shiny::renderer_ptr rndr;
 
 		shiny::vertex_buffer_ptr vb;
 		shiny::index_buffer_ptr ib;
@@ -74,13 +72,14 @@ namespace sandbox
 		shiny::resource_view_ptr fragments_srv_view;
 		shiny::vertex_shader_ptr vs_voxelize;
 		shiny::geometry_shader_ptr gs_voxelize;
-		shiny::fragment_shader_ptr fs_voxelize;
+		shiny::fragment_shader_handle fs_voxelize;
 #if 0
 		fragments_t fragments;
 		shiny::buffer_ptr voxelbuf;
 		shiny::resource_view_ptr voxelbuf_view;
 #endif
 		
+		lion::asset_library_t library_;
 		
 
 		// svo
@@ -99,7 +98,7 @@ namespace sandbox
 		// rendering
 		shiny::vertex_buffer_ptr vb_quad;
 		shiny::vertex_shader_ptr vs_voxels;
-		shiny::fragment_shader_ptr fs_voxels;
+		shiny::fragment_shader_handle fs_voxels;
 	};
 
 	using voxelization_plugin_ptr = atma::intrusive_ptr<voxelization_plugin_t>;;
