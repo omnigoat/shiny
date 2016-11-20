@@ -1,7 +1,7 @@
 #include <shiny/platform/win32/buffer.hpp>
 
 #include <shiny/platform/win32/dxgid3d_convert.hpp>
-#include <shiny/context.hpp>
+#include <shiny/renderer.hpp>
 
 #include <atma/assert.hpp>
 

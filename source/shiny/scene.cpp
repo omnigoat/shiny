@@ -1,6 +1,6 @@
 #include <shiny/scene.hpp>
 
-#include <shiny/context.hpp>
+#include <shiny/renderer.hpp>
 #include <shiny/camera.hpp>
 #include <shiny/constant_buffer.hpp>
 #include <shiny/data_declaration.hpp>

@@ -1,4 +1,4 @@
-#include <shiny/context.hpp>
+#include <shiny/renderer.hpp>
 
 #include <shiny/platform/win32/dxgid3d_convert.hpp>
 #include <shiny/platform/win32/d3d_fwd.hpp>

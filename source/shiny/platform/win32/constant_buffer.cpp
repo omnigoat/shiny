@@ -1,6 +1,6 @@
 #include <shiny/platform/win32/constant_buffer.hpp>
 
-#include <shiny/context.hpp>
+#include <shiny/renderer.hpp>
 
 
 using namespace shiny;

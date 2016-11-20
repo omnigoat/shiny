@@ -2,7 +2,7 @@
 #include <sandbox/voxelization.hpp>
 
 #include <shiny/runtime.hpp>
-#include <shiny/context.hpp>
+#include <shiny/renderer.hpp>
 #include <shiny/vertex_buffer.hpp>
 #include <shiny/data_declaration.hpp>
 #include <shiny/vertex_shader.hpp>

@@ -1,6 +1,6 @@
 #include <shiny/platform/win32/index_buffer.hpp>
 
-#include <shiny/context.hpp>
+#include <shiny/renderer.hpp>
 
 #include <atma/assert.hpp>
 

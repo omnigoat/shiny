@@ -14,5 +14,5 @@ namespace shiny
 }
 
 #ifdef ATMA_PLATFORM_WINDOWS
-#	include <shiny/platform/win32/context.hpp>
+#	include <shiny/platform/win32/renderer.hpp>
 #endif

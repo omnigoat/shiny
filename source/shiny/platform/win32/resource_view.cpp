@@ -1,6 +1,6 @@
 #include <shiny/platform/win32/resource_view.hpp>
 
-#include <shiny/context.hpp>
+#include <shiny/renderer.hpp>
 #include <shiny/texture3d.hpp>
 #include <shiny/platform/win32/dxgid3d_convert.hpp>
 

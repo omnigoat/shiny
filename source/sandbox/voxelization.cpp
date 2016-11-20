@@ -1,6 +1,6 @@
 #include <sandbox/voxelization.hpp>
 
-#include <shiny/context.hpp>
+#include <shiny/renderer.hpp>
 #include <shiny/scene.hpp>
 #include <shiny/draw.hpp>
 #include <shiny/compute.hpp>

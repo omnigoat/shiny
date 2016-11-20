@@ -1,6 +1,6 @@
 #include <shiny/platform/win32/depth_stencil_view.hpp>
 
-#include <shiny/context.hpp>
+#include <shiny/renderer.hpp>
 
 
 using namespace shiny;

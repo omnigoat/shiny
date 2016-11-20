@@ -1,5 +1,5 @@
 #include <shiny/platform/win32/resource.hpp>
-#include <shiny/platform/win32/context.hpp>
+#include <shiny/platform/win32/renderer.hpp>
 
 using namespace shiny;
 using shiny::resource_t;

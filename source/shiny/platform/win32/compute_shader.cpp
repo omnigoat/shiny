@@ -1,6 +1,6 @@
 #include <shiny/compute_shader.hpp>
 
-#include <shiny/context.hpp>
+#include <shiny/renderer.hpp>
 #include <shiny/logging.hpp>
 
 #include <rose/file.hpp>

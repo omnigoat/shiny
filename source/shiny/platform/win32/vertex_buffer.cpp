@@ -1,6 +1,6 @@
 #include <shiny/platform/win32/vertex_buffer.hpp>
 
-#include <shiny/context.hpp>
+#include <shiny/renderer.hpp>
 #include <shiny/data_declaration.hpp>
 
 #include <atma/assert.hpp>

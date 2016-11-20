@@ -1,6 +1,6 @@
 #include <shiny/platform/win32/generic_buffer.hpp>
 
-#include <shiny/context.hpp>
+#include <shiny/renderer.hpp>
 
 using namespace shiny;
 using shiny::generic_buffer_t;
