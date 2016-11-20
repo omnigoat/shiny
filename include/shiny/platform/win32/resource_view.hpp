@@ -35,7 +35,7 @@ namespace shiny
 		resource_view_t(resource_cptr const&, resource_view_type_t, format_t, resource_subset_t);
 		~resource_view_t();
 
-		auto context() const -> renderer_ptr const&;
+		auto renderer() const -> renderer_ptr const&;
 		auto resource() const -> resource_cptr const& { return resource_; }
 		auto view_type() const -> resource_view_type_t { return resource_view_type_; }
 		auto format() const -> format_t { return format_; }

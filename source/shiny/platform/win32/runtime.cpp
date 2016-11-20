@@ -82,13 +82,13 @@ auto shiny::runtime_t::dxgid3d_for_adapter(uint32 adapter_index) -> std::tuple<d
 {
 	dxgi_adapter_ptr const& adapter = dxgi_adapters_[adapter_index];
 	d3d_device_ptr device;
-	d3d_renderer_ptr context;
+	d3d_renderer_ptr renderer;
 
 	// get or craete device for adapter
 	auto i = d3d_devices_.find(adapter);
 	if (i != d3d_devices_.end()) {
 		device = i->second;
-		device->GetImmediateContext(context.assign());
+		device->GetImmediateContext(renderer.assign());
 	}
 	else
 	{
@@ -100,7 +100,7 @@ auto shiny::runtime_t::dxgid3d_for_adapter(uint32 adapter_index) -> std::tuple<d
 			D3D11_SDK_VERSION,
 			device.assign(),
 			NULL,
-			context.assign()
+			renderer.assign()
 		))
 #endif
 		{
@@ -111,14 +111,14 @@ auto shiny::runtime_t::dxgid3d_for_adapter(uint32 adapter_index) -> std::tuple<d
 				D3D11_SDK_VERSION,
 				device.assign(),
 				NULL,
-				context.assign()
+				renderer.assign()
 			));
 		}
 
 		d3d_devices_[adapter] = device;
 	}
 
-	return std::make_tuple(dxgi_adapters_[adapter_index], device, context);
+	return std::make_tuple(dxgi_adapters_[adapter_index], device, renderer);
 }
 
 auto runtime_t::dxgi_output_of(platform::dxgi_adapter_ptr const& adapter, uint output_index) -> platform::dxgi_output_ptr const&

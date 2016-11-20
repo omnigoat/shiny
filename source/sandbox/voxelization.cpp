@@ -624,7 +624,7 @@ auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
 		uint32 brickcache_width, brick_size;
 	};
 
-	auto cb = shiny::make_constant_buffer(scene.context(), blah{
+	auto cb = shiny::make_constant_buffer(scene.renderer(), blah{
 		scene.camera().position(),
 		scene.camera().yaw(), scene.camera().pitch(),
 		(uint32)brickcache->width() / 8, 8

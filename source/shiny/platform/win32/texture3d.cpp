@@ -23,7 +23,7 @@ texture3d_t::texture3d_t(renderer_ptr const& rndr, resource_usage_mask_t ru, res
 	: resource_t(rndr, resource_type_t::texturd3d, ru, rs, element_size(td.format), td.width * td.height * td.depth)
 	, format_(td.format), mips_(td.mips), width_(td.width), height_(td.height), depth_(td.depth)
 {
-	auto const& device = context()->d3d_device();
+	auto const& device = renderer()->d3d_device();
 
 	auto d3dusage = D3D11_USAGE();
 	auto d3dbind = D3D11_BIND_FLAG{};

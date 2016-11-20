@@ -10,11 +10,11 @@ using namespace shiny;
 using shiny::geometry_shader_t;
 
 
-auto shiny::create_geometry_shader(renderer_ptr const& context, atma::string const& path, bool precompiled, atma::string const& entrypoint) -> geometry_shader_ptr
+auto shiny::create_geometry_shader(renderer_ptr const& renderer, atma::string const& path, bool precompiled, atma::string const& entrypoint) -> geometry_shader_ptr
 {
 	auto f = rose::file_t{path};
 	auto m = rose::read_into_memory(f);
-	return geometry_shader_ptr::make(context, path, m.begin(), m.size(), precompiled, entrypoint);
+	return geometry_shader_ptr::make(renderer, path, m.begin(), m.size(), precompiled, entrypoint);
 }
 
 geometry_shader_t::geometry_shader_t(renderer_ptr const& rndr, atma::string const& path, void const* data, size_t data_length, bool precompiled, atma::string const& entrypoint)

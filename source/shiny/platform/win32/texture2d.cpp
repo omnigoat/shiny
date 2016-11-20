@@ -12,7 +12,7 @@ texture2d_t::texture2d_t(renderer_ptr const& rndr, resource_usage_mask_t usage_f
 	: resource_t(rndr, resource_type_t::texture2d, usage_flags, resource_storage_t::persistant, shiny::element_size(format), width * height)
 	, format_(format), width_(width), height_(height), mips_(mips)
 {
-	auto const& device = context()->d3d_device();
+	auto const& device = renderer()->d3d_device();
 
 	auto d3dusage = D3D11_USAGE();
 	auto d3dbind = 0;
@@ -85,9 +85,9 @@ auto texture2d_t::d3d_resource() const -> platform::d3d_resource_ptr
 
 
 
-auto shiny::make_texture2d(renderer_ptr const& context, resource_usage_mask_t flags, format_t format, uint width, uint height) -> texture2d_ptr
+auto shiny::make_texture2d(renderer_ptr const& renderer, resource_usage_mask_t flags, format_t format, uint width, uint height) -> texture2d_ptr
 {
-	return atma::make_intrusive<texture2d_t>(context, flags, format, width, height, 0u);
+	return atma::make_intrusive<texture2d_t>(renderer, flags, format, width, height, 0u);
 }
 
 

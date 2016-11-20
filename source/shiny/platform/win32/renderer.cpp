@@ -134,7 +134,7 @@ auto renderer_t::push_display_format(DXGI_MODE_DESC& dxgimode, display_mode_t co
 auto renderer_t::bind_events(fooey::window_ptr const& window) -> void
 {
 	/*bound_events_ = */window->on({
-		{"resize-dc.shiny.context", [this](fooey::events::resize_t& e) { on_resize(e); }}
+		{"resize-dc.shiny.renderer", [this](fooey::events::resize_t& e) { on_resize(e); }}
 	});
 }
 

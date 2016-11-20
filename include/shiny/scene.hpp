@@ -22,7 +22,7 @@ namespace shiny
 
 		auto scene_constant_buffer() const -> constant_buffer_ptr const& { return scene_constant_buffer_; }
 
-		auto context() const -> renderer_ptr const& { return rndr_; }
+		auto renderer() const -> renderer_ptr const& { return rndr_; }
 		auto draw_target() const -> draw_target_t const& { return draw_target_; }
 		auto camera() const -> camera_t const& { return camera_; }
 

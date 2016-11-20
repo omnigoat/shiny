@@ -12,11 +12,11 @@ using namespace shiny;
 using shiny::fragment_shader_t;
 
 
-auto fragment_shader_t::make(renderer_ptr const& context, lion::path_t const& path, bool precompiled, atma::string const& entrypoint) -> fragment_shader_ptr
+auto fragment_shader_t::make(renderer_ptr const& renderer, lion::path_t const& path, bool precompiled, atma::string const& entrypoint) -> fragment_shader_ptr
 {
 	auto f = rose::file_t{path.string()};
 	auto m = rose::read_into_memory(f);
-	return fragment_shader_ptr::make(context, path, m.begin(), m.size(), precompiled, entrypoint);
+	return fragment_shader_ptr::make(renderer, path, m.begin(), m.size(), precompiled, entrypoint);
 }
 
 auto fragment_shader_t::make(shiny::renderer_ptr const& rndr, lion::path_t const& path, void const* data, size_t data_size, bool precompiled, atma::string const& entrypoint) -> fragment_shader_ptr

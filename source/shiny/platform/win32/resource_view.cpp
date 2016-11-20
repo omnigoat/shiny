@@ -49,7 +49,7 @@ resource_view_t::resource_view_t(resource_cptr const& rs, resource_view_type_t v
 					break;
 			}
 
-			ATMA_ENSURE_IS(S_OK, context()->d3d_device()->CreateShaderResourceView(resource_->d3d_resource().get(), &desc, d3d_srv_.assign()));
+			ATMA_ENSURE_IS(S_OK, renderer()->d3d_device()->CreateShaderResourceView(resource_->d3d_resource().get(), &desc, d3d_srv_.assign()));
 			d3d_view_ = d3d_srv_;
 			break;
 		}
@@ -72,7 +72,7 @@ resource_view_t::resource_view_t(resource_cptr const& rs, resource_view_type_t v
 					break;
 			}
 
-			ATMA_ENSURE_IS(S_OK, context()->d3d_device()->CreateUnorderedAccessView(resource_->d3d_resource().get(), &desc, d3d_uav_.assign()));
+			ATMA_ENSURE_IS(S_OK, renderer()->d3d_device()->CreateUnorderedAccessView(resource_->d3d_resource().get(), &desc, d3d_uav_.assign()));
 			d3d_view_ = d3d_uav_;
 			break;
 		}
@@ -85,7 +85,7 @@ resource_view_t::resource_view_t(resource_cptr const& rs, resource_view_type_t v
 			desc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
 			desc.Texture2D = D3D11_TEX2D_RTV{0u};
 
-			ATMA_ENSURE_IS(S_OK, context()->d3d_device()->CreateRenderTargetView(resource_->d3d_resource().get(), nullptr, &(ID3D11RenderTargetView*&)d3d_view_.get()));
+			ATMA_ENSURE_IS(S_OK, renderer()->d3d_device()->CreateRenderTargetView(resource_->d3d_resource().get(), nullptr, &(ID3D11RenderTargetView*&)d3d_view_.get()));
 			break;
 		}
 
@@ -97,7 +97,7 @@ resource_view_t::resource_view_t(resource_cptr const& rs, resource_view_type_t v
 			desc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
 			desc.Texture2D = D3D11_TEX2D_DSV{0u};
 
-			ATMA_ENSURE_IS(S_OK, context()->d3d_device()->CreateDepthStencilView(resource_->d3d_resource().get(), &desc, &(ID3D11DepthStencilView*&)d3d_view_.get()));
+			ATMA_ENSURE_IS(S_OK, renderer()->d3d_device()->CreateDepthStencilView(resource_->d3d_resource().get(), &desc, &(ID3D11DepthStencilView*&)d3d_view_.get()));
 			break;
 		}
 
@@ -111,9 +111,9 @@ resource_view_t::~resource_view_t()
 {
 }
 
-auto resource_view_t::context() const -> renderer_ptr const&
+auto resource_view_t::renderer() const -> renderer_ptr const&
 {
-	return resource_->context();
+	return resource_->renderer();
 }
 
 auto shiny::make_resource_view(resource_cptr const& r, resource_view_type_t vt, format_t ef, resource_subset_t s) -> resource_view_ptr

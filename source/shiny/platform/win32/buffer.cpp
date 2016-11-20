@@ -92,7 +92,7 @@ buffer_t::buffer_t(
 			ATMA_ASSERT(d3d_ca == 0, "immutable buffer with cpu access? silly.");
 
 			auto d3d_data = D3D11_SUBRESOURCE_DATA{bdt.data, (UINT)data_size, 1};
-			ATMA_ENSURE_IS(S_OK, context()->d3d_device()->CreateBuffer(&buffer_desc, &d3d_data, d3d_buffer_.assign()));
+			ATMA_ENSURE_IS(S_OK, renderer()->d3d_device()->CreateBuffer(&buffer_desc, &d3d_data, d3d_buffer_.assign()));
 			break;
 		}
 
@@ -110,11 +110,11 @@ buffer_t::buffer_t(
 			if (bdt.data)
 			{
 				auto d3d_data = D3D11_SUBRESOURCE_DATA{bdt.data, (UINT)data_size, 1};
-				ATMA_ENSURE_IS(S_OK, context()->d3d_device()->CreateBuffer(&buffer_desc, &d3d_data, d3d_buffer_.assign()));
+				ATMA_ENSURE_IS(S_OK, renderer()->d3d_device()->CreateBuffer(&buffer_desc, &d3d_data, d3d_buffer_.assign()));
 			}
 			else
 			{
-				ATMA_ENSURE_IS(S_OK, context()->d3d_device()->CreateBuffer(&buffer_desc, nullptr, d3d_buffer_.assign()));
+				ATMA_ENSURE_IS(S_OK, renderer()->d3d_device()->CreateBuffer(&buffer_desc, nullptr, d3d_buffer_.assign()));
 			}
 
 			break;

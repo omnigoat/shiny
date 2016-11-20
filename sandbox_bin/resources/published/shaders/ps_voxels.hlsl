@@ -332,7 +332,7 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 	color += float4(i * lpwr, 0);
 #endif
 
-	//return float4(1.f, 0.f, 0.f, 1.f);
+	return float4(1.f, 0.f, 0.f, 1.f);
 	return color;
 }
 
