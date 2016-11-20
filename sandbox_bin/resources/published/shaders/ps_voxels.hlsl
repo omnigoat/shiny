@@ -8,7 +8,7 @@ float4 u32x1_to_f(uint x)
 		((x >> 16) & 0xff) / 255.f,
 		((x >> 24) & 0xff) / 255.f
 	);  
-}    
+}      
 
 cbuffer buf_scene : register(b0)
 {
@@ -332,7 +332,7 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 	color += float4(i * lpwr, 0);
 #endif
 
-	//return float4(1.f, 0.f, 0.f, 1.f);
+	return float4(1.f, 0.f, 0.f, 1.f);
 	return color;
 }
 

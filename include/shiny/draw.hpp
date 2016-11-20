@@ -151,29 +151,29 @@ namespace shiny
 	{
 		using queue_t = atma::thread::engine_t::queue_t;
 
-		auto generate_draw_prelude(queue_t::batch_t&, context_ptr const&) -> void;
-		auto generate_command(queue_t::batch_t&, context_ptr const&, input_assembly_stage_t const&) -> void;
-		auto generate_command(queue_t::batch_t&, context_ptr const&, geometry_stage_t const&) -> void;
-		auto generate_command(queue_t::batch_t&, context_ptr const&, vertex_stage_t const&) -> void;
-		auto generate_command(queue_t::batch_t&, context_ptr const&, fragment_stage_t const&) -> void;
-		auto generate_command(queue_t::batch_t&, context_ptr const&, output_merger_stage_t const&) -> void;
-		auto generate_command(queue_t::batch_t&, context_ptr const&, draw_range_t const&) -> void;
+		auto generate_draw_prelude(queue_t::batch_t&, renderer_ptr const&) -> void;
+		auto generate_command(queue_t::batch_t&, renderer_ptr const&, input_assembly_stage_t const&) -> void;
+		auto generate_command(queue_t::batch_t&, renderer_ptr const&, geometry_stage_t const&) -> void;
+		auto generate_command(queue_t::batch_t&, renderer_ptr const&, vertex_stage_t const&) -> void;
+		auto generate_command(queue_t::batch_t&, renderer_ptr const&, fragment_stage_t const&) -> void;
+		auto generate_command(queue_t::batch_t&, renderer_ptr const&, output_merger_stage_t const&) -> void;
+		auto generate_command(queue_t::batch_t&, renderer_ptr const&, draw_range_t const&) -> void;
 
-		auto dispatch_signal_draw(context_ptr const&, queue_t::batch_t&) -> void;
+		auto dispatch_signal_draw(renderer_ptr const&, queue_t::batch_t&) -> void;
 	}
 
 	template <typename... Args>
-	inline auto signal_draw(context_ptr const& ctx, atma::thread::engine_t::queue_t::batch_t& batch, Args&&... args) -> void
+	inline auto signal_draw(renderer_ptr const& rndr, atma::thread::engine_t::queue_t::batch_t& batch, Args&&... args) -> void
 	{
-		detail::generate_draw_prelude(batch, ctx);
-		int expand_type[] = {0, (detail::generate_command(batch, ctx, std::forward<Args>(args)), 0)...};
-		detail::dispatch_signal_draw(ctx, batch);
+		detail::generate_draw_prelude(batch, rndr);
+		int expand_type[] = {0, (detail::generate_command(batch, rndr, std::forward<Args>(args)), 0)...};
+		detail::dispatch_signal_draw(rndr, batch);
 	}
 
 	template <typename... Args>
-	inline auto signal_draw(context_ptr const& ctx, Args&&... args) -> void
+	inline auto signal_draw(renderer_ptr const& rndr, Args&&... args) -> void
 	{
 		atma::thread::engine_t::queue_t::batch_t batch;
-		signal_draw(ctx, batch, std::forward<Args>(args)...);
+		signal_draw(rndr, batch, std::forward<Args>(args)...);
 	}
 }

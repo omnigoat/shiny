@@ -15,8 +15,8 @@ namespace shiny
 {
 	struct texture2d_t : resource_t
 	{
-		texture2d_t(context_ptr const&, resource_usage_mask_t, format_t, uint width, uint height, uint mips);
-		texture2d_t(context_ptr const&, resource_usage_mask_t, format_t, uint width, uint height, uint mips, resource_subset_t);
+		texture2d_t(renderer_ptr const&, resource_usage_mask_t, format_t, uint width, uint height, uint mips);
+		texture2d_t(renderer_ptr const&, resource_usage_mask_t, format_t, uint width, uint height, uint mips, resource_subset_t);
 
 		auto format() const -> format_t;
 		auto width() const -> uint;
@@ -28,7 +28,7 @@ namespace shiny
 		auto d3d_resource() const -> platform::d3d_resource_ptr override;
 
 	private:
-		texture2d_t(context_ptr const&, platform::d3d_texture2d_ptr const&, resource_usage_mask_t, format_t, uint width, uint height, uint mips);
+		texture2d_t(renderer_ptr const&, platform::d3d_texture2d_ptr const&, resource_usage_mask_t, format_t, uint width, uint height, uint mips);
 
 	private:
 		format_t format_;
@@ -37,11 +37,11 @@ namespace shiny
 
 		platform::d3d_texture2d_ptr d3d_texture_;
 
-		friend struct context_t;
+		friend struct renderer_t;
 	};
 
 
-	auto make_texture2d(context_ptr const&, resource_usage_mask_t, format_t, uint width, uint height) -> texture2d_ptr;
+	auto make_texture2d(renderer_ptr const&, resource_usage_mask_t, format_t, uint width, uint height) -> texture2d_ptr;
 }
 
 

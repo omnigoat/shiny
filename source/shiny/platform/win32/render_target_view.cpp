@@ -1,6 +1,6 @@
 #include <shiny/render_target_view.hpp>
 
-#include <shiny/context.hpp>
+#include <shiny/renderer.hpp>
 
 
 using namespace shiny;
@@ -16,7 +16,7 @@ auto shiny::make_render_target_view(texture2d_ptr const& tx) -> render_target_vi
 
 
 render_target_view_t::render_target_view_t(texture2d_ptr const& tx, uint mip)
-	: ctx_{tx->context()}
+	: ctx_{tx->renderer()}
 	, texture_{tx}
 	, mip_{mip}
 {

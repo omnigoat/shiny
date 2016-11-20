@@ -39,8 +39,8 @@ namespace sandbox
 		voxelization_plugin_t() = delete;
 		voxelization_plugin_t(application_t*);
 
-		auto gfx_setup(shiny::context_ptr const&) -> void override;
-		auto gfx_ctx_draw(shiny::context_ptr const&) -> void override;
+		auto gfx_setup(shiny::renderer_ptr const&) -> void override;
+		auto gfx_ctx_draw(shiny::renderer_ptr const&) -> void override;
 		auto gfx_draw(shiny::scene_t&) -> void override;
 		
 		auto main_setup() -> void override;
@@ -51,7 +51,7 @@ namespace sandbox
 		auto result() const -> int override { return EXIT_SUCCESS; }
 
 	private:
-		shiny::context_ptr ctx;
+		shiny::renderer_ptr rndr;
 
 		shiny::vertex_buffer_ptr vb;
 		shiny::index_buffer_ptr ib;

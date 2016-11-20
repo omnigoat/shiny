@@ -1,7 +1,7 @@
 #include <shiny/platform/win32/texture3d.hpp>
 
 #include <shiny/platform/win32/dxgid3d_convert.hpp>
-#include <shiny/context.hpp>
+#include <shiny/renderer.hpp>
 
 
 using namespace shiny;
@@ -9,21 +9,21 @@ using shiny::texture3d_t;
 
 
 auto shiny::make_texture3d(
-	context_ptr const& ctx,
+	renderer_ptr const& rndr,
 	resource_usage_mask_t ru,
 	resource_storage_t rs,
 	texture3d_dimensions_t const& td) -> texture3d_ptr
 {
-	return atma::make_intrusive<texture3d_t>(ctx, ru, rs, td);
+	return atma::make_intrusive<texture3d_t>(rndr, ru, rs, td);
 }
 
 
 
-texture3d_t::texture3d_t(context_ptr const& ctx, resource_usage_mask_t ru, resource_storage_t rs, texture3d_dimensions_t const& td)
-	: resource_t(ctx, resource_type_t::texturd3d, ru, rs, element_size(td.format), td.width * td.height * td.depth)
+texture3d_t::texture3d_t(renderer_ptr const& rndr, resource_usage_mask_t ru, resource_storage_t rs, texture3d_dimensions_t const& td)
+	: resource_t(rndr, resource_type_t::texturd3d, ru, rs, element_size(td.format), td.width * td.height * td.depth)
 	, format_(td.format), mips_(td.mips), width_(td.width), height_(td.height), depth_(td.depth)
 {
-	auto const& device = context()->d3d_device();
+	auto const& device = renderer()->d3d_device();
 
 	auto d3dusage = D3D11_USAGE();
 	auto d3dbind = D3D11_BIND_FLAG{};

@@ -16,13 +16,13 @@ namespace shiny
 {
 	struct scene_t
 	{
-		scene_t(context_ptr const&, draw_target_t const&, camera_t const&, rendertarget_clear_t const&);
-		scene_t(context_ptr const&, draw_target_t const&);
-		scene_t(context_ptr const&, camera_t const&, rendertarget_clear_t const&);
+		scene_t(renderer_ptr const&, draw_target_t const&, camera_t const&, rendertarget_clear_t const&);
+		scene_t(renderer_ptr const&, draw_target_t const&);
+		scene_t(renderer_ptr const&, camera_t const&, rendertarget_clear_t const&);
 
 		auto scene_constant_buffer() const -> constant_buffer_ptr const& { return scene_constant_buffer_; }
 
-		auto context() const -> context_ptr const& { return context_; }
+		auto renderer() const -> renderer_ptr const& { return rndr_; }
 		auto draw_target() const -> draw_target_t const& { return draw_target_; }
 		auto camera() const -> camera_t const& { return camera_; }
 
@@ -32,7 +32,7 @@ namespace shiny
 	private:
 		static camera_t default_camera_;
 
-		context_ptr context_;
+		renderer_ptr rndr_;
 		draw_target_t draw_target_;
 		constant_buffer_ptr scene_constant_buffer_;
 		camera_t camera_;
@@ -40,14 +40,14 @@ namespace shiny
 		atma::thread::engine_t::queue_t queue_;
 		atma::thread::engine_t::queue_t::batch_t batch_;
 
-		friend struct context_t;
+		friend struct renderer_t;
 	};
 
 
 	template <typename... Stages>
 	auto scene_t::draw(Stages&&... stages) -> void
 	{
-		shiny::signal_draw(context_, batch_, std::forward<Stages>(stages)...);
+		shiny::signal_draw(rndr_, batch_, std::forward<Stages>(stages)...);
 	}
 
 }

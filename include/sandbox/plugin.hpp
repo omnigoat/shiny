@@ -21,9 +21,9 @@ namespace sandbox
 		virtual auto input_update() -> void {}
 		virtual auto input_unbind() -> void {}
 
-		virtual auto gfx_setup(shiny::context_ptr const&) -> void {}
+		virtual auto gfx_setup(shiny::renderer_ptr const&) -> void {}
 		virtual auto gfx_draw(shiny::scene_t&) -> void {}
-		virtual auto gfx_ctx_draw(shiny::context_ptr const&) -> void {}
+		virtual auto gfx_ctx_draw(shiny::renderer_ptr const&) -> void {}
 		virtual auto gfx_teardown() -> void {}
 
 		virtual auto end_frame() -> void {}

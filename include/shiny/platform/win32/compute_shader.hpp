@@ -14,10 +14,10 @@ namespace shiny
 		auto d3d_cs() const -> platform::d3d_compute_shader_ptr const& { return d3d_cs_; }
 
 	protected:
-		compute_shader_t(context_ptr const&, atma::string const&, void const*, size_t, bool, atma::string const&);
+		compute_shader_t(renderer_ptr const&, atma::string const&, void const*, size_t, bool, atma::string const&);
 
 	private:
-		context_ptr context_;
+		renderer_ptr rndr_;
 		atma::string path_;
 
 		platform::d3d_blob_ptr d3d_blob_;

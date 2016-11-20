@@ -2,7 +2,7 @@
 #include <sandbox/voxelization.hpp>
 
 #include <shiny/runtime.hpp>
-#include <shiny/context.hpp>
+#include <shiny/renderer.hpp>
 #include <shiny/vertex_buffer.hpp>
 #include <shiny/data_declaration.hpp>
 #include <shiny/vertex_shader.hpp>
@@ -204,13 +204,13 @@ application_t::application_t(rose::runtime_t* rr)
 	window_renderer->add_window(window);
 
 	// shiny contex
-	ctx = shiny::create_context(runtime, window, shiny::primary_adapter);
+	rndr = shiny::create_context(runtime, window, shiny::primary_adapter);
 
 
 	// CURRENT
 	//auto vs_basic_file = atma::filesystem::file_t("../shaders/vs_basic.hlsl");
 	//auto vs_basic_mem = vs_basic_file.read_into_memory();
-	//vs_flat = shiny::create_vertex_shader(ctx, dd_position, vs_basic_mem, false);
+	//vs_flat = shiny::create_vertex_shader(rndr, dd_position, vs_basic_mem, false);
 
 	// DESIRED
 	// auto vs_basic = library.load_asset_as<shiny::vertex_shader_t>("/res/shaders/vs_basic.hlsl");
@@ -226,18 +226,18 @@ application_t::application_t(rose::runtime_t* rr)
 		{"color", 0, shiny::format_t::f32x4}
 	});
 
-	vb_cube = shiny::create_vertex_buffer(ctx, shiny::resource_storage_t::immutable, dd_position_color, 8, cube_vertices);
-	ib_cube = shiny::create_index_buffer(ctx, shiny::resource_storage_t::immutable, shiny::format_t::u16, 36, cube_indices);
+	vb_cube = shiny::create_vertex_buffer(rndr, shiny::resource_storage_t::immutable, dd_position_color, 8, cube_vertices);
+	ib_cube = shiny::create_index_buffer(rndr, shiny::resource_storage_t::immutable, shiny::format_t::u16, 36, cube_indices);
 
 
 	//auto f = vfs.open("/res/shaders/vs_basic.hlsl");
 	//auto m = lion::read_all(f);
-	//auto sdf = shiny::create_vertex_shader(ctx, m, false);
+	//auto sdf = shiny::create_vertex_shader(rndr, m, false);
 	//shiny::vertex_shader_t::make()
 
 	// shaders
-	vs_flat = shiny::vertex_shader_t::make(ctx, "../shaders/vs_basic.hlsl", false);
-	fs_flat = shiny::fragment_shader_t::make(ctx, "../shaders/ps_basic.hlsl", false);
+	vs_flat = shiny::vertex_shader_t::make(rndr, "../shaders/vs_basic.hlsl", false);
+	fs_flat = shiny::fragment_shader_t::make(rndr, "../shaders/ps_basic.hlsl", false);
 }
 
 auto application_t::run() -> int
@@ -255,7 +255,7 @@ auto application_t::run() -> int
 	});
 
 	window->key_state.on_key_down(fooey::key_t::Alt + fooey::key_t::Enter, [&]{
-		ctx->signal_fullscreen_toggle(1);
+		rndr->signal_fullscreen_toggle(1);
 	});
 
 	window->key_state.on_key_down(fooey::key_t::Esc, [&running]{
@@ -268,7 +268,7 @@ auto application_t::run() -> int
 
 
 	// clear!
-	ctx->signal_draw_scene(shiny::scene_t{ctx, cc.camera(), shiny::rendertarget_clear_t{aml::vector4f{0.2f, 0.2f, 0.2f}, 1.f}});
+	rndr->signal_draw_scene(shiny::scene_t{rndr, cc.camera(), shiny::rendertarget_clear_t{aml::vector4f{0.2f, 0.2f, 0.2f}, 1.f}});
 
 
 	//
@@ -277,7 +277,7 @@ auto application_t::run() -> int
 	for (auto const& x : plugins_)
 	{
 		x->input_bind(window);
-		x->gfx_setup(ctx);
+		x->gfx_setup(rndr);
 		x->main_setup();
 	}
 
@@ -302,20 +302,20 @@ auto application_t::run() -> int
 			x->input_update();
 		}
 
-		ctx->immediate_set_stage(shiny::renderer_stage_t::resource_upload);
+		rndr->immediate_set_stage(shiny::renderer_stage_t::resource_upload);
 
 		// all plugins draw to same scene
-		ctx->immediate_set_stage(shiny::renderer_stage_t::render);
+		rndr->immediate_set_stage(shiny::renderer_stage_t::render);
 
-		auto&& scene = shiny::scene_t{ctx, cc.camera(), shiny::rendertarget_clear_t{aml::vector4f{0.2f, 0.2f, 0.2f}, 1.f}};
+		auto&& scene = shiny::scene_t{rndr, cc.camera(), shiny::rendertarget_clear_t{aml::vector4f{0.2f, 0.2f, 0.2f}, 1.f}};
 		for (auto const& x : plugins_) {
-			x->gfx_ctx_draw(ctx);
+			x->gfx_ctx_draw(rndr);
 			x->gfx_draw(scene);
 		}
-		ctx->signal_draw_scene(scene);
+		rndr->signal_draw_scene(scene);
 
-		ctx->signal_present();
-		ctx->signal_block();
+		rndr->signal_present();
+		rndr->signal_block();
 	}
 
 	return 0;

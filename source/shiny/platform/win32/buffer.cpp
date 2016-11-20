@@ -1,7 +1,7 @@
 #include <shiny/platform/win32/buffer.hpp>
 
 #include <shiny/platform/win32/dxgid3d_convert.hpp>
-#include <shiny/context.hpp>
+#include <shiny/renderer.hpp>
 
 #include <atma/assert.hpp>
 
@@ -11,10 +11,10 @@ using shiny::buffer_t;
 
 
 buffer_t::buffer_t(
-	context_ptr const& ctx,
+	renderer_ptr const& rndr,
 	resource_type_t rt, resource_usage_mask_t ru, resource_storage_t rs,
 	buffer_dimensions_t const& bdm, buffer_data_t const& bdt)
-	: resource_t(ctx, rt, ru, rs, bdm.stride, bdm.count)
+	: resource_t(rndr, rt, ru, rs, bdm.stride, bdm.count)
 {
 	// no zero-size buffers
 	ATMA_ASSERT(resource_size());
@@ -92,7 +92,7 @@ buffer_t::buffer_t(
 			ATMA_ASSERT(d3d_ca == 0, "immutable buffer with cpu access? silly.");
 
 			auto d3d_data = D3D11_SUBRESOURCE_DATA{bdt.data, (UINT)data_size, 1};
-			ATMA_ENSURE_IS(S_OK, context()->d3d_device()->CreateBuffer(&buffer_desc, &d3d_data, d3d_buffer_.assign()));
+			ATMA_ENSURE_IS(S_OK, renderer()->d3d_device()->CreateBuffer(&buffer_desc, &d3d_data, d3d_buffer_.assign()));
 			break;
 		}
 
@@ -110,11 +110,11 @@ buffer_t::buffer_t(
 			if (bdt.data)
 			{
 				auto d3d_data = D3D11_SUBRESOURCE_DATA{bdt.data, (UINT)data_size, 1};
-				ATMA_ENSURE_IS(S_OK, context()->d3d_device()->CreateBuffer(&buffer_desc, &d3d_data, d3d_buffer_.assign()));
+				ATMA_ENSURE_IS(S_OK, renderer()->d3d_device()->CreateBuffer(&buffer_desc, &d3d_data, d3d_buffer_.assign()));
 			}
 			else
 			{
-				ATMA_ENSURE_IS(S_OK, context()->d3d_device()->CreateBuffer(&buffer_desc, nullptr, d3d_buffer_.assign()));
+				ATMA_ENSURE_IS(S_OK, renderer()->d3d_device()->CreateBuffer(&buffer_desc, nullptr, d3d_buffer_.assign()));
 			}
 
 			break;
