@@ -10,28 +10,28 @@ using namespace shiny;
 using shiny::vertex_shader_t;
 
 
-auto vertex_shader_t::make(renderer_ptr const& ctx, lion::path_t const& path, bool precompiled, atma::string const& entrypoint) -> vertex_shader_ptr
+auto vertex_shader_t::make(renderer_ptr const& rndr, lion::path_t const& path, bool precompiled, atma::string const& entrypoint) -> vertex_shader_ptr
 {
 	auto f = rose::file_t{path.string()};
 	auto m = rose::read_into_memory(f);
-	return vertex_shader_ptr::make(ctx, path, m.begin(), m.size(), precompiled, entrypoint);
+	return vertex_shader_ptr::make(rndr, path, m.begin(), m.size(), precompiled, entrypoint);
 }
 
-auto vertex_shader_t::make(shiny::renderer_ptr const& ctx, lion::path_t const& path, void const* data, size_t data_size, bool precompiled, atma::string const& entrypoint) -> vertex_shader_ptr
+auto vertex_shader_t::make(shiny::renderer_ptr const& rndr, lion::path_t const& path, void const* data, size_t data_size, bool precompiled, atma::string const& entrypoint) -> vertex_shader_ptr
 {
-	return vertex_shader_ptr::make(ctx, path, data, data_size, precompiled, entrypoint);
+	return vertex_shader_ptr::make(rndr, path, data, data_size, precompiled, entrypoint);
 }
 
 
-vertex_shader_t::vertex_shader_t(renderer_ptr const& ctx, lion::path_t const& path, platform::d3d_blob_ptr const& blob, platform::d3d_vertex_shader_ptr const& shader)
+vertex_shader_t::vertex_shader_t(renderer_ptr const& rndr, lion::path_t const& path, platform::d3d_blob_ptr const& blob, platform::d3d_vertex_shader_ptr const& shader)
 	: asset_t{path}
-	, context_{ctx}
+	, context_{rndr}
 	, d3d_blob_{blob}
 	, d3d_vs_{shader}
 {}
 
 
-auto atma::intrusive_ptr_make<shiny::vertex_shader_t>::make(renderer_ptr const& ctx, lion::path_t const& path, void const* data, size_t data_size, bool precompiled, atma::string const& entrypoint) -> vertex_shader_t*
+auto atma::intrusive_ptr_make<shiny::vertex_shader_t>::make(renderer_ptr const& rndr, lion::path_t const& path, void const* data, size_t data_size, bool precompiled, atma::string const& entrypoint) -> vertex_shader_t*
 {
 	using namespace shiny;
 	namespace platform = shiny::platform;
@@ -55,10 +55,10 @@ auto atma::intrusive_ptr_make<shiny::vertex_shader_t>::make(renderer_ptr const& 
 	}
 
 	// create vertex-shader
-	auto const& device = ctx->d3d_device();
+	auto const& device = rndr->d3d_device();
 	if (S_OK == device->CreateVertexShader(d3d_blob->GetBufferPointer(), d3d_blob->GetBufferSize(), nullptr, d3d_vs.assign()))
 	{
-		return new vertex_shader_t{ctx, path, d3d_blob, d3d_vs};
+		return new vertex_shader_t{rndr, path, d3d_blob, d3d_vs};
 	}
 	else
 	{

@@ -51,7 +51,7 @@ namespace sandbox
 		auto result() const -> int override { return EXIT_SUCCESS; }
 
 	private:
-		shiny::renderer_ptr ctx;
+		shiny::renderer_ptr rndr;
 
 		shiny::vertex_buffer_ptr vb;
 		shiny::index_buffer_ptr ib;

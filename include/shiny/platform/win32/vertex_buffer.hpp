@@ -29,12 +29,12 @@ namespace shiny
 	//   not-null, of course.
 	//
 	inline auto create_vertex_buffer(
-		renderer_ptr const& ctx, resource_storage_t usage,
+		renderer_ptr const& rndr, resource_storage_t usage,
 		data_declaration_t const* vd, uint vertex_count,
 		void const* data, uint data_vertcount = 0)
 		-> vertex_buffer_ptr
 	{
-		return vertex_buffer_ptr(new vertex_buffer_t(ctx, usage, vd, vertex_count, data, data_vertcount));
+		return vertex_buffer_ptr(new vertex_buffer_t(rndr, usage, vd, vertex_count, data, data_vertcount));
 	}
 }
 

@@ -20,11 +20,11 @@ namespace shiny
 
 	template <typename T>
 	inline auto make_structured_buffer(
-		renderer_ptr const& ctx,
+		renderer_ptr const& rndr,
 		resource_usage_mask_t mask,
 		resource_storage_t usage,
 		structured_buffer_t::typed_shadow_buffer_t<T> const& data) -> structured_buffer_ptr
 	{
-		return make_structured_buffer(ctx, mask, usage, sizeof(T), data.size(), &data[0], data.size());
+		return make_structured_buffer(rndr, mask, usage, sizeof(T), data.size(), &data[0], data.size());
 	}
 }

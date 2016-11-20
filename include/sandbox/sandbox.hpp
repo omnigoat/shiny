@@ -27,7 +27,7 @@ namespace sandbox
 		fooey::window_ptr window;
 
 		shiny::runtime_t runtime;
-		shiny::renderer_ptr ctx;
+		shiny::renderer_ptr rndr;
 
 		std::vector<plugin_ptr> plugins_;
 

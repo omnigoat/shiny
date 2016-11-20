@@ -17,8 +17,8 @@ auto shiny::create_geometry_shader(renderer_ptr const& context, atma::string con
 	return geometry_shader_ptr::make(context, path, m.begin(), m.size(), precompiled, entrypoint);
 }
 
-geometry_shader_t::geometry_shader_t(renderer_ptr const& ctx, atma::string const& path, void const* data, size_t data_length, bool precompiled, atma::string const& entrypoint)
-	: context_{ctx}
+geometry_shader_t::geometry_shader_t(renderer_ptr const& rndr, atma::string const& path, void const* data, size_t data_length, bool precompiled, atma::string const& entrypoint)
+	: context_{rndr}
 	, path_{path}
 {
 	// create blob

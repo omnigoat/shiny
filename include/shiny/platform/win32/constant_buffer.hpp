@@ -11,8 +11,8 @@ namespace shiny
 
 
 
-	inline auto make_constant_buffer(renderer_ptr const& ctx, size_t data_size, void const* data) -> constant_buffer_ptr {
-		return atma::make_intrusive<constant_buffer_t>(ctx, data_size, data);
+	inline auto make_constant_buffer(renderer_ptr const& rndr, size_t data_size, void const* data) -> constant_buffer_ptr {
+		return atma::make_intrusive<constant_buffer_t>(rndr, data_size, data);
 	}
 
 	template <typename T>
