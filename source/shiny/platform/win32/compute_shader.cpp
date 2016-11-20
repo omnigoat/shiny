@@ -17,7 +17,7 @@ auto shiny::create_compute_shader(renderer_ptr const& context, atma::string cons
 }
 
 compute_shader_t::compute_shader_t(renderer_ptr const& context, atma::string const& path, void const* data, size_t data_size, bool precompiled, atma::string const& entrypoint)
-	: context_(context)
+	: rndr_(context)
 {
 	if (precompiled)
 	{
@@ -36,7 +36,7 @@ compute_shader_t::compute_shader_t(renderer_ptr const& context, atma::string con
 	}
 
 
-	auto const& device = context_->d3d_device();
+	auto const& device = rndr_->d3d_device();
 	ATMA_ENSURE_IS(S_OK, device->CreateComputeShader(d3d_blob_->GetBufferPointer(), d3d_blob_->GetBufferSize(), nullptr, d3d_cs_.assign()));
 }
 

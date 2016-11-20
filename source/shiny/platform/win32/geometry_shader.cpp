@@ -18,7 +18,7 @@ auto shiny::create_geometry_shader(renderer_ptr const& context, atma::string con
 }
 
 geometry_shader_t::geometry_shader_t(renderer_ptr const& rndr, atma::string const& path, void const* data, size_t data_length, bool precompiled, atma::string const& entrypoint)
-	: context_{rndr}
+	: rndr_{rndr}
 	, path_{path}
 {
 	// create blob
@@ -39,7 +39,7 @@ geometry_shader_t::geometry_shader_t(renderer_ptr const& rndr, atma::string cons
 
 
 	// create geometry-shader
-	auto const& device = context_->d3d_device();
+	auto const& device = rndr_->d3d_device();
 	ATMA_ENSURE_IS(S_OK, device->CreateGeometryShader(d3d_blob_->GetBufferPointer(), d3d_blob_->GetBufferSize(), nullptr, d3d_gs_.assign()));
 }
 

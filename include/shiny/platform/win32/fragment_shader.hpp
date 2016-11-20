@@ -23,7 +23,7 @@ namespace shiny
 		fragment_shader_t(renderer_ptr const&, lion::path_t const&, platform::d3d_blob_ptr const&, platform::d3d_fragment_shader_ptr const&);
 
 	private:
-		renderer_ptr context_;
+		renderer_ptr rndr_;
 
 		platform::d3d_blob_ptr d3d_blob_;
 		platform::d3d_fragment_shader_ptr d3d_fs_;

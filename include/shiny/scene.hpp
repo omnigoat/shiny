@@ -22,7 +22,7 @@ namespace shiny
 
 		auto scene_constant_buffer() const -> constant_buffer_ptr const& { return scene_constant_buffer_; }
 
-		auto context() const -> renderer_ptr const& { return context_; }
+		auto context() const -> renderer_ptr const& { return rndr_; }
 		auto draw_target() const -> draw_target_t const& { return draw_target_; }
 		auto camera() const -> camera_t const& { return camera_; }
 
@@ -32,7 +32,7 @@ namespace shiny
 	private:
 		static camera_t default_camera_;
 
-		renderer_ptr context_;
+		renderer_ptr rndr_;
 		draw_target_t draw_target_;
 		constant_buffer_ptr scene_constant_buffer_;
 		camera_t camera_;
@@ -47,7 +47,7 @@ namespace shiny
 	template <typename... Stages>
 	auto scene_t::draw(Stages&&... stages) -> void
 	{
-		shiny::signal_draw(context_, batch_, std::forward<Stages>(stages)...);
+		shiny::signal_draw(rndr_, batch_, std::forward<Stages>(stages)...);
 	}
 
 }

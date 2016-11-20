@@ -25,7 +25,7 @@ auto vertex_shader_t::make(shiny::renderer_ptr const& rndr, lion::path_t const& 
 
 vertex_shader_t::vertex_shader_t(renderer_ptr const& rndr, lion::path_t const& path, platform::d3d_blob_ptr const& blob, platform::d3d_vertex_shader_ptr const& shader)
 	: asset_t{path}
-	, context_{rndr}
+	, rndr_{rndr}
 	, d3d_blob_{blob}
 	, d3d_vs_{shader}
 {}

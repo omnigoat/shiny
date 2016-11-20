@@ -16,7 +16,7 @@ namespace shiny
 		resource_t(renderer_ptr const&, resource_type_t, resource_usage_mask_t, resource_storage_t, size_t element_stride, size_t element_count);
 		virtual ~resource_t();
 
-		auto context() const -> renderer_ptr const& { return context_; }
+		auto context() const -> renderer_ptr const& { return rndr_; }
 		auto resource_type() const -> resource_type_t { return resource_type_; }
 		auto resource_usage() const -> resource_usage_mask_t { return resource_usage_; }
 		auto resource_storage() const -> resource_storage_t { return resource_storage_; }
@@ -27,7 +27,7 @@ namespace shiny
 		virtual auto d3d_resource() const -> platform::d3d_resource_ptr = 0;
 
 	private:
-		renderer_ptr context_;
+		renderer_ptr rndr_;
 		resource_type_t resource_type_;
 		resource_usage_mask_t resource_usage_;
 		resource_storage_t resource_storage_;
