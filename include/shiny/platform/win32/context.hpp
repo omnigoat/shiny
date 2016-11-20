@@ -52,11 +52,11 @@ namespace shiny
 		//teardown,
 	};
 
-	struct context_t : atma::ref_counted
+	struct renderer_t : atma::ref_counted
 	{
 		using map_callback_t = std::function<void(mapped_subresource_t&)>;
 
-		~context_t();
+		~renderer_t();
 
 		auto runtime() -> runtime_t& { return runtime_; }
 		auto runtime() const -> runtime_t const& { return runtime_; }
@@ -141,11 +141,11 @@ namespace shiny
 		auto signal_d3d_buffer_upload(platform::d3d_buffer_ptr const&, void const* data, uint row_pitch, uint depth_pitch) -> void;
 		
 		auto d3d_device() const -> platform::d3d_device_ptr const& { return d3d_device_; }
-		auto d3d_immediate_context() const -> platform::d3d_context_ptr const& { return d3d_immediate_context_; }
+		auto d3d_immediate_context() const -> platform::d3d_renderer_ptr const& { return d3d_immediate_context_; }
 
 
 	private:
-		context_t(runtime_t&, fooey::window_ptr const&, uint adapter);
+		renderer_t(runtime_t&, fooey::window_ptr const&, uint adapter);
 
 		auto bind_events(fooey::window_ptr const&) -> void;
 		auto create_swapchain() -> void; 
@@ -222,7 +222,7 @@ namespace shiny
 
 		platform::dxgi_adapter_ptr dxgi_adapter_;
 		platform::d3d_device_ptr   d3d_device_;
-		platform::d3d_context_ptr  d3d_immediate_context_;
+		platform::d3d_renderer_ptr  d3d_immediate_context_;
 
 
 	private:
@@ -265,7 +265,7 @@ namespace shiny
 
 
 	template <typename T>
-	inline auto context_t::signal_rs_upload(resource_ptr const& res, T const& t) -> void
+	inline auto renderer_t::signal_rs_upload(resource_ptr const& res, T const& t) -> void
 	{
 		signal_rs_upload(res, buffer_data_t{&t, sizeof(t)});
 	}

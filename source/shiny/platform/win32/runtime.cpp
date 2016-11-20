@@ -78,11 +78,11 @@ auto runtime_t::enumerate_backbuffers(platform::dxgi_output_ptr const& output) -
 	}
 }
 
-auto shiny::runtime_t::dxgid3d_for_adapter(uint32 adapter_index) -> std::tuple<dxgi_adapter_ptr, d3d_device_ptr, d3d_context_ptr>
+auto shiny::runtime_t::dxgid3d_for_adapter(uint32 adapter_index) -> std::tuple<dxgi_adapter_ptr, d3d_device_ptr, d3d_renderer_ptr>
 {
 	dxgi_adapter_ptr const& adapter = dxgi_adapters_[adapter_index];
 	d3d_device_ptr device;
-	d3d_context_ptr context;
+	d3d_renderer_ptr context;
 
 	// get or craete device for adapter
 	auto i = d3d_devices_.find(adapter);

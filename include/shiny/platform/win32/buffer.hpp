@@ -83,7 +83,7 @@ namespace shiny
 	{
 		template <typename T> using aligned_data_t = detail::aligned_data_t<T>;
 
-		buffer_t(context_ptr const&, resource_type_t, resource_usage_mask_t, resource_storage_t, buffer_dimensions_t const&, buffer_data_t const&);
+		buffer_t(renderer_ptr const&, resource_type_t, resource_usage_mask_t, resource_storage_t, buffer_dimensions_t const&, buffer_data_t const&);
 		virtual ~buffer_t();
 
 		auto primary_input_view() const -> resource_view_ptr const& { return primary_input_view_; }
@@ -106,7 +106,7 @@ namespace shiny
 
 
 	template <typename... Args>
-	inline auto make_buffer(context_ptr const& ctx,
+	inline auto make_buffer(renderer_ptr const& ctx,
 		resource_type_t rt,
 		resource_usage_mask_t ru,
 		resource_storage_t rs,

@@ -16,7 +16,7 @@
 namespace shiny { namespace platform {
 
 	using d3d_device_ptr                = atma::com_ptr<ID3D11Device>;
-	using d3d_context_ptr               = atma::com_ptr<ID3D11DeviceContext>;
+	using d3d_renderer_ptr               = atma::com_ptr<ID3D11DeviceContext>;
 
 	// shaders
 	using d3d_blob_ptr                  = atma::com_ptr<ID3DBlob>;

@@ -15,7 +15,7 @@ namespace shiny
 		auto mip() const -> uint { return mip_; }
 
 	private:
-		context_ptr ctx_;
+		renderer_ptr ctx_;
 
 		texture2d_ptr texture_;
 		uint mip_;

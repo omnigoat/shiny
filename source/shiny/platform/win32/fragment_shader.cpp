@@ -12,20 +12,20 @@ using namespace shiny;
 using shiny::fragment_shader_t;
 
 
-auto fragment_shader_t::make(context_ptr const& context, lion::path_t const& path, bool precompiled, atma::string const& entrypoint) -> fragment_shader_ptr
+auto fragment_shader_t::make(renderer_ptr const& context, lion::path_t const& path, bool precompiled, atma::string const& entrypoint) -> fragment_shader_ptr
 {
 	auto f = rose::file_t{path.string()};
 	auto m = rose::read_into_memory(f);
 	return fragment_shader_ptr::make(context, path, m.begin(), m.size(), precompiled, entrypoint);
 }
 
-auto fragment_shader_t::make(shiny::context_ptr const& ctx, lion::path_t const& path, void const* data, size_t data_size, bool precompiled, atma::string const& entrypoint) -> fragment_shader_ptr
+auto fragment_shader_t::make(shiny::renderer_ptr const& ctx, lion::path_t const& path, void const* data, size_t data_size, bool precompiled, atma::string const& entrypoint) -> fragment_shader_ptr
 {
 	return fragment_shader_ptr::make(ctx, path, data, data_size, precompiled, entrypoint);
 }
 
 
-fragment_shader_t::fragment_shader_t(context_ptr const& ctx, lion::path_t const& path, platform::d3d_blob_ptr const& blob, platform::d3d_fragment_shader_ptr const& shader)
+fragment_shader_t::fragment_shader_t(renderer_ptr const& ctx, lion::path_t const& path, platform::d3d_blob_ptr const& blob, platform::d3d_fragment_shader_ptr const& shader)
 	: asset_t{path}
 	, context_{ctx}
 	, d3d_blob_{blob}
@@ -33,7 +33,7 @@ fragment_shader_t::fragment_shader_t(context_ptr const& ctx, lion::path_t const&
 {}
 
 
-auto atma::intrusive_ptr_make<shiny::fragment_shader_t>::make(context_ptr const& ctx, lion::path_t const& path, void const* data, size_t data_size, bool precompiled, atma::string const& entrypoint) -> fragment_shader_t*
+auto atma::intrusive_ptr_make<shiny::fragment_shader_t>::make(renderer_ptr const& ctx, lion::path_t const& path, void const* data, size_t data_size, bool precompiled, atma::string const& entrypoint) -> fragment_shader_t*
 {
 	using namespace shiny;
 	namespace platform = shiny::platform;

@@ -19,8 +19,8 @@ namespace shiny
 	struct output_t;
 	typedef atma::intrusive_ptr<output_t> output_ptr;
 
-	struct context_t;
-	typedef atma::intrusive_ptr<context_t> context_ptr;
+	struct renderer_t;
+	typedef atma::intrusive_ptr<renderer_t> renderer_ptr;
 
 	struct geometry_shader_t;
 	using  geometry_shader_ptr = atma::intrusive_ptr<geometry_shader_t>;

@@ -11,7 +11,7 @@ using shiny::buffer_t;
 
 
 buffer_t::buffer_t(
-	context_ptr const& ctx,
+	renderer_ptr const& ctx,
 	resource_type_t rt, resource_usage_mask_t ru, resource_storage_t rs,
 	buffer_dimensions_t const& bdm, buffer_data_t const& bdt)
 	: resource_t(ctx, rt, ru, rs, bdm.stride, bdm.count)

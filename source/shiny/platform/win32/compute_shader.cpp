@@ -9,14 +9,14 @@ using namespace shiny;
 using shiny::compute_shader_t;
 
 
-auto shiny::create_compute_shader(context_ptr const& context, atma::string const& path, bool precompiled, atma::string const& entrypoint) -> compute_shader_ptr
+auto shiny::create_compute_shader(renderer_ptr const& context, atma::string const& path, bool precompiled, atma::string const& entrypoint) -> compute_shader_ptr
 {
 	auto f = rose::file_t{path};
 	auto m = rose::read_into_memory(f);
 	return compute_shader_ptr::make(context, path, m.begin(), m.size(), precompiled, entrypoint);
 }
 
-compute_shader_t::compute_shader_t(context_ptr const& context, atma::string const& path, void const* data, size_t data_size, bool precompiled, atma::string const& entrypoint)
+compute_shader_t::compute_shader_t(renderer_ptr const& context, atma::string const& path, void const* data, size_t data_size, bool precompiled, atma::string const& entrypoint)
 	: context_(context)
 {
 	if (precompiled)

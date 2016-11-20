@@ -31,7 +31,7 @@ namespace
 }
 
 
-scene_t::scene_t(context_ptr const& context, draw_target_t const& dt, camera_t const& camera, rendertarget_clear_t const& fc)
+scene_t::scene_t(renderer_ptr const& context, draw_target_t const& dt, camera_t const& camera, rendertarget_clear_t const& fc)
 	: context_(context)
 	, draw_target_(dt)
 	, camera_(camera)
@@ -57,11 +57,11 @@ scene_t::scene_t(context_ptr const& context, draw_target_t const& dt, camera_t c
 	});
 }
 
-scene_t::scene_t(context_ptr const& context, draw_target_t const& dt)
+scene_t::scene_t(renderer_ptr const& context, draw_target_t const& dt)
 	: scene_t(context, dt, camera_t{}, rendertarget_clear_t{})
 {}
 
-scene_t::scene_t(context_ptr const& context, camera_t const& camera, rendertarget_clear_t const& fc)
+scene_t::scene_t(renderer_ptr const& context, camera_t const& camera, rendertarget_clear_t const& fc)
 	: context_(context)
 	, camera_(camera)
 {

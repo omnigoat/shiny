@@ -8,11 +8,11 @@ namespace shiny
 {
 	struct structured_buffer_t : shiny::buffer_t
 	{
-		structured_buffer_t(context_ptr const&, resource_usage_mask_t const&, resource_storage_t usage, size_t stride, uint elements, void const* data, uint data_elemcount);
+		structured_buffer_t(renderer_ptr const&, resource_usage_mask_t const&, resource_storage_t usage, size_t stride, uint elements, void const* data, uint data_elemcount);
 	};
 
 	auto make_structured_buffer(
-		context_ptr const&,
+		renderer_ptr const&,
 		resource_usage_mask_t,
 		resource_storage_t,
 		size_t stride, uint elements,
@@ -20,7 +20,7 @@ namespace shiny
 
 	template <typename T>
 	inline auto make_structured_buffer(
-		context_ptr const& ctx,
+		renderer_ptr const& ctx,
 		resource_usage_mask_t mask,
 		resource_storage_t usage,
 		structured_buffer_t::typed_shadow_buffer_t<T> const& data) -> structured_buffer_ptr

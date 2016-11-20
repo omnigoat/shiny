@@ -9,7 +9,7 @@ using shiny::texture3d_t;
 
 
 auto shiny::make_texture3d(
-	context_ptr const& ctx,
+	renderer_ptr const& ctx,
 	resource_usage_mask_t ru,
 	resource_storage_t rs,
 	texture3d_dimensions_t const& td) -> texture3d_ptr
@@ -19,7 +19,7 @@ auto shiny::make_texture3d(
 
 
 
-texture3d_t::texture3d_t(context_ptr const& ctx, resource_usage_mask_t ru, resource_storage_t rs, texture3d_dimensions_t const& td)
+texture3d_t::texture3d_t(renderer_ptr const& ctx, resource_usage_mask_t ru, resource_storage_t rs, texture3d_dimensions_t const& td)
 	: resource_t(ctx, resource_type_t::texturd3d, ru, rs, element_size(td.format), td.width * td.height * td.depth)
 	, format_(td.format), mips_(td.mips), width_(td.width), height_(td.height), depth_(td.depth)
 {

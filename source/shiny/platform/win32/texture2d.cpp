@@ -8,7 +8,7 @@ using namespace shiny;
 using shiny::texture2d_t;
 
 
-texture2d_t::texture2d_t(context_ptr const& ctx, resource_usage_mask_t usage_flags, format_t format, uint width, uint height, uint mips)
+texture2d_t::texture2d_t(renderer_ptr const& ctx, resource_usage_mask_t usage_flags, format_t format, uint width, uint height, uint mips)
 	: resource_t(ctx, resource_type_t::texture2d, usage_flags, resource_storage_t::persistant, shiny::element_size(format), width * height)
 	, format_(format), width_(width), height_(height), mips_(mips)
 {
@@ -41,7 +41,7 @@ texture2d_t::texture2d_t(context_ptr const& ctx, resource_usage_mask_t usage_fla
 	ATMA_ENSURE_IS(S_OK, device->CreateTexture2D(&texdesc, nullptr, d3d_texture_.assign()));
 }
 
-texture2d_t::texture2d_t(context_ptr const& ctx, platform::d3d_texture2d_ptr const& tx, resource_usage_mask_t rum, format_t f, uint w, uint h, uint m)
+texture2d_t::texture2d_t(renderer_ptr const& ctx, platform::d3d_texture2d_ptr const& tx, resource_usage_mask_t rum, format_t f, uint w, uint h, uint m)
 	: resource_t{ctx, resource_type_t::texture2d, rum, resource_storage_t::persistant, shiny::element_size(f), w * h}
 	, d3d_texture_(tx)
 	, format_(f), width_(w), height_(h), mips_(m)
@@ -85,7 +85,7 @@ auto texture2d_t::d3d_resource() const -> platform::d3d_resource_ptr
 
 
 
-auto shiny::make_texture2d(context_ptr const& context, resource_usage_mask_t flags, format_t format, uint width, uint height) -> texture2d_ptr
+auto shiny::make_texture2d(renderer_ptr const& context, resource_usage_mask_t flags, format_t format, uint width, uint height) -> texture2d_ptr
 {
 	return atma::make_intrusive<texture2d_t>(context, flags, format, width, height, 0u);
 }

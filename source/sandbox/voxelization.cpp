@@ -81,7 +81,7 @@ auto obj_model_t::triangle_of(aml::vector4i const& f) const -> aml::triangle_t
 }
 
 
-auto load_fragment_shader(shiny::context_ptr const& ctx, rose::path_t const& path, lion::input_stream_ptr const& stream) -> lion::asset_ptr
+auto load_fragment_shader(shiny::renderer_ptr const& ctx, rose::path_t const& path, lion::input_stream_ptr const& stream) -> lion::asset_ptr
 {
 	bool precompiled = path.extension() == "cso";
 	auto r = shiny::fragment_shader_t::make(ctx, path, precompiled, "main");
@@ -97,7 +97,7 @@ voxelization_plugin_t::voxelization_plugin_t(application_t* app)
 		});
 }
 
-auto voxelization_plugin_t::gfx_setup(shiny::context_ptr const& ctx2) -> void
+auto voxelization_plugin_t::gfx_setup(shiny::renderer_ptr const& ctx2) -> void
 {
 	ctx = ctx2;
 }
@@ -597,7 +597,7 @@ auto voxelization_plugin_t::setup_rendering() -> void
 	fs_voxels = library_.load_as<shiny::fragment_shader_t>("/res/shaders/ps_voxels.hlsl");
 }
 
-auto voxelization_plugin_t::gfx_ctx_draw(shiny::context_ptr const& ctx) -> void
+auto voxelization_plugin_t::gfx_ctx_draw(shiny::renderer_ptr const& ctx) -> void
 {
 	
 }

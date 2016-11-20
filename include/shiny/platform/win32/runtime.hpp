@@ -40,7 +40,7 @@ namespace shiny
 		auto geometry_declaration_of(geometry_streams_t const&) -> geometry_declaration_t const*;
 
 		// dxgi/d3d specific
-		auto dxgid3d_for_adapter(uint adapter_index) -> std::tuple<platform::dxgi_adapter_ptr, platform::d3d_device_ptr, platform::d3d_context_ptr>;
+		auto dxgid3d_for_adapter(uint adapter_index) -> std::tuple<platform::dxgi_adapter_ptr, platform::d3d_device_ptr, platform::d3d_renderer_ptr>;
 		auto dxgi_output_of(platform::dxgi_adapter_ptr const&, uint output_index) -> platform::dxgi_output_ptr const&;
 		auto d3d_report_live_objects() -> void;
 

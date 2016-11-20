@@ -111,7 +111,7 @@ resource_view_t::~resource_view_t()
 {
 }
 
-auto resource_view_t::context() const -> context_ptr const&
+auto resource_view_t::context() const -> renderer_ptr const&
 {
 	return resource_->context();
 }
