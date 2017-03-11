@@ -24,7 +24,6 @@
 #include <atma/math/aabc.hpp>
 #include <atma/math/intersection.hpp>
 
-#include <atma/filesystem/file.hpp>
 #include <atma/vector.hpp>
 #include <atma/memory.hpp>
 
