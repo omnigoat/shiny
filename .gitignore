@@ -1,8 +1,6 @@
 
 ; ignore visual studio files
-Debug/
-Release/
-data/
+.vs/
 *.opensdf
 *.suo
 *.sdf
@@ -14,4 +12,12 @@ data/
 *.VC.opendb
 *.VC.db
 
-fxc.exe
+; ignore data
+data/
+
+; ignore intermediates & output files
+project/*/intermediates/
+project/*/builds/
+
+; ignore vendor stuff
+vendor/DirectXTex/Bin
