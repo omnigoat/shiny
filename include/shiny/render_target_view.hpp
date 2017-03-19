@@ -10,5 +10,5 @@ namespace shiny
 }
 
 #ifdef ATMA_PLATFORM_WINDOWS
-#	include <shiny/platform/win32/render_target_view.hpp>
+#	include <shiny/platform/dx11/render_target_view.hpp>
 #endif

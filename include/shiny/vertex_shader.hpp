@@ -3,5 +3,5 @@
 #include <atma/config/platform.hpp>
 
 #ifdef ATMA_PLATFORM_WINDOWS
-#	include <shiny/platform/win32/vertex_shader.hpp>
+#	include <shiny/platform/dx11/vertex_shader.hpp>
 #endif

@@ -3,7 +3,7 @@
 #include <atma/config/platform.hpp>
 
 #ifdef ATMA_PLATFORM_WINDOWS
-#	include <shiny/platform/win32/resource_view.hpp>
+#	include <shiny/platform/dx11/resource_view.hpp>
 #endif
 
 namespace shiny

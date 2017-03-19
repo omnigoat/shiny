@@ -3,7 +3,7 @@
 #include <atma/config/platform.hpp>
 
 #ifdef ATMA_PLATFORM_WINDOWS
-#	include <shiny/platform/win32/geometry_shader.hpp>
+#	include <shiny/platform/dx11/geometry_shader.hpp>
 #endif
 
 namespace shiny {
