@@ -4,10 +4,9 @@
 #include <shiny/renderer.hpp>
 
 
-using namespace shiny_d3d11;
+using namespace shiny_dx11;
 
-texture2d_dx11_t::texture2d_dx11_t(renderer_ptr const& rndr, resource_usage_mask_t usage_flags, format_t format, uint width, uint height, uint mips)
-	: resource_t(rndr, resource_type_t::texture2d, usage_flags, resource_storage_t::persistant, shiny::element_size(format), width * height)
+texture2d_dx11_t::texture2d_dx11_t(resource_usage_mask_t usage_flags, format_t format, uint width, uint height, uint mips)
 {
 	auto const& device = renderer()->d3d_device();
 
@@ -38,9 +37,8 @@ texture2d_dx11_t::texture2d_dx11_t(renderer_ptr const& rndr, resource_usage_mask
 	ATMA_ENSURE_IS(S_OK, device->CreateTexture2D(&texdesc, nullptr, d3d_texture_.assign()));
 }
 
-shiny_d3d11::texture2d_dx11_t::texture2d_dx11_t(renderer_ptr const& rndr, platform::d3d_texture2d_ptr const& tx, resource_usage_mask_t rum, format_t f, uint w, uint h, uint m)
-	: resource_t{rndr, resource_type_t::texture2d, rum, resource_storage_t::persistant, shiny::element_size(f), w * h}
-	, d3d_texture_(tx)
+shiny_dx11::texture2d_dx11_t::texture2d_dx11_t(platform::d3d_texture2d_ptr const& tx)
+	: d3d_texture_(tx)
 {}
 
 

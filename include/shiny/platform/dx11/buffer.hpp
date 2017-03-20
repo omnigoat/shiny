@@ -79,7 +79,7 @@ namespace shiny
 		size_t size;
 	};
 
-	struct buffer_t : resource_t
+	struct buffer_t : shiny_dx11::resource_dx11_t
 	{
 		template <typename T> using aligned_data_t = detail::aligned_data_t<T>;
 

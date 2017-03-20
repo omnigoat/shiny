@@ -34,6 +34,7 @@
 
 
 using namespace shiny;
+using namespace shiny_dx11;
 using shiny::renderer_t;
 
 
@@ -171,11 +172,10 @@ auto renderer_t::setup_rendertarget(uint width, uint height) -> void
 	d3d_backbuffer_->GetDesc(&backbuffer_desc);
 
 	// create default render-target
-	backbuffer_texture_ = this->make_texture(
-		d3d_backbuffer_,
+	backbuffer_texture_ = this->make_texture2d(
 		resource_usage_t::render_target,
 		format_t::nu8x4,
-		backbuffer_desc.Width, backbuffer_desc.Height, 1});
+		backbuffer_desc.Width, backbuffer_desc.Height, 1);
 
 	backbuffer_view_ = make_resource_view(
 		backbuffer_texture_,
@@ -363,6 +363,13 @@ auto renderer_t::immediate_clear(rendertarget_clear_t const& rtc) -> void
 	float color[4] = {rtc.color().x, rtc.color().y, rtc.color().z, rtc.color().w};
 	d3d_immediate_context_->ClearRenderTargetView((ID3D11RenderTargetView*)current_render_target_view_[0]->d3d_view().get(), color);
 	d3d_immediate_context_->ClearDepthStencilView((ID3D11DepthStencilView*)current_depth_stencil_view_->d3d_view().get(), D3D11_CLEAR_DEPTH, rtc.depth(), rtc.stencil());
+}
+
+auto renderer_t::make_texture2d(resource_usage_mask_t usage, format_t format, uint width, uint height, uint mips) -> texture2d_ptr
+{
+	return new shiny::api_bridge::bridge_t<texture2d_t, texture2d_dx11_t>{
+		texture2d_t{shared_from_this<renderer_t>(), usage, format, width, height, mips},
+		shiny_dx11::texture2d_dx11_t{usage, format, width, height, mips}};
 }
 
 auto renderer_t::immediate_draw_pipeline_reset() -> void

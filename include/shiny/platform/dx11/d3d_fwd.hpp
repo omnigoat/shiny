@@ -44,7 +44,7 @@ namespace shiny::platform
 
 }
 
-namespace shiny_d3d11
+namespace shiny_dx11
 {
 	// yes, in a header-file
 	using namespace shiny;

@@ -83,10 +83,32 @@ namespace shiny
 	#undef NS
 
 
-	auto element_count(format_t) -> uint;
-	auto element_size(format_t) -> size_t;
-	auto is_generic(format_t) -> bool;
-	auto format_depth_size(format_t) -> size_t;
-	auto format_stencil_size(format_t) -> size_t;
+	inline constexpr auto element_count(shiny::format_t f) -> uint
+	{
+		return ((uint32)f & 0xf0) >> 4;
+	}
+
+	inline constexpr auto element_size(format_t f) -> size_t
+	{
+		return element_count(f) * (((uint32)f & 0xff00) >> 8) / 8;
+	}
+
+	inline constexpr auto is_generic(format_t f) -> bool
+	{
+		return ((uint32)f & 0x1) != 0;
+	}
+
+	inline constexpr auto format_depth_size(format_t f) -> size_t
+	{
+		if ((uint32)f & 0x100)
+			return element_size(f);
+		else
+			return 0;
+	}
+
+	inline constexpr auto format_stencil_size(format_t f) -> size_t
+	{
+		return ((uint32)f & 0x200);
+	}
 
 }

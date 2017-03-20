@@ -83,7 +83,7 @@ namespace shiny
 		// make functions
 		// these are threadsafe
 		//auto make_render_target_view(resource_cptr const&) -> render_target_view_ptr;
-
+		auto make_texture2d(resource_usage_mask_t, format_t, uint width, uint height, uint mips) -> texture2d_ptr;
 
 		// pipeline-setup-stage
 		auto immediate_draw_pipeline_reset() -> void;
