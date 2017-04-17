@@ -7,6 +7,8 @@ namespace shiny
 	struct constant_buffer_t : buffer_t
 	{
 		constant_buffer_t(renderer_ptr const& renderer, size_t data_size, void const* data);
+
+		auto sizeof_host_resource() const -> size_t override { return sizeof(constant_buffer_t); }
 	};
 
 

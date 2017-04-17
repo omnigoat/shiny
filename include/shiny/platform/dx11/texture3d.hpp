@@ -40,9 +40,11 @@ namespace shiny
 		auto height() const -> size_t;
 		auto depth() const -> size_t;
 
-		//auto d3d_texture() const -> platform::d3d_texture3d_ptr const&;
-		//auto d3d_texture() -> platform::d3d_texture3d_ptr&;
-		//auto d3d_resource() const -> platform::d3d_resource_ptr override;
+		auto d3d_texture() const -> platform::d3d_texture3d_ptr const&;
+		auto d3d_texture() -> platform::d3d_texture3d_ptr&;
+		auto d3d_resource() const -> platform::d3d_resource_ptr;
+
+		auto sizeof_host_resource() const -> size_t override { return sizeof(texture3d_t); }
 
 	private:
 		format_t format_;

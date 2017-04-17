@@ -2,7 +2,10 @@
 
 #include <shiny/shiny_fwd.hpp>
 #include <shiny/resource.hpp>
+#include <shiny/resource_view.hpp>
+
 #include <shiny/platform/dx11/d3d_fwd.hpp>
+#include <shiny/platform/dx11/resource.hpp>
 
 #include <atma/aligned_allocator.hpp>
 #include <atma/vector.hpp>
@@ -79,7 +82,7 @@ namespace shiny
 		size_t size;
 	};
 
-	struct buffer_t : shiny_dx11::resource_dx11_t
+	struct buffer_t : resource_t
 	{
 		template <typename T> using aligned_data_t = detail::aligned_data_t<T>;
 
@@ -93,7 +96,9 @@ namespace shiny
 		auto bind(gen_primary_compute_view_t const&) -> void;
 
 		auto d3d_buffer() const -> platform::d3d_buffer_ptr const& { return d3d_buffer_; }
-		auto d3d_resource() const -> platform::d3d_resource_ptr override { return d3d_buffer_; }
+		auto d3d_resource() const -> platform::d3d_resource_ptr { return d3d_buffer_; }
+
+		auto sizeof_host_resource() const -> size_t override { return sizeof(buffer_t); }
 
 	protected:
 		resource_view_ptr primary_input_view_;

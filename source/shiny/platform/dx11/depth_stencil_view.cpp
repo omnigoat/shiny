@@ -1,5 +1,6 @@
 #include <shiny/platform/dx11/depth_stencil_view.hpp>
 
+#include <shiny/platform/dx11/texture2d.hpp>
 #include <shiny/renderer.hpp>
 
 
@@ -20,5 +21,5 @@ depth_stencil_view_t::depth_stencil_view_t(texture2d_ptr const& tx, uint mip)
 	desc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
 	desc.Texture2D = D3D11_TEX2D_DSV{0};
 
-	ctx_->d3d_device()->CreateDepthStencilView(texture_->d3d_resource().get(), &desc, d3d_rt_.assign());
+	ctx_->d3d_device()->CreateDepthStencilView(device_unsafe_access<shiny_dx11::texture2d_t>(texture_)->d3d_resource().get(), &desc, d3d_rt_.assign());
 }

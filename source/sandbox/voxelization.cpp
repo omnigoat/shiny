@@ -183,10 +183,10 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 	//auto voxel_halfwidth = std::sqrtf(voxelwidth * voxelwidth) / 0.5f;
 
 
-	auto render_target = shiny::make_texture2d(rndr,
+	auto render_target = rndr->make_texture(
 		shiny::resource_usage_t::render_target,
 		shiny::format_t::nu8x4,
-		gridsize, gridsize);
+		gridsize, gridsize, 1);
 
 	auto render_target_view = shiny::make_resource_view(render_target,
 		shiny::resource_view_type_t::render_target,

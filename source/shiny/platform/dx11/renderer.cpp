@@ -3,6 +3,7 @@
 #include <shiny/platform/dx11/dxgid3d_convert.hpp>
 #include <shiny/platform/dx11/d3d_fwd.hpp>
 #include <shiny/platform/dx11/dxgi_fwd.hpp>
+#include <shiny/platform/dx11/texture2d.hpp>
 
 #include <shiny/data_declaration.hpp>
 #include <shiny/vertex_buffer.hpp>
@@ -36,6 +37,8 @@
 using namespace shiny;
 using namespace shiny_dx11;
 using shiny::renderer_t;
+
+using renderer_t = shiny::renderer_t;
 
 
 //======================================================================
@@ -107,6 +110,12 @@ renderer_t::~renderer_t()
 	engine_.signal_block();
 }
 
+auto renderer_t::make_texture(resource_usage_mask_t usage, format_t format, uint width, uint height, uint mips) -> texture2d_ptr
+{
+	return texture2d_ptr{new texture2d_bridge_t<shiny_dx11::texture2d_t>{shared_from_this<renderer_t>(), usage, format, width, height, mips}};
+}
+
+
 auto renderer_t::immediate_set_stage(renderer_stage_t rs) -> void
 {
 	stage_ = rs;
@@ -172,10 +181,12 @@ auto renderer_t::setup_rendertarget(uint width, uint height) -> void
 	d3d_backbuffer_->GetDesc(&backbuffer_desc);
 
 	// create default render-target
-	backbuffer_texture_ = this->make_texture2d(
+	backbuffer_texture_ = this->make_texture(
 		resource_usage_t::render_target,
 		format_t::nu8x4,
 		backbuffer_desc.Width, backbuffer_desc.Height, 1);
+
+	device_unsafe_access<shiny_dx11::texture2d_t>(backbuffer_texture_)->d3d_texture().reset(d3d_backbuffer_.get());
 
 	backbuffer_view_ = make_resource_view(
 		backbuffer_texture_,
@@ -183,11 +194,10 @@ auto renderer_t::setup_rendertarget(uint width, uint height) -> void
 		format_t::nu8x4);
 	
 	// create default depth-stencil
-	default_depth_stencil_texture_ = texture2d_ptr{new texture2d_t{
-		shared_from_this<renderer_t>(),
+	default_depth_stencil_texture_ = this->make_texture(
 		resource_usage_t::depth_stencil,
 		format_t::dnu24s8,
-		backbuffer_desc.Width, backbuffer_desc.Height, 1}};
+		backbuffer_desc.Width, backbuffer_desc.Height, 1);
 
 	default_depth_stencil_view_ = make_resource_view(default_depth_stencil_texture_,
 		resource_view_type_t::depth_stencil,
@@ -363,13 +373,6 @@ auto renderer_t::immediate_clear(rendertarget_clear_t const& rtc) -> void
 	float color[4] = {rtc.color().x, rtc.color().y, rtc.color().z, rtc.color().w};
 	d3d_immediate_context_->ClearRenderTargetView((ID3D11RenderTargetView*)current_render_target_view_[0]->d3d_view().get(), color);
 	d3d_immediate_context_->ClearDepthStencilView((ID3D11DepthStencilView*)current_depth_stencil_view_->d3d_view().get(), D3D11_CLEAR_DEPTH, rtc.depth(), rtc.stencil());
-}
-
-auto renderer_t::make_texture2d(resource_usage_mask_t usage, format_t format, uint width, uint height, uint mips) -> texture2d_ptr
-{
-	return new shiny::api_bridge::bridge_t<texture2d_t, texture2d_dx11_t>{
-		texture2d_t{shared_from_this<renderer_t>(), usage, format, width, height, mips},
-		shiny_dx11::texture2d_dx11_t{usage, format, width, height, mips}};
 }
 
 auto renderer_t::immediate_draw_pipeline_reset() -> void
@@ -706,11 +709,12 @@ auto renderer_t::signal_rs_map(resource_ptr const& rs, uint subresource, map_typ
 		;
 
 	engine_.signal([&, rs, subresource, d3dmap, fn] {
+		auto d3dr = device_pin<shiny_dx11::resource_dx11_t>(rs)->d3d_resource();
 		auto sr = D3D11_MAPPED_SUBRESOURCE{};
-		ATMA_ENSURE_IS(S_OK, d3d_immediate_context_->Map(rs->d3d_resource().get(), subresource, d3dmap, 0, &sr));
+		ATMA_ENSURE_IS(S_OK, d3d_immediate_context_->Map(d3dr.get(), subresource, d3dmap, 0, &sr));
 		mapped_subresource_t msr{sr.pData, sr.RowPitch, sr.DepthPitch};
 		fn(msr);
-		d3d_immediate_context_->Unmap(rs->d3d_resource().get(), subresource);
+		d3d_immediate_context_->Unmap(d3dr.get(), subresource);
 	});
 }
 
@@ -858,7 +862,9 @@ auto renderer_t::on_resize(fooey::events::resize_t& e) -> void
 auto renderer_t::signal_copy_buffer(resource_ptr const& dest, resource_cptr const& src) -> void
 {
 	engine_.signal([&, dest, src]{
-		d3d_immediate_context_->CopyResource(dest->d3d_resource().get(), src->d3d_resource().get());
+		d3d_immediate_context_->CopyResource(
+			device_unsafe_access<shiny_dx11::resource_dx11_t>(dest)->d3d_resource().get(),
+			device_unsafe_access<shiny_dx11::resource_dx11_t>(src)->d3d_resource().get());
 	});
 }
 
@@ -904,7 +910,8 @@ auto renderer_t::signal_rs_upload(resource_ptr const& rs, uint subresource, buff
 		default:
 		{
 			engine_.signal([&, rs, subresource, mem]{
-				d3d_immediate_context_->UpdateSubresource(rs->d3d_resource().get(), subresource, nullptr, mem.begin(), (UINT)mem.size(), 1);
+				auto dx11rs = device_pin<shiny_dx11::resource_dx11_t>(rs);
+				d3d_immediate_context_->UpdateSubresource(dx11rs->d3d_resource().get(), subresource, nullptr, mem.begin(), (UINT)mem.size(), 1);
 			});
 		}
 	}

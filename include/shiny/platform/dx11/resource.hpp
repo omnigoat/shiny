@@ -9,10 +9,10 @@
 #include <vector>
 
 
-namespace shiny
+namespace shiny_dx11
 {
 	struct resource_dx11_t
 	{
-		virtual auto d3d_resource() const -> platform::d3d_resource_ptr = 0;
+		virtual auto d3d_resource() const -> d3d_resource_ptr = 0;
 	};
 }

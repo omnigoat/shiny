@@ -63,6 +63,7 @@ namespace shiny { namespace platform {
 	{
 		static D3D11_BIND_FLAG const mapping[] =
 		{
+			D3D11_BIND_FLAG{},
 			D3D11_BIND_VERTEX_BUFFER,
 			D3D11_BIND_INDEX_BUFFER,
 			D3D11_BIND_CONSTANT_BUFFER,

@@ -129,6 +129,8 @@ namespace shiny
 
 	enum class resource_type_t
 	{
+		unknown,
+
 		vertex_buffer,
 		index_buffer,
 		constant_buffer,
@@ -142,6 +144,8 @@ namespace shiny
 
 	enum class resource_view_type_t
 	{
+		unknown,
+
 		// read-only (shader-resource)
 		input,
 		// read-write (unordered-access)
@@ -156,6 +160,8 @@ namespace shiny
 
 	enum class resource_storage_t
 	{
+		unknown,
+
 		// immutable:
 		//   cpu: none
 		//   gpu: read

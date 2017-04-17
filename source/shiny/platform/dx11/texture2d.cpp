@@ -3,12 +3,12 @@
 #include <shiny/platform/dx11/dxgid3d_convert.hpp>
 #include <shiny/renderer.hpp>
 
-
+using namespace shiny;
 using namespace shiny_dx11;
 
-texture2d_dx11_t::texture2d_dx11_t(resource_usage_mask_t usage_flags, format_t format, uint width, uint height, uint mips)
+shiny_dx11::texture2d_t::texture2d_t(renderer_ptr const& rndr, resource_usage_mask_t usage_flags, format_t format, uint width, uint height, uint mips)
 {
-	auto const& device = renderer()->d3d_device();
+	auto const& device = rndr->d3d_device();
 
 	auto d3dusage = D3D11_USAGE();
 	auto d3dbind = 0;
@@ -37,14 +37,8 @@ texture2d_dx11_t::texture2d_dx11_t(resource_usage_mask_t usage_flags, format_t f
 	ATMA_ENSURE_IS(S_OK, device->CreateTexture2D(&texdesc, nullptr, d3d_texture_.assign()));
 }
 
-shiny_dx11::texture2d_dx11_t::texture2d_dx11_t(platform::d3d_texture2d_ptr const& tx)
+shiny_dx11::texture2d_t::texture2d_t(renderer_ptr const& rndr, platform::d3d_texture2d_ptr const& tx, resource_usage_mask_t rum, format_t f, uint w, uint h, uint m)
 	: d3d_texture_(tx)
 {}
-
-
-//auto shiny::make_texture2d(renderer_ptr const& renderer, resource_usage_mask_t flags, format_t format, uint width, uint height) -> texture2d_ptr
-//{
-//	return atma::make_intrusive<texture2d_dx11_t>(renderer, flags, format, width, height, 0u);
-//}
 
 

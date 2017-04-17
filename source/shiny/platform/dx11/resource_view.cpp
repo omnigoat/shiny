@@ -28,6 +28,8 @@ resource_view_t::resource_view_t(resource_cptr const& rs, resource_view_type_t v
 	if (subset_.count == 0)
 		subset_.count = rs->elements_count();
 
+	auto dx11d = device_pin<shiny_dx11::resource_dx11_t>(resource_);
+
 	switch (view_type)
 	{
 		case resource_view_type_t::input:
@@ -49,7 +51,7 @@ resource_view_t::resource_view_t(resource_cptr const& rs, resource_view_type_t v
 					break;
 			}
 
-			ATMA_ENSURE_IS(S_OK, renderer()->d3d_device()->CreateShaderResourceView(resource_->d3d_resource().get(), &desc, d3d_srv_.assign()));
+			ATMA_ENSURE_IS(S_OK, renderer()->d3d_device()->CreateShaderResourceView(dx11d->d3d_resource().get(), &desc, d3d_srv_.assign()));
 			d3d_view_ = d3d_srv_;
 			break;
 		}
@@ -72,7 +74,7 @@ resource_view_t::resource_view_t(resource_cptr const& rs, resource_view_type_t v
 					break;
 			}
 
-			ATMA_ENSURE_IS(S_OK, renderer()->d3d_device()->CreateUnorderedAccessView(resource_->d3d_resource().get(), &desc, d3d_uav_.assign()));
+			ATMA_ENSURE_IS(S_OK, renderer()->d3d_device()->CreateUnorderedAccessView(dx11d->d3d_resource().get(), &desc, d3d_uav_.assign()));
 			d3d_view_ = d3d_uav_;
 			break;
 		}
@@ -85,7 +87,7 @@ resource_view_t::resource_view_t(resource_cptr const& rs, resource_view_type_t v
 			desc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
 			desc.Texture2D = D3D11_TEX2D_RTV{0u};
 
-			ATMA_ENSURE_IS(S_OK, renderer()->d3d_device()->CreateRenderTargetView(resource_->d3d_resource().get(), nullptr, &(ID3D11RenderTargetView*&)d3d_view_.get()));
+			ATMA_ENSURE_IS(S_OK, renderer()->d3d_device()->CreateRenderTargetView(dx11d->d3d_resource().get(), nullptr, &(ID3D11RenderTargetView*&)d3d_view_.get()));
 			break;
 		}
 
@@ -97,7 +99,7 @@ resource_view_t::resource_view_t(resource_cptr const& rs, resource_view_type_t v
 			desc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
 			desc.Texture2D = D3D11_TEX2D_DSV{0u};
 
-			ATMA_ENSURE_IS(S_OK, renderer()->d3d_device()->CreateDepthStencilView(resource_->d3d_resource().get(), &desc, &(ID3D11DepthStencilView*&)d3d_view_.get()));
+			ATMA_ENSURE_IS(S_OK, renderer()->d3d_device()->CreateDepthStencilView(dx11d->d3d_resource().get(), &desc, &(ID3D11DepthStencilView*&)d3d_view_.get()));
 			break;
 		}
 

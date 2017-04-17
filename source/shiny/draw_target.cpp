@@ -2,6 +2,8 @@
 
 #include <shiny/render_target_view.hpp>
 #include <shiny/depth_stencil_view.hpp>
+#include <shiny/renderer.hpp>
+
 
 using namespace shiny;
 using shiny::draw_target_t;

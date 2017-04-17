@@ -80,6 +80,8 @@ namespace shiny
 
 		auto immediate_clear(rendertarget_clear_t const&) -> void;
 
+		auto make_texture(resource_usage_mask_t, format_t, uint width, uint height, uint mips) -> texture2d_ptr;
+
 		// make functions
 		// these are threadsafe
 		//auto make_render_target_view(resource_cptr const&) -> render_target_view_ptr;

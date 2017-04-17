@@ -1,5 +1,7 @@
 #include <shiny/render_target_view.hpp>
 
+#include <shiny/platform/dx11/texture2d.hpp>
+
 #include <shiny/renderer.hpp>
 
 
@@ -30,6 +32,6 @@ render_target_view_t::render_target_view_t(texture2d_ptr const& tx, uint mip)
 	desc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
 	desc.Texture2D = D3D11_TEX2D_RTV{0};
 
-	ctx_->d3d_device()->CreateRenderTargetView(texture_->d3d_resource().get(), &desc, d3d_rt_.assign());
+	ctx_->d3d_device()->CreateRenderTargetView(device_unsafe_access<shiny_dx11::texture2d_t>(texture_)->d3d_resource().get(), &desc, d3d_rt_.assign());
 }
 

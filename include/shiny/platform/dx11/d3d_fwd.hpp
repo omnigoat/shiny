@@ -46,10 +46,6 @@ namespace shiny::platform
 
 namespace shiny_dx11
 {
-	// yes, in a header-file
-	using namespace shiny;
-
-
 	using d3d_device_ptr                = atma::com_ptr<ID3D11Device>;
 	using d3d_renderer_ptr               = atma::com_ptr<ID3D11DeviceContext>;
 

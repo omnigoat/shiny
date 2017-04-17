@@ -13,6 +13,8 @@ namespace shiny
 		auto data_declaration() const -> data_declaration_t const* { return data_declaration_; }
 		auto vertex_count() const -> uint { return vertex_count_; }
 
+		auto sizeof_host_resource() const -> size_t override { return sizeof(vertex_buffer_t); }
+
 	private:
 		data_declaration_t const* data_declaration_;
 		uint vertex_count_;

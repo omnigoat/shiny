@@ -13,6 +13,8 @@ namespace shiny
 		auto index_count() const -> uint { return index_count_; }
 		auto index_format() const -> format_t { return index_format_; }
 
+		auto sizeof_host_resource() const -> size_t override { return sizeof(index_buffer_t); }
+
 	private:
 		uint index_count_;
 		format_t index_format_;

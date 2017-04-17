@@ -28,7 +28,7 @@ buffer_t::buffer_t(
 	if (data_element_count == 0)
 		data_element_count = bdm.count;
 	auto data_size = bdm.stride * data_element_count;
-
+	data_size = atma::alignby((uint)data_size, 16);
 
 	// determine resource-storage and cpu-access
 	auto d3d_rs = D3D11_USAGE();
@@ -82,13 +82,14 @@ buffer_t::buffer_t(
 
 
 	// create buffer
-	auto buffer_desc = D3D11_BUFFER_DESC{(UINT)resource_size(), d3d_rs, (UINT)binding, (UINT)d3d_ca, (UINT)misc_flags, (UINT)bdm.stride};
+	auto rs_size = atma::alignby((uint)resource_size(), 16);
+	auto buffer_desc = D3D11_BUFFER_DESC{(UINT)rs_size, d3d_rs, (UINT)binding, (UINT)d3d_ca, (UINT)misc_flags, (UINT)bdm.stride};
 	switch (resource_storage())
 	{
 		case resource_storage_t::immutable:
 		{
 			ATMA_ASSERT(bdt.data, "immutable buffers require data upon initialisation");
-			ATMA_ASSERT(resource_size() == data_size, "immutable buffer: allocation size != data size");
+			//ATMA_ASSERT(resource_size() == data_size, "immutable buffer: allocation size != data size");
 			ATMA_ASSERT(d3d_ca == 0, "immutable buffer with cpu access? silly.");
 
 			auto d3d_data = D3D11_SUBRESOURCE_DATA{bdt.data, (UINT)data_size, 1};
