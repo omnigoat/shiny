@@ -73,5 +73,9 @@ namespace shiny_dx11
 	using d3d_input_layout_ptr          = atma::com_ptr<ID3D11InputLayout>;
 	using d3d_blend_state_ptr           = atma::com_ptr<ID3D11BlendState>;
 	using d3d_depth_stencil_state_ptr   = atma::com_ptr<ID3D11DepthStencilState>;
+}
 
+namespace shiny_dx11
+{
+	struct resource_t;
 }

@@ -292,7 +292,7 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 	fs_voxelize = library_.load_as<shiny::fragment_shader_t>("/res/shaders/fs_voxelize.hlsl");
 
 	// fragments buffer (64mb)
-	fragments_buf = shiny::make_buffer(rndr,
+	fragments_buf = rndr->make_buffer(
 		shiny::resource_type_t::structured_buffer,
 		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
 		shiny::resource_storage_t::persistant,
@@ -304,7 +304,7 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 		shiny::format_t::unknown);
 
 	fragments_srv_view = shiny::make_resource_view(fragments_buf,
-		shiny::resource_view_type_t::input,
+		shiny::resource_view_type_t::read,
 		shiny::format_t::unknown);
 
 	{
@@ -312,7 +312,7 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 
 
 		uint32 counters[2] = {0, 0};
-		auto countbuf = shiny::make_buffer(rndr,
+		auto countbuf = rndr->make_buffer(
 			shiny::resource_type_t::structured_buffer,
 			shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
 			shiny::resource_storage_t::persistant,
@@ -325,10 +325,10 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 
 		auto mid = (bbmin + bbmax) / 2.f;
 		mid.w = gridwidth * 0.5f;
-		auto cb = shiny::make_constant_buffer(rndr, mid);
+		auto cb = rndr->make_constant_buffer_for(mid);
 
 		aml::vector4f dimensions{(float)gridsize, (float)gridsize, (float)gridsize, 0.f};
-		auto cb2 = shiny::make_constant_buffer(rndr, dimensions);
+		auto cb2 = rndr->make_constant_buffer_for(dimensions);
 
 		voxelization_scene.draw
 		(
@@ -367,7 +367,7 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 
 		rndr->signal_draw_scene(voxelization_scene);
 
-		auto counter_scratch = shiny::make_buffer(rndr,
+		auto counter_scratch = rndr->make_buffer(
 			shiny::resource_type_t::staging_buffer,
 			shiny::resource_usage_mask_t::none,
 			shiny::resource_storage_t::staging,
@@ -459,13 +459,11 @@ auto voxelization_plugin_t::setup_svo() -> void
 		uint32 pad;
 	};
 
-	auto cb = shiny::make_constant_buffer(rndr,
-		sizeof(cbuf),
-		nullptr);
+	auto cb = rndr->make_constant_buffer(nullptr, sizeof(cbuf));
 
 	// atomic counters
 	uint32 counters[2] ={1, 1};
-	countbuf = shiny::make_buffer(rndr,
+	countbuf = rndr->make_buffer(
 		shiny::resource_type_t::structured_buffer,
 		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
 		shiny::resource_storage_t::persistant,
@@ -477,19 +475,20 @@ auto voxelization_plugin_t::setup_svo() -> void
 		shiny::format_t::unknown);
 
 	// node-cache
-	nodecache = shiny::make_buffer(rndr,
+	nodecache = rndr->make_buffer(
 		shiny::resource_type_t::structured_buffer,
 		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
 		shiny::resource_storage_t::persistant,
 		shiny::buffer_dimensions_t{tile_size, tiles_required},
-		shiny::buffer_data_t{cmem.begin(), tiles_required},
-			shiny::gen_primary_input_view_t{},
-			shiny::gen_primary_compute_view_t{});
+		shiny::buffer_data_t{cmem.begin(), tiles_required});
 
 	nodecache_view = shiny::make_resource_view(nodecache,
 		shiny::resource_view_type_t::compute,
 		shiny::format_t::unknown);
 
+	nodecache_input_view = shiny::make_resource_view(nodecache,
+		shiny::resource_view_type_t::read,
+		shiny::format_t::unknown);
 
 	auto const grid_size_500mb = 400;
 
@@ -504,7 +503,7 @@ auto voxelization_plugin_t::setup_svo() -> void
 		shiny::format_t::unknown);
 
 	brickcache_input_view = shiny::make_resource_view(brickcache,
-		shiny::resource_view_type_t::input,
+		shiny::resource_view_type_t::read,
 		shiny::format_t::f32x2);
 
 #if 0
@@ -590,7 +589,7 @@ auto voxelization_plugin_t::setup_rendering() -> void
 		{"position", 0, shiny::format_t::f32x4}
 	});
 
-	vb_quad = shiny::create_vertex_buffer(rndr, shiny::resource_storage_t::persistant, dd, 8, vbd);
+	vb_quad = rndr->make_vertex_buffer(shiny::resource_storage_t::persistant, dd, 8, vbd, 8);
 
 	vs_voxels = shiny::vertex_shader_t::make(rndr, "resources/published/shaders/vs_voxels.hlsl", false);
 	fs_voxels = library_.load_as<shiny::fragment_shader_t>("/res/shaders/ps_voxels.hlsl");
@@ -623,7 +622,7 @@ auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
 		uint32 brickcache_width, brick_size;
 	};
 
-	auto cb = shiny::make_constant_buffer(scene.renderer(), blah{
+	auto cb = scene.renderer()->make_constant_buffer_for(blah{
 		scene.camera().position(),
 		scene.camera().yaw(), scene.camera().pitch(),
 		(uint32)brickcache->width() / 8, 8
@@ -645,7 +644,7 @@ auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
 			},
 		
 			shiny::bound_input_views_t{
-				{0, nodecache->primary_input_view()},
+				{0, nodecache_input_view},
 				{1, brickcache_input_view}
 			}
 		)

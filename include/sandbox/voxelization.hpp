@@ -89,7 +89,8 @@ namespace sandbox
 		shiny::buffer_ptr nodecache, countbuf;
 		shiny::resource_view_ptr brickcache_view, nodecache_view, countbuf_view;
 		shiny::compute_shader_ptr cs_mark, cs_allocate, cs_write_fragments;
-		shiny::resource_view_ptr nodecache_input_view, brickcache_input_view;
+		shiny::resource_view_ptr brickcache_input_view;
+		shiny::resource_view_ptr nodecache_input_view;
 
 		// debug
 		shiny::buffer_ptr stb;

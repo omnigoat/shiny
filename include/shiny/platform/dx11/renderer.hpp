@@ -86,7 +86,8 @@ namespace shiny
 		auto make_buffer(resource_type_t, resource_usage_mask_t, resource_storage_t, buffer_dimensions_t, buffer_data_t) -> buffer_ptr;
 		auto make_constant_buffer(void const* data, size_t data_size) -> constant_buffer_ptr;
 		auto make_vertex_buffer(resource_storage_t, data_declaration_t const*, size_t bufcount, void const* data, size_t datacount) -> vertex_buffer_ptr;
-		auto make_texture2d(resource_usage_mask_t, format_t, uint width, uint height, uint mips) -> texture2d_ptr;
+		auto make_texture2d(resource_usage_mask_t, resource_storage_t, format_t, uint width, uint height, uint mips) -> texture2d_ptr;
+		auto make_texture3d(resource_usage_mask_t, resource_storage_t, format_t, uint width, uint height, uint depth, uint mips) -> texture3d_ptr;
 
 		template <typename T>
 		auto make_constant_buffer_for(T const& t) -> constant_buffer_ptr
@@ -203,7 +204,7 @@ namespace shiny
 		//{
 			lion::asset_library_t library;
 
-			using bound_constant_buffers2_t = atma::vector<std::pair<int, shiny_dx11::buffer_bridge_ptr>>;
+			using bound_constant_buffers2_t = std::vector<std::pair<uint, shiny_dx11::buffer_bridge_ptr>>;
 
 			// compute pipeline
 			bound_constant_buffers_t cs_cbs_;

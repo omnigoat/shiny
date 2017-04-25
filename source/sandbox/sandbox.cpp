@@ -225,7 +225,7 @@ application_t::application_t(rose::runtime_t* rr)
 		{"color", 0, shiny::format_t::f32x4}
 	});
 
-	vb_cube = shiny::create_vertex_buffer(rndr, shiny::resource_storage_t::immutable, dd_position_color, 8, cube_vertices);
+	vb_cube = rndr->make_vertex_buffer(shiny::resource_storage_t::immutable, dd_position_color, 8, cube_vertices, 8);
 	ib_cube = shiny::create_index_buffer(rndr, shiny::resource_storage_t::immutable, shiny::format_t::u16, 36, cube_indices);
 
 

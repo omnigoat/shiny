@@ -5,30 +5,17 @@
 
 
 using namespace shiny;
-using shiny::texture3d_t;
+using namespace shiny_dx11;
 
 
-auto shiny::make_texture3d(
-	renderer_ptr const& rndr,
-	resource_usage_mask_t ru,
-	resource_storage_t rs,
-	texture3d_dimensions_t const& td) -> texture3d_ptr
+shiny_dx11::texture3d_t::texture3d_t(renderer_ptr const& rndr, resource_usage_mask_t ru, resource_storage_t rs, format_t format, size_t width, size_t height, size_t depth, uint mips)
 {
-	return atma::make_intrusive<texture3d_t>(rndr, ru, rs, td);
-}
-
-
-
-texture3d_t::texture3d_t(renderer_ptr const& rndr, resource_usage_mask_t ru, resource_storage_t rs, texture3d_dimensions_t const& td)
-	: resource_t(rndr, resource_type_t::texturd3d, ru, rs, element_size(td.format), td.width * td.height * td.depth)
-	, format_(td.format), mips_(td.mips), width_(td.width), height_(td.height), depth_(td.depth)
-{
-	auto const& device = renderer()->d3d_device();
+	auto const& device = rndr->d3d_device();
 
 	auto d3dusage = D3D11_USAGE();
 	auto d3dbind = D3D11_BIND_FLAG{};
 	auto d3dcpu = D3D11_CPU_ACCESS_FLAG();
-	auto d3dfmt = platform::dxgi_format_of(td.format);
+	auto d3dfmt = platform::dxgi_format_of(format);
 
 	// resource-usage
 	if (ru & resource_usage_t::render_target || ru & resource_usage_t::depth_stencil) {
@@ -56,48 +43,9 @@ texture3d_t::texture3d_t(renderer_ptr const& rndr, resource_usage_mask_t ru, res
 	}
 
 	auto desc = D3D11_TEXTURE3D_DESC{
-		(UINT)width_, (UINT)height_, (UINT)depth_, mips_,
+		(UINT)width, (UINT)height, (UINT)depth, mips,
 		d3dfmt, d3dusage, (UINT)d3dbind, (UINT)d3dcpu, 0};
 
 	ATMA_ENSURE_IS(S_OK, device->CreateTexture3D(&desc, nullptr, d3d_texture_.assign()));
 }
 
-auto texture3d_t::format() const -> format_t
-{
-	return format_;
-}
-
-auto texture3d_t::mips() const -> uint
-{
-	return mips_;
-}
-
-auto texture3d_t::width() const -> size_t
-{
-	return width_;
-}
-
-auto texture3d_t::height() const -> size_t
-{
-	return height_;
-}
-
-auto texture3d_t::depth() const -> size_t
-{
-	return depth_;
-}
-
-auto texture3d_t::d3d_texture() const -> platform::d3d_texture3d_ptr const&
-{
-	return d3d_texture_;
-}
-
-auto texture3d_t::d3d_texture() -> platform::d3d_texture3d_ptr&
-{
-	return d3d_texture_;
-}
-
-auto texture3d_t::d3d_resource() const -> platform::d3d_resource_ptr
-{
-	return d3d_texture_;
-}

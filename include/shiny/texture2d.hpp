@@ -8,8 +8,8 @@ namespace shiny
 {
 	struct texture2d_t : resource_t
 	{
-		texture2d_t(renderer_ptr const& rndr, resource_usage_mask_t usage, format_t format, uint width, uint height, uint mips)
-			: resource_t{rndr, resource_type_t::texture2d, usage, resource_storage_t::persistant, element_size(format), width * height}
+		texture2d_t(renderer_ptr const& rndr, resource_usage_mask_t usage, resource_storage_t storage, format_t format, uint width, uint height, uint mips)
+			: resource_t{rndr, resource_type_t::texture2d, usage, storage, element_size(format), width * height}
 			, format_{format}
 			, width_{width}, height_{height}
 			, mips_{mips}

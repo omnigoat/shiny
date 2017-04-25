@@ -28,17 +28,17 @@ resource_view_t::resource_view_t(resource_cptr const& rs, resource_view_type_t v
 	if (subset_.count == 0)
 		subset_.count = rs->elements_count();
 
-	auto dx11d = device_pin<shiny_dx11::resource_dx11_t>(resource_);
+	auto dx11d = device_pin<shiny_dx11::resource_t>(resource_);
 
 	switch (view_type)
 	{
-		case resource_view_type_t::input:
+		case resource_view_type_t::read:
 		{
 			auto desc = D3D11_SHADER_RESOURCE_VIEW_DESC{fmt};
 
 			switch (resource_->resource_type())
 			{
-				case resource_type_t::texturd3d:
+				case resource_type_t::texture3d:
 					desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE3D;
 					desc.Texture3D = D3D11_TEX3D_SRV{0, 1};
 					break;
@@ -62,7 +62,7 @@ resource_view_t::resource_view_t(resource_cptr const& rs, resource_view_type_t v
 
 			switch (resource_->resource_type())
 			{
-				case resource_type_t::texturd3d:
+				case resource_type_t::texture3d:
 					desc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE3D;
 					desc.Texture3D = D3D11_TEX3D_UAV{0, 0, (UINT)-1};
 					break;

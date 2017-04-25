@@ -11,7 +11,7 @@
 
 namespace shiny_dx11
 {
-	struct resource_dx11_t
+	struct resource_t
 	{
 		virtual auto d3d_resource() const -> d3d_resource_ptr = 0;
 	};

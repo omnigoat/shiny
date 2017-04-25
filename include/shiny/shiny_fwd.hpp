@@ -139,7 +139,7 @@ namespace shiny
 		staging_buffer,
 
 		texture2d,
-		texturd3d,
+		texture3d,
 	};
 
 	enum class resource_view_type_t
@@ -147,7 +147,7 @@ namespace shiny
 		unknown,
 
 		// read-only (shader-resource)
-		input,
+		read,
 		// read-write (unordered-access)
 		compute,
 

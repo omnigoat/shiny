@@ -6,7 +6,7 @@
 using namespace shiny;
 using namespace shiny_dx11;
 
-shiny_dx11::texture2d_t::texture2d_t(renderer_ptr const& rndr, resource_usage_mask_t usage_flags, format_t format, uint width, uint height, uint mips)
+shiny_dx11::texture2d_t::texture2d_t(renderer_ptr const& rndr, resource_usage_mask_t usage_flags, resource_storage_t rs, format_t format, uint width, uint height, uint mips)
 {
 	auto const& device = rndr->d3d_device();
 
@@ -30,6 +30,22 @@ shiny_dx11::texture2d_t::texture2d_t(renderer_ptr const& rndr, resource_usage_ma
 	if (usage_flags & resource_usage_t::unordered_access)
 		(uint&)d3dbind |= D3D11_BIND_UNORDERED_ACCESS;
 
+
+	// resource-storage
+	if (rs == resource_storage_t::immutable) {
+		ATMA_HALT("not possible!");
+		return;
+	}
+	else if (rs == resource_storage_t::transient) {
+		d3dusage = D3D11_USAGE_DYNAMIC;
+		d3dcpu = D3D11_CPU_ACCESS_WRITE;
+	}
+	else if (rs == resource_storage_t::staging) {
+		d3dusage = D3D11_USAGE_STAGING;
+		d3dcpu = D3D11_CPU_ACCESS_READ;
+	}
+
+
 	D3D11_TEXTURE2D_DESC texdesc{
 		width, height, mips, 1,
 		d3dfmt, {1, 0}, d3dusage, (UINT)d3dbind, (UINT)d3dcpu, 0};
@@ -37,7 +53,7 @@ shiny_dx11::texture2d_t::texture2d_t(renderer_ptr const& rndr, resource_usage_ma
 	ATMA_ENSURE_IS(S_OK, device->CreateTexture2D(&texdesc, nullptr, d3d_texture_.assign()));
 }
 
-shiny_dx11::texture2d_t::texture2d_t(renderer_ptr const& rndr, platform::d3d_texture2d_ptr const& tx, resource_usage_mask_t rum, format_t f, uint w, uint h, uint m)
+shiny_dx11::texture2d_t::texture2d_t(platform::d3d_texture2d_ptr const& tx)
 	: d3d_texture_(tx)
 {}
 
