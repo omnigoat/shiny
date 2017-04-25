@@ -48,13 +48,13 @@ scene_t::scene_t(renderer_ptr const& renderer, draw_target_t const& dt, camera_t
 		});
 	}
 
-	scene_constant_buffer_ = shiny::make_constant_buffer(rndr_, scene_data_t{
-		camera.view(),
-		camera.inverse_view(),
-		camera.projection(),
-		invert(camera.view() * camera.projection()),
-		0.f
-	});
+	scene_constant_buffer_ = rndr_->make_constant_buffer_for(
+		scene_data_t{
+			camera.view(),
+			camera.inverse_view(),
+			camera.projection(),
+			invert(camera.view() * camera.projection()),
+			0.f});
 }
 
 scene_t::scene_t(renderer_ptr const& renderer, draw_target_t const& dt)
@@ -74,13 +74,13 @@ scene_t::scene_t(renderer_ptr const& renderer, camera_t const& camera, rendertar
 		});
 	}
 
-	scene_constant_buffer_ = shiny::make_constant_buffer(rndr_, scene_data_t{
-		camera.view(),
-		camera.inverse_view(),
-		camera.projection(),
-		invert(camera.view() * camera.projection()),
-		0.f
-	});
+	scene_constant_buffer_ = rndr_->make_constant_buffer_for(
+		scene_data_t{
+			camera.view(),
+			camera.inverse_view(),
+			camera.projection(),
+			invert(camera.view() * camera.projection()),
+			0.f});
 }
 
 

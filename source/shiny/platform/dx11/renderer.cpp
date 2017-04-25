@@ -4,6 +4,9 @@
 #include <shiny/platform/dx11/d3d_fwd.hpp>
 #include <shiny/platform/dx11/dxgi_fwd.hpp>
 #include <shiny/platform/dx11/texture2d.hpp>
+#include <shiny/platform/dx11/buffer.hpp>
+#include <shiny/platform/dx11/constant_buffer.hpp>
+#include <shiny/platform/dx11/vertex_buffer.hpp>
 
 #include <shiny/data_declaration.hpp>
 #include <shiny/vertex_buffer.hpp>
@@ -110,11 +113,35 @@ renderer_t::~renderer_t()
 	engine_.signal_block();
 }
 
-auto renderer_t::make_texture(resource_usage_mask_t usage, format_t format, uint width, uint height, uint mips) -> texture2d_ptr
+auto renderer_t::make_buffer(resource_type_t rt, resource_usage_mask_t ru, resource_storage_t rs, buffer_dimensions_t dims, buffer_data_t data) -> buffer_ptr
 {
-	return texture2d_ptr{new texture2d_bridge_t<shiny_dx11::texture2d_t>{shared_from_this<renderer_t>(), usage, format, width, height, mips}};
+	return shiny_dx11::buffer_bridge_ptr::make(
+		shiny::buffer_t{shared_from_this<renderer_t>(), rt, ru, rs, dims, data},
+		shiny_dx11::buffer_t{shared_from_this<renderer_t>(), rt, ru, rs, dims, data});
 }
 
+auto renderer_t::make_constant_buffer(void const* data, size_t data_size) -> constant_buffer_ptr
+{
+	return shiny_dx11::constant_buffer_bridge_ptr::make(
+		shiny::constant_buffer_t{shared_from_this<renderer_t>(), data, data_size},
+		shiny_dx11::buffer_t{shared_from_this<renderer_t>(),
+			shiny::resource_type_t::constant_buffer, shiny::resource_usage_mask_t::none, shiny::resource_storage_t::constant,
+			buffer_dimensions_t{1, data_size}, buffer_data_t{data, data_size}});
+}
+
+auto renderer_t::make_vertex_buffer(resource_storage_t storage, data_declaration_t const* dd, size_t bufcount, void const* data, size_t datacount) -> vertex_buffer_ptr
+{
+	return shiny_dx11::vertex_buffer_bridge_ptr::make(
+		shiny::vertex_buffer_t{shared_from_this<renderer_t>(), storage, dd, bufcount, data, datacount},
+		shiny_dx11::buffer_t{shared_from_this<renderer_t>(),
+			resource_type_t::vertex_buffer, resource_usage_mask_t::none, storage,
+			buffer_dimensions_t{dd->stride(), bufcount}, buffer_data_t{data, dd->stride() * datacount}});
+}
+
+auto renderer_t::make_texture2d(resource_usage_mask_t usage, format_t format, uint width, uint height, uint mips) -> texture2d_ptr
+{
+	return shiny_dx11::texture2d_bridge_ptr::make(shared_from_this<renderer_t>(), usage, format, width, height, mips);
+}
 
 auto renderer_t::immediate_set_stage(renderer_stage_t rs) -> void
 {
@@ -181,7 +208,7 @@ auto renderer_t::setup_rendertarget(uint width, uint height) -> void
 	d3d_backbuffer_->GetDesc(&backbuffer_desc);
 
 	// create default render-target
-	backbuffer_texture_ = this->make_texture(
+	backbuffer_texture_ = this->make_texture2d(
 		resource_usage_t::render_target,
 		format_t::nu8x4,
 		backbuffer_desc.Width, backbuffer_desc.Height, 1);
@@ -194,7 +221,7 @@ auto renderer_t::setup_rendertarget(uint width, uint height) -> void
 		format_t::nu8x4);
 	
 	// create default depth-stencil
-	default_depth_stencil_texture_ = this->make_texture(
+	default_depth_stencil_texture_ = this->make_texture2d(
 		resource_usage_t::depth_stencil,
 		format_t::dnu24s8,
 		backbuffer_desc.Width, backbuffer_desc.Height, 1);
@@ -420,7 +447,9 @@ auto renderer_t::immediate_vs_set_vertex_shader(vertex_shader_cptr const& vs) ->
 
 auto renderer_t::immediate_vs_set_constant_buffers(bound_constant_buffers_t const& cbs) -> void
 {
-	vs_cbs_ = cbs;
+	//static_assert()
+
+	vs_cbs_ = reinterpret_cast<bound_constant_buffers2_t const&>(cbs);
 }
 
 auto renderer_t::immediate_vs_set_input_views(bound_input_views_t const& ivs) -> void
@@ -490,18 +519,21 @@ auto renderer_t::immediate_draw() -> void
 	// input-assembly-stage 
 	{
 		ATMA_ENSURE(vs_shader_);
+		ATMA_ENSURE(ia_vb_);
+
+		auto dx11vb = device_unsafe_access<shiny_dx11::buffer_t>(ia_vb_);
+
 		auto d3d_il = get_d3d_input_layout(ia_vb_->data_declaration(), vs_shader_);
 		d3d_immediate_context_->IASetInputLayout(d3d_il.get());
 
-		ATMA_ENSURE(ia_vb_);
 		UINT offset = 0;
 		UINT stride = (UINT)ia_vb_->data_declaration()->stride();
-		d3d_immediate_context_->IASetVertexBuffers(0, 1, &ia_vb_->d3d_buffer().get(), &stride, &offset);
+		d3d_immediate_context_->IASetVertexBuffers(0, 1, &dx11vb->d3d_buffer().get(), &stride, &offset);
 
 		if (ia_ib_)
 		{
 			auto fmt = platform::dxgi_format_of(ia_ib_->index_format());
-			d3d_immediate_context_->IASetIndexBuffer(ia_ib_->d3d_buffer().get(), fmt, 0);
+			d3d_immediate_context_->IASetIndexBuffer(dx11vb->d3d_buffer().get(), fmt, 0);
 		}
 		else
 		{
@@ -517,7 +549,7 @@ auto renderer_t::immediate_draw() -> void
 		ID3D11Buffer* cbs[D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT]{};
 		for (auto const& cb : vs_cbs_) {
 			if (cb.second)
-				cbs[cb.first] = cb.second->d3d_buffer().get();
+				cbs[cb.first] = device_unsafe_access<shiny_dx11::buffer_t>(cb.second)->d3d_buffer().get();
 		}
 		d3d_immediate_context_->VSSetConstantBuffers(0, D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT, cbs);
 
@@ -528,10 +560,10 @@ auto renderer_t::immediate_draw() -> void
 	}
 
 	// geometry-stage
-	{	
+	{
 		ID3D11Buffer* cbs[D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT]{};
 		for (auto const& cb : gs_cbs_)
-			cbs[cb.first] = cb.second->d3d_buffer().get();
+			cbs[cb.first] = device_unsafe_access<shiny_dx11::buffer_t>(cb.second)->d3d_buffer().get();
 		d3d_immediate_context_->GSSetConstantBuffers(0, D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT, cbs);
 
 		if (!gs_shader_)
@@ -547,7 +579,7 @@ auto renderer_t::immediate_draw() -> void
 
 		ID3D11Buffer* cbs[D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT]{};
 		for (auto const& cb : fs_cbs_)
-			cbs[cb.first] = cb.second->d3d_buffer().get();
+			cbs[cb.first] = device_unsafe_access<shiny_dx11::buffer_t>(cb.second)->d3d_buffer().get();
 		d3d_immediate_context_->PSSetConstantBuffers(0, D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT, cbs);
 
 		ID3D11ShaderResourceView* srvs[D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT]{};
@@ -604,7 +636,7 @@ auto renderer_t::immediate_draw() -> void
 	else
 	{
 		if (draw_range_.vertex_count == 0)
-			draw_range_.vertex_count = ia_vb_->vertex_count();
+			draw_range_.vertex_count = (uint)ia_vb_->vertex_count();
 
 		d3d_immediate_context_->Draw(draw_range_.vertex_count, draw_range_.vertex_offset);
 	}
@@ -659,7 +691,7 @@ auto renderer_t::immediate_compute(uint x, uint y, uint z) -> void
 	ID3D11Buffer* cbs[cbs_count]{};
 	for (auto const& x : cs_cbs_)
 		if (x.second)
-			cbs[x.first] = x.second->d3d_buffer().get();
+			cbs[x.first] = device_unsafe_access<shiny_dx11::buffer_t>(x.second)->d3d_buffer().get();
 	d3d_immediate_context_->CSSetConstantBuffers(0, cbs_count, cbs);
 
 	// srvs

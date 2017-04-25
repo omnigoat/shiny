@@ -30,5 +30,6 @@ namespace shiny_dx11
 	};
 
 	using texture2d_bridge_t = shiny::texture2d_bridge_t<shiny_dx11::texture2d_t>;
+	using texture2d_bridge_ptr = atma::intrusive_ptr<texture2d_bridge_t>;
 }
 

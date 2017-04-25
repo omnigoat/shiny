@@ -3,6 +3,8 @@
 
 #include <shiny/shiny_fwd.hpp>
 
+#include <typeindex>
+
 
 namespace shiny
 {
@@ -151,6 +153,7 @@ namespace shiny
 			, concrete_{std::move(c)}
 		{}
 
+		// helpful if host & device constructors are identical
 		template <typename... Args>
 		resource_bridge_t(Args&&... args)
 			: Interface{std::forward<Args>(args)...}

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <atma/config/platform.hpp>
-
 #include <shiny/resource.hpp>
 #include <shiny/format.hpp>
 

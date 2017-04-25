@@ -7,21 +7,22 @@
 
 
 using namespace shiny;
-using shiny::buffer_t;
+using shiny_dx11::buffer_t;
 
 
-buffer_t::buffer_t(
+shiny_dx11::buffer_t::buffer_t(
 	renderer_ptr const& rndr,
 	resource_type_t rt, resource_usage_mask_t ru, resource_storage_t rs,
 	buffer_dimensions_t const& bdm, buffer_data_t const& bdt)
-	: resource_t(rndr, rt, ru, rs, bdm.stride, bdm.count)
 {
 	// no zero-size buffers
-	ATMA_ASSERT(resource_size());
-	// unordered-access buffers must be placed into persistant storage
-	ATMA_ASSERT(!(ru & resource_usage_t::unordered_access) || rs == resource_storage_t::persistant);
+	ATMA_ASSERT(bdm.stride * bdm.count > 0);
+	
+	ATMA_ASSERT(!(ru & resource_usage_t::unordered_access) || rs == resource_storage_t::persistant,
+		"unordered-access buffers must be placed into persistant storage");
 
 
+	auto resource_size = bdm.stride * bdm.count;
 
 	// fixup default element-count, figure out size of data
 	auto data_element_count = bdt.size;
@@ -33,7 +34,7 @@ buffer_t::buffer_t(
 	// determine resource-storage and cpu-access
 	auto d3d_rs = D3D11_USAGE();
 	auto d3d_ca = D3D11_CPU_ACCESS_FLAG();
-	switch (resource_storage())
+	switch (rs)
 	{
 		case resource_storage_t::immutable:
 			d3d_rs = D3D11_USAGE_IMMUTABLE;
@@ -63,28 +64,28 @@ buffer_t::buffer_t(
 
 	// structured buffer?
 	auto misc_flags = D3D11_RESOURCE_MISC_FLAG{};
-	if (resource_type() == resource_type_t::structured_buffer)
+	if (rt == resource_type_t::structured_buffer)
 	{
 		(uint&)misc_flags |= D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
 	}
 
 
 	// determine binding
-	auto binding = platform::d3dbind_of(resource_type());
-	if (resource_usage() & resource_usage_t::render_target)
+	auto binding = platform::d3dbind_of(rt);
+	if (ru & resource_usage_t::render_target)
 		(uint&)binding |= D3D11_BIND_RENDER_TARGET;
-	if (resource_usage() & resource_usage_t::depth_stencil)
+	if (ru & resource_usage_t::depth_stencil)
 		(uint&)binding |= D3D11_BIND_DEPTH_STENCIL;
-	if (resource_usage() & resource_usage_t::shader_resource)
+	if (ru & resource_usage_t::shader_resource)
 		(uint&)binding |= D3D11_BIND_SHADER_RESOURCE;
-	if (resource_usage() & resource_usage_t::unordered_access)
+	if (ru & resource_usage_t::unordered_access)
 		(uint&)binding |= D3D11_BIND_UNORDERED_ACCESS;
 
 
 	// create buffer
-	auto rs_size = atma::alignby((uint)resource_size(), 16);
+	auto rs_size = atma::alignby((uint)resource_size, 16);
 	auto buffer_desc = D3D11_BUFFER_DESC{(UINT)rs_size, d3d_rs, (UINT)binding, (UINT)d3d_ca, (UINT)misc_flags, (UINT)bdm.stride};
-	switch (resource_storage())
+	switch (rs)
 	{
 		case resource_storage_t::immutable:
 		{
@@ -93,7 +94,7 @@ buffer_t::buffer_t(
 			ATMA_ASSERT(d3d_ca == 0, "immutable buffer with cpu access? silly.");
 
 			auto d3d_data = D3D11_SUBRESOURCE_DATA{bdt.data, (UINT)data_size, 1};
-			ATMA_ENSURE_IS(S_OK, renderer()->d3d_device()->CreateBuffer(&buffer_desc, &d3d_data, d3d_buffer_.assign()));
+			ATMA_ENSURE_IS(S_OK, rndr->d3d_device()->CreateBuffer(&buffer_desc, &d3d_data, d3d_buffer_.assign()));
 			break;
 		}
 
@@ -111,11 +112,11 @@ buffer_t::buffer_t(
 			if (bdt.data)
 			{
 				auto d3d_data = D3D11_SUBRESOURCE_DATA{bdt.data, (UINT)data_size, 1};
-				ATMA_ENSURE_IS(S_OK, renderer()->d3d_device()->CreateBuffer(&buffer_desc, &d3d_data, d3d_buffer_.assign()));
+				ATMA_ENSURE_IS(S_OK, rndr->d3d_device()->CreateBuffer(&buffer_desc, &d3d_data, d3d_buffer_.assign()));
 			}
 			else
 			{
-				ATMA_ENSURE_IS(S_OK, renderer()->d3d_device()->CreateBuffer(&buffer_desc, nullptr, d3d_buffer_.assign()));
+				ATMA_ENSURE_IS(S_OK, rndr->d3d_device()->CreateBuffer(&buffer_desc, nullptr, d3d_buffer_.assign()));
 			}
 
 			break;
@@ -127,30 +128,5 @@ buffer_t::buffer_t(
 			break;
 		}
 	}
-}
-
-
-buffer_t::~buffer_t()
-{
-}
-
-auto buffer_t::bind(gen_primary_input_view_t const& v) -> void
-{
-	ATMA_ASSERT(!primary_input_view_);
-
-	primary_input_view_ = make_resource_view(shared_from_this<resource_t>(),
-		shiny::resource_view_type_t::input,
-		v.element_format,
-		v.subset);
-}
-
-auto buffer_t::bind(gen_primary_compute_view_t const& v) -> void
-{
-	ATMA_ASSERT(!primary_compute_view_);
-
-	primary_compute_view_ = make_resource_view(shared_from_this<resource_t>(),
-		shiny::resource_view_type_t::compute,
-		v.element_format,
-		v.subset);
 }
 

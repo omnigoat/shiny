@@ -16,9 +16,11 @@
 #include <shiny/draw.hpp>
 #include <shiny/rendertarget_clear.hpp>
 #include <shiny/depth_state.hpp>
+#include <shiny/resource.hpp>
 
 #include <shiny/platform/dx11/d3d_fwd.hpp>
 #include <shiny/platform/dx11/blender.hpp>
+#include <shiny/platform/dx11/buffer.hpp>
 
 #include <fooey/fooey_fwd.hpp>
 #include <fooey/event_handler.hpp>
@@ -80,12 +82,25 @@ namespace shiny
 
 		auto immediate_clear(rendertarget_clear_t const&) -> void;
 
-		auto make_texture(resource_usage_mask_t, format_t, uint width, uint height, uint mips) -> texture2d_ptr;
-
 		// make functions
-		// these are threadsafe
-		//auto make_render_target_view(resource_cptr const&) -> render_target_view_ptr;
+		auto make_buffer(resource_type_t, resource_usage_mask_t, resource_storage_t, buffer_dimensions_t, buffer_data_t) -> buffer_ptr;
+		auto make_constant_buffer(void const* data, size_t data_size) -> constant_buffer_ptr;
+		auto make_vertex_buffer(resource_storage_t, data_declaration_t const*, size_t bufcount, void const* data, size_t datacount) -> vertex_buffer_ptr;
 		auto make_texture2d(resource_usage_mask_t, format_t, uint width, uint height, uint mips) -> texture2d_ptr;
+
+		template <typename T>
+		auto make_constant_buffer_for(T const& t) -> constant_buffer_ptr
+			{ return make_constant_buffer(&t, sizeof(t)); }
+
+		template <typename T>
+		auto make_vertex_buffer_for(resource_storage_t storage, data_declaration_t const* dd, atma::vector<T> const& x) -> vertex_buffer_ptr
+			{ ATMA_ASSERT(dd->stride() == sizeof(T), "invalid sizes for vertex-buffer shortcut creation");
+			  return make_vertex_buffer(storage, dd, x.size(), x.data(), x.size()); }
+
+		template <typename T>
+		auto make_vertex_buffer_for(resource_storage_t storage, data_declaration_t const* dd, std::vector<T> const& x) -> vertex_buffer_ptr
+			{ ATMA_ASSERT(dd->stride() == sizeof(T), "invalid sizes for vertex-buffer shortcut creation");
+			  return make_vertex_buffer(storage, dd, x.size(), x.data(), x.size()); }
 
 		// pipeline-setup-stage
 		auto immediate_draw_pipeline_reset() -> void;
@@ -188,6 +203,8 @@ namespace shiny
 		//{
 			lion::asset_library_t library;
 
+			using bound_constant_buffers2_t = atma::vector<std::pair<int, shiny_dx11::buffer_bridge_ptr>>;
+
 			// compute pipeline
 			bound_constant_buffers_t cs_cbs_;
 			bound_resource_views_t cs_uavs_;
@@ -199,7 +216,7 @@ namespace shiny
 			index_buffer_cptr         ia_ib_;
 			vertex_buffer_cptr        ia_vb_;
 			vertex_shader_cptr        vs_shader_;
-			bound_constant_buffers_t  vs_cbs_;
+			bound_constant_buffers2_t  vs_cbs_;
 			bound_resource_views_t    vs_srvs_;
 			geometry_shader_cptr      gs_shader_;
 			bound_constant_buffers_t  gs_cbs_;
@@ -210,6 +227,8 @@ namespace shiny
 			bound_resource_views_t    om_rtvs_;
 			depth_stencil_state_t     om_depth_stencil_;
 			draw_range_t              draw_range_;
+
+			//std::vector<buffer_bridge_dx11_ptr> vs_cbs_2;
 
 			// render-targets & depth-stencil
 			resource_view_ptr current_render_target_view_[4];

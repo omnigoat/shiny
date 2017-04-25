@@ -1,8 +1,17 @@
 #pragma once
 
+#include <shiny/vertex_buffer.hpp>
+
 #include <shiny/platform/dx11/buffer.hpp>
 
 
+namespace shiny_dx11
+{
+	using vertex_buffer_bridge_t = shiny::vertex_buffer_bridge_t<buffer_t>;
+	using vertex_buffer_bridge_ptr = atma::intrusive_ptr<vertex_buffer_bridge_t>;
+}
+
+#if 0
 namespace shiny
 {
 	struct vertex_buffer_t : buffer_t
@@ -39,4 +48,5 @@ namespace shiny
 		return vertex_buffer_ptr(new vertex_buffer_t(rndr, usage, vd, vertex_count, data, data_vertcount));
 	}
 }
+#endif
 
