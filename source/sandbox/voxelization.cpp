@@ -185,6 +185,7 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 
 	auto render_target = rndr->make_texture2d(
 		shiny::resource_usage_t::render_target,
+		shiny::resource_storage_t::persistant,
 		shiny::format_t::nu8x4,
 		gridsize, gridsize, 1);
 
@@ -490,13 +491,13 @@ auto voxelization_plugin_t::setup_svo() -> void
 		shiny::resource_view_type_t::read,
 		shiny::format_t::unknown);
 
-	auto const grid_size_500mb = 400;
+	auto const brickcachesize = 400;
 
 	// brick-cache
-	brickcache = shiny::make_texture3d(rndr,
+	brickcache = rndr->make_texture3d(
 		shiny::resource_usage_t::shader_resource | shiny::resource_usage_t::unordered_access,
 		shiny::resource_storage_t::persistant,
-		shiny::texture3d_dimensions_t::cube(shiny::format_t::f32x2, grid_size_500mb, 1));
+		shiny::format_t::f32x2, brickcachesize, brickcachesize, brickcachesize, 1);
 
 	brickcache_view = shiny::make_resource_view(brickcache,
 		shiny::resource_view_type_t::compute,
