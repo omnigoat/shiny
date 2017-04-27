@@ -226,7 +226,7 @@ application_t::application_t(rose::runtime_t* rr)
 	});
 
 	vb_cube = rndr->make_vertex_buffer(shiny::resource_storage_t::immutable, dd_position_color, 8, cube_vertices, 8);
-	ib_cube = shiny::create_index_buffer(rndr, shiny::resource_storage_t::immutable, shiny::format_t::u16, 36, cube_indices);
+	ib_cube = rndr->make_index_buffer(shiny::resource_storage_t::immutable, shiny::format_t::u16, 36, cube_indices, 36);
 
 
 	//auto f = vfs.open("/res/shaders/vs_basic.hlsl");

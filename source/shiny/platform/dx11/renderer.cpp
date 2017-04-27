@@ -6,6 +6,7 @@
 #include <shiny/platform/dx11/buffer.hpp>
 #include <shiny/platform/dx11/constant_buffer.hpp>
 #include <shiny/platform/dx11/vertex_buffer.hpp>
+#include <shiny/platform/dx11/index_buffer.hpp>
 #include <shiny/platform/dx11/texture2d.hpp>
 #include <shiny/platform/dx11/texture3d.hpp>
 
@@ -137,6 +138,15 @@ auto renderer_t::make_vertex_buffer(resource_storage_t storage, data_declaration
 		shiny_dx11::buffer_t{shared_from_this<renderer_t>(),
 			resource_type_t::vertex_buffer, resource_usage_mask_t::none, storage,
 			buffer_dimensions_t{dd->stride(), bufcount}, buffer_data_t{data, dd->stride() * datacount}});
+}
+
+auto renderer_t::make_index_buffer(resource_storage_t storage, format_t format, uint indexcount, void const* data, uint datacount) -> index_buffer_ptr
+{
+	return shiny_dx11::index_buffer_bridge_ptr::make(
+		shiny::index_buffer_t{shared_from_this<renderer_t>(), storage, format, indexcount, data, datacount},
+		shiny_dx11::buffer_t{shared_from_this<renderer_t>(),
+			resource_type_t::index_buffer, resource_usage_mask_t::none, storage,
+			buffer_dimensions_t{element_size(format), indexcount}, buffer_data_t{data, element_size(format) * datacount}});
 }
 
 auto renderer_t::make_texture2d(resource_usage_mask_t usage, resource_storage_t storage, format_t format, uint width, uint height, uint mips) -> texture2d_ptr
