@@ -30,6 +30,7 @@
 #include <atma/thread/engine.hpp>
 #include <atma/shared_memory.hpp>
 #include <atma/math/vector4f.hpp>
+#include <atma/math/vector4i.hpp>
 #include <atma/hash.hpp>
 
 #include <deque>
@@ -53,6 +54,27 @@ namespace shiny
 		//present,
 		//teardown,
 	};
+
+	template <typename T>
+	struct is_vector : std::false_type {};
+
+	template <typename T>
+	struct is_vector<std::vector<T>> : std::true_type {};
+
+	template <typename T>
+	struct is_vector<atma::vector<T>> : std::true_type {};
+
+	template <typename T>
+	constexpr bool is_vector_v = is_vector<T>::value;
+
+	template <typename T>
+	constexpr bool is_vector_of_indexes_v =
+		is_vector_v<T> && (
+		std::is_same_v<typename T::value_type, uint32> || std::is_same_v<typename T::value_type, uint16>);
+
+	template <typename T>
+	constexpr bool is_vector_of_faces_v =
+		is_vector_v<T> && std::is_same_v<typename T::value_type, aml::vector4i>;
 
 	struct renderer_t : atma::ref_counted
 	{
@@ -85,8 +107,8 @@ namespace shiny
 		// make functions
 		auto make_buffer(resource_type_t, resource_usage_mask_t, resource_storage_t, buffer_dimensions_t, buffer_data_t) -> buffer_ptr;
 		auto make_constant_buffer(void const* data, size_t data_size) -> constant_buffer_ptr;
-		auto make_index_buffer(resource_storage_t, format_t, uint indexcount, void const* data, uint datacount) -> index_buffer_ptr;
-		auto make_vertex_buffer(resource_storage_t, data_declaration_t const*, size_t bufcount, void const* data, size_t datacount) -> vertex_buffer_ptr;
+		auto make_index_buffer(resource_storage_t, format_t, uint indexcount, void const* data, uint datacount = 0) -> index_buffer_ptr;
+		auto make_vertex_buffer(resource_storage_t, data_declaration_t const*, size_t bufcount, void const* data, size_t datacount = 0) -> vertex_buffer_ptr;
 		auto make_texture2d(resource_usage_mask_t, resource_storage_t, format_t, uint width, uint height, uint mips) -> texture2d_ptr;
 		auto make_texture3d(resource_usage_mask_t, resource_storage_t, format_t, uint width, uint height, uint depth, uint mips) -> texture3d_ptr;
 
@@ -95,14 +117,26 @@ namespace shiny
 			{ return make_constant_buffer(&t, sizeof(t)); }
 
 		template <typename T>
-		auto make_vertex_buffer_for(resource_storage_t storage, data_declaration_t const* dd, atma::vector<T> const& x) -> vertex_buffer_ptr
+		auto make_vertex_buffer(resource_storage_t storage, data_declaration_t const* dd, atma::vector<T> const& x) -> vertex_buffer_ptr
 			{ ATMA_ASSERT(dd->stride() == sizeof(T), "invalid sizes for vertex-buffer shortcut creation");
 			  return make_vertex_buffer(storage, dd, x.size(), x.data(), x.size()); }
 
 		template <typename T>
-		auto make_vertex_buffer_for(resource_storage_t storage, data_declaration_t const* dd, std::vector<T> const& x) -> vertex_buffer_ptr
-			{ ATMA_ASSERT(dd->stride() == sizeof(T), "invalid sizes for vertex-buffer shortcut creation");
-			  return make_vertex_buffer(storage, dd, x.size(), x.data(), x.size()); }
+		auto make_index_buffer(resource_storage_t storage, format_t format, T const& x)
+			-> std::enable_if_t<is_vector_of_indexes_v<T>, index_buffer_ptr>
+			{ ATMA_ASSERT(element_size(format) == sizeof(T), "invalid sizes for vertex-buffer shortcut creation");
+			  return make_index_buffer(storage, format, x.size(), x.data(), x.size()); }
+
+		template <typename T>
+		auto make_index_buffer(resource_storage_t storage, format_t format, T const& x)
+			-> std::enable_if_t<!is_vector_of_faces_v<T>, index_buffer_ptr>
+			{ ATMA_ASSERT(element_size(format) == sizeof(T), "invalid sizes for vertex-buffer shortcut creation");
+			  return make_index_buffer(storage, format, x.size(), x.data(), x.size()); }
+
+		//template <typename T>
+		//auto make_vertex_buffer(resource_storage_t storage, data_declaration_t const* dd, std::vector<T> const& x) -> vertex_buffer_ptr
+		//	{ ATMA_ASSERT(dd->stride() == sizeof(T), "invalid sizes for vertex-buffer shortcut creation");
+		//	  return make_vertex_buffer(storage, dd, x.size(), x.data(), x.size()); }
 
 		// pipeline-setup-stage
 		auto immediate_draw_pipeline_reset() -> void;

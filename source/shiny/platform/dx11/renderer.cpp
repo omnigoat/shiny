@@ -142,6 +142,9 @@ auto renderer_t::make_vertex_buffer(resource_storage_t storage, data_declaration
 
 auto renderer_t::make_index_buffer(resource_storage_t storage, format_t format, uint indexcount, void const* data, uint datacount) -> index_buffer_ptr
 {
+	if (datacount == 0)
+		datacount = indexcount;
+
 	return shiny_dx11::index_buffer_bridge_ptr::make(
 		shiny::index_buffer_t{shared_from_this<renderer_t>(), storage, format, indexcount, data, datacount},
 		shiny_dx11::buffer_t{shared_from_this<renderer_t>(),
@@ -538,6 +541,7 @@ auto renderer_t::immediate_draw() -> void
 		ATMA_ENSURE(ia_vb_);
 
 		auto dx11vb = device_unsafe_access<shiny_dx11::buffer_t>(ia_vb_);
+		auto dx11ib = device_unsafe_access<shiny_dx11::buffer_t>(ia_ib_);
 
 		auto d3d_il = get_d3d_input_layout(ia_vb_->data_declaration(), vs_shader_);
 		d3d_immediate_context_->IASetInputLayout(d3d_il.get());
@@ -549,7 +553,7 @@ auto renderer_t::immediate_draw() -> void
 		if (ia_ib_)
 		{
 			auto fmt = platform::dxgi_format_of(ia_ib_->index_format());
-			d3d_immediate_context_->IASetIndexBuffer(dx11vb->d3d_buffer().get(), fmt, 0);
+			d3d_immediate_context_->IASetIndexBuffer(dx11ib->d3d_buffer().get(), fmt, 0);
 		}
 		else
 		{

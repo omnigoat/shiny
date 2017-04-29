@@ -37,8 +37,8 @@ using sandbox::voxelization_plugin_t;
 
 struct obj_model_t
 {
-	using verts_t = std::vector<aml::vector4f>;
-	using faces_t = std::vector<aml::vector4i>;
+	using verts_t = atma::vector<aml::vector4f>;
+	using faces_t = atma::vector<aml::vector4i>;
 
 	obj_model_t(rose::file_t&);
 
@@ -153,8 +153,8 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 			++i;
 		}
 
-		vb = rndr->make_vertex_buffer(shiny::resource_storage_t::immutable, dd_position(), (uint)obj.vertices().size(), &obj.vertices()[0], (uint)obj.vertices().size());
-		ib = shiny::create_index_buffer(rndr, shiny::resource_storage_t::immutable, shiny::format_t::u32, (uint)obj.faces().size() * 3, mi.begin());
+		vb = rndr->make_vertex_buffer(shiny::resource_storage_t::immutable, dd_position(), obj.vertices());
+		ib = rndr->make_index_buffer(shiny::resource_storage_t::immutable, shiny::format_t::u32, (uint)obj.faces().size() * 3, mi.begin());
 	}
 
 	
@@ -281,8 +281,8 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 			++i;
 		}
 
-		vb = rndr->make_vertex_buffer_for(shiny::resource_storage_t::immutable, dd_position(), obj.vertices());
-		ib = shiny::create_index_buffer(rndr, shiny::resource_storage_t::immutable, shiny::format_t::u32, (uint)obj.faces().size() * 3, mi.begin());
+		vb = rndr->make_vertex_buffer(shiny::resource_storage_t::immutable, dd_position(), obj.vertices());
+		ib = rndr->make_index_buffer(shiny::resource_storage_t::immutable, shiny::format_t::u32, (uint)obj.faces().size() * 3, mi.begin());
 	}
 #endif
 
