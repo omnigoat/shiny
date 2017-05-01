@@ -7,7 +7,6 @@
 #include <shiny/constant_buffer.hpp>
 #include <shiny/vertex_buffer.hpp>
 #include <shiny/index_buffer.hpp>
-#include <shiny/generic_buffer.hpp>
 #include <shiny/geometry_shader.hpp>
 #include <shiny/vertex_shader.hpp>
 #include <shiny/fragment_shader.hpp>
@@ -88,9 +87,6 @@ namespace shiny
 		auto backbuffer_render_target() -> resource_view_ptr const&;
 		auto backbuffer_depth_stencil() -> resource_view_ptr const&;
 
-		auto make_generic_buffer(resource_usage_mask_t const&, resource_storage_t, size_t stride, uint elements, void const* data, uint data_elemcount) -> generic_buffer_ptr;
-		auto make_generic_buffer(resource_usage_mask_t const&, resource_storage_t, size_t stride, uint elements) -> generic_buffer_ptr;
-
 		auto signal_block() -> void;
 		auto signal_fullscreen_toggle(uint output_index = primary_output) -> void;
 		auto signal_present() -> void;
@@ -120,23 +116,6 @@ namespace shiny
 		auto make_vertex_buffer(resource_storage_t storage, data_declaration_t const* dd, atma::vector<T> const& x) -> vertex_buffer_ptr
 			{ ATMA_ASSERT(dd->stride() == sizeof(T), "invalid sizes for vertex-buffer shortcut creation");
 			  return make_vertex_buffer(storage, dd, x.size(), x.data(), x.size()); }
-
-		template <typename T>
-		auto make_index_buffer(resource_storage_t storage, format_t format, T const& x)
-			-> std::enable_if_t<is_vector_of_indexes_v<T>, index_buffer_ptr>
-			{ ATMA_ASSERT(element_size(format) == sizeof(T), "invalid sizes for vertex-buffer shortcut creation");
-			  return make_index_buffer(storage, format, x.size(), x.data(), x.size()); }
-
-		template <typename T>
-		auto make_index_buffer(resource_storage_t storage, format_t format, T const& x)
-			-> std::enable_if_t<!is_vector_of_faces_v<T>, index_buffer_ptr>
-			{ ATMA_ASSERT(element_size(format) == sizeof(T), "invalid sizes for vertex-buffer shortcut creation");
-			  return make_index_buffer(storage, format, x.size(), x.data(), x.size()); }
-
-		//template <typename T>
-		//auto make_vertex_buffer(resource_storage_t storage, data_declaration_t const* dd, std::vector<T> const& x) -> vertex_buffer_ptr
-		//	{ ATMA_ASSERT(dd->stride() == sizeof(T), "invalid sizes for vertex-buffer shortcut creation");
-		//	  return make_vertex_buffer(storage, dd, x.size(), x.data(), x.size()); }
 
 		// pipeline-setup-stage
 		auto immediate_draw_pipeline_reset() -> void;

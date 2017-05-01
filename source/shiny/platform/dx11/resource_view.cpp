@@ -43,11 +43,14 @@ resource_view_t::resource_view_t(resource_cptr const& rs, resource_view_type_t v
 					desc.Texture3D = D3D11_TEX3D_SRV{0, 1};
 					break;
 
-
 				case resource_type_t::structured_buffer:
 				case resource_type_t::generic_buffer:
 					desc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
 					desc.Buffer = D3D11_BUFFER_SRV{(UINT)subset_.offset, (UINT)subset_.count};
+					break;
+
+				default:
+					ATMA_HALT("bad things");
 					break;
 			}
 
@@ -71,6 +74,10 @@ resource_view_t::resource_view_t(resource_cptr const& rs, resource_view_type_t v
 				case resource_type_t::generic_buffer:
 					desc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
 					desc.Buffer = D3D11_BUFFER_UAV{(UINT)subset_.offset, (UINT)subset_.count, 0};
+					break;
+
+				default:
+					ATMA_HALT("bad things");
 					break;
 			}
 

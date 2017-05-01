@@ -42,14 +42,17 @@ runtime_t::runtime_t()
 		auto hDll = LoadLibrary(L"dxgidebug.dll");
 		typedef HRESULT(__stdcall *fPtr)(REFIID, void**);
 		fPtr DXGIGetDebugInterface = (fPtr)GetProcAddress(hDll, "DXGIGetDebugInterface");
-
-		DXGIGetDebugInterface(__uuidof(IDXGIDebug), (void**)&dxgi_debug);
+		if (DXGIGetDebugInterface)
+		{
+			DXGIGetDebugInterface(__uuidof(IDXGIDebug), (void**)&dxgi_debug);
+		}
 	}
 #endif
 }
 
 runtime_t::~runtime_t()
 {
+	d3d_report_live_objects();
 }
 
 auto runtime_t::dxgi_factory() const -> platform::dxgi_factory_ptr const&
@@ -132,8 +135,9 @@ auto runtime_t::dxgi_output_of(platform::dxgi_adapter_ptr const& adapter, uint o
 
 auto runtime_t::d3d_report_live_objects() -> void
 {
-#if ATMA_DEBUG
-	dxgi_debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_SUMMARY);
+#if _DEBUG
+	if (dxgi_debug)
+		dxgi_debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_SUMMARY);
 #endif
 }
 

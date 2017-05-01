@@ -895,11 +895,6 @@ auto shiny::renderer_t::backbuffer_depth_stencil() -> resource_view_ptr const &
 	return default_depth_stencil_view_;
 }
 
-auto renderer_t::make_generic_buffer(resource_usage_mask_t const& rs, resource_storage_t bu, size_t stride, uint elements, void const* data, uint data_elemcount) -> generic_buffer_ptr
-{
-	return generic_buffer_ptr(new generic_buffer_t(shared_from_this<renderer_t>(), rs, bu, stride, elements, data, data_elemcount));
-}
-
 auto renderer_t::on_resize(fooey::events::resize_t& e) -> void
 {
 	if (requested_display_mode_ == &requested_fullscreen_display_mode_)

@@ -131,9 +131,6 @@
     <ClCompile Include="..\..\source\shiny\platform\dx11\fragment_shader.cpp">
       <Filter>source\shiny\platform\dx11</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\shiny\platform\dx11\generic_buffer.cpp">
-      <Filter>source\shiny\platform\dx11</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\source\shiny\platform\dx11\geometry_shader.cpp">
       <Filter>source\shiny\platform\dx11</Filter>
     </ClCompile>
@@ -235,9 +232,6 @@
     <ClInclude Include="..\..\vendor\zlib\zutil.h">
       <Filter>vendor\zlib</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\shiny\generic_buffer.hpp">
-      <Filter>include\shiny</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\shiny\fragment_shader.hpp">
       <Filter>include\shiny</Filter>
     </ClInclude>
@@ -323,9 +317,6 @@
       <Filter>include\shiny\platform\dx11</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\shiny\platform\dx11\fragment_shader.hpp">
-      <Filter>include\shiny\platform\dx11</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\shiny\platform\dx11\generic_buffer.hpp">
       <Filter>include\shiny\platform\dx11</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\shiny\platform\dx11\geometry_shader.hpp">

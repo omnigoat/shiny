@@ -114,7 +114,6 @@
     <ClCompile Include="..\..\source\shiny\platform\dx11\constant_buffer.cpp" />
     <ClCompile Include="..\..\source\shiny\platform\dx11\depth_stencil_view.cpp" />
     <ClCompile Include="..\..\source\shiny\platform\dx11\fragment_shader.cpp" />
-    <ClCompile Include="..\..\source\shiny\platform\dx11\generic_buffer.cpp" />
     <ClCompile Include="..\..\source\shiny\platform\dx11\geometry_shader.cpp" />
     <ClCompile Include="..\..\source\shiny\platform\dx11\index_buffer.cpp" />
     <ClCompile Include="..\..\source\shiny\platform\dx11\output.cpp" />
@@ -159,7 +158,6 @@
     <ClInclude Include="..\..\include\shiny\depth_stencil_view.hpp" />
     <ClInclude Include="..\..\include\shiny\draw.hpp" />
     <ClInclude Include="..\..\include\shiny\draw_target.hpp" />
-    <ClInclude Include="..\..\include\shiny\generic_buffer.hpp" />
     <ClInclude Include="..\..\include\shiny\geometry_declaration.hpp" />
     <ClInclude Include="..\..\include\shiny\geometry_shader.hpp" />
     <ClInclude Include="..\..\include\shiny\logging.hpp" />
@@ -173,7 +171,6 @@
     <ClInclude Include="..\..\include\shiny\platform\dx11\dxgid3d_convert.hpp" />
     <ClInclude Include="..\..\include\shiny\platform\dx11\dxgi_fwd.hpp" />
     <ClInclude Include="..\..\include\shiny\platform\dx11\fragment_shader.hpp" />
-    <ClInclude Include="..\..\include\shiny\platform\dx11\generic_buffer.hpp" />
     <ClInclude Include="..\..\include\shiny\platform\dx11\geometry_shader.hpp" />
     <ClInclude Include="..\..\include\shiny\platform\dx11\index_buffer.hpp" />
     <ClInclude Include="..\..\include\shiny\platform\dx11\output.hpp" />
