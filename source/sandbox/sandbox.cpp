@@ -15,7 +15,6 @@
 #include <shiny/compute_shader.hpp>
 #include <shiny/texture3d.hpp>
 #include <shiny/blend_state.hpp>
-#include <shiny/generic_buffer.hpp>
 #include <shiny/draw_target.hpp>
 #include <shiny/logging.hpp>
 

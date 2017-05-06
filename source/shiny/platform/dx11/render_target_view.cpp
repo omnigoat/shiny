@@ -1,5 +1,6 @@
 #include <shiny/render_target_view.hpp>
 
+#include <shiny/platform/dx11/dxgid3d_convert.hpp>
 #include <shiny/platform/dx11/texture2d.hpp>
 
 #include <shiny/renderer.hpp>

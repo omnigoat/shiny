@@ -4,7 +4,6 @@
 #include <shiny/scene.hpp>
 #include <shiny/draw.hpp>
 #include <shiny/compute.hpp>
-#include <shiny/generic_buffer.hpp>
 #include <shiny/resource_view.hpp>
 #include <shiny/texture3d.hpp>
 #include <shiny/compute_shader.hpp>

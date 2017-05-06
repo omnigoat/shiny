@@ -1,6 +1,7 @@
 #include <shiny/platform/dx11/depth_stencil_view.hpp>
 
 #include <shiny/platform/dx11/texture2d.hpp>
+#include <shiny/platform/dx11/dxgid3d_convert.hpp>
 #include <shiny/renderer.hpp>
 
 

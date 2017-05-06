@@ -21,7 +21,6 @@
 #include <shiny/compute_shader.hpp>
 #include <shiny/texture2d.hpp>
 #include <shiny/texture3d.hpp>
-#include <shiny/generic_buffer.hpp>
 #include <shiny/vertex_buffer.hpp>
 #include <shiny/index_buffer.hpp>
 #include <shiny/render_target_view.hpp>
