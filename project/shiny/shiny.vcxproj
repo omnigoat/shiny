@@ -65,8 +65,8 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <AdditionalIncludeDirectories>$(SolutionDir)..\..\shiny\vendor\zlib;$(SolutionDir)..\..\shiny\include;$(SolutionDir)..\..\atma\vendor;$(SolutionDir)..\..\atma\include;$(SolutionDir)..\..\fooey\include</AdditionalIncludeDirectories>
-      <AdditionalOptions>/std:c++latest %(AdditionalOptions)</AdditionalOptions>
       <IntrinsicFunctions>true</IntrinsicFunctions>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -86,8 +86,8 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
       <AdditionalIncludeDirectories>$(SolutionDir)..\..\shiny\vendor\zlib;$(SolutionDir)..\..\shiny\include;$(SolutionDir)..\..\atma\vendor;$(SolutionDir)..\..\atma\include;$(SolutionDir)..\..\fooey\include</AdditionalIncludeDirectories>
-      <AdditionalOptions>/std:c++latest %(AdditionalOptions)</AdditionalOptions>
       <IntrinsicFunctions>true</IntrinsicFunctions>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
