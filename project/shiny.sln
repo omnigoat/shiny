@@ -1,9 +1,12 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26228.4
+VisualStudioVersion = 15.0.26430.12
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fooey", "..\..\fooey\project\fooey.vcxproj", "{82B83F8F-A8CF-4720-9ABD-F08682C1C325}"
+	ProjectSection(ProjectDependencies) = postProject
+		{3301E1FA-9F23-43C6-A5E1-183204867D44} = {3301E1FA-9F23-43C6-A5E1-183204867D44}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "shiny", "shiny\shiny.vcxproj", "{8E03B685-D9CE-45BF-8597-E7EF57E62B8D}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -48,23 +51,31 @@ Global
 		{82B83F8F-A8CF-4720-9ABD-F08682C1C325}.Development|ARM.ActiveCfg = Development|x64
 		{82B83F8F-A8CF-4720-9ABD-F08682C1C325}.Development|Mixed Platforms.ActiveCfg = Development|x64
 		{82B83F8F-A8CF-4720-9ABD-F08682C1C325}.Development|Mixed Platforms.Build.0 = Development|x64
+		{82B83F8F-A8CF-4720-9ABD-F08682C1C325}.Development|Mixed Platforms.Deploy.0 = Development|x64
 		{82B83F8F-A8CF-4720-9ABD-F08682C1C325}.Development|Win32.ActiveCfg = Development|x64
 		{82B83F8F-A8CF-4720-9ABD-F08682C1C325}.Development|x64.ActiveCfg = Development|x64
 		{82B83F8F-A8CF-4720-9ABD-F08682C1C325}.Development|x64.Build.0 = Development|x64
+		{82B83F8F-A8CF-4720-9ABD-F08682C1C325}.Development|x64.Deploy.0 = Development|x64
 		{82B83F8F-A8CF-4720-9ABD-F08682C1C325}.Distribution|ARM.ActiveCfg = Distribution|x64
 		{82B83F8F-A8CF-4720-9ABD-F08682C1C325}.Distribution|Mixed Platforms.ActiveCfg = Distribution|x64
 		{82B83F8F-A8CF-4720-9ABD-F08682C1C325}.Distribution|Mixed Platforms.Build.0 = Distribution|x64
+		{82B83F8F-A8CF-4720-9ABD-F08682C1C325}.Distribution|Mixed Platforms.Deploy.0 = Distribution|x64
 		{82B83F8F-A8CF-4720-9ABD-F08682C1C325}.Distribution|Win32.ActiveCfg = Distribution|x64
 		{82B83F8F-A8CF-4720-9ABD-F08682C1C325}.Distribution|x64.ActiveCfg = Distribution|x64
 		{82B83F8F-A8CF-4720-9ABD-F08682C1C325}.Distribution|x64.Build.0 = Distribution|x64
+		{82B83F8F-A8CF-4720-9ABD-F08682C1C325}.Distribution|x64.Deploy.0 = Distribution|x64
 		{82B83F8F-A8CF-4720-9ABD-F08682C1C325}.Profiling|ARM.ActiveCfg = Distribution|x64
 		{82B83F8F-A8CF-4720-9ABD-F08682C1C325}.Profiling|ARM.Build.0 = Distribution|x64
+		{82B83F8F-A8CF-4720-9ABD-F08682C1C325}.Profiling|ARM.Deploy.0 = Distribution|x64
 		{82B83F8F-A8CF-4720-9ABD-F08682C1C325}.Profiling|Mixed Platforms.ActiveCfg = Distribution|x64
 		{82B83F8F-A8CF-4720-9ABD-F08682C1C325}.Profiling|Mixed Platforms.Build.0 = Distribution|x64
+		{82B83F8F-A8CF-4720-9ABD-F08682C1C325}.Profiling|Mixed Platforms.Deploy.0 = Distribution|x64
 		{82B83F8F-A8CF-4720-9ABD-F08682C1C325}.Profiling|Win32.ActiveCfg = Distribution|x64
 		{82B83F8F-A8CF-4720-9ABD-F08682C1C325}.Profiling|Win32.Build.0 = Distribution|x64
+		{82B83F8F-A8CF-4720-9ABD-F08682C1C325}.Profiling|Win32.Deploy.0 = Distribution|x64
 		{82B83F8F-A8CF-4720-9ABD-F08682C1C325}.Profiling|x64.ActiveCfg = Distribution|x64
 		{82B83F8F-A8CF-4720-9ABD-F08682C1C325}.Profiling|x64.Build.0 = Distribution|x64
+		{82B83F8F-A8CF-4720-9ABD-F08682C1C325}.Profiling|x64.Deploy.0 = Distribution|x64
 		{8E03B685-D9CE-45BF-8597-E7EF57E62B8D}.Development|ARM.ActiveCfg = Development|x64
 		{8E03B685-D9CE-45BF-8597-E7EF57E62B8D}.Development|Mixed Platforms.ActiveCfg = Development|x64
 		{8E03B685-D9CE-45BF-8597-E7EF57E62B8D}.Development|Mixed Platforms.Build.0 = Development|x64
