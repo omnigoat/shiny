@@ -530,8 +530,6 @@ auto renderer_t::immediate_om_set_blending(blender_cptr const& b) -> void
 	//d3d_immediate_context_->OMSetBlendState(b->d3d_blend_state().get(), nullptr, 0xffffffff);
 }
 
-
-
 auto renderer_t::immediate_draw() -> void
 {
 	// input-assembly-stage 

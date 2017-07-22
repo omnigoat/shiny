@@ -365,7 +365,4 @@
   <ItemGroup>
     <None Include="..\..\.gitignore" />
   </ItemGroup>
-  <ItemGroup>
-    <Natvis Include="..\..\resources\shiny.natvis" />
-  </ItemGroup>
 </Project>

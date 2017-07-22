@@ -67,6 +67,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)..\..\shiny\vendor\zlib;$(SolutionDir)..\..\shiny\include;$(SolutionDir)..\..\atma\vendor;$(SolutionDir)..\..\atma\include;$(SolutionDir)..\..\fooey\include</AdditionalIncludeDirectories>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -88,6 +89,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)..\..\shiny\vendor\zlib;$(SolutionDir)..\..\shiny\include;$(SolutionDir)..\..\atma\vendor;$(SolutionDir)..\..\atma\include;$(SolutionDir)..\..\fooey\include</AdditionalIncludeDirectories>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

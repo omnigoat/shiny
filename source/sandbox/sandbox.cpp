@@ -43,7 +43,7 @@
 #include <atma/function.hpp>
 #include <atma/console.hpp>
 #include <atma/atomic.hpp>
-#include <atma/mpsc_queue.hpp>
+#include <atma/lockfree_queue.hpp>
 #include <atma/threading.hpp>
 #include <atma/logging.hpp>
 #include <atma/string.hpp>
