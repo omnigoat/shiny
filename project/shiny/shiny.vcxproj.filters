@@ -113,16 +113,10 @@
     <ClCompile Include="..\..\source\shiny\draw_target.cpp">
       <Filter>source\shiny</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\shiny\format.cpp">
-      <Filter>source\shiny</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\source\shiny\platform\dx11\buffer.cpp">
       <Filter>source\shiny\platform\dx11</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\shiny\platform\dx11\compute_shader.cpp">
-      <Filter>source\shiny\platform\dx11</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\source\shiny\platform\dx11\constant_buffer.cpp">
       <Filter>source\shiny\platform\dx11</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\shiny\platform\dx11\depth_stencil_view.cpp">
@@ -134,9 +128,6 @@
     <ClCompile Include="..\..\source\shiny\platform\dx11\geometry_shader.cpp">
       <Filter>source\shiny\platform\dx11</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\shiny\platform\dx11\index_buffer.cpp">
-      <Filter>source\shiny\platform\dx11</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\source\shiny\platform\dx11\output.cpp">
       <Filter>source\shiny\platform\dx11</Filter>
     </ClCompile>
@@ -144,9 +135,6 @@
       <Filter>source\shiny\platform\dx11</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\shiny\platform\dx11\renderer.cpp">
-      <Filter>source\shiny\platform\dx11</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\source\shiny\platform\dx11\resource.cpp">
       <Filter>source\shiny\platform\dx11</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\shiny\platform\dx11\resource_view.cpp">
@@ -159,9 +147,6 @@
       <Filter>source\shiny\platform\dx11</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\shiny\platform\dx11\texture3d.cpp">
-      <Filter>source\shiny\platform\dx11</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\source\shiny\platform\dx11\vertex_buffer.cpp">
       <Filter>source\shiny\platform\dx11</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\shiny\platform\dx11\vertex_shader.cpp">
