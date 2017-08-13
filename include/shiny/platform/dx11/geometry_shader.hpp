@@ -25,7 +25,7 @@ namespace shiny
 
 
 		friend struct renderer_t;
-		friend struct atma::enable_default_intrusive_ptr_make;
+		friend struct atma::enable_intrusive_ptr_make;
 	};
 }
 

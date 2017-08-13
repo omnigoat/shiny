@@ -28,15 +28,6 @@ namespace shiny
 		platform::d3d_blob_ptr d3d_blob_;
 		platform::d3d_fragment_shader_ptr d3d_fs_;
 
-		friend struct atma::intrusive_ptr_make<fragment_shader_t>;
-	};
-}
-
-namespace atma
-{
-	template <>
-	struct intrusive_ptr_make<shiny::fragment_shader_t>
-	{
-		static auto make(shiny::renderer_ptr const&, lion::path_t const&, void const*, size_t, bool, atma::string const&) -> shiny::fragment_shader_t*;
+		friend struct atma::enable_intrusive_ptr_make;
 	};
 }

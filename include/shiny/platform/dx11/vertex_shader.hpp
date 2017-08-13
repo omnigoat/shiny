@@ -1,43 +1,29 @@
 #pragma once
 
-#include <shiny/shiny_fwd.hpp>
 #include <shiny/platform/dx11/d3d_fwd.hpp>
 
-#include <lion/assets.hpp>
+#include <shiny/shiny_fwd.hpp>
+#include <shiny/vertex_shader.hpp>
 
-#include <atma/string.hpp>
 
-
-namespace shiny
+namespace shiny_dx11
 {
-	struct vertex_shader_t : lion::asset_t
+	struct vertex_shader_t
 	{
-		static auto make(shiny::renderer_ptr const&, lion::path_t const& path, bool precompiled, atma::string const& entrypoint = "main") -> vertex_shader_ptr;
-		static auto make(shiny::renderer_ptr const&, lion::path_t const& path, void const* data, size_t data_size, bool precompiled, atma::string const& entrypoint = "main") -> vertex_shader_ptr;
+		vertex_shader_t(d3d_blob_ptr const& blob, d3d_vertex_shader_ptr const& shader)
+			: d3d_blob_{blob}
+			, d3d_vs_{shader}
+		{}
 
-		auto d3d_blob() const -> platform::d3d_blob_ptr const& { return d3d_blob_; }
-		auto d3d_vs() const -> platform::d3d_vertex_shader_ptr const& { return d3d_vs_; }
-
-	protected:
-		vertex_shader_t(renderer_ptr const&, lion::path_t const&, platform::d3d_blob_ptr const&, platform::d3d_vertex_shader_ptr const&);
+		auto d3d_blob() const -> d3d_blob_ptr const& { return d3d_blob_; }
+		auto d3d_vs() const -> d3d_vertex_shader_ptr const& { return d3d_vs_; }
 
 	private:
-		renderer_ptr rndr_;
-
-		platform::d3d_blob_ptr d3d_blob_;
-		platform::d3d_vertex_shader_ptr d3d_vs_;
-
-		friend struct atma::intrusive_ptr_make<vertex_shader_t>;
+		d3d_blob_ptr d3d_blob_;
+		d3d_vertex_shader_ptr d3d_vs_;
 	};
-}
 
-namespace atma
-{
-	template <>
-	struct intrusive_ptr_make<shiny::vertex_shader_t>
-	{
-		static auto make(shiny::renderer_ptr const&, lion::path_t const&, void const*, size_t, bool, atma::string const&) -> shiny::vertex_shader_t*;
-	};
+	using vertex_shader_bridge_t = shiny::vertex_shader_bridge_t<vertex_shader_t>;
+	using vertex_shader_bridge_ptr = atma::intrusive_ptr<vertex_shader_bridge_t>;
 }
-
 

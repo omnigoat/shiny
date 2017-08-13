@@ -9,6 +9,7 @@
 #include <shiny/platform/dx11/index_buffer.hpp>
 #include <shiny/platform/dx11/texture2d.hpp>
 #include <shiny/platform/dx11/texture3d.hpp>
+#include <shiny/platform/dx11/vertex_shader.hpp>
 
 #include <shiny/data_declaration.hpp>
 #include <shiny/vertex_buffer.hpp>
@@ -25,6 +26,7 @@
 #include <shiny/index_buffer.hpp>
 #include <shiny/render_target_view.hpp>
 #include <shiny/depth_stencil_view.hpp>
+#include <shiny/logging.hpp>
 
 #include <fooey/events/resize.hpp>
 #include <fooey/keys.hpp>
@@ -159,6 +161,37 @@ auto renderer_t::make_texture2d(resource_usage_mask_t usage, resource_storage_t 
 auto renderer_t::make_texture3d(resource_usage_mask_t usage, resource_storage_t storage, format_t format, uint width, uint height, uint depth, uint mips) -> texture3d_ptr
 {
 	return shiny_dx11::texture3d_bridge_ptr::make(shared_from_this<renderer_t>(), usage, storage, format, width, height, depth, mips);
+}
+
+auto renderer_t::make_vertex_shader(lion::path_t const& path, atma::unique_memory_t const& data, atma::string const& entrypoint, bool precompiled) -> vertex_shader_ptr
+{
+	shiny_dx11::d3d_blob_ptr d3d_blob;
+	shiny_dx11::d3d_vertex_shader_ptr d3d_vs;
+
+	if (precompiled)
+	{
+		ATMA_ENSURE_IS(S_OK, D3DCreateBlob(data.size(), d3d_blob.assign()));
+		memcpy(d3d_blob->GetBufferPointer(), data.begin(), data.size());
+	}
+	else
+	{
+		shiny_dx11::d3d_blob_ptr errors;
+		ATMA_ENSURE_IS(S_OK, D3DCompile(data.begin(), data.size(), path.c_str(), nullptr, nullptr, entrypoint.raw_begin(), "vs_5_0", D3DCOMPILE_PREFER_FLOW_CONTROL | D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, d3d_blob.assign(), errors.assign()));
+		if (errors)
+		{
+			SHINY_ERROR("vertex-shader errors:\n", (char*)errors->GetBufferPointer());
+		}
+	}
+
+	// create vertex-shader
+	if (S_OK == d3d_device_->CreateVertexShader(d3d_blob->GetBufferPointer(), d3d_blob->GetBufferSize(), nullptr, d3d_vs.assign()))
+	{
+		return shiny_dx11::vertex_shader_bridge_ptr::make(
+			shiny::vertex_shader_t{path, shared_from_this<renderer_t>()},
+			shiny_dx11::vertex_shader_t(shared_from_this<renderer_t>(), d3d_blob, d3d_vs));
+	}
+
+	return vertex_shader_ptr::null;
 }
 
 auto renderer_t::immediate_set_stage(renderer_stage_t rs) -> void
@@ -561,7 +594,10 @@ auto renderer_t::immediate_draw() -> void
 	// vertex-stage
 	{
 		ATMA_ENSURE(vs_shader_);
-		d3d_immediate_context_->VSSetShader(vs_shader_->d3d_vs().get(), nullptr, 0);
+
+		auto dx11vs = device_unsafe_access<shiny_dx11::vertex_shader_t>(vs_shader_);
+
+		d3d_immediate_context_->VSSetShader(dx11vs->d3d_vs().get(), nullptr, 0);
 		
 		ID3D11Buffer* cbs[D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT]{};
 		for (auto const& cb : vs_cbs_) {
@@ -783,9 +819,12 @@ auto renderer_t::create_d3d_input_layout(vertex_shader_cptr const& vs, data_decl
 		offset += x.size();
 	}
 
+	ATMA_ASSERT(vs_shader_);
+	auto dx11vs = device_unsafe_access<shiny_dx11::vertex_shader_t>(vs_shader_);
+
 	platform::d3d_input_layout_ptr result;
 	ATMA_ENSURE_IS(S_OK, d3d_device_->CreateInputLayout(&d3d_elements[0], (uint)d3d_elements.size(),
-		vs->d3d_blob()->GetBufferPointer(), vs->d3d_blob()->GetBufferSize(), result.assign()));
+		dx11vs->d3d_blob()->GetBufferPointer(), dx11vs->d3d_blob()->GetBufferSize(), result.assign()));
 
 	return result;
 }
@@ -811,9 +850,12 @@ auto renderer_t::get_d3d_input_layout(data_declaration_t const* dd, vertex_shade
 		offset += x.size();
 	}
 
+	ATMA_ASSERT(vs_shader_);
+	auto dx11vs = device_unsafe_access<shiny_dx11::vertex_shader_t>(vs_shader_);
+
 	platform::d3d_input_layout_ptr input_layout;
 	ATMA_ENSURE_IS(S_OK, d3d_device_->CreateInputLayout(&d3d_elements[0], (uint)d3d_elements.size(),
-		vs->d3d_blob()->GetBufferPointer(), vs->d3d_blob()->GetBufferSize(), input_layout.assign()));
+		dx11vs->d3d_blob()->GetBufferPointer(), dx11vs->d3d_blob()->GetBufferSize(), input_layout.assign()));
 
 	auto r = built_input_layouts_.insert({key, input_layout});
 	ATMA_ENSURE(r.second);

@@ -1,13 +1,34 @@
 #pragma once
-#include <atma/intrusive_ptr.hpp>
 
 #include <shiny/shiny_fwd.hpp>
+
+#include <lion/assets.hpp>
+
+#include <atma/intrusive_ptr.hpp>
 
 #include <typeindex>
 
 
 namespace shiny
 {
+	struct component_t : lion::asset_t
+	{
+		component_t(lion::path_t const& path, renderer_ptr const& rndr)
+			: lion::asset_t(path)
+			, rndr_{rndr}
+		{}
+
+		virtual ~component_t()
+		{}
+
+		virtual auto sizeof_host_resource() const -> size_t = 0;
+
+		auto renderer() const -> renderer_ptr const& { return rndr_; }
+
+	private:
+		renderer_ptr rndr_;
+	};
+
 	struct resource_t : atma::ref_counted
 	{
 		resource_t(renderer_ptr const& rndr, resource_type_t rt, resource_usage_mask_t ru, resource_storage_t rs, size_t element_stride, size_t element_count)
@@ -130,20 +151,6 @@ namespace shiny
 
 namespace shiny
 {
-#if 0
-	template <typename C, typename I>
-	inline constexpr C* inteface_to_concrete(I* i)
-	{
-		return reinterpret_cast<C*>((char*)i + sizeof(I));
-	}
-
-	template <typename I, typename C>
-	inline constexpr C* concrete_to_interface(C* c)
-	{
-		return reinterpret_cast<I*>((char*)c - sizeof(I));
-	}
-#endif
-
 	template <typename Interface, typename Concrete>
 	struct resource_bridge_t
 		: Interface
@@ -163,4 +170,7 @@ namespace shiny
 	protected:
 		Concrete concrete_;
 	};
+
+	template <typename Interface, typename Concrete>
+	using component_bridge_t = resource_bridge_t<Interface, Concrete>;
 }

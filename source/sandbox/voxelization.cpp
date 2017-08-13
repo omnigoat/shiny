@@ -78,6 +78,13 @@ auto obj_model_t::triangle_of(aml::vector4i const& f) const -> aml::triangle_t
 	return aml::triangle_t{verts_[f.x], verts_[f.y], verts_[f.z]};
 }
 
+auto load_vertex_shader(shiny::renderer_ptr const& rndr, rose::path_t const& path, lion::input_stream_ptr const& stream) -> lion::asset_ptr
+{
+	bool precompiled = path.extension() == "cso";
+	//auto r = shiny::vertex_shader_ptr::make(rndr, path, precompiled, "main");
+	auto r = rndr->make_vertex_shader(path, precompiled, "main");
+	return r;
+}
 
 auto load_fragment_shader(shiny::renderer_ptr const& rndr, rose::path_t const& path, lion::input_stream_ptr const& stream) -> lion::asset_ptr
 {

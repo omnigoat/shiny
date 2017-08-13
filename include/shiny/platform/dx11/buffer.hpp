@@ -35,20 +35,4 @@ namespace shiny_dx11
 
 	using buffer_bridge_t = shiny::buffer_bridge_t<shiny_dx11::buffer_t>;
 	using buffer_bridge_ptr = atma::intrusive_ptr<buffer_bridge_t>;
-
-	//template <typename... Args>
-	//inline auto make_buffer(renderer_ptr const& rndr,
-	//	resource_type_t rt,
-	//	resource_usage_mask_t ru,
-	//	resource_storage_t rs,
-	//	buffer_dimensions_t const& bdm,
-	//	buffer_data_t const& bdt,
-	//	Args&&... req_views) -> buffer_ptr
-	//{
-	//	auto b = atma::make_intrusive<buffer_t>(rndr, rt, ru, rs, bdm, bdt);
-	//	int _[] = { 0, (b->bind(req_views), 0)... };
-	//	
-	//	return b;
-	//}
-
 }

@@ -128,9 +128,6 @@
     <ClCompile Include="..\..\source\shiny\platform\dx11\geometry_shader.cpp">
       <Filter>source\shiny\platform\dx11</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\shiny\platform\dx11\output.cpp">
-      <Filter>source\shiny\platform\dx11</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\source\shiny\platform\dx11\render_target_view.cpp">
       <Filter>source\shiny\platform\dx11</Filter>
     </ClCompile>

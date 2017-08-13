@@ -42,6 +42,7 @@ namespace shiny
 		auto make_vertex_buffer(resource_storage_t, data_declaration_t const*, size_t bufcount, void const* data, size_t datacount = 0) -> vertex_buffer_ptr;
 		auto make_texture2d(resource_usage_mask_t, resource_storage_t, format_t, uint width, uint height, uint mips) -> texture2d_ptr;
 		auto make_texture3d(resource_usage_mask_t, resource_storage_t, format_t, uint width, uint height, uint depth, uint mips) -> texture3d_ptr;
+		auto make_vertex_shader(lion::path_t const&, bool precompiled, atma::string const& entrypoint) -> vertex_shader_ptr;
 
 		template <typename T>
 		auto make_constant_buffer_for(T const& t) -> constant_buffer_ptr
@@ -112,7 +113,7 @@ namespace shiny
 		virtual auto backbuffer_depth_stencil() -> resource_view_ptr const& = 0;
 
 	private:
-		friend struct atma::enable_default_intrusive_ptr_make;
+		friend struct atma::enable_intrusive_ptr_make;
 	};
 }
 #endif

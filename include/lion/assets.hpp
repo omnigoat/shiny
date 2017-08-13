@@ -32,6 +32,9 @@ namespace lion
 {
 	struct asset_t : atma::ref_counted
 	{
+		asset_t()
+		{}
+
 		asset_t(path_t const& path)
 			: path_(path)
 		{}
@@ -40,6 +43,7 @@ namespace lion
 		{}
 
 		auto path() const -> path_t const& { return path_; }
+		auto set_path(path_t const& p) { ATMA_ASSERT(path_.string().empty()); path_ = p; }
 
 	private:
 		path_t path_;
