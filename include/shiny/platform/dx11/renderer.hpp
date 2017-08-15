@@ -108,6 +108,7 @@ namespace shiny
 		auto make_texture2d(resource_usage_mask_t, resource_storage_t, format_t, uint width, uint height, uint mips) -> texture2d_ptr;
 		auto make_texture3d(resource_usage_mask_t, resource_storage_t, format_t, uint width, uint height, uint depth, uint mips) -> texture3d_ptr;
 		auto make_vertex_shader(lion::path_t const&, atma::unique_memory_t const&, atma::string const& entrypoint, bool precompiled) -> vertex_shader_ptr;
+		auto make_fragment_shader(lion::path_t const&, atma::unique_memory_t const&, atma::string const& entrypoint, bool precompiled) -> fragment_shader_ptr;
 
 		template <typename T>
 		auto make_constant_buffer_for(T const& t) -> constant_buffer_ptr

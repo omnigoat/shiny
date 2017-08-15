@@ -10,6 +10,7 @@
 #include <shiny/platform/dx11/texture2d.hpp>
 #include <shiny/platform/dx11/texture3d.hpp>
 #include <shiny/platform/dx11/vertex_shader.hpp>
+#include <shiny/platform/dx11/fragment_shader.hpp>
 
 #include <shiny/data_declaration.hpp>
 #include <shiny/vertex_buffer.hpp>
@@ -188,10 +189,45 @@ auto renderer_t::make_vertex_shader(lion::path_t const& path, atma::unique_memor
 	{
 		return shiny_dx11::vertex_shader_bridge_ptr::make(
 			shiny::vertex_shader_t{path, shared_from_this<renderer_t>()},
-			shiny_dx11::vertex_shader_t(shared_from_this<renderer_t>(), d3d_blob, d3d_vs));
+			shiny_dx11::vertex_shader_t(d3d_blob, d3d_vs));
 	}
 
 	return vertex_shader_ptr::null;
+}
+
+auto renderer_t::make_fragment_shader(lion::path_t const& path, atma::unique_memory_t const& data, atma::string const& entrypoint, bool precompiled) -> fragment_shader_ptr
+{
+	shiny_dx11::d3d_blob_ptr d3d_blob;
+	shiny_dx11::d3d_fragment_shader_ptr d3d_vs;
+
+	if (precompiled)
+	{
+		ATMA_ENSURE_IS(S_OK, D3DCreateBlob(data.size(), d3d_blob.assign()));
+		memcpy(d3d_blob->GetBufferPointer(), data.begin(), data.size());
+	}
+	else
+	{
+		platform::d3d_blob_ptr errors;
+		if (S_OK != D3DCompile(data.begin(), data.size(), path.c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, entrypoint.raw_begin(), "ps_5_0", D3DCOMPILE_PREFER_FLOW_CONTROL | D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, d3d_blob.assign(), errors.assign()))
+		{
+			SHINY_ERROR("fragment-shader errors:\n", (char*)errors->GetBufferPointer());
+			return fragment_shader_ptr::null;
+		}
+		else if (errors)
+		{
+			SHINY_WARN("fragment-shader warnings:\n", (char*)errors->GetBufferPointer());
+		}
+	}
+
+	// create vertex-shader
+	if (S_OK == d3d_device_->CreatePixelShader(d3d_blob->GetBufferPointer(), d3d_blob->GetBufferSize(), nullptr, d3d_vs.assign()))
+	{
+		return shiny_dx11::fragment_shader_bridge_ptr::make(
+			shiny::fragment_shader_t{path, shared_from_this<renderer_t>()},
+			shiny_dx11::fragment_shader_t(d3d_blob, d3d_vs));
+	}
+
+	return fragment_shader_ptr::null;
 }
 
 auto renderer_t::immediate_set_stage(renderer_stage_t rs) -> void
@@ -628,7 +664,10 @@ auto renderer_t::immediate_draw() -> void
 	// fragment-stage
 	{
 		ATMA_ENSURE(fs_shader_ && fs_shader_.address());
-		d3d_immediate_context_->PSSetShader(fs_shader_->d3d_fs().get(), nullptr, 0);
+
+		auto dx11fs = device_unsafe_access<shiny_dx11::vertex_shader_t>(fs_shader_);
+
+		d3d_immediate_context_->PSSetShader(dx11fs->d3d_fs().get(), nullptr, 0);
 
 		ID3D11Buffer* cbs[D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT]{};
 		for (auto const& cb : fs_cbs_)

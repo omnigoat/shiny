@@ -1,10 +1,19 @@
 #pragma once
 
-#include <atma/config/platform.hpp>
+#include <shiny/resource.hpp>
 
-#ifdef ATMA_PLATFORM_WINDOWS
-#	include <shiny/platform/dx11/fragment_shader.hpp>
-#endif
 
-#include <lion/streams.hpp>
+namespace shiny
+{
+	struct fragment_shader_t : component_t
+	{
+		fragment_shader_t(lion::path_t const& path, renderer_ptr const& rndr)
+			: component_t{path, rndr}
+		{}
 
+		auto sizeof_host_resource() const -> size_t override { return sizeof(fragment_shader_t); }
+	};
+
+	template <typename T>
+	using fragment_shader_bridge_t = component_bridge_t<fragment_shader_t, T>;
+}
