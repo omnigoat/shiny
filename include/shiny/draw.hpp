@@ -29,7 +29,7 @@ namespace shiny
 
 	struct vertex_stage_t
 	{
-		vertex_shader_cptr vs;
+		vertex_shader_handle vs;
 		bound_constant_buffers_t cbs;
 		bound_input_views_t ivs;
 	};
@@ -74,7 +74,7 @@ namespace shiny
 			inline auto ia_set(input_assembly_stage_t& ia, vertex_buffer_cptr const& vb) -> void { ia.vb = vb; }
 			inline auto ia_set(input_assembly_stage_t& ia, index_buffer_cptr const& ib) -> void  { ia.ib = ib; }
 
-			inline auto vs_set(vertex_stage_t& vs, vertex_shader_cptr const& vsh) -> void       { vs.vs = vsh; }
+			inline auto vs_set(vertex_stage_t& vs, vertex_shader_handle const& vsh) -> void       { vs.vs = vsh; }
 			inline auto vs_set(vertex_stage_t& vs, bound_constant_buffers_t const& cbs) -> void { vs.cbs = cbs; }
 			inline auto vs_set(vertex_stage_t& vs, bound_input_views_t const& ivs) -> void      { vs.ivs = ivs; }
 

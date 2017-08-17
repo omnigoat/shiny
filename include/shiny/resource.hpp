@@ -70,7 +70,7 @@ namespace shiny
 	template <typename R, typename T>
 	struct device_pin_ptr
 	{
-		using devce_type = atma::transfer_const_t<typename R::value_type, T>;
+		using device_type = atma::transfer_const_t<std::remove_reference_t<decltype(*std::declval<R>())>, T>;
 
 		device_pin_ptr()
 		{}
@@ -107,10 +107,10 @@ namespace shiny
 			return !r_;
 		}
 
-		auto operator -> () const -> devce_type*
+		auto operator -> () const -> device_type*
 		{
-			using intermediary_t = atma::transfer_const_t<typename R::value_type, char>;
-			return r_ ? reinterpret_cast<devce_type*>(reinterpret_cast<intermediary_t*>(r_.get()) + r_->sizeof_host_resource()) : nullptr;
+			using intermediary_t = atma::transfer_const_t<device_type, char>;
+			return r_ ? reinterpret_cast<device_type*>(reinterpret_cast<intermediary_t*>(r_.operator -> ()) + r_->sizeof_host_resource()) : nullptr;
 		}
 
 		auto operator * () const -> T&
@@ -119,10 +119,10 @@ namespace shiny
 			return *operator->();
 		}
 
-		static auto unsafe_access(R const& r)
+		static auto unsafe_access(R const& r) -> device_type*
 		{
-			using intermediary_t = atma::transfer_const_t<typename R::value_type, char>;
-			return r ? reinterpret_cast<devce_type*>(reinterpret_cast<intermediary_t*>(r.get()) + r->sizeof_host_resource()) : nullptr;
+			using intermediary_t = atma::transfer_const_t<device_type, char>;
+			return r ? reinterpret_cast<device_type*>(reinterpret_cast<intermediary_t*>(r.operator -> ()) + r->sizeof_host_resource()) : nullptr;
 		}
 
 	private:

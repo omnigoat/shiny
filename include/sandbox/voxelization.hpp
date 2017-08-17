@@ -70,8 +70,8 @@ namespace sandbox
 		uint fragments_count;
 		shiny::resource_view_ptr fragments_view;
 		shiny::resource_view_ptr fragments_srv_view;
-		shiny::vertex_shader_ptr vs_voxelize;
 		shiny::geometry_shader_ptr gs_voxelize;
+		shiny::vertex_shader_handle vs_voxelize;
 		shiny::fragment_shader_handle fs_voxelize;
 #if 0
 		fragments_t fragments;
@@ -98,7 +98,7 @@ namespace sandbox
 	private:
 		// rendering
 		shiny::vertex_buffer_ptr vb_quad;
-		shiny::vertex_shader_ptr vs_voxels;
+		shiny::vertex_shader_handle vs_voxels;
 		shiny::fragment_shader_handle fs_voxels;
 	};
 

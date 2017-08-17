@@ -665,7 +665,7 @@ auto renderer_t::immediate_draw() -> void
 	{
 		ATMA_ENSURE(fs_shader_ && fs_shader_.address());
 
-		auto dx11fs = device_unsafe_access<shiny_dx11::vertex_shader_t>(fs_shader_);
+		auto dx11fs = device_unsafe_access<shiny_dx11::fragment_shader_t>(fs_shader_);
 
 		d3d_immediate_context_->PSSetShader(dx11fs->d3d_fs().get(), nullptr, 0);
 

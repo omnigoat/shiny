@@ -80,10 +80,8 @@ namespace lion
 		template <typename Y, typename = std::enable_if_t<std::is_convertible<Y*, T*>::value>>
 		auto operator = (asset_handle_t<Y>&& rhs) -> asset_handle_t&;
 
-		auto operator -> () const -> T const* { return (T const*)library_->find(id_)->asset.get(); }
-		auto operator -> () -> T*             { return (T      *)library_->find(id_)->asset.get(); }
-		auto operator *() const -> T const&   { return *this->operator ->(); }
-		auto operator *() -> T&               { return *this->operator ->(); }
+		auto operator -> () const -> T* { return (T      *)library_->find(id_)->asset.get(); }
+		auto operator *() const -> T& { return *this->operator ->(); }
 
 		operator bool() const { return id_ != 0; }
 

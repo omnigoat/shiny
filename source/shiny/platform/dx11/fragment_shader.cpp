@@ -11,7 +11,7 @@
 using namespace shiny;
 using shiny::fragment_shader_t;
 
-
+#if 0
 auto fragment_shader_t::make(renderer_ptr const& renderer, lion::path_t const& path, bool precompiled, atma::string const& entrypoint) -> fragment_shader_ptr
 {
 	auto f = rose::file_t{path.string()};
@@ -72,3 +72,4 @@ auto atma::intrusive_ptr_make<shiny::fragment_shader_t>::make(renderer_ptr const
 	}
 }
 
+#endif
