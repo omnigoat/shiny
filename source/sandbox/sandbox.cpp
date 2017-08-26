@@ -234,8 +234,8 @@ application_t::application_t(rose::runtime_t* rr)
 	//shiny::vertex_shader_t::make()
 
 	// shaders
-	vs_flat = shiny::vertex_shader_t::make(rndr, "../shaders/vs_basic.hlsl", false);
-	fs_flat = shiny::fragment_shader_t::make(rndr, "../shaders/ps_basic.hlsl", false);
+	//vs_flat = shiny::vertex_shader_t::make(rndr, "../shaders/vs_basic.hlsl", false);
+	//fs_flat = shiny::fragment_shader_t::make(rndr, "../shaders/ps_basic.hlsl", false);
 }
 
 auto application_t::run() -> int

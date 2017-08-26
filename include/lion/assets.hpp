@@ -15,6 +15,7 @@
 #include <type_traits>
 #include <regex>
 #include <set>
+#include <typeindex>
 
 
 // forward declares
@@ -80,8 +81,9 @@ namespace lion
 		template <typename Y, typename = std::enable_if_t<std::is_convertible<Y*, T*>::value>>
 		auto operator = (asset_handle_t<Y>&& rhs) -> asset_handle_t&;
 
-		auto operator -> () const -> T* { return (T      *)library_->find(id_)->asset.get(); }
-		auto operator *() const -> T& { return *this->operator ->(); }
+		//auto operator -> () const -> T* { return (T      *)library_->find(id_)->asset.get(); }
+		auto operator -> () const -> atma::intrusive_ptr<T> { return atma::ptr_cast_static<T>(library_->find(id_)->asset); }
+		auto operator *() const -> T& { return *(T*)library_->find(id_)->asset.get(); }
 
 		operator bool() const { return id_ != 0; }
 
@@ -514,7 +516,13 @@ namespace lion
 		asset_library_t();
 		asset_library_t(vfs_t*);
 
-		auto register_asset_type(asset_patterns_t) -> asset_type_handle_t;
+		template <typename T>
+		auto register_asset_type(asset_patterns_t patterns) -> asset_type_handle_t
+		{
+			return register_asset_type(std::type_index{typeid(T)}, std::move(patterns));
+		}
+
+		auto register_asset_type(std::type_index, asset_patterns_t) -> asset_type_handle_t;
 
 		auto store(asset_ptr const&) -> base_asset_handle_t;
 		auto retain_copy(base_asset_handle_t const&) -> base_asset_handle_t;
@@ -538,7 +546,7 @@ namespace lion
 
 	private: // assets
 		asset_types_t asset_types_;
-		std::map<rose::path_t, uint32> pathed_assets_;
+		std::map<rose::path_t, std::tuple<std::type_index, uint32>> pathed_assets_;
 
 	private:
 		template <typename> friend struct asset_handle_t;
@@ -550,6 +558,7 @@ namespace lion
 
 	struct asset_library_t::asset_type_t
 	{
+		std::type_index typeidx;
 		asset_patterns_t patterns;
 	};
 

@@ -41,9 +41,9 @@ auto lion::asset_library_t::find(uint32 h) const -> storage_t const*
 	return st;
 }
 
-auto lion::asset_library_t::register_asset_type(asset_patterns_t patterns) -> asset_type_handle_t
+auto lion::asset_library_t::register_asset_type(std::type_index idx, asset_patterns_t patterns) -> asset_type_handle_t
 {
-	auto r = asset_types_.insert(asset_type_t{std::move(patterns)});
+	auto r = asset_types_.insert(asset_type_t{idx, std::move(patterns)});
 	ATMA_ASSERT(r.second, "bad insert");
 	
 	for (auto const& pattern : atma::filter_by(&asset_pattern_t::reload, r.first->patterns))
@@ -57,7 +57,9 @@ auto lion::asset_library_t::register_asset_type(asset_patterns_t patterns) -> as
 			if (candidate == pathed_assets_.end())
 				return;
 
-			auto old_handle = candidate->second;
+			auto [typeidx, old_handle] = candidate->second;
+			if (r.first->typeidx != typeidx)
+				return;
 
 			if (auto asset = pattern.reload(path, stream))
 			{
@@ -88,7 +90,7 @@ auto lion::asset_library_t::load(path_t const& path) -> base_asset_handle_t
 				{
 					auto a = p.load(filepath, istream);
 					auto h = store(a);
-					auto r = pathed_assets_.insert(std::make_pair(filepath, h.id()));
+					auto r = pathed_assets_.insert(std::make_pair(filepath, std::make_tuple(at.typeidx, h.id())));
 					ATMA_ASSERT(r.second);
 					return h;
 				}
@@ -101,12 +103,13 @@ auto lion::asset_library_t::load(path_t const& path) -> base_asset_handle_t
 
 auto lion::operator < (lion::asset_library_t::asset_type_t const& lhs, lion::asset_library_t::asset_type_t const& rhs) -> bool
 {
-	return std::lexicographical_compare(
+	return lhs.typeidx < rhs.typeidx || (lhs.typeidx == rhs.typeidx &&
+		std::lexicographical_compare(
 		lhs.patterns.begin(), lhs.patterns.end(),
 		rhs.patterns.begin(), rhs.patterns.end(),
 		[](lion::asset_pattern_t const& lhs, lion::asset_pattern_t const& rhs) {
 			return lhs.load < rhs.load;
-		});
+		}));
 }
 
 

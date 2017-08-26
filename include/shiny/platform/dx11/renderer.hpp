@@ -136,7 +136,7 @@ namespace shiny
 		auto immediate_ia_set_topology(topology_t) -> void;
 
 		// vertex-stage
-		auto immediate_vs_set_vertex_shader(vertex_shader_cptr const&) -> void;
+		auto immediate_vs_set_vertex_shader(vertex_shader_handle const&) -> void;
 		auto immediate_vs_set_constant_buffers(bound_constant_buffers_t const&) -> void;
 		auto immediate_vs_set_input_views(bound_input_views_t const&) -> void;
 
@@ -237,7 +237,7 @@ namespace shiny
 			bound_resource_views_t    vs_srvs_;
 			geometry_shader_cptr      gs_shader_;
 			bound_constant_buffers_t  gs_cbs_;
-			fragment_shader_handle    fs_shader_;
+			fragment_shader_cptr      fs_shader_;
 			bound_constant_buffers_t  fs_cbs_;
 			bound_resource_views_t    fs_srvs_;
 			bound_resource_views_t    fs_uavs_;

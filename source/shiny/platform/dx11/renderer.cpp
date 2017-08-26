@@ -493,7 +493,7 @@ auto renderer_t::immediate_draw_pipeline_reset() -> void
 {
 	vs_shader_.reset();
 	gs_shader_.reset();
-	fs_shader_ = fragment_shader_handle{};
+	fs_shader_.reset();
 	draw_range_ = draw_range_t{};
 }
 
@@ -526,10 +526,10 @@ auto renderer_t::immediate_ia_set_topology(topology_t t) -> void
 	d3d_immediate_context_->IASetPrimitiveTopology(d3dt);
 }
 
-auto renderer_t::immediate_vs_set_vertex_shader(vertex_shader_cptr const& vs) -> void
+auto renderer_t::immediate_vs_set_vertex_shader(vertex_shader_handle const& vs) -> void
 {
 	ATMA_ASSERT(vs);
-	vs_shader_ = vs;
+	vs_shader_ = vs.operator ->();
 }
 
 auto renderer_t::immediate_vs_set_constant_buffers(bound_constant_buffers_t const& cbs) -> void
@@ -561,7 +561,7 @@ auto shiny::renderer_t::immediate_gs_set_input_views(bound_input_views_t const &
 
 auto renderer_t::immediate_fs_set_fragment_shader(fragment_shader_handle const& fs) -> void
 {
-	fs_shader_ = lion::polymorphic_asset_cast<fragment_shader_t>(library.retain_copy(fs));
+	fs_shader_ = fs.operator ->(); // lion::polymorphic_asset_cast<fragment_shader_t>(library.retain_copy(fs));
 }
 
 auto renderer_t::immediate_fs_set_constant_buffers(bound_constant_buffers_t const& cbs) -> void
@@ -663,7 +663,7 @@ auto renderer_t::immediate_draw() -> void
 
 	// fragment-stage
 	{
-		ATMA_ENSURE(fs_shader_ && fs_shader_.address());
+		ATMA_ENSURE(fs_shader_);
 
 		auto dx11fs = device_unsafe_access<shiny_dx11::fragment_shader_t>(fs_shader_);
 
