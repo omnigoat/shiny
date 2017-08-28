@@ -177,10 +177,16 @@ auto renderer_t::make_vertex_shader(lion::path_t const& path, atma::unique_memor
 	else
 	{
 		shiny_dx11::d3d_blob_ptr errors;
-		ATMA_ENSURE_IS(S_OK, D3DCompile(data.begin(), data.size(), path.c_str(), nullptr, nullptr, entrypoint.raw_begin(), "vs_5_0", D3DCOMPILE_PREFER_FLOW_CONTROL | D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, d3d_blob.assign(), errors.assign()));
-		if (errors)
+		if (S_OK != D3DCompile(data.begin(), data.size(), path.c_str(), nullptr, nullptr, entrypoint.raw_begin(), "vs_5_0", D3DCOMPILE_PREFER_FLOW_CONTROL | D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, d3d_blob.assign(), errors.assign()))
 		{
-			SHINY_ERROR("vertex-shader errors:\n", (char*)errors->GetBufferPointer());
+			if (errors) {
+				SHINY_ERROR("vertex-shader errors:\n", (char*)errors->GetBufferPointer());
+			}
+			return vertex_shader_ptr::null;
+		}
+		else if (errors)
+		{
+			SHINY_ERROR("vertex-shader warnings:\n", (char*)errors->GetBufferPointer());
 		}
 	}
 
@@ -603,8 +609,10 @@ auto renderer_t::immediate_draw() -> void
 {
 	// input-assembly-stage 
 	{
-		ATMA_ENSURE(vs_shader_);
-		ATMA_ENSURE(ia_vb_);
+		//ATMA_ENSURE(vs_shader_);
+		//ATMA_ENSURE(ia_vb_);
+		if (vs_shader_ == nullptr)
+			return;
 
 		auto dx11vb = device_unsafe_access<shiny_dx11::buffer_t>(ia_vb_);
 		auto dx11ib = device_unsafe_access<shiny_dx11::buffer_t>(ia_ib_);

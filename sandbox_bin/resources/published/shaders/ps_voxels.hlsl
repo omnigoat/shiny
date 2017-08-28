@@ -317,15 +317,15 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 	// debug: number of nodes traversed
 	//return float4(reps / 16.f, 0.f, 0.f, 1.f);
 
-#if 0
+#if 1
 	float3 n = normalize(color.xyz);
 
 	float3 lamb = (0.4);
 	float3 lpwr = (0.3);
-	float3 ldir = float3(0, -1, 0);
+	float3 ldir = float3(0, 1, 0);
 	// diffuse lighting
 	float i  = dot(ldir, n);
-	color = float4(lamb+ i * lpwr, color.w);
+	color = float4(lamb + i * lpwr, color.w);
 	// specular lighting
 	float3 h = normalize(ldir + normal);
 	i = clamp(pow(dot(n, h), 15), 0, 1);

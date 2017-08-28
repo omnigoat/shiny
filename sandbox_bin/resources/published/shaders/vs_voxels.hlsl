@@ -37,7 +37,7 @@ ps_input_t main(in vs_input_t input)
 	float3 right    = cross(up, view_dir);
 
 	float aspect  = proj[1][1] / proj[0][0];
-	float inv_fov = 2.f / (atan(1.f / proj[0][0]) * 2.f);
+	float inv_fov = 1.f / (atan(1.f / proj[0][0]) * 2.f);
 
 	float3 ray = normalize(view_dir + up * input.position.y * inv_fov + right * input.position.x * aspect * inv_fov);
 
