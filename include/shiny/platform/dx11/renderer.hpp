@@ -199,7 +199,7 @@ namespace shiny
 		//auto make_depth_stencil(depth_stencil_state_t const&) -> 
 
 		// these functions are called on a fooey thread
-		auto on_resize(fooey::events::resize_t&) -> void;
+		auto on_resize(fooey::events::resize_t const&) -> void;
 
 
 	private:

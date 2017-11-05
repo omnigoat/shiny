@@ -266,7 +266,8 @@ auto application_t::run() -> int
 
 
 	// clear!
-	rndr->signal_draw_scene(shiny::scene_t{rndr, cc.camera(), shiny::rendertarget_clear_t{aml::vector4f{0.2f, 0.2f, 0.2f}, 1.f}});
+	shiny::scene_t clear_scene{rndr, cc.camera(), shiny::rendertarget_clear_t{aml::vector4f{0.2f, 0.2f, 0.2f}, 1.f}};
+	rndr->signal_draw_scene(clear_scene);
 
 
 	//

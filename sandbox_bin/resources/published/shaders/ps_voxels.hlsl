@@ -284,10 +284,10 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 		discard; //return float4(0.f, 1.f, 0.f, 1.f);
 
 	// debug: hit-enter
-	//return float4(hit_enter, 1.f);
+	// return float4(hit_enter, 1.f);
 
 	// debug: hit-exit
-	//return float4(hit_exit, 1.f);
+	// return float4(hit_exit, 1.f);
 
 	float4 color = {0.f, 0.f, 0.f, 0.f};
 
@@ -315,9 +315,9 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 	}
 
 	// debug: number of nodes traversed
-	//return float4(reps / 16.f, 0.f, 0.f, 1.f);
+	// return float4(reps / 32.f, 0.f, 0.f, 1.f);
 
-#if 1
+#if 0
 	float3 n = normalize(color.xyz);
 
 	float3 lamb = (0.4);
@@ -332,7 +332,7 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 	color += float4(i * lpwr, 0);
 #endif
 
-	//return float4(1.f, 0.f, 0.f, 1.f);
+	// return float4(1.f, 0.f, 0.f, 1.f);
 	return color;
 }
 

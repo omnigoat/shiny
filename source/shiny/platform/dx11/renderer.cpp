@@ -264,7 +264,7 @@ auto renderer_t::push_display_format(DXGI_MODE_DESC& dxgimode, display_mode_t co
 auto renderer_t::bind_events(fooey::window_ptr const& window) -> void
 {
 	/*bound_events_ = */window->on({
-		{"resize-dc.shiny.renderer", [this](fooey::events::resize_t& e) { on_resize(e); }}
+		{"resize-dc.shiny.renderer", [this](fooey::events::resize_t const& e) { on_resize(e); }}
 	});
 }
 
@@ -981,7 +981,7 @@ auto shiny::renderer_t::backbuffer_depth_stencil() -> resource_view_ptr const &
 	return default_depth_stencil_view_;
 }
 
-auto renderer_t::on_resize(fooey::events::resize_t& e) -> void
+auto renderer_t::on_resize(fooey::events::resize_t const& e) -> void
 {
 	if (requested_display_mode_ == &requested_fullscreen_display_mode_)
 		return;
