@@ -16,6 +16,7 @@
 #include <shiny/rendertarget_clear.hpp>
 #include <shiny/depth_state.hpp>
 #include <shiny/resource.hpp>
+#include <shiny/compute.hpp>
 
 #include <shiny/platform/dx11/d3d_fwd.hpp>
 #include <shiny/platform/dx11/blender.hpp>
@@ -77,7 +78,7 @@ namespace shiny
 
 	struct renderer_t : atma::ref_counted
 	{
-		using map_callback_t = std::function<void(mapped_subresource_t&)>;
+		using map_callback_t = atma::function<void(mapped_subresource_t&)>;
 
 		~renderer_t();
 
@@ -118,6 +119,9 @@ namespace shiny
 		auto make_vertex_buffer(resource_storage_t storage, data_declaration_t const* dd, atma::vector<T> const& x) -> vertex_buffer_ptr
 			{ ATMA_ASSERT(dd->stride() == sizeof(T), "invalid sizes for vertex-buffer shortcut creation");
 			  return make_vertex_buffer(storage, dd, x.size(), x.data(), x.size()); }
+
+
+		auto make_compute_context(bound_constant_buffers_t const&, bound_input_views_t const&, bound_compute_views_t const&) -> compute_context_t;
 
 		// pipeline-setup-stage
 		auto immediate_draw_pipeline_reset() -> void;
@@ -168,6 +172,7 @@ namespace shiny
 		auto immediate_cs_set_compute_shader(compute_shader_cptr const&) -> void;
 		auto immediate_compute(uint x, uint y, uint z) -> void;
 
+		auto signal_compute(compute_context_t const*, compute_shader_cptr const&, uint32, uint32, uint32) -> void;
 
 
 
@@ -256,7 +261,7 @@ namespace shiny
 
 	private:
 		runtime_t& runtime_;
-		atma::thread::engine_t engine_;
+		atma::inplace_engine_t engine_;
 
 		platform::dxgi_adapter_ptr dxgi_adapter_;
 		platform::d3d_device_ptr   d3d_device_;

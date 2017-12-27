@@ -348,23 +348,26 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 
 		voxelization_scene.draw
 		(
-			sdc::input_assembly_stage(
+			shiny::input_assembly_stage_t{
 				vb->data_declaration(),
-				vb, ib),
+				vb, ib},
 
-			sdc::vertex_stage(vs_voxelize,
+			shiny::vertex_stage_t{
+				vs_voxelize,
 				shiny::bound_constant_buffers_t{
 					{0, cb}
 				}
-			),
+			},
 
-			sdc::geometry_stage(gs_voxelize,
+			shiny::geometry_stage_t{
+				gs_voxelize,
 				shiny::bound_constant_buffers_t{
 					{0, cb2}
 				}
-			),
+			},
 
-			sdc::fragment_stage(fs_voxelize,
+			shiny::fragment_stage_t{
+				fs_voxelize,
 				shiny::bound_constant_buffers_t{
 					{0, cb},
 					{1, cb2}
@@ -374,11 +377,11 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 					{0, countbuf_view},
 					{1, fragments_view}
 				}
-			),
+			},
 
-			sdc::output_merger_stage(
+			shiny::output_merger_stage_t{
 				shiny::depth_stencil_state_t::off
-			)
+			}
 		);
 
 		rndr->signal_draw_scene(voxelization_scene);
@@ -547,7 +550,11 @@ auto voxelization_plugin_t::setup_svo() -> void
 
 	uint kx, ky, kz;
 	fit_linear_dispatch_to_group(kx, ky, kz, 8, 8, 8, fragments_count);
-	//kx = fragments_count / 64;
+
+	auto cc = rndr->make_compute_context(
+		bound_constant_buffers,
+		bound_input_views,
+		bound_compute_views);
 
 	// mark & allocate tiles in the node-cache
 	for (int i = 0; i != levels_required; ++i)
@@ -555,17 +562,11 @@ auto voxelization_plugin_t::setup_svo() -> void
 		rndr->signal_rs_upload(cb, cbuf{
 			(uint32)fragments_count,
 			(uint32)levels_required,
-			(uint32)i
-		});
+			(uint32)i});
 
-		auto d = aml::pow(2, i);
-
-		shiny::signal_compute(rndr,
-			bound_constant_buffers,
-			bound_input_views,
-			bound_compute_views,
-			scc::dispatch(cs_mark, kx, ky, kz),
-			scc::dispatch(cs_allocate, d, d, d));
+		cc.signal_dispatch(cs_mark, kx, ky, kz)
+		  .signal_dispatch(cs_allocate, aml::pow(2, i))
+		  ;
 	}
 
 	// 1) mark nodes' brick_ids
@@ -575,17 +576,12 @@ auto voxelization_plugin_t::setup_svo() -> void
 		rndr->signal_rs_upload(cb, cbuf{
 			(uint32)fragments_count,
 			(uint32)levels_required,
-			(uint32)levels_required
-		});
+			(uint32)levels_required});
 
-		auto dim = aml::pow(2, (int)levels_required);
-		shiny::signal_compute(rndr,
-			bound_constant_buffers,
-			bound_input_views,
-			bound_compute_views,
-			scc::dispatch(cs_mark, kx, ky, kz),
-			scc::dispatch(cs_allocate, dim, dim, dim),
-			scc::dispatch(cs_write_fragments, kx, ky, kz));
+		cc.signal_dispatch(cs_mark, kx, ky, kz)
+		  .signal_dispatch(cs_allocate, aml::pow(2, (int)levels_required))
+		  .signal_dispatch(cs_write_fragments, kx, ky, kz)
+		  ;
 	}
 }
 
@@ -620,50 +616,42 @@ auto voxelization_plugin_t::gfx_draw(shiny::scene_t& scene) -> void
 {
 	namespace sdc = shiny::draw_commands;
 
-#if 0
-	scene.draw(
-		sdc::input_assembly_stage(vb->data_declaration(), vb, ib),
-		sdc::vertex_stage(vs_flat(), shiny::bound_constant_buffers_t{
-			{0, scene.scene_constant_buffer()}
-		}),
-		sdc::geometry_stage(gs),
-		sdc::fragment_stage(fs_flat())
-	);
-#endif
-
-	struct blah
+	struct brick_cb_t
 	{
 		aml::vector4f position;
 		float x, y;
 		uint32 brickcache_width, brick_size;
 	};
 
-	auto cb = scene.renderer()->make_constant_buffer_for(blah{
+	auto cb = scene.renderer()->make_constant_buffer_for(brick_cb_t{
 		scene.camera().position(),
 		scene.camera().yaw(), scene.camera().pitch(),
 		(uint32)brickcache->width() / 8, 8
 	});
 
-	scene.draw(
-		sdc::input_assembly_stage(vb_quad->data_declaration(), vb_quad),
-		sdc::vertex_stage(vs_voxels,
-			shiny::bound_constant_buffers_t{
-				{0, scene.scene_constant_buffer()},
-				{2, cb}
-			}
-		),
+	auto bound_buffers = shiny::bound_constant_buffers_t{
+		{0, scene.scene_constant_buffer()},
+		{2, cb}};
 
-		sdc::fragment_stage(fs_voxels, 
-			shiny::bound_constant_buffers_t{
-				{0, scene.scene_constant_buffer()},
-				{2, cb}
-			},
+	scene.draw(
+		shiny::input_assembly_stage_t{
+			vb_quad->data_declaration(),
+			vb_quad},
+
+		shiny::vertex_stage_t{
+			vs_voxels,
+			bound_buffers
+		},
+
+		shiny::fragment_stage_t{
+			fs_voxels, 
+			bound_buffers,
 		
 			shiny::bound_input_views_t{
 				{0, nodecache_input_view},
 				{1, brickcache_input_view}
 			}
-		)
+		}
 	);
 
 }

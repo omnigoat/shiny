@@ -453,6 +453,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 {
 	// thread pool for various systems
 	atma::thread_pool_t global_thread_pool{8};
+
 	// platform runtime & console-logging-handler
 	atma::inplace_engine_t fs_engine_{4096};
 	rose::runtime_t RR{&fs_engine_};

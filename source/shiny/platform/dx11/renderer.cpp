@@ -59,6 +59,7 @@ auto shiny::create_context(runtime_t& runtime, fooey::window_ptr const& window, 
 
 renderer_t::renderer_t(runtime_t& runtime, fooey::window_ptr const& window, uint adapter)
 	: runtime_(runtime), stage_(), window_(window), current_display_mode_(), requested_display_mode_()
+	, engine_{512 * 1024}
 {
 	std::tie(dxgi_adapter_, d3d_device_, d3d_immediate_context_) = runtime_.dxgid3d_for_adapter(adapter);
 	create_swapchain();
@@ -66,9 +67,6 @@ renderer_t::renderer_t(runtime_t& runtime, fooey::window_ptr const& window, uint
 	setup_rendertarget(window->drawcontext_width(), window->drawcontext_height());
 
 	bind_events(window);
-
-
-
 
 	// SERIOUSLY, we need to think of a better way to deal with default samplers
 	//if (false)
@@ -105,6 +103,9 @@ renderer_t::renderer_t(runtime_t& runtime, fooey::window_ptr const& window, uint
 		d3d_device_->CreateRasterizerState(&rasterDesc, d3d_rs.assign());
 		d3d_immediate_context_->RSSetState(d3d_rs.get());
 	}
+
+	engine_.ensure_running();
+
 }
 
 renderer_t::~renderer_t()
@@ -234,6 +235,11 @@ auto renderer_t::make_fragment_shader(lion::path_t const& path, atma::unique_mem
 	}
 
 	return fragment_shader_ptr::null;
+}
+
+auto renderer_t::make_compute_context(bound_constant_buffers_t const& cbs, bound_input_views_t const& ivs, bound_compute_views_t const& cvs) -> compute_context_t
+{
+	return compute_context_t{shared_from_this<renderer_t>(), cbs, ivs, cvs};
 }
 
 auto renderer_t::immediate_set_stage(renderer_stage_t rs) -> void
@@ -480,12 +486,75 @@ auto renderer_t::signal_clear(atma::math::vector4f const& color) -> void
 
 auto renderer_t::signal_draw_scene(scene_t& scene) -> void
 {
-	engine_.signal_batch(scene.batch_);
+	auto sceneptr = std::make_shared<scene_t>(std::move(scene));
+
+	engine_.signal([=]
+	{
+		auto const& scene = *sceneptr;
+
+		immediate_draw_pipeline_reset();
+
+		if (scene.draw_target_.render_target())
+		{
+			immediate_om_set_render_target(scene.draw_target().render_target());
+			immediate_om_set_depth_stencil(scene.draw_target_.depth_stencil());
+		}
+		else
+		{
+			immediate_om_set_render_target(backbuffer_view_);
+			immediate_om_set_depth_stencil(default_depth_stencil_view_);
+		}
+
+		if (scene.clear_.clear_any())
+		{
+			immediate_clear(scene.clear_);
+		}
+
+		for (auto const& draw : scene.draw_commands_)
+		{
+			{ // input-assembly
+				immediate_ia_set_topology(draw.ia.tp);
+				immediate_ia_set_data_declaration(draw.ia.dd);
+				immediate_ia_set_vertex_buffer(draw.ia.vb);
+
+				if (draw.ia.ib)
+					immediate_ia_set_index_buffer(draw.ia.ib);
+			}
+
+			{ // vertex-stage
+				immediate_vs_set_vertex_shader(draw.vs.vs);
+				immediate_vs_set_constant_buffers(draw.vs.cbs);
+				immediate_vs_set_input_views(draw.vs.ivs);
+			}
+
+			{ // geometry-stage
+				immediate_gs_set_geometry_shader(draw.gs.gs);
+				immediate_gs_set_constant_buffers(draw.gs.cbs);
+			}
+
+			{ // fragment-stage
+				immediate_fs_set_fragment_shader(draw.fs.fs);
+				immediate_fs_set_constant_buffers(draw.fs.cbs);
+				immediate_fs_set_input_views(draw.fs.ivs);
+				immediate_fs_set_compute_views(draw.fs.cvs);
+			}
+
+			{ // oputput-merger-stage
+				immediate_om_set_blending(draw.om.b);
+			}
+
+			{ // draw-command
+				immediate_draw_set_range(draw.dr);
+				immediate_draw();
+			}
+		}
+
+	});
 }
 
 auto renderer_t::signal(atma::thread::engine_t::queue_t::batch_t& batch) -> void
 {
-	engine_.signal_batch(batch);
+	//engine_.signal_batch(batch);
 }
 
 auto renderer_t::immediate_clear(rendertarget_clear_t const& rtc) -> void
@@ -849,6 +918,26 @@ auto renderer_t::signal_rs_map(resource_ptr const& rs, uint subresource, map_typ
 		d3d_immediate_context_->Unmap(d3dr.get(), subresource);
 	});
 }
+
+auto renderer_t::signal_compute(compute_context_t const* cc, compute_shader_cptr const& shader, uint32 x, uint32 y, uint32 z) -> void
+{
+	engine_.signal([&, cbs = cc->constant_buffers(), ivs = cc->input_views(), cvs = cc->compute_views(), shader, x, y, z] {
+
+		immediate_compute_pipeline_reset();
+
+		cs_cbs_ = cbs;
+		cs_srvs_ = ivs.views;
+		cs_uavs_ = cvs.views;
+		cs_shader_ = shader;
+
+		immediate_compute(x, y, z);
+	});
+}
+
+
+
+
+
 
 auto renderer_t::create_d3d_input_layout(vertex_shader_cptr const& vs, data_declaration_t const* vd) -> platform::d3d_input_layout_ptr
 {
