@@ -132,7 +132,7 @@ auto voxelization_plugin_t::main_setup() -> void
 
 auto const gridsize = 512;
 
-auto fit_linear_dispatch_to_group(uint& x, uint& y, uint& z, uint xs, uint ys, uint zs, uint s) -> bool
+auto fit_linear_dispatch_to_group(uint xs, uint ys, uint zs, uint s) -> std::tuple<uint, uint, uint>
 {
 	// s = 10,000
 	// x,y,z = 8
@@ -141,11 +141,11 @@ auto fit_linear_dispatch_to_group(uint& x, uint& y, uint& z, uint xs, uint ys, u
 	//  [1, 1, 1] -> [8, 8, 8]
 	//  [8, 1, 1] -> [64, 8, 8]
 
-	x = std::max(1u, (uint)std::ceil((float)s / (xs * ys * zs)));
-	y = 1;
-	z = 1;
+	uint x = std::max(1u, (uint)std::ceil((float)s / (xs * ys * zs)));
+	uint y = 1;
+	uint z = 1;
 
-	return true;
+	return {x, y, z};
 }
 
 auto voxelization_plugin_t::setup_voxelization() -> void
@@ -541,15 +541,16 @@ auto voxelization_plugin_t::setup_svo() -> void
 #endif
 
 
-	namespace scc = shiny::compute_commands;
-
 	// setup bound resources
-	auto bound_constant_buffers = scc::bind_constant_buffers({{0, cb}});
-	auto bound_input_views      = scc::bind_input_views({{0, fragments_srv_view}});
-	auto bound_compute_views    = scc::bind_compute_views({{0, countbuf_view}, {1, nodecache_view}, {2, brickcache_view}});
+	auto bound_constant_buffers = shiny::bound_constant_buffers_t{{0, cb}};
+	auto bound_input_views      = shiny::bound_input_views_t{{0, fragments_srv_view}};
 
-	uint kx, ky, kz;
-	fit_linear_dispatch_to_group(kx, ky, kz, 8, 8, 8, fragments_count);
+	auto bound_compute_views = shiny::bound_compute_views_t{
+		{0, countbuf_view},
+		{1, nodecache_view},
+		{2, brickcache_view}};
+
+	auto [kx, ky, kz] = fit_linear_dispatch_to_group(8, 8, 8, fragments_count);
 
 	auto cc = rndr->make_compute_context(
 		bound_constant_buffers,

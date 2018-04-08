@@ -5,6 +5,8 @@
 
 #include <regex>
 
+#include <atma/config/platform.hpp>
+
 using namespace lion;
 
 
