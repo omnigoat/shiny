@@ -29,7 +29,7 @@ shiny_dx11::buffer_t::buffer_t(
 	if (data_element_count == 0)
 		data_element_count = bdm.count;
 	auto data_size = bdm.stride * data_element_count;
-	data_size = atma::alignby((uint)data_size, 16);
+	data_size = aml::alignby((uint)data_size, 16);
 
 	// determine resource-storage and cpu-access
 	auto d3d_rs = D3D11_USAGE();
@@ -83,7 +83,7 @@ shiny_dx11::buffer_t::buffer_t(
 
 
 	// create buffer
-	auto rs_size = atma::alignby((uint)resource_size, 16);
+	auto rs_size = aml::alignby((uint)resource_size, 16);
 	auto buffer_desc = D3D11_BUFFER_DESC{(UINT)rs_size, d3d_rs, (UINT)binding, (UINT)d3d_ca, (UINT)misc_flags, (UINT)bdm.stride};
 	switch (rs)
 	{

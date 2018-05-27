@@ -457,7 +457,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	// platform runtime & console-logging-handler
 	atma::inplace_engine_t fs_engine_{4096};
 	rose::runtime_t RR{&fs_engine_};
-	lion::console_log_handler_t console_log{RR.get_console()};
+	lion::console_log_handler_t console_log{RR.console()};
 
 	// shiny runtime & logging through console
 	shiny::logging::runtime_t SLR;
