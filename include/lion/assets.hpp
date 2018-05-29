@@ -60,7 +60,7 @@ namespace lion
 	template <typename T>
 	struct asset_handle_t
 	{
-		constexpr asset_handle_t();
+		constexpr asset_handle_t() = default;
 		asset_handle_t(asset_handle_t const& rhs);
 		asset_handle_t(asset_handle_t&& rhs);
 		~asset_handle_t();
@@ -192,20 +192,19 @@ namespace lion
 
 namespace lion
 {
-	template <typename T>
-	inline constexpr asset_handle_t<T>::asset_handle_t()
-	{}
 
 	template <typename T>
 	inline asset_handle_t<T>::asset_handle_t(asset_handle_t const& rhs)
-		: library_{rhs.library_}, id_{rhs.id_}
+		: library_{rhs.library_}
+		, id_{rhs.id_}
 	{
 		library_->table_.retain(id_);
 	}
 
 	template <typename T>
 	inline asset_handle_t<T>::asset_handle_t(asset_handle_t&& rhs)
-		: library_{rhs.library_}, id_{rhs.id_}
+		: library_{rhs.library_}
+		, id_{rhs.id_}
 	{
 		rhs.id_ = 0;
 	}
@@ -215,13 +214,14 @@ namespace lion
 		: library_{rhs.library_}
 		, id_{rhs.expired() ? 0 : rhs.id_}
 	{
-		library_->table_.release(id_);
+		library_->table_.retain(id_);
 	}
 
 	template <typename T>
 	template <typename Y, typename>
 	inline asset_handle_t<T>::asset_handle_t(asset_handle_t<Y> const& rhs)
-		: library_{rhs.library_}, id_{rhs.id_}
+		: library_{rhs.library_}
+		, id_{rhs.id_}
 	{
 		library_->table_.retain(id_);
 	}
@@ -229,7 +229,8 @@ namespace lion
 	template <typename T>
 	template <typename Y, typename>
 	inline asset_handle_t<T>::asset_handle_t(asset_handle_t<Y>&& rhs)
-		: library_{rhs.library_}, id_{rhs.id_}
+		: library_{rhs.library_}
+		, id_{rhs.id_}
 	{
 		rhs.id_ = 0;
 	}

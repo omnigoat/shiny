@@ -46,26 +46,19 @@ auto lion::asset_library_t::register_asset_type(std::type_index idx, asset_patte
 	auto [asset_type, good_insert] = asset_types_.insert(asset_type_t{idx, std::move(patterns)});
 	ATMA_ASSERT(good_insert, "bad insert");
 	
-	for (auto const& pattern : atma::filter_by(&asset_pattern_t::reload, asset_type->patterns))
+	for (auto const& pattern : atma::filter(&asset_pattern_t::reload, asset_type->patterns))
 	{
 		vfs_->add_filewatch(pattern.path, [&, asset_type](rose::path_t const& path, rose::file_change_t change, lion::input_stream_ptr const& stream)
 		{
 			if (change != rose::file_change_t::changed)
 				return;
-
-			auto candidate = pathed_assets_.find(path);
-			if (candidate == pathed_assets_.end())
+			else if (auto candidate = pathed_assets_.find(path); candidate == pathed_assets_.end())
 				return;
-
-			auto [typeidx, old_handle] = candidate->second;
-			if (asset_type->typeidx != typeidx)
+			else if (auto [typeidx, old_handle] = candidate->second; asset_type->typeidx != typeidx)
 				return;
-
-			if (auto asset = pattern.reload(path, stream))
-			{
-				auto h = store(asset);
-				table_.swap(old_handle, h.id());
-			}
+			else if (auto asset = pattern.reload(path, stream))
+				table_.swap(old_handle, store(asset).id());
+			
 		});
 	}
 
