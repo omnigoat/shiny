@@ -1,6 +1,6 @@
 #include <lion/assets.hpp>
 
-#include <atma/algorithm/filter.hpp>
+#include <atma/ranges/filter.hpp>
 
 #include <memory>
 

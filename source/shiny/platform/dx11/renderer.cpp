@@ -33,7 +33,7 @@
 #include <fooey/keys.hpp>
 #include <fooey/widgets/window.hpp>
 
-#include <atma/algorithm/filter.hpp>
+#include <atma/ranges/filter.hpp>
 #include <atma/function_traits.hpp>
 
 #include <vector>
