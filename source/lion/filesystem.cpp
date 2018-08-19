@@ -1,11 +1,11 @@
 #include <lion/filesystem.hpp>
 
 #include <rose/mmap.hpp>
+
 #include <atma/algorithm.hpp>
+#include <atma/config/platform.hpp>
 
 #include <regex>
-
-#include <atma/config/platform.hpp>
 
 using namespace lion;
 
