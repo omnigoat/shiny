@@ -108,6 +108,8 @@ namespace shiny
 		auto make_vertex_buffer(resource_storage_t, data_declaration_t const*, size_t bufcount, void const* data, size_t datacount = 0) -> vertex_buffer_ptr;
 		auto make_texture2d(resource_usage_mask_t, resource_storage_t, format_t, uint width, uint height, uint mips) -> texture2d_ptr;
 		auto make_texture3d(resource_usage_mask_t, resource_storage_t, format_t, uint width, uint height, uint depth, uint mips) -> texture3d_ptr;
+
+		auto make_geometry_shader(lion::path_t const&, atma::unique_memory_t const&, atma::string const& entrypoint, bool precompiled) -> geometry_shader_ptr;
 		auto make_vertex_shader(lion::path_t const&, atma::unique_memory_t const&, atma::string const& entrypoint, bool precompiled) -> vertex_shader_ptr;
 		auto make_fragment_shader(lion::path_t const&, atma::unique_memory_t const&, atma::string const& entrypoint, bool precompiled) -> fragment_shader_ptr;
 
@@ -145,7 +147,7 @@ namespace shiny
 		auto immediate_vs_set_input_views(bound_input_views_t const&) -> void;
 
 		// geometry-stage
-		auto immediate_gs_set_geometry_shader(geometry_shader_cptr const&) -> void;
+		auto immediate_gs_set_geometry_shader(geometry_shader_handle const&) -> void;
 		auto immediate_gs_set_constant_buffers(bound_constant_buffers_t const&) -> void;
 		auto immediate_gs_set_input_views(bound_input_views_t const&) -> void;
 

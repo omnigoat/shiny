@@ -25,6 +25,7 @@ namespace shiny
 	struct geometry_shader_t;
 	using  geometry_shader_ptr = atma::intrusive_ptr<geometry_shader_t>;
 	using  geometry_shader_cptr = atma::intrusive_ptr<geometry_shader_t const>;
+	using  geometry_shader_handle = lion::asset_handle_t<geometry_shader_t>;
 
 	struct vertex_shader_t;
 	using  vertex_shader_ptr = atma::intrusive_ptr<vertex_shader_t>;

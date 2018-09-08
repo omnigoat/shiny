@@ -31,7 +31,7 @@ namespace shiny
 		inline auto vs_set(vertex_stage_t& vs, bound_constant_buffers_t const& cbs) -> void;
 		inline auto vs_set(vertex_stage_t& vs, bound_input_views_t const& ivs) -> void;
 
-		inline auto gs_set(geometry_stage_t& gs, geometry_shader_cptr const& gsh) -> void;
+		inline auto gs_set(geometry_stage_t& gs, geometry_shader_handle const& gsh) -> void;
 		inline auto gs_set(geometry_stage_t& gs, bound_constant_buffers_t const& cbs) -> void;
 		inline auto gs_set(geometry_stage_t& gs, bound_input_views_t const& ivs) -> void;
 
@@ -68,7 +68,7 @@ namespace shiny
 			ATMA_SPLAT_FN(detail::gs_set(*this, std::forward<Args>(args)));
 		}
 
-		geometry_shader_cptr gs;
+		geometry_shader_handle gs;
 		bound_constant_buffers_t cbs;
 		bound_input_views_t ivs;
 	};
@@ -141,7 +141,7 @@ namespace shiny
 		inline auto vs_set(vertex_stage_t& vs, bound_constant_buffers_t const& cbs) -> void { vs.cbs = cbs; }
 		inline auto vs_set(vertex_stage_t& vs, bound_input_views_t const& ivs) -> void { vs.ivs = ivs; }
 
-		inline auto gs_set(geometry_stage_t& gs, geometry_shader_cptr const& gsh) -> void { gs.gs = gsh; }
+		inline auto gs_set(geometry_stage_t& gs, geometry_shader_handle const& gsh) -> void { gs.gs = gsh; }
 		inline auto gs_set(geometry_stage_t& gs, bound_constant_buffers_t const& cbs) -> void { gs.cbs = cbs; }
 		inline auto gs_set(geometry_stage_t& gs, bound_input_views_t const& ivs) -> void { gs.ivs = ivs; }
 
@@ -168,7 +168,7 @@ namespace shiny
 			inline auto vs_set(vertex_stage_t& vs, bound_constant_buffers_t const& cbs) -> void   { vs.cbs = cbs; }
 			inline auto vs_set(vertex_stage_t& vs, bound_input_views_t const& ivs) -> void        { vs.ivs = ivs; }
 
-			inline auto gs_set(geometry_stage_t& gs, geometry_shader_cptr const& gsh) -> void     { gs.gs = gsh; }
+			inline auto gs_set(geometry_stage_t& gs, geometry_shader_handle const& gsh) -> void     { gs.gs = gsh; }
 			inline auto gs_set(geometry_stage_t& gs, bound_constant_buffers_t const& cbs) -> void { gs.cbs = cbs; }
 			inline auto gs_set(geometry_stage_t& gs, bound_input_views_t const& ivs) -> void      { gs.ivs = ivs; }
 

@@ -70,7 +70,7 @@ namespace sandbox
 		uint fragments_count;
 		shiny::resource_view_ptr fragments_view;
 		shiny::resource_view_ptr fragments_srv_view;
-		shiny::geometry_shader_ptr gs_voxelize;
+		shiny::geometry_shader_handle gs_voxelize;
 		shiny::vertex_shader_handle vs_voxelize;
 		shiny::fragment_shader_handle fs_voxelize;
 #if 0

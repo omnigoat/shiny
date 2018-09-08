@@ -78,6 +78,15 @@ auto obj_model_t::triangle_of(aml::vector4i const& f) const -> aml::triangle_t
 	return aml::triangle_t{verts_[f.x], verts_[f.y], verts_[f.z]};
 }
 
+auto load_geometry_shader(shiny::renderer_ptr const& rndr, rose::path_t const& path, lion::input_stream_ptr const& stream) -> lion::asset_ptr
+{
+	bool precompiled = path.extension() == "cso";
+	auto f = rose::file_t{path.c_str()};
+	auto m = rose::read_into_memory(f);
+	auto r = rndr->make_geometry_shader(path, m, "main", precompiled);
+	return r;
+}
+
 auto load_vertex_shader(shiny::renderer_ptr const& rndr, rose::path_t const& path, lion::input_stream_ptr const& stream) -> lion::asset_ptr
 {
 	bool precompiled = path.extension() == "cso";
@@ -106,6 +115,10 @@ voxelization_plugin_t::voxelization_plugin_t(application_t* app)
 
 	library_.register_asset_type<shiny::vertex_shader_t>({
 		lion::asset_pattern_t{"/res/shaders/vs_.+\\.hlsl", atma::curry(&load_vertex_shader, std::ref(rndr)), atma::curry(&load_vertex_shader, std::ref(rndr))}
+	});
+
+	library_.register_asset_type<shiny::geometry_shader_t>({
+		lion::asset_pattern_t{"/res/shaders/gs_.+\\.hlsl", atma::curry(&load_geometry_shader, std::ref(rndr)), atma::curry(&load_geometry_shader, std::ref(rndr))}
 	});
 }
 
@@ -301,7 +314,8 @@ auto voxelization_plugin_t::setup_voxelization() -> void
 
 
 
-	gs_voxelize = shiny::create_geometry_shader(rndr, "resources/published/shaders/gs_voxelization.hlsl", false);
+	//gs_voxelize = shiny::create_geometry_shader(rndr, "resources/published/shaders/gs_voxelization.hlsl", false);
+	gs_voxelize = library_.load_as<shiny::geometry_shader_t>("/res/shaders/gs_voxelization.hlsl");
 	vs_voxelize = library_.load_as<shiny::vertex_shader_t>("/res/shaders/vs_voxelize.hlsl");
 	fs_voxelize = library_.load_as<shiny::fragment_shader_t>("/res/shaders/fs_voxelize.hlsl");
 	ATMA_ASSERT(vs_voxelize);

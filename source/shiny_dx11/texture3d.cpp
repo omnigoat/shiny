@@ -30,7 +30,7 @@ shiny_dx11::texture3d_t::texture3d_t(renderer_ptr const& rndr, resource_usage_ma
 
 	// resource-storage
 	if (rs == resource_storage_t::immutable) {
-		ATMA_HALT("not possible!");	
+		ATMA_HALT("not possible!");
 		return;
 	}
 	else if (rs == resource_storage_t::transient) {

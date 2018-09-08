@@ -9,6 +9,7 @@
 #include <shiny_dx11/index_buffer.hpp>
 #include <shiny_dx11/texture2d.hpp>
 #include <shiny_dx11/texture3d.hpp>
+#include <shiny_dx11/geometry_shader.hpp>
 #include <shiny_dx11/vertex_shader.hpp>
 #include <shiny_dx11/fragment_shader.hpp>
 
@@ -165,6 +166,38 @@ auto renderer_t::make_texture3d(resource_usage_mask_t usage, resource_storage_t 
 	return shiny_dx11::texture3d_bridge_ptr::make(shared_from_this<renderer_t>(), usage, storage, format, width, height, depth, mips);
 }
 
+auto renderer_t::make_geometry_shader(lion::path_t const& path, atma::unique_memory_t const& data, atma::string const& entrypoint, bool precompiled) -> geometry_shader_ptr
+{
+	shiny_dx11::d3d_blob_ptr d3d_blob;
+	shiny_dx11::d3d_geometry_shader_ptr d3d_gs;
+
+	// create blob
+	if (precompiled)
+	{
+		ATMA_ENSURE_IS(S_OK, D3DCreateBlob(data.size(), d3d_blob.assign()));
+		memcpy(d3d_blob->GetBufferPointer(), data.begin(), data.size());
+	}
+	else
+	{
+		platform::d3d_blob_ptr errors;
+		ATMA_ENSURE_IS(S_OK, D3DCompile(data.begin(), data.size(), path.c_str(), nullptr, nullptr, entrypoint.raw_begin(), "gs_5_0", D3DCOMPILE_PREFER_FLOW_CONTROL | D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, 0, d3d_blob.assign(), errors.assign()));
+		if (errors)
+		{
+			SHINY_ERROR("geometry-shader compilation errors:\n", (char*)errors->GetBufferPointer());
+		}
+	}
+
+	// create geometry-shader
+	if (S_OK == d3d_device_->CreateGeometryShader(d3d_blob->GetBufferPointer(), d3d_blob->GetBufferSize(), nullptr, d3d_gs.assign()))
+	{
+		return shiny_dx11::geometry_shader_bridge_ptr::make(
+			shiny::geometry_shader_t{path, shared_from_this<renderer_t>()},
+			shiny_dx11::geometry_shader_t{d3d_blob, d3d_gs});
+	}
+
+	return geometry_shader_ptr::null;
+}
+
 auto renderer_t::make_vertex_shader(lion::path_t const& path, atma::unique_memory_t const& data, atma::string const& entrypoint, bool precompiled) -> vertex_shader_ptr
 {
 	shiny_dx11::d3d_blob_ptr d3d_blob;
@@ -196,7 +229,7 @@ auto renderer_t::make_vertex_shader(lion::path_t const& path, atma::unique_memor
 	{
 		return shiny_dx11::vertex_shader_bridge_ptr::make(
 			shiny::vertex_shader_t{path, shared_from_this<renderer_t>()},
-			shiny_dx11::vertex_shader_t(d3d_blob, d3d_vs));
+			shiny_dx11::vertex_shader_t{d3d_blob, d3d_vs});
 	}
 
 	return vertex_shader_ptr::null;
@@ -619,9 +652,9 @@ auto renderer_t::immediate_vs_set_input_views(bound_input_views_t const& ivs) ->
 	vs_srvs_ = ivs.views;
 }
 
-auto renderer_t::immediate_gs_set_geometry_shader(geometry_shader_cptr const& gs) -> void
+auto renderer_t::immediate_gs_set_geometry_shader(geometry_shader_handle const& gs) -> void
 {
-	gs_shader_ = gs;
+	gs_shader_ = gs ? gs.operator ->() : geometry_shader_ptr::null;
 }
 
 auto shiny::renderer_t::immediate_gs_set_constant_buffers(bound_constant_buffers_t const& cbs) -> void
@@ -727,15 +760,17 @@ auto renderer_t::immediate_draw() -> void
 
 	// geometry-stage
 	{
+		auto dx11gs = device_unsafe_access<shiny_dx11::geometry_shader_t>(gs_shader_);
+
 		ID3D11Buffer* cbs[D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT]{};
 		for (auto const& cb : gs_cbs_)
 			cbs[cb.first] = device_unsafe_access<shiny_dx11::buffer_t>(cb.second)->d3d_buffer().get();
 		d3d_immediate_context_->GSSetConstantBuffers(0, D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT, cbs);
 
-		if (!gs_shader_)
+		if (!dx11gs)
 			d3d_immediate_context_->GSSetShader(nullptr, nullptr, 0);
 		else
-			d3d_immediate_context_->GSSetShader(gs_shader_->d3d_gs().get(), nullptr, 0);
+			d3d_immediate_context_->GSSetShader(dx11gs->d3d_gs().get(), nullptr, 0);
 	}
 
 	// fragment-stage

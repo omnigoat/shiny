@@ -44,7 +44,7 @@ auto lion::asset_library_t::find(uint32 h) const -> storage_t const*
 auto lion::asset_library_t::register_asset_type(std::type_index idx, asset_patterns_t patterns) -> asset_type_handle_t
 {
 	auto [asset_type, good_insert] = asset_types_.insert(asset_type_t{idx, std::move(patterns)});
-	ATMA_ASSERT(good_insert, "bad insert");
+	ATMA_ASSERT(good_insert, "asset type already registered for loading");
 	
 	for (auto const& pattern : atma::filter(&asset_pattern_t::reload, asset_type->patterns))
 	{
