@@ -116,12 +116,6 @@
     <ClCompile Include="..\..\source\shiny_dx11\depth_stencil_view.cpp">
       <Filter>source\shiny_dx11</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\shiny_dx11\fragment_shader.cpp">
-      <Filter>source\shiny_dx11</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\source\shiny_dx11\geometry_shader.cpp">
-      <Filter>source\shiny_dx11</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\source\shiny_dx11\render_target_view.cpp">
       <Filter>source\shiny_dx11</Filter>
     </ClCompile>
@@ -138,9 +132,6 @@
       <Filter>source\shiny_dx11</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\shiny_dx11\texture3d.cpp">
-      <Filter>source\shiny_dx11</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\source\shiny_dx11\vertex_shader.cpp">
       <Filter>source\shiny_dx11</Filter>
     </ClCompile>
   </ItemGroup>

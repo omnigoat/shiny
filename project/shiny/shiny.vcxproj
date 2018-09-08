@@ -118,15 +118,12 @@
     <ClCompile Include="..\..\source\shiny_dx11\buffer.cpp" />
     <ClCompile Include="..\..\source\shiny_dx11\compute_shader.cpp" />
     <ClCompile Include="..\..\source\shiny_dx11\depth_stencil_view.cpp" />
-    <ClCompile Include="..\..\source\shiny_dx11\fragment_shader.cpp" />
-    <ClCompile Include="..\..\source\shiny_dx11\geometry_shader.cpp" />
     <ClCompile Include="..\..\source\shiny_dx11\renderer.cpp" />
     <ClCompile Include="..\..\source\shiny_dx11\render_target_view.cpp" />
     <ClCompile Include="..\..\source\shiny_dx11\resource_view.cpp" />
     <ClCompile Include="..\..\source\shiny_dx11\runtime.cpp" />
     <ClCompile Include="..\..\source\shiny_dx11\texture2d.cpp" />
     <ClCompile Include="..\..\source\shiny_dx11\texture3d.cpp" />
-    <ClCompile Include="..\..\source\shiny_dx11\vertex_shader.cpp" />
     <ClCompile Include="..\..\vendor\zlib\adler32.c" />
     <ClCompile Include="..\..\vendor\zlib\compress.c" />
     <ClCompile Include="..\..\vendor\zlib\crc32.c" />
