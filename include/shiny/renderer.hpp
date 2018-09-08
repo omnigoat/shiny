@@ -18,6 +18,20 @@ namespace shiny
 #endif
 
 
+
+
+// PIMPL
+namespace shiny
+{
+	struct renderer_impl_t
+	{
+		virtual auto initialize(runtime_t&, uint adapter) -> bool;
+		virtual auto device_make_buffer(resource_type_t, resource_usage_mask_t, resource_storage_t, buffer_dimensions_t, buffer_data_t) -> resource_t;
+	};
+
+	using renderer_impl_ptr = std::unique_ptr<renderer_impl_t>;
+}
+
 #if 1
 namespace shiny
 {
@@ -106,11 +120,12 @@ namespace shiny
 
 	private:
 		renderer2_t(runtime_t&, fooey::window_ptr const&, uint adapter);
-
-		runtime_t& runtime_;
-
 		virtual auto backbuffer_render_target() -> resource_view_ptr const& = 0;
 		virtual auto backbuffer_depth_stencil() -> resource_view_ptr const& = 0;
+
+		runtime_t& runtime_;
+		renderer_impl_ptr impl_;
+		
 
 	private:
 		friend struct atma::enable_intrusive_ptr_make;

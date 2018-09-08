@@ -306,7 +306,6 @@ namespace shiny
 		friend struct atma::enable_intrusive_ptr_make;
 	};
 
-
 	template <typename T>
 	inline auto renderer_t::signal_rs_upload(resource_ptr const& res, T const& t) -> void
 	{
@@ -314,3 +313,10 @@ namespace shiny
 	}
 }
 
+namespace shiny_dx11
+{
+	struct renderer_dx11_t : shiny::renderer_impl_t
+	{
+		auto device_make_buffer(resource_type_t, resource_usage_mask_t, resource_storage_t, buffer_dimensions_t, buffer_data_t) -> resource_t override;
+	};
+}

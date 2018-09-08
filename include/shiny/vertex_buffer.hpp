@@ -31,5 +31,5 @@ namespace shiny
 	};
 
 	template <typename T>
-	using vertex_buffer_bridge_t = resource_bridge_t<vertex_buffer_t, T>;
+	using vertex_buffer_bridge_t = device_bridge_t<vertex_buffer_t, T>;
 }

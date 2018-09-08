@@ -9,6 +9,16 @@
 #include <typeindex>
 
 
+// device-interop, no strings attached
+namespace shiny
+{
+	struct device_interop_t : atma::ref_counted
+	{
+		virtual auto sizeof_host_resource() const -> size_t = 0;
+	};
+}
+
+// component, weirdly has the renderer????
 namespace shiny
 {
 	struct component_t : lion::asset_t
@@ -28,8 +38,13 @@ namespace shiny
 	private:
 		renderer_ptr rndr_;
 	};
+}
 
-	struct resource_t : atma::ref_counted
+
+// resource, this has a lot going on
+namespace shiny
+{
+	struct resource_t : device_interop_t
 	{
 		resource_t(renderer_ptr const& rndr, resource_type_t rt, resource_usage_mask_t ru, resource_storage_t rs, size_t element_stride, size_t element_count)
 			: rndr_{rndr}
@@ -42,8 +57,6 @@ namespace shiny
 
 		virtual ~resource_t()
 		{}
-
-		virtual auto sizeof_host_resource() const -> size_t = 0;
 
 		auto renderer() const -> renderer_ptr const& { return rndr_; }
 		auto resource_type() const -> resource_type_t { return resource_type_; }
@@ -152,17 +165,17 @@ namespace shiny
 namespace shiny
 {
 	template <typename Interface, typename Concrete>
-	struct resource_bridge_t
+	struct device_bridge_t
 		: Interface
 	{
-		resource_bridge_t(Interface&& i, Concrete&& c)
+		device_bridge_t(Interface&& i, Concrete&& c)
 			: Interface{std::move(i)}
 			, concrete_{std::move(c)}
 		{}
 
 		// helpful if host & device constructors are identical
 		template <typename... Args>
-		resource_bridge_t(Args&&... args)
+		device_bridge_t(Args&&... args)
 			: Interface{std::forward<Args>(args)...}
 			, concrete_{std::forward<Args>(args)...}
 		{}
@@ -170,7 +183,6 @@ namespace shiny
 	protected:
 		Concrete concrete_;
 	};
-
-	template <typename Interface, typename Concrete>
-	using component_bridge_t = resource_bridge_t<Interface, Concrete>;
 }
+
+

@@ -40,5 +40,5 @@ namespace shiny
 
 
 	template <typename Device>
-	using texture3d_bridge_t = resource_bridge_t<texture3d_t, Device>;
+	using texture3d_bridge_t = device_bridge_t<texture3d_t, Device>;
 }

@@ -28,5 +28,5 @@ namespace shiny
 	};
 
 	template <typename T>
-	using index_buffer_bridge_t = resource_bridge_t<index_buffer_t, T>;
+	using index_buffer_bridge_t = device_bridge_t<index_buffer_t, T>;
 }

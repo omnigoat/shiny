@@ -15,5 +15,5 @@ namespace shiny
 	};
 
 	template <typename T>
-	using vertex_shader_bridge_t = component_bridge_t<vertex_shader_t, T>;
+	using vertex_shader_bridge_t = device_bridge_t<vertex_shader_t, T>;
 }

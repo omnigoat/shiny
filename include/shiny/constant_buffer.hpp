@@ -17,5 +17,5 @@ namespace shiny
 	};
 
 	template <typename T>
-	using constant_buffer_bridge_t = resource_bridge_t<constant_buffer_t, T>;
+	using constant_buffer_bridge_t = device_bridge_t<constant_buffer_t, T>;
 }
