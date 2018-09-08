@@ -26,7 +26,7 @@ namespace shiny
 	struct renderer_impl_t
 	{
 		virtual auto initialize(runtime_t&, uint adapter) -> bool;
-		virtual auto device_make_buffer(resource_type_t, resource_usage_mask_t, resource_storage_t, buffer_dimensions_t, buffer_data_t) -> resource_t;
+		virtual auto device_make_buffer(resource_type_t, resource_usage_mask_t, resource_storage_t, buffer_dimensions_t, buffer_data_t) -> resource_ptr;
 	};
 
 	using renderer_impl_ptr = std::unique_ptr<renderer_impl_t>;

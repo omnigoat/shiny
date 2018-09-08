@@ -6,7 +6,7 @@ using namespace shiny::platform;
 
 using shiny::runtime_t;
 
-
+#if 0
 namespace shiny_dx11
 {
 	runtime_dx11_t::runtime_dx11_t()
@@ -166,6 +166,7 @@ namespace shiny_dx11
 		return i->second.get();
 	}
 }
+#endif
 
 
 

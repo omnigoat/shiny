@@ -20,6 +20,7 @@
 #include <vector>
 #include <map>
 
+#if 0
 namespace shiny_dx11
 {
 	struct output_dx11_t
@@ -79,6 +80,8 @@ namespace shiny_dx11
 	}
 
 }
+
+#endif
 
 
 namespace shiny

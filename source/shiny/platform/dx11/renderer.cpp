@@ -1152,10 +1152,11 @@ shiny::depth_stencil_state_t const shiny::depth_stencil_state_t::standard = shin
 
 
 
-
+#if 0
 namespace shiny_dx11
 {
 	auto renderer_dx11_t::device_make_buffer(resource_type_t, resource_usage_mask_t, resource_storage_t, buffer_dimensions_t, buffer_data_t) -> resource_t
 	{
 	}
 }
+#endif

@@ -8,6 +8,7 @@
 
 #include <shiny/renderer.hpp>
 
+#if 0
 namespace shiny
 {
 	struct output_t : device_interop_t
@@ -17,8 +18,9 @@ namespace shiny
 
 	using output_ptr = atma::intrusive_ptr<output_t>;
 }
+#endif
 
-
+#if 0
 namespace shiny
 {
 	struct runtime_t
@@ -27,3 +29,4 @@ namespace shiny
 		auto create_renderer() const -> renderer_ptr;
 	};
 }
+#endif

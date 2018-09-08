@@ -15,5 +15,5 @@ namespace shiny
 	};
 
 	template <typename T>
-	using fragment_shader_bridge_t = component_bridge_t<fragment_shader_t, T>;
+	using fragment_shader_bridge_t = device_bridge_t<fragment_shader_t, T>;
 }

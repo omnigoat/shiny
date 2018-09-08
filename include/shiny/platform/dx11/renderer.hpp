@@ -313,6 +313,7 @@ namespace shiny
 	}
 }
 
+#if 0
 namespace shiny_dx11
 {
 	struct renderer_dx11_t : shiny::renderer_impl_t
@@ -320,3 +321,4 @@ namespace shiny_dx11
 		auto device_make_buffer(resource_type_t, resource_usage_mask_t, resource_storage_t, buffer_dimensions_t, buffer_data_t) -> resource_t override;
 	};
 }
+#endif

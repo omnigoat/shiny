@@ -11,7 +11,7 @@ shiny_dx11::texture2d_t::texture2d_t(renderer_ptr const& rndr, resource_usage_ma
 	auto const& device = rndr->d3d_device();
 
 	auto d3dusage = D3D11_USAGE();
-	auto d3dbind = 0;
+	auto d3dbind = 0u;
 	auto d3dcpu = D3D11_CPU_ACCESS_FLAG();
 	auto d3dfmt = platform::dxgi_format_of(format);
 
@@ -22,13 +22,13 @@ shiny_dx11::texture2d_t::texture2d_t(renderer_ptr const& rndr, resource_usage_ma
 			ATMA_ASSERT(mips == 1, "render-targets|depth-stencil-targets can not have mipmaps");
 
 	if (usage_flags & resource_usage_t::render_target)
-		(uint&)d3dbind |= D3D11_BIND_RENDER_TARGET;
+		d3dbind |= D3D11_BIND_RENDER_TARGET;
 	if (usage_flags & resource_usage_t::depth_stencil)
-		(uint&)d3dbind |= D3D11_BIND_DEPTH_STENCIL;
+		d3dbind |= D3D11_BIND_DEPTH_STENCIL;
 	if (usage_flags & resource_usage_t::shader_resource)
-		(uint&)d3dbind |= D3D11_BIND_SHADER_RESOURCE;
+		d3dbind |= D3D11_BIND_SHADER_RESOURCE;
 	if (usage_flags & resource_usage_t::unordered_access)
-		(uint&)d3dbind |= D3D11_BIND_UNORDERED_ACCESS;
+		d3dbind |= D3D11_BIND_UNORDERED_ACCESS;
 
 
 	// resource-storage
