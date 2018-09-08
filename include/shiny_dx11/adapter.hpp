@@ -1,6 +1,6 @@
 #pragma once
 //======================================================================
-#include <shiny/platform/dx11/dxgi_fwd.hpp>
+#include <shiny_dx11/dxgi_fwd.hpp>
 
 #include <atma/com_ptr.hpp>
 #include <atma/intrusive_ptr.hpp>

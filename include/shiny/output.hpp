@@ -25,6 +25,6 @@ namespace shiny
 }
 
 #ifdef ATMA_PLATFORM_WINDOWS
-#	include <shiny/platform/dx11/output.hpp>
+#	include <shiny_dx11/output.hpp>
 #endif
 

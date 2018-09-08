@@ -1,7 +1,7 @@
 #pragma once
 
-#include <shiny/platform/dx11/d3d_fwd.hpp>
-#include <shiny/platform/dx11/resource.hpp>
+#include <shiny_dx11/d3d_fwd.hpp>
+#include <shiny_dx11/resource.hpp>
 
 #include <shiny/shiny_fwd.hpp>
 #include <shiny/format.hpp>

@@ -4,8 +4,8 @@
 #include <shiny/buffer.hpp>
 #include <shiny/resource_view.hpp>
 
-#include <shiny/platform/dx11/d3d_fwd.hpp>
-#include <shiny/platform/dx11/resource.hpp>
+#include <shiny_dx11/d3d_fwd.hpp>
+#include <shiny_dx11/resource.hpp>
 
 #include <atma/aligned_allocator.hpp>
 #include <atma/vector.hpp>

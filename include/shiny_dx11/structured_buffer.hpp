@@ -1,7 +1,7 @@
 #pragma once
 
 #include <shiny/buffer.hpp>
-#include <shiny/platform/dx11/dxgid3d_convert.hpp>
+#include <shiny_dx11/dxgid3d_convert.hpp>
 
 
 namespace shiny

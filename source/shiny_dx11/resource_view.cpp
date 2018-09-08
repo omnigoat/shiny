@@ -1,8 +1,8 @@
-#include <shiny/platform/dx11/resource_view.hpp>
+#include <shiny_dx11/resource_view.hpp>
 
 #include <shiny/renderer.hpp>
 #include <shiny/texture3d.hpp>
-#include <shiny/platform/dx11/dxgid3d_convert.hpp>
+#include <shiny_dx11/dxgid3d_convert.hpp>
 
 #include <atma/intrusive_ptr.hpp>
 

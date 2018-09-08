@@ -2,7 +2,7 @@
 
 #include <shiny/constant_buffer.hpp>
 
-#include <shiny/platform/dx11/buffer.hpp>
+#include <shiny_dx11/buffer.hpp>
 
 
 namespace shiny_dx11

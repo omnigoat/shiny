@@ -2,7 +2,7 @@
 
 #include <shiny/shiny_fwd.hpp>
 #include <shiny/blend_state.hpp>
-#include <shiny/platform/dx11/d3d_fwd.hpp>
+#include <shiny_dx11/d3d_fwd.hpp>
 
 
 namespace shiny

@@ -1,4 +1,4 @@
-#include <shiny/platform/dx11/runtime.hpp>
+#include <shiny_dx11/runtime.hpp>
 
 
 using namespace shiny;

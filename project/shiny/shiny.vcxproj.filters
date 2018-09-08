@@ -27,17 +27,17 @@
     <Filter Include="source\shiny">
       <UniqueIdentifier>{14079420-de18-4597-80fe-c99aa0f42f3f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="source\shiny\platform">
-      <UniqueIdentifier>{12a41398-3e52-463b-9511-7b7d7694b954}</UniqueIdentifier>
-    </Filter>
     <Filter Include="source\pepper">
       <UniqueIdentifier>{18e8745c-d8b7-420f-9b42-690bef13824c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="source\shiny\platform\dx11">
-      <UniqueIdentifier>{3649ea99-fc91-4e0c-beae-8faa75eaba5a}</UniqueIdentifier>
-    </Filter>
     <Filter Include="include\shiny\platform\dx11">
       <UniqueIdentifier>{d04ba51c-92e4-49af-9871-fa6333127067}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\shiny_dx11">
+      <UniqueIdentifier>{91dc3204-7348-40f6-98fb-f66196afe061}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\shiny_dx11">
+      <UniqueIdentifier>{b87ed79a-2478-4f2c-ad0f-d41e59dc5b15}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -113,41 +113,41 @@
     <ClCompile Include="..\..\source\shiny\draw_target.cpp">
       <Filter>source\shiny</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\shiny\platform\dx11\buffer.cpp">
-      <Filter>source\shiny\platform\dx11</Filter>
+    <ClCompile Include="..\..\source\shiny_dx11\buffer.cpp">
+      <Filter>source\shiny_dx11</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\shiny\platform\dx11\compute_shader.cpp">
-      <Filter>source\shiny\platform\dx11</Filter>
+    <ClCompile Include="..\..\source\shiny_dx11\compute_shader.cpp">
+      <Filter>source\shiny_dx11</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\shiny\platform\dx11\depth_stencil_view.cpp">
-      <Filter>source\shiny\platform\dx11</Filter>
+    <ClCompile Include="..\..\source\shiny_dx11\depth_stencil_view.cpp">
+      <Filter>source\shiny_dx11</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\shiny\platform\dx11\fragment_shader.cpp">
-      <Filter>source\shiny\platform\dx11</Filter>
+    <ClCompile Include="..\..\source\shiny_dx11\fragment_shader.cpp">
+      <Filter>source\shiny_dx11</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\shiny\platform\dx11\geometry_shader.cpp">
-      <Filter>source\shiny\platform\dx11</Filter>
+    <ClCompile Include="..\..\source\shiny_dx11\geometry_shader.cpp">
+      <Filter>source\shiny_dx11</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\shiny\platform\dx11\render_target_view.cpp">
-      <Filter>source\shiny\platform\dx11</Filter>
+    <ClCompile Include="..\..\source\shiny_dx11\render_target_view.cpp">
+      <Filter>source\shiny_dx11</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\shiny\platform\dx11\renderer.cpp">
-      <Filter>source\shiny\platform\dx11</Filter>
+    <ClCompile Include="..\..\source\shiny_dx11\renderer.cpp">
+      <Filter>source\shiny_dx11</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\shiny\platform\dx11\resource_view.cpp">
-      <Filter>source\shiny\platform\dx11</Filter>
+    <ClCompile Include="..\..\source\shiny_dx11\resource_view.cpp">
+      <Filter>source\shiny_dx11</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\shiny\platform\dx11\runtime.cpp">
-      <Filter>source\shiny\platform\dx11</Filter>
+    <ClCompile Include="..\..\source\shiny_dx11\runtime.cpp">
+      <Filter>source\shiny_dx11</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\shiny\platform\dx11\texture2d.cpp">
-      <Filter>source\shiny\platform\dx11</Filter>
+    <ClCompile Include="..\..\source\shiny_dx11\texture2d.cpp">
+      <Filter>source\shiny_dx11</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\shiny\platform\dx11\texture3d.cpp">
-      <Filter>source\shiny\platform\dx11</Filter>
+    <ClCompile Include="..\..\source\shiny_dx11\texture3d.cpp">
+      <Filter>source\shiny_dx11</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\shiny\platform\dx11\vertex_shader.cpp">
-      <Filter>source\shiny\platform\dx11</Filter>
+    <ClCompile Include="..\..\source\shiny_dx11\vertex_shader.cpp">
+      <Filter>source\shiny_dx11</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -342,6 +342,78 @@
     </ClInclude>
     <ClInclude Include="..\..\include\shiny\platform\dx11\vertex_shader.hpp">
       <Filter>include\shiny\platform\dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\shiny_dx11\adapter.hpp">
+      <Filter>include\shiny_dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\shiny_dx11\blender.hpp">
+      <Filter>include\shiny_dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\shiny_dx11\buffer.hpp">
+      <Filter>include\shiny_dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\shiny_dx11\compute_shader.hpp">
+      <Filter>include\shiny_dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\shiny_dx11\constant_buffer.hpp">
+      <Filter>include\shiny_dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\shiny_dx11\d3d_fwd.hpp">
+      <Filter>include\shiny_dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\shiny_dx11\depth_stencil_view.hpp">
+      <Filter>include\shiny_dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\shiny_dx11\dxgi_fwd.hpp">
+      <Filter>include\shiny_dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\shiny_dx11\dxgid3d_convert.hpp">
+      <Filter>include\shiny_dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\shiny_dx11\fragment_shader.hpp">
+      <Filter>include\shiny_dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\shiny_dx11\geometry_shader.hpp">
+      <Filter>include\shiny_dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\shiny_dx11\index_buffer.hpp">
+      <Filter>include\shiny_dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\shiny_dx11\output.hpp">
+      <Filter>include\shiny_dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\shiny_dx11\render_target_view.hpp">
+      <Filter>include\shiny_dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\shiny_dx11\renderer.hpp">
+      <Filter>include\shiny_dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\shiny_dx11\resource.hpp">
+      <Filter>include\shiny_dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\shiny_dx11\resource_view.hpp">
+      <Filter>include\shiny_dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\shiny_dx11\runtime.hpp">
+      <Filter>include\shiny_dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\shiny_dx11\shader_resource2d.hpp">
+      <Filter>include\shiny_dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\shiny_dx11\structured_buffer.hpp">
+      <Filter>include\shiny_dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\shiny_dx11\texture2d.hpp">
+      <Filter>include\shiny_dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\shiny_dx11\texture3d.hpp">
+      <Filter>include\shiny_dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\shiny_dx11\vertex_buffer.hpp">
+      <Filter>include\shiny_dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\shiny_dx11\vertex_shader.hpp">
+      <Filter>include\shiny_dx11</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

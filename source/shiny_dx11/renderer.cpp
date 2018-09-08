@@ -1,16 +1,16 @@
 #include <shiny/renderer.hpp>
 
-#include <shiny/platform/dx11/dxgid3d_convert.hpp>
-#include <shiny/platform/dx11/d3d_fwd.hpp>
-#include <shiny/platform/dx11/dxgi_fwd.hpp>
-#include <shiny/platform/dx11/buffer.hpp>
-#include <shiny/platform/dx11/constant_buffer.hpp>
-#include <shiny/platform/dx11/vertex_buffer.hpp>
-#include <shiny/platform/dx11/index_buffer.hpp>
-#include <shiny/platform/dx11/texture2d.hpp>
-#include <shiny/platform/dx11/texture3d.hpp>
-#include <shiny/platform/dx11/vertex_shader.hpp>
-#include <shiny/platform/dx11/fragment_shader.hpp>
+#include <shiny_dx11/dxgid3d_convert.hpp>
+#include <shiny_dx11/d3d_fwd.hpp>
+#include <shiny_dx11/dxgi_fwd.hpp>
+#include <shiny_dx11/buffer.hpp>
+#include <shiny_dx11/constant_buffer.hpp>
+#include <shiny_dx11/vertex_buffer.hpp>
+#include <shiny_dx11/index_buffer.hpp>
+#include <shiny_dx11/texture2d.hpp>
+#include <shiny_dx11/texture3d.hpp>
+#include <shiny_dx11/vertex_shader.hpp>
+#include <shiny_dx11/fragment_shader.hpp>
 
 #include <shiny/data_declaration.hpp>
 #include <shiny/vertex_buffer.hpp>
