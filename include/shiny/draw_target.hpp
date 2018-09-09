@@ -3,7 +3,7 @@
 #include <shiny/shiny_fwd.hpp>
 
 #include <atma/intrusive_ptr.hpp>
-
+#include <shiny/resource_view.hpp>
 
 namespace shiny
 {

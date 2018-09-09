@@ -10,12 +10,15 @@
 #include <atma/types.hpp>
 #include <atma/thread/engine.hpp>
 #include <atma/math/vector4f.hpp>
+#include <atma/platform/allocation.hpp>
 
 
 namespace shiny
 {
 	struct scene_t
 	{
+		scene_t(scene_t const&) {}
+		scene_t(scene_t&&);
 		scene_t(renderer_ptr const&, draw_target_t const&, camera_t const&, rendertarget_clear_t const&);
 		scene_t(renderer_ptr const&, draw_target_t const&);
 		scene_t(renderer_ptr const&, camera_t const&, rendertarget_clear_t const&);
@@ -34,11 +37,12 @@ namespace shiny
 
 		renderer_ptr rndr_;
 		draw_target_t draw_target_;
-		constant_buffer_ptr scene_constant_buffer_;
+		rendertarget_clear_t clear_;
 		camera_t camera_;
 
-		atma::thread::engine_t::queue_t queue_;
-		atma::thread::engine_t::queue_t::batch_t batch_;
+		constant_buffer_ptr scene_constant_buffer_;
+
+		draw_commands_t draw_commands_;
 
 		friend struct renderer_t;
 	};
@@ -47,7 +51,7 @@ namespace shiny
 	template <typename... Stages>
 	auto scene_t::draw(Stages&&... stages) -> void
 	{
-		shiny::signal_draw(rndr_, batch_, std::forward<Stages>(stages)...);
+		shiny::signal_draw(rndr_, draw_commands_, std::forward<Stages>(stages)...);
 	}
 
 }

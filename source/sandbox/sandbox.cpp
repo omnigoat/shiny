@@ -15,7 +15,6 @@
 #include <shiny/compute_shader.hpp>
 #include <shiny/texture3d.hpp>
 #include <shiny/blend_state.hpp>
-#include <shiny/generic_buffer.hpp>
 #include <shiny/draw_target.hpp>
 #include <shiny/logging.hpp>
 
@@ -44,7 +43,7 @@
 #include <atma/function.hpp>
 #include <atma/console.hpp>
 #include <atma/atomic.hpp>
-#include <atma/mpsc_queue.hpp>
+#include <atma/lockfree_queue.hpp>
 #include <atma/threading.hpp>
 #include <atma/logging.hpp>
 #include <atma/string.hpp>
@@ -225,8 +224,8 @@ application_t::application_t(rose::runtime_t* rr)
 		{"color", 0, shiny::format_t::f32x4}
 	});
 
-	vb_cube = shiny::create_vertex_buffer(rndr, shiny::resource_storage_t::immutable, dd_position_color, 8, cube_vertices);
-	ib_cube = shiny::create_index_buffer(rndr, shiny::resource_storage_t::immutable, shiny::format_t::u16, 36, cube_indices);
+	vb_cube = rndr->make_vertex_buffer(shiny::resource_storage_t::immutable, dd_position_color, 8, cube_vertices, 8);
+	ib_cube = rndr->make_index_buffer(shiny::resource_storage_t::immutable, shiny::format_t::u16, 36, cube_indices, 36);
 
 
 	//auto f = vfs.open("/res/shaders/vs_basic.hlsl");
@@ -235,8 +234,8 @@ application_t::application_t(rose::runtime_t* rr)
 	//shiny::vertex_shader_t::make()
 
 	// shaders
-	vs_flat = shiny::vertex_shader_t::make(rndr, "../shaders/vs_basic.hlsl", false);
-	fs_flat = shiny::fragment_shader_t::make(rndr, "../shaders/ps_basic.hlsl", false);
+	//vs_flat = shiny::vertex_shader_t::make(rndr, "../shaders/vs_basic.hlsl", false);
+	//fs_flat = shiny::fragment_shader_t::make(rndr, "../shaders/ps_basic.hlsl", false);
 }
 
 auto application_t::run() -> int
@@ -267,7 +266,8 @@ auto application_t::run() -> int
 
 
 	// clear!
-	rndr->signal_draw_scene(shiny::scene_t{rndr, cc.camera(), shiny::rendertarget_clear_t{aml::vector4f{0.2f, 0.2f, 0.2f}, 1.f}});
+	shiny::scene_t clear_scene{rndr, cc.camera(), shiny::rendertarget_clear_t{aml::vector4f{0.2f, 0.2f, 0.2f}, 1.f}};
+	rndr->signal_draw_scene(clear_scene);
 
 
 	//
@@ -448,15 +448,6 @@ namespace atma
 }
 #endif
 
-struct thing : lion::asset_t
-{
-	int bam = 4;
-
-	~thing()
-	{
-	}
-};
-
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
 {
@@ -464,8 +455,9 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	atma::thread_pool_t global_thread_pool{8};
 
 	// platform runtime & console-logging-handler
-	rose::runtime_t RR{&global_thread_pool};
-	lion::console_log_handler_t console_log{RR.get_console()};
+	atma::inplace_engine_t fs_engine_{4096};
+	rose::runtime_t RR{&fs_engine_};
+	lion::console_log_handler_t console_log{RR.console()};
 
 	// shiny runtime & logging through console
 	shiny::logging::runtime_t SLR;

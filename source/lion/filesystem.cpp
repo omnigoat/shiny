@@ -1,7 +1,9 @@
 #include <lion/filesystem.hpp>
 
 #include <rose/mmap.hpp>
+
 #include <atma/algorithm.hpp>
+#include <atma/config/platform.hpp>
 
 #include <regex>
 
@@ -236,9 +238,7 @@ auto vfs_t::open(path_t const& path, atma::string* filepath) -> atma::stream_ptr
 
 auto vfs_t::add_filewatch(path_t const& path, filewatch_callback_t const& callback) -> void
 {
-	mount_node_t* mount = nullptr;
-	path_t physpath;
-	std::tie(mount, physpath) = get_physical_path(path);
+	auto [mount, physpath] = get_physical_path(path);
 
 	rose_runtime_->register_directory_watch(physpath, false, rose::file_change_t::changed,
 		[=](path_t const& filename, rose::file_change_t change) {

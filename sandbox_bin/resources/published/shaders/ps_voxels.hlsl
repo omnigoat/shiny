@@ -284,10 +284,10 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 		discard; //return float4(0.f, 1.f, 0.f, 1.f);
 
 	// debug: hit-enter
-	//return float4(hit_enter, 1.f);
+	// return float4(hit_enter, 1.f);
 
 	// debug: hit-exit
-	//return float4(hit_exit, 1.f);
+	// return float4(hit_exit, 1.f);
 
 	float4 color = {0.f, 0.f, 0.f, 0.f};
 
@@ -315,24 +315,24 @@ float4 brick_path(float3 position, float3 normal, float ratio)
 	}
 
 	// debug: number of nodes traversed
-	//return float4(reps / 16.f, 0.f, 0.f, 1.f);
+	// return float4(reps / 32.f, 0.f, 0.f, 1.f);
 
 #if 0
 	float3 n = normalize(color.xyz);
 
 	float3 lamb = (0.4);
 	float3 lpwr = (0.3);
-	float3 ldir = float3(0, -1, 0);
+	float3 ldir = float3(0, 1, 0);
 	// diffuse lighting
 	float i  = dot(ldir, n);
-	color = float4(lamb+ i * lpwr, color.w);
+	color = float4(lamb + i * lpwr, color.w);
 	// specular lighting
 	float3 h = normalize(ldir + normal);
 	i = clamp(pow(dot(n, h), 15), 0, 1);
 	color += float4(i * lpwr, 0);
 #endif
 
-	//return float4(1.f, 0.f, 0.f, 1.f);
+	// return float4(1.f, 0.f, 0.f, 1.f);
 	return color;
 }
 

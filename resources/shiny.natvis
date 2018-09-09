@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+  
+  <!-- PAIRED RESOURCE -->
+  <Type Name="shiny::resource_bridge_t&lt;*,*&gt;" ExcludeView="simple">
+    <DisplayString>{{ paired-resource }}</DisplayString>
+    <Expand>
+      <Item Name="interface">this,view(flat)</Item>
+      <Item Name="api">concrete_</Item>
+    </Expand>
+  </Type>
+
+  <Type Name="shiny::resource_bridge_t&lt;*,*&gt;" IncludeView="flat">
+    <DisplayString>{{ {($T1*)this,view(simple)} }}</DisplayString>
+    <Expand>
+      <ExpandedItem>($T1*)this,nd</ExpandedItem>
+    </Expand>
+  </Type>
+
+</AutoVisualizer>

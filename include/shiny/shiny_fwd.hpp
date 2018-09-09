@@ -25,14 +25,16 @@ namespace shiny
 	struct geometry_shader_t;
 	using  geometry_shader_ptr = atma::intrusive_ptr<geometry_shader_t>;
 	using  geometry_shader_cptr = atma::intrusive_ptr<geometry_shader_t const>;
+	using  geometry_shader_handle = lion::asset_handle_t<geometry_shader_t>;
 
 	struct vertex_shader_t;
-	typedef atma::intrusive_ptr<vertex_shader_t> vertex_shader_ptr;
-	typedef atma::intrusive_ptr<vertex_shader_t const> vertex_shader_cptr;
+	using  vertex_shader_ptr = atma::intrusive_ptr<vertex_shader_t>;
+	using  vertex_shader_cptr = atma::intrusive_ptr<vertex_shader_t const>;
+	using  vertex_shader_handle = lion::asset_handle_t<vertex_shader_t>;
 
 	struct fragment_shader_t;
-	typedef atma::intrusive_ptr<fragment_shader_t> fragment_shader_ptr;
-	typedef atma::intrusive_ptr<fragment_shader_t const> fragment_shader_cptr;
+	using  fragment_shader_ptr = atma::intrusive_ptr<fragment_shader_t>;
+	using  fragment_shader_cptr = atma::intrusive_ptr<fragment_shader_t const>;
 	using  fragment_shader_handle = lion::asset_handle_t<fragment_shader_t>;
 
 	struct geometry_stream_t;
@@ -129,6 +131,8 @@ namespace shiny
 
 	enum class resource_type_t
 	{
+		unknown,
+
 		vertex_buffer,
 		index_buffer,
 		constant_buffer,
@@ -137,13 +141,15 @@ namespace shiny
 		staging_buffer,
 
 		texture2d,
-		texturd3d,
+		texture3d,
 	};
 
 	enum class resource_view_type_t
 	{
+		unknown,
+
 		// read-only (shader-resource)
-		input,
+		read,
 		// read-write (unordered-access)
 		compute,
 
@@ -156,6 +162,8 @@ namespace shiny
 
 	enum class resource_storage_t
 	{
+		unknown,
+
 		// immutable:
 		//   cpu: none
 		//   gpu: read

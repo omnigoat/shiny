@@ -3,7 +3,7 @@
 #include <atma/config/platform.hpp>
 
 #ifdef ATMA_PLATFORM_WINDOWS
-#	include <shiny/platform/win32/compute_shader.hpp>
+#	include <shiny_dx11/compute_shader.hpp>
 #endif
 
 // implemented per-platform

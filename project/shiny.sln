@@ -1,9 +1,12 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26228.4
+VisualStudioVersion = 15.0.26430.12
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fooey", "..\..\fooey\project\fooey.vcxproj", "{82B83F8F-A8CF-4720-9ABD-F08682C1C325}"
+	ProjectSection(ProjectDependencies) = postProject
+		{3301E1FA-9F23-43C6-A5E1-183204867D44} = {3301E1FA-9F23-43C6-A5E1-183204867D44}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "shiny", "shiny\shiny.vcxproj", "{8E03B685-D9CE-45BF-8597-E7EF57E62B8D}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -24,6 +27,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "atma", "..\..\atma\project\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "atma_test", "..\..\atma\project\atma_test\atma_test.vcxproj", "{AD2E1D66-97F7-4E55-8277-0FAFA8B4CB0F}"
 	ProjectSection(ProjectDependencies) = postProject
+		{58B3D2C1-0AB1-48CF-8B47-60DC3FC9ADB6} = {58B3D2C1-0AB1-48CF-8B47-60DC3FC9ADB6}
 		{3301E1FA-9F23-43C6-A5E1-183204867D44} = {3301E1FA-9F23-43C6-A5E1-183204867D44}
 	EndProjectSection
 EndProject
@@ -208,5 +212,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {711ECAEF-6DEC-4567-AE25-F37408324F99}
 	EndGlobalSection
 EndGlobal
